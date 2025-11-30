@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Audit de Nuit{% endblock %} | Sheraton Laval</title>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Feather Icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% if session.get('authenticated') %}
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i data-feather="moon"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-title">Night Audit</span>
+                    <span class="logo-subtitle">Sheraton Laval</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <a href="{{ url_for('checklist.index') }}" class="menu-item active">
+                <i data-feather="layout"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Outils</div>
+
+            <a href="#" class="menu-item disabled" title="Bientôt disponible">
+                <i data-feather="file-text"></i>
+                <span>Documents</span>
+                <span class="badge">Soon</span>
+            </a>
+            <a href="#" class="menu-item disabled" title="Bientôt disponible">
+                <i data-feather="bar-chart-2"></i>
+                <span>Rapports</span>
+                <span class="badge">Soon</span>
+            </a>
+            <a href="#" class="menu-item disabled" title="Bientôt disponible">
+                <i data-feather="calculator"></i>
+                <span>Balances</span>
+                <span class="badge">Soon</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Support</div>
+
+            <a href="#" class="menu-item">
+                <i data-feather="help-circle"></i>
+                <span>Aide</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i data-feather="book-open"></i>
+                <span>Documentation</span>
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="user-profile">
+                <div class="user-avatar">NA</div>
+                <div class="user-info">
+                    <div class="user-name">Night Auditor</div>
+                    <div class="user-role">Front Desk</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
+                <i data-feather="log-out"></i>
+                <span>Déconnexion</span>
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+
+    <main class="{% if session.get('authenticated') %}with-sidebar{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // Initialize Feather Icons
+        feather.replace();
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

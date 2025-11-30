@@ -1,0 +1,41 @@
+.DS_Store
+.Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environments
+.env
+.venv/
+venv/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+
+# Dependencies & builds
+node_modules/
+build/
+dist/
+/out/
+target/
+
+# Logs & swaps
+*.log
+*.bak
+*.swp
+
+# Databases & app data
+*.sqlite3
+database/*.db
+
+# Tests / tooling
+.coverage
+.coverage.*
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.ipynb_checkpoints/

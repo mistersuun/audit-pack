@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">
+                    <i data-feather="moon"></i>
+                </div>
+                <h1>Night Audit</h1>
+                <p>Sheraton Laval</p>
+            </div>
+
+            <div class="login-body">
+                <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
+                    {% if error %}
+                    <div class="error-message">
+                        <i data-feather="alert-circle"></i>
+                        {{ error }}
+                    </div>
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label>Entrez votre PIN pour accéder</label>
+                        <div class="pin-input-container">
+                            <input type="text"
+                                   class="pin-digit"
+                                   maxlength="1"
+                                   pattern="[0-9]"
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   data-index="0">
+                            <input type="text"
+                                   class="pin-digit"
+                                   maxlength="1"
+                                   pattern="[0-9]"
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   data-index="1">
+                            <input type="text"
+                                   class="pin-digit"
+                                   maxlength="1"
+                                   pattern="[0-9]"
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   data-index="2">
+                            <input type="text"
+                                   class="pin-digit"
+                                   maxlength="1"
+                                   pattern="[0-9]"
+                                   inputmode="numeric"
+                                   autocomplete="off"
+                                   data-index="3">
+                        </div>
+                        <input type="hidden" name="pin" id="hidden-pin">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block">
+                        <i data-feather="log-in"></i>
+                        Accéder à la checklist
+                    </button>
+                </form>
+
+                <div class="login-footer">
+                    <p>Application réservée au personnel autorisé</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const digits = document.querySelectorAll('.pin-digit');
+    const hiddenPin = document.getElementById('hidden-pin');
+
+    // Focus first input on load
+    digits[0].focus();
+
+    digits.forEach((digit, index) => {
+        // Handle input
+        digit.addEventListener('input', function(e) {
+            // Only allow numbers
+            this.value = this.value.replace(/[^0-9]/g, '');
+
+            if (this.value.length === 1) {
+                // Move to next input
+                if (index < digits.length - 1) {
+                    digits[index + 1].focus();
+                }
+            }
+
+            updateHiddenPin();
+        });
+
+        // Handle backspace
+        digit.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                digits[index - 1].focus();
+                digits[index - 1].value = '';
+            }
+
+            // Handle paste
+            if (e.key === 'v' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                navigator.clipboard.readText().then(text => {
+                    const numbers = text.replace(/[^0-9]/g, '').slice(0, 4);
+                    numbers.split('').forEach((num, i) => {
+                        if (digits[i]) {
+                            digits[i].value = num;
+                        }
+                    });
+                    updateHiddenPin();
+                    if (numbers.length > 0) {
+                        digits[Math.min(numbers.length, 3)].focus();
+                    }
+                });
+            }
+        });
+
+        // Select all on focus
+        digit.addEventListener('focus', function() {
+            this.select();
+        });
+    });
+
+    function updateHiddenPin() {
+        let pin = '';
+        digits.forEach(d => pin += d.value);
+        hiddenPin.value = pin;
+    }
+
+    // Initialize Feather Icons for this page
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+});
+</script>
+{% endblock %}
