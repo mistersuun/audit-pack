@@ -1,0 +1,306 @@
+PROCÉDURE – AUDITION DE NUIT – FRONT 
+	•	Échange d’information avec le quart du soir.
+	•	Prendre connaissance du panneau incendie
+	•	Arrivées restantes, si les dépôts sont pris
+	•	Situations clients 
+	•	Ouvrir Empower & GXP (Rester actif en tout temps).
+
+	•	Remplir les imprimantes.
+
+	•	Vérifier les wakeup calls.
+Comparer la section « appel réveil » du « Guide de la réception » avec lien « Espresso » déjà configuré sur Chrome. (Hospitalité / Horaire des appels de réveil) 
+	•	Nom d’utilisateur : reception 	
+	•	Mot de passe : reception
+Si les appels ne sont pas configurés, il faut appuyer sur le dernier bouton en bas à gauche sur la console qui s’appelle « Réveil » puis suivre les instructions.  Le système de réveil automatique ne peut enregistrer qu’un seul appel par chambre.
+
+
+
+	•	Imprimer le Séparateur Daté.
+	•	(Dans Public-Auditeurs-Séparateur date comptabilité). Inscrire la bonne date, imprimer.
+Imprimer la feuille de tournée.
+	•	(Dans Public-Auditeurs-Checklist Tournée Étages). Inscrire la bonne date, imprimer.
+Mettre à jour la météo & imprimer la feuille de déneigement
+	•	(Dans Public-Auditeurs- Entretien Sheraton Laval Hiver). Inscrire la bonne date, imprimer.
+
+	•	Run Pre-Audit Reports (Partie 1)
+Dans lightspeed, choisir l’onglet Night Audit, ensuite appuyez sur Run Pre-Audit Reports:  
+
+Classement des rapports :
+ Room Availability Report : 
+Garder en avant avec les checklists. Jeter après audition, avant l’arrivée de l’équipe AM. 
+In House Guest Report / Order by Room Number: 
+Garder en avant avec les checklists. Jeter après audition, avant l’arrivée de l’équipe AM. 
+Actual Departure Report:
+Vérifier les balances de la colonne « Gst Balance/NGst Balance »et inscrire le problème et corriger si nous le pouvons. Exemple : ( Posté un 40.10 ou un  40.60 pour les petits montant de +/- 1.00$ ), Prendre paiement si réceptionniste oublie ou settle en facture direct  pour ceux qui sont déjà prépayer avec les points Marriott ou prépayer par Expedia . Mettre dans le Séparateur daté en arrière sur bureau des Auditeurs. 
+In House Guest Report / Order by Guest Name: 
+Garder en avant avec les checklists. Jeter après audition, avant l’arrivée de l’équipe AM. 
+Expected Arrival Report / From « date avant audit » : 
+Garder en avant avec les checklists. Jeter après audition, avant l’arrivée de l’équipe AM. 
+Expected Arrival Report / From  « date après audit » :
+Mettre dans le pigeonnier de Mélanie. (1 copie supplémentaire actuellement, conserver en avant avec les checklists. Jeter après audition, avant l’arrivée de l’équipe AM) 
+Complimentary Rooms Report: 
+Verifier les “Market segment” des chambres qui sont sur le rapport pour savoir si elles sont vraiment des chambres complémentaires ou seulement des tarifs à « 0$ ».  Par la suite, marqué sur le rapport « SD » pour le nombre de chambres louées et « CO » pour le nombre de chambre complémentaire. (Ne pas oublier que s’il reste des chambres complémentaires en arrivé, les données vont changer…mais il y en a un autre qui s’imprime durant le changement de date.)
+
+
+
+
+
+
+
+
+	•	Imprimer un in-house list pour Group Delegate Guests, et un pour les Wholesaler Delegates. Ranger ces rapports dans la filière bleu du jour.
+
+Dans Lightspeed (Reports) Chercher le rapport In-house List. Appliquez ces options pour chacun des rapports et imprimer.
+
+      
+
+	•	Faire les clefs pilotes. 
+	•	Imprimer feuille de contrôle FEDEX & Cargojet (Dans Public-Auditeurs-Enregistrement Pilotes) et imprimer feuille de Contrôle UPS que vous allez recevoir par courriel. Changer la date ainsi que les # chambres indiqué (vous fiez à ceux dans Lightspeed pour inscrire leur # chambres sur chaque document).
+	•	Préparer les clés pour chacun d’eux et les rattachées avec documents pour leur arrivée le matin.
+
+
+
+
+
+
+
+
+	•	Imprimer le rapport Room Status Detail. Mettre dans la pile Gouvernante. 
+Dans Lightspeed (Reports) Chercher le rapport Room Status Details. Appliquez ces options et imprimer. Mettre dans la pile de la gouvernante. 
+
+	•	Faire copies du logbook/checklist de la réception. Mettre dans la pile Gouvernante.
+
+	•	Faire les photocopies des 3 pages du cahier de la réception. Mettre dans la pile de la gouvernante.
+
+	•	Vérifier Folio Amérispa.
+
+	•	Aller dans l’onglet « Cashiering » et trouver le compte AMERISPA. S’il y a des transactions, SVP faire le paiement en facturation directe. 
+ 
+	•	Imprimer le folio. Faire une photocopie de la facture originale de Positouch et brocher ensemble. Mettre dans le séparateur daté.
+
+	•	Faire les contrats Banquets.
+
+	•	L’auditeur qui travaille à l’arrière va fournir les factures POSitouch qui sont fermés dans des comptes maîtres. Veuillez faire des photocopies de celles-ci. Remettre les factures originales dans le tirroir en dessous du 7e étage.
+	•	Aller dans le menu « Cashering » de Lightspeed. Imprimer 1 copie de facture des comptes maîtres qui concordent avec les factures POSitouch remises. Assurez-vous que vous avez tous les photocopies des Factures Positouch qui apparaissent dans le compte maître. Sinon vous devez les ré imprimer avec l’aide de Positouch, prendre le # facture manquante dans le folio et la réimprimer à la Spesa.
+	•	Brocher les factures Lightspeed & les copies des factures Positouch pour chaque groupe séparément. Les mettre dans le séparateur daté.
+
+
+
+
+
+
+	•	Ajuster le folio Internet. 
+Aller dans Reports (dans Lightspeed) et imprimer le « Cashier Detail » 36 – Internet 1 – Internet, Pour voir les chambres qui ont été facturé pour des charges Internet durant la journée. 
+	•	Sélectionnez les options suivantes : 
+
+	•	Vérifier ensuite ceux qui ont l’Internet inclus (membre BonVoy Gold et supérieur).  Transférer les charges Internet de ceux inclus dans le compte « Marriott Internet. 
+	•	Pour ceux qui ne sont pas Membre Bonvoy Gold ou supérieur et qui sont chargé plus que 4.95$, nous devons canceller la charge dans light speed avec le X Rouge et reposté un 36-Internet 1-Internet a 4.95$).
+	•	Une fois toutes les charges appropriées transférés, ajuster le compte « Marriott Internet » en utilisant le 36 – Internet 5 – Adj Internet pour mettre le compte à « 0 ».  
+
+
+
+Imprimer une copie du folio et aller imprimer le « Cashier Detail » 36 – Internet, 5 – Adj Internet. Brocher ensemble et remettre à votre collègue.
+
+	•	Préparer la liste des événements de demain et faire les clefs.
+
+(Dans Public-Auditeurs-CLES BANQUETS)
+
+	•	Inscrire les événements du jours et les informations respectives selon les salles attitrés et imprimer la feuille.
+	•	Préparé les clefs à l’aide de Saflok, en choissisant l’option Latch-Unlatch.
+
+	•	Faire les pourboires journaliers.
+
+	•	Ouvrir le fichier Excel POD avec la date du mois en cours (Dans Audition K-POURBOIRE 2024).
+	•	Prendre la feuille de déclaration de pourboires du VNC (la personne qui fait le back sera en mesure de te la donner). 
+	•	Sur la feuille de déclaration la colonne qui t’intéresse c’est la deuxième colonne, soit celle qui s’appelle Sales Net of Tax.
+	•	Tu vas entourer le montant de toute personne QUI NE SONT PAS DES SERVEURS (Spesa, MD, Réception).
+	•	Il faut prendre le montant total de la deuxième colonne et l’entrer dans le fichier excel sur la ligne #82, soit entre les 2 lignes inscrites 0.00.
+
+	•	Avec la formule tu vas soustraire du montant total, tous les montant entourer sur la feuille de déclaration. Exemple : =1000-25-65-85-35 etc.
+	•	Lorsque le calcule est complet, il y aura un nouveau montant. Le nouveau montant doit correspondre au montant total des petites feuilles remplis par les serveurs (la personne qui fait le back sera en mesure de te donner ces feuilles.)
+	•	Le montant des petites feuilles est associé à un nom sur la feuille de déclaration de pourboire. Tu dois t’assurer que les montants sur les petites feuilles correspondent au montant à coter des noms QUI N’ONT PAS ÉTÉ ENCERCLER.
+	•	Si en additionnant les montants des gens non entourés tu trouves exactement le même total que dans le fichier Excel.
+	•	Les montants apparaissant dans la colonne DÉCLARATION DES VENTES PAR EMPLOYÉ de la petite feuille des serveurs doivent être retranscrits dans la colonne VENTES du fichier Excel.
+	•	Les montants apparaissant dans la colonne DECLARATION DES POURBOIRES PAR EMPLOYÉ de la petite feuille des serveurs doivent être retranscrits dans la colonne POURBOIRS du fichier Excel.
+
+	•	Lorsque votre collègue est prêt, débuter le Part 2.
+
+Dans lightspeed, choisir l’onglet Night Audit, ensuite appuyez sur : 
+
+Lorsque Lightspeed se fermera, reconnectez-vous pour poursuivre avec la prochaine étape : 
+
+
+*Voir annexe à la fin du cahier pour le classement des documents*
+
+	•	Imprimer le No Posting Allowed Report. 
+Dans Lightspeed (Reports) Chercher le rapport No Posting Allowed. Appliquez ces options et imprimer. Mettre dans la pile du restaurant. 
+
+
+
+	•	Imprimer un rapport Guest List – Charge All. 
+Dans Lightspeed (Reports) Chercher le rapport In-house List. Appliquez ces options et imprimer. Mettre dans la pile du restaurant.
+
+
+
+	•	Imprimer le rapport Allotment.
+
+Dans Lightspeed (Reports) Chercher le rapport Allotment Overview. Appliquez ces options (49 jours) et imprimer. Mettre dans la pile du DBRS.
+
+
+
+
+
+
+
+
+
+	•	Imprimer Rapport Inhouse avec Spécial service G4 (3x pour Piles DBRS, Auditeurs et Restaurant)
+
+Dans Lightspeed (Reports) Chercher le rapport In-house List. Appliquez ces options et imprimer. Mettre dans les piles respectives.
+
+ 
+	•	Imprimer Rapport Inhouse avec Spécial service G4 + CL (2x pour Piles Superviseur Réception & Restaurant)
+
+Dans Lightspeed (Reports) Chercher le rapport In-house List. Appliquez ces options et imprimer. Mettre dans les piles respectives. 
+
+	•	Prendre les 5 copies du High Balance et faires les vérifications/inscrire les notes sur chaque feuille (Pigeonnier de M.Pazzi, M. Meunier, Roula, Séparateur daté, & Pile Superviseur Réception).
+
+Allez dans chaque réservation et faire un paiement pour voir si la carte fonctionne. Ensuite appuyez sur le X rouge. 
+
+
+	•	Faire les départs après part 2. 
+	•	Envoyé les Plug in par courriel avant 5h30am à la Gouvernante, SAC et Directrice de Réception.
+
+	•	Il faut contre vérifier le cahier de la réception ainsi que lightspeed. À noté que tous les pilotes en maisons devraient apparaitre sur le courriel. Les pilotes faisant un départ en fin de journée devraient aussi y apparaitre. Merci d’Y mettre le plus d’information possible.
+	•	Assurez-vous de faire les départs après Part 2 avant d’envoyer ce courriel pour éviter des erreurs.
+	•	Envoyer sous ce format à ces destinataires SVP : 
+
+
+	•	Faire la fermeture/facturation de la machine de vin (lounge). 
+	•	Ouvrir Enoclient 
+Nom d’utilisateur : Reception 
+Mot de passe : 1234
+
+	•	Cliquer sur statistics et selectionner report management dans le menu déroulant 
+
+
+	•	Selectionner Sheraton yesterday and today’s tasting puis cliquer sur load
+
+
+	•	Si la page est vide il n’y a pas de vin a charger. Si la page contient une transaction de vin cliquer sur le petit carré rouge pour imprimez la page
+
+	•	Pour faire la facturation du vin, il faut aller au restaurant sur l’écran positouch et sélectionner la page Club Lounge, choisir le bon vin, et le charger à la chambre. *Attention de bien vérifier l’heure à laquelle il a été consommer et voir si c’est bien envoyé au bon client. Sinon, faire le transfert dans Lightspeed.
+
+	•	Faire la facturation de no show + les feuilles ajustements.
+
+	•	Allez dans chaque réservation no-show et faire Add to List, Post Charge :
+
+	•	Ensuite prendre le paiement pour les frais et imprimer une copie de la facture :
+
+	•	Faire une feuille d’ajustement et brocher ensemble, remettre aux superviseurs.
+
+	•	Imprimer RESOB x 9 copies (Pigeonnier M.Pazzi, M. Dacosta, M.Meunier, Melanie, Jerome, Cuisine, Ventes, & Pile Superviseur Réception, Pile Restaurant).
+
+Dans Lightspeed (Reports) Chercher le rapport Reservations on the Books. Appliquez ces options (365 jours) et imprimer. Mettre dans les pigeonniers respectifs.
+
+ 
+
+	•	Placer les journaux
+
+	•	Retirer les anciens et garder seulement la première page du journal de montréal. Les laisser sous le bureau des superviseurs.
+	•	Placer les nouveaux (2 de chaques journaux au lounge, le reste à la Spesa).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CLASSEMENT DU CHANGEMENT DES PARTS
+House Count Report : DBRS
+		Page blanche: scrap
+		Availability Rebuild Exception Report: Auditeur
+		Qualifier Queuename = : scrap
+		Detail Ticket Report: Auditeur (tous broché ensemble dans l’ordre d’impression)
+Daily Cash Out Report : Auditeur (l’avant dernière page For All Cashiers sur le dessus puis tous broché)
+Auditeur :  tous broché ensemble dans l’ordre d’impression avec le « Advance Deposit Balance Sheet » sur le dessus.
+Auditeur :  tous broché ensemble dans l’ordre d’impression avec le « Advance Deposit Balance Sheet » sur le dessus.
+		Deposits Received
+		Deposits Applied Today
+		Deposits Not Received Report
+		Room Post Audit Report : Auditeur (broché)
+Room Post Audit Report : Dossier rouge sur le bureau des auditeurs en ordre de date la nouvelle sur le dessus.  Il y a 2 dossiers, du 1 au 15 et du 16 au 31. (broché)
+Room Revenue Report : Réception (broché) prendre le Total de « # of rooms » pour SD sur « Complimentary Rooms report ».  Il y en a un qu’on a mis de côté un peu plus tôt en classant le Part 1 et il y en aura 1 autre dans 4 rapports.
+		Cutoff Date Report: Réception
+Credit Cards Not in BLT File: faire une pile pour les rapports des cartes de crédits et banques.  Elle ira sur Auditeur quand nous aurons classé tous nos rapports.  Pour le moment, on les met de côté avec le « Credit Cards Not in BLT File » sur le dessus.
+		Guest History Exception Report: Réception
+Complimentary Rooms Report: reprendre celui qui était dans part 1. Transcrire les informations (SD et CO). 1 va sur Auditeur et l’autre va sur DBRS.  S’assurer qu’ils sont identiques.  S’ils ont une différence, c’est normalement celui qui a été imprimé du durant le changement de date qui sera bon.  On fera une photocopie de celui-là dans ce cas pour avoir les 2 copies nécessaires.
+		Availability Rebuild Exception Report: Réception
+		Credit Cards Not in BLT File: pile des cartes de crédits et banques.
+		High Balance Report : pigeonnier Melanie St Germain
+		High Balance Report : pigeonnier M. Meunier
+		High Balance Report : pigeonnier Roula
+High Balance Report : Dans le Séparateur daté avec l’« Actual Departure Report » sur le bureau des auditeurs.
+High Balance Report : la pile de rapports sur le bureau des superviseurs.  Avec le In-House List avec le special service « CAR »
+Expected Departurs Report :  Réception (broché)
+Out Of Order Report :  Réception (broché)
+Off Market Report : Réception (broché)
+No Show Report : DBRS (ne pas brocher)
+No Show Report : Dans le Séparateur daté avec l’« Actual Departure Report » sur le bureau des auditeurs.
+Market Segment Analysis : garder seulement les 2 premières pages.  Il faut faire une photocopie de la page 1.  La photocopie ira dans le pigeonnier Comptabilité.  Les originaux iront sur la pile DBRS.
+Daily Revenue Report : faire une photocopie de la page 1.  La photocopie de la page 1 ira sur la pile DBRS.  Les 7 pages originales doivent être brochées ensemble et iront sur la pile Auditeur.
+Front Office Folio Transferred Report: il faut la mettre de côté.  Elle fera partie de la pile des A/R qui sera mis sur la pile Auditeur à la fin du classement des papiers.
+Guest Ledger Summary Report: prendre la dernière page avec les totaux et la brocher sur le dessus.  Si les lignes de totaux sont sur 2 pages, nous mettons la dernière sur le dessus et l’avant-dernière en 2e page.  Le document une fois broché ira sur la pile Auditeur.
+Invoice Register – Detail Report : il faut la mettre de côté avec le « Front Office Folio Transferred Report ».  Elles feront partie de la pile des A/R qui sera mis sur la pile Auditeur à la fin du classement des papiers.
+Accounts Receivable Exception Report : il faut la mettre de côté avec le « Front Office Folio Transferred Report ».  Elles feront partie de la pile des A/R qui sera mis sur la pile Auditeur à la fin du classement des papiers.
+Commercial Firm Tracking Purge Processing and Report: Auditeur
+A/R Summary Report: il faut la mettre de côté avec le « Front Office Folio Transferred Report ».  Elles feront partie de la pile des A/R qui sera mis sur la pile Auditeur à la fin du classement des papiers. La page « A/R Summary Report » ira sur le dessus de la pile à la fin avant d’être broché.  
+Bank Night Audit Status Report: faire une pile pour les rapports des cartes de crédits et banques.  Elle ira sur Auditeur quand nous aurons classé tous nos rapports.  Pour le moment, on les met de côté avec le « Credit Cards Not in BLT File » sur le dessus.
+Room Upsell Revenue and Statistics Report:  Réception
+Accounts Receivable Validation Report:  il faut la mettre de côté avec le « Front Office Folio Transferred Report ».  Elles feront partie de la pile des A/R qui sera mis sur la pile Auditeur à la fin du classement des papiers. La page « A/R Summary Report » ira sur le dessus de la pile à la fin avant d’être broché.  
+Expected Arrival Report : Réception (broché)
+Departures / Arrivals / Stayovers : pile de la Gouvernante sur le classeur gris à côté de la tablette.
+Departures / Arrivals / Stayovers : DBRS  
+Auditeur
+SCRAP
+Réception
+DBRS
+Pigeonnier
+Séparateur daté
+Dossier rouge sur le bureau auditeur
+Bureau des superviseurs
+Gouvernante sur le classeur
+
+Room Post Audit Report : Dossier rouge sur le bureau des auditeurs  Market Segment Analysis (page 1) : pigeonnier Comptabilité
+High Balance Report : pigeonnier M. Pazzi
+	High Balance Report : pigeonnier M. Meunier
+High Balance Report : pigeonnier J-P Pouliot 
+High Balance Report : Dans le Séparateur daté avec l’« Actual Departure Report » sur le bureau des auditeurs.
+No Show Report : Dans le Séparateur daté avec l’« Actual Departure Report » sur le bureau des auditeurs.
+1 – Brocher la pile des cartes de crédits avec le rapport « Credit Cards Not in BLT File » sur le dessus.  Mettre le document sur la pile Auditeur.
+2 – Brocher la pile des A/R avec le rapport « A/R Summary Report » sur le dessus.  Mettre le document sur la pile Auditeur.
+3 – Attacher avec un trombone la pile Réception et la mettre avec l’autre pile sur le Bureau des superviseurs dans laquelle il y a le « In-House List avec special CAR. »
+4 – À partir de LighSpeed, imprimer le rapport « Allotment Overview » et le mettre sur la pile DBRS.
+
+
+
+
+5 – Faire une photocopie de la pile DBRS au complet avec le « Departures / Arrivals / Stayovers » sur le dessus.  Mettre les copies de côté mais les garder séparer.
+
+6-Sur le rapport In house avec Special service G4, il faut faire le total du nombre de « Guest » puis multiplier le total par 10$.  Si le total du nombre de client est « 0 », (simplement marquer « 0 ».)
+
+1 X va sur la pile Auditeur	1 X va sur la pile DBRS original	1 X va sur la pile DBRS copie
+7 – Attacher avec un trombone chacune des piles DBRS.  Elles vont toutes les 2 sur le bureau des auditeurs.
+8 – Prendre la pile Auditeur et la mettre sur le bureau des auditeurs.
+

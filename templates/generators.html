@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateurs de Documents - Night Audit</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+        }
+
+        .nav {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 0 10px;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .nav a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .generators-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .generator-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .generator-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .generator-card p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .event-list {
+            margin-bottom: 15px;
+        }
+
+        .event-item {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .event-item button {
+            width: auto;
+            padding: 5px 10px;
+            background: #e74c3c;
+            margin-top: 5px;
+        }
+
+        .add-event-btn {
+            background: #27ae60;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Générateurs de Documents</h1>
+
+        <div class="nav">
+            <a href="/">← Retour à la Checklist</a>
+        </div>
+
+        <div class="generators-grid">
+            <!-- Séparateur Date -->
+            <div class="generator-card">
+                <h2>📅 Séparateur Daté</h2>
+                <p>Génère le séparateur daté pour organiser les documents de la nuit.</p>
+                <form id="form-separateur">
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" required>
+                    </div>
+                    <button type="submit">Générer</button>
+                    <div class="message" id="msg-separateur"></div>
+                </form>
+            </div>
+
+            <!-- Checklist Tournée -->
+            <div class="generator-card">
+                <h2>🏢 Checklist Tournée Étages</h2>
+                <p>Génère la feuille de tournée de sécurité des étages.</p>
+                <form id="form-tournee">
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" required>
+                    </div>
+                    <button type="submit">Générer</button>
+                    <div class="message" id="msg-tournee"></div>
+                </form>
+            </div>
+
+            <!-- Entretien Hiver -->
+            <div class="generator-card">
+                <h2>❄️ Feuille Entretien Hiver</h2>
+                <p>Génère la feuille d'entretien avec la météo et le déneigement.</p>
+                <form id="form-entretien">
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" required>
+                    </div>
+                    <button type="submit">Générer</button>
+                    <div class="message" id="msg-entretien"></div>
+                </form>
+            </div>
+
+            <!-- Clés Banquets -->
+            <div class="generator-card">
+                <h2>🔑 Clés Banquets</h2>
+                <p>Génère la feuille de contrôle des clés pour les événements banquets.</p>
+                <form id="form-banquets">
+                    <div class="form-group">
+                        <label>Date:</label>
+                        <input type="date" name="date" required>
+                    </div>
+
+                    <div class="event-list" id="event-list"></div>
+
+                    <button type="button" class="add-event-btn" onclick="addEvent()">+ Ajouter un événement</button>
+                    <button type="submit">Générer</button>
+                    <div class="message" id="msg-banquets"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.querySelectorAll('input[type="date"]').forEach(input => {
+            input.valueAsDate = new Date();
+        });
+
+        let eventCounter = 0;
+        const events = [];
+
+        function addEvent() {
+            const eventId = eventCounter++;
+            const eventList = document.getElementById('event-list');
+
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+            eventItem.id = `event-${eventId}`;
+            eventItem.innerHTML = `
+                <div class="form-group">
+                    <label>Salon:</label>
+                    <input type="text" name="salon-${eventId}" placeholder="ex: Aut-Vimont" required>
+                </div>
+                <div class="form-group">
+                    <label>Compagnie:</label>
+                    <input type="text" name="compagnie-${eventId}" placeholder="ex: SAPUTO" required>
+                </div>
+                <div class="form-group">
+                    <label>Heure:</label>
+                    <input type="text" name="heure-${eventId}" placeholder="ex: 08:00-13:00" required>
+                </div>
+                <div class="form-group">
+                    <label>Responsable:</label>
+                    <input type="text" name="responsable-${eventId}" placeholder="ex: JOANNA KOLANKAWSKA" required>
+                </div>
+                <button type="button" onclick="removeEvent(${eventId})">Supprimer</button>
+            `;
+
+            eventList.appendChild(eventItem);
+            events.push(eventId);
+        }
+
+        function removeEvent(eventId) {
+            document.getElementById(`event-${eventId}`).remove();
+            const index = events.indexOf(eventId);
+            if (index > -1) events.splice(index, 1);
+        }
+
+        // Initialize with one event
+        addEvent();
+
+        // Form handlers
+        async function handleFormSubmit(formId, endpoint, msgId) {
+            const form = document.getElementById(formId);
+            const msg = document.getElementById(msgId);
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const button = form.querySelector('button[type="submit"]');
+                button.disabled = true;
+                button.textContent = 'Génération...';
+
+                let data = { date: form.querySelector('input[name="date"]').value };
+
+                // Special handling for banquets form
+                if (formId === 'form-banquets') {
+                    data.events = [];
+                    events.forEach(eventId => {
+                        const salonInput = form.querySelector(`input[name="salon-${eventId}"]`);
+                        if (salonInput) {
+                            data.events.push({
+                                salon: salonInput.value,
+                                compagnie: form.querySelector(`input[name="compagnie-${eventId}"]`).value,
+                                heure: form.querySelector(`input[name="heure-${eventId}"]`).value,
+                                responsable: form.querySelector(`input[name="responsable-${eventId}"]`).value
+                            });
+                        }
+                    });
+                }
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+
+                        msg.className = 'message success';
+                        msg.textContent = '✓ Document généré avec succès!';
+                        msg.style.display = 'block';
+                    } else {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Erreur lors de la génération');
+                    }
+                } catch (error) {
+                    msg.className = 'message error';
+                    msg.textContent = '✗ ' + error.message;
+                    msg.style.display = 'block';
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Générer';
+                    setTimeout(() => { msg.style.display = 'none'; }, 5000);
+                }
+            });
+        }
+
+        // Initialize all forms
+        handleFormSubmit('form-separateur', '/api/generators/separateur-date', 'msg-separateur');
+        handleFormSubmit('form-tournee', '/api/generators/checklist-tournee', 'msg-tournee');
+        handleFormSubmit('form-entretien', '/api/generators/entretien-hiver', 'msg-entretien');
+        handleFormSubmit('form-banquets', '/api/generators/cles-banquets', 'msg-banquets');
+    </script>
+</body>
+</html>

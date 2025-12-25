@@ -31,7 +31,7 @@
         </div>
 
         <div class="sidebar-menu">
-            <a href="{{ url_for('checklist.index') }}" class="menu-item active">
+            <a href="{{ url_for('checklist.index') }}" class="menu-item {% if request.path == url_for('checklist.index') %}active{% endif %}">
                 <i data-feather="layout"></i>
                 <span>Dashboard</span>
             </a>
@@ -39,10 +39,13 @@
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-title">Outils</div>
 
-            <a href="#" class="menu-item disabled" title="Bientôt disponible">
+            <a href="{{ url_for('checklist.documentation') }}" class="menu-item {% if request.path.startswith('/documentation') %}active{% endif %}">
+                <i data-feather="book-open"></i>
+                <span>Documentation</span>
+            </a>
+            <a href="{{ url_for('rj.rj_page') }}" class="menu-item {% if request.path.startswith('/rj') %}active{% endif %}">
                 <i data-feather="file-text"></i>
-                <span>Documents</span>
-                <span class="badge">Soon</span>
+                <span>Gestion RJ</span>
             </a>
             <a href="#" class="menu-item disabled" title="Bientôt disponible">
                 <i data-feather="bar-chart-2"></i>
@@ -58,13 +61,13 @@
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-title">Support</div>
 
-            <a href="#" class="menu-item">
+            <a href="{{ url_for('checklist.faq') }}" class="menu-item {% if request.path.startswith('/faq') %}active{% endif %}">
                 <i data-feather="help-circle"></i>
-                <span>Aide</span>
+                <span>FAQ</span>
             </a>
-            <a href="#" class="menu-item">
-                <i data-feather="book-open"></i>
-                <span>Documentation</span>
+            <a href="{{ url_for('checklist.documentation') }}" class="menu-item {% if request.path.startswith('/documentation') %}active{% endif %}">
+                <i data-feather="file-text"></i>
+                <span>Guides</span>
             </a>
         </div>
 
@@ -73,9 +76,13 @@
                 <div class="user-avatar">NA</div>
                 <div class="user-info">
                     <div class="user-name">Night Auditor</div>
-                    <div class="user-role">Front Desk</div>
+                    <div class="user-role">{{ session.get('user_role', 'Auditor')|capitalize }}</div>
                 </div>
             </div>
+            <a href="#" onclick="changeRole()" class="menu-item" style="color: #6c757d;">
+                <i data-feather="users"></i>
+                <span>Changer Poste</span>
+            </a>
             <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
                 <i data-feather="log-out"></i>
                 <span>Déconnexion</span>
@@ -91,6 +98,11 @@
     <script>
         // Initialize Feather Icons
         feather.replace();
+
+        function changeRole() {
+            fetch('/api/clear-role', { method: 'POST' })
+                .then(() => window.location.href = '/');
+        }
     </script>
     {% block scripts %}{% endblock %}
 </body>

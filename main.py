@@ -3,6 +3,8 @@ from flask import Flask, redirect, url_for
 from config.settings import Config
 from database import db
 from routes import auth_bp, checklist_bp
+from routes.generators import generators_bp
+from routes.rj import rj_bp
 
 def create_app():
     app = Flask(__name__)
@@ -17,6 +19,8 @@ def create_app():
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(checklist_bp)
+    app.register_blueprint(generators_bp)
+    app.register_blueprint(rj_bp)
 
     # Create tables
     with app.app_context():

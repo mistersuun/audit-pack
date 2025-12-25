@@ -1,0 +1,728 @@
+
+
+
+
+FORMATION 
+AUDITEUR DE NUIT
+BACK
+
+
+
+
+Mise à jour 19 décembre 2024
+
+
+MISE EN PLACE DE L’ESPACE DE TRAVAIL
+Échange d’information avec le superviseur.
+Vérification des courriels.
+Vérification du panneau d’incendie.
+Nettoyer le bureau, l’équipement de travail et organiser son espace de travail.
+Ouvrir le fichier EXCEL appelé RJ de la date d’hier, faire enregistrer sous et sauvegarder le document en changeant la date au jour actuel.
+Dans l’onglet « Contrôle » du RJ mettre à jour la date et le nom de l’auditeur
+Effacer les onglets RECAP, TRANSELECT et GEAC/UX
+
+TRIAGE DES PAPIERS, VÉRIFICATION DES MONTANTS DÉPOSÉS ET DOCUMENTS
+Ramasser les papiers de la journée dans le panier sur les caisses.
+Séparer les papiers de la réception (enveloppe grise/brune) et ceux du F&B (enveloppes bleus)
+Trier les papiers du F&B par mode de paiement :
+               SUR LA TABLETTE 
+Débit
+Visa
+MasterCard
+AmericanExpress
+Forfait
+Admin & Hotel Prom
+Rapport journalier des serveurs
+Bordereaux de dépôt
+DANS LE 2e TIRROIR BLANC
+Séparer par étage dans le tiroir 
+Compte maître (Faire une pile banquet et remettre à la personne du front)
+
+Séparer les caisses des réceptionnistes, les relevés de dépôt, des feuilles d’ajustement, des rapports POSitouch et des factures POSitouch. 
+
+Vérifier les Details Tickets (1-99 et all Sub departments) :
+
+
+Imprimer le cashier detail de chaque département avec code de réceptionniste.
+Pour settlements, imprimer seulement les paiements interacs et les chèques s’ils en n’a. (98-13) (98-14) séparément.
+
+Compléter l’onglet « Due Back » du fichier Excel RJ avec les rapports de caisse des réceptionnistes.
+Sur la 1e ligne de la date, inscrire le dueback précédant de chaque employé (en négatif)
+Sur la 2e ligne de la date, inscrire le dueback d’aujourd’hui, soit total de chaque employé (en positif)
+			Tel qu’incrit sur leur rapport de caisse :
+			
+
+Lorsque tous les serveurs ont terminé leur quart et ont récupérer leurs pourboires, nous pouvons fermer le compte des « Dépôt restaurant » (là où sont posté les remboursements serveurs).
+Aller dans le menu « Cashiering »  dans LightSpeed
+Faire un « post » 
+
+
+
+
+
+Imprimer une copie du folio puis refermer le folio.
+Mettre la copie du « Cashier Detail » du code 90.2 sur le dessus, suivi par les copies des rapports de caisse POSitouch des serveurs signés dans l’ordre du Cashier Detail et suivi par la copie du folio « Depot Restaurant ».
+Encercler et signer le total du « Cashier Detail »
+Encercler et signer la balance à 0$ du folio « Depot restaurant »
+
+COMPLÉTER LES ONGLETS NETTOYEUR ET SOMM NETTOYEUR DANS LE RJ (s’il y avait du nettoyage à sec)
+Utiliser le rapport remis par Daoust (jaune normalement) pour compléter l’onglet « Valet » en premier temps et ensuite et l’onglet « Somm_valet » dans le fichier Excel RJ.
+
+FERMER LES TERMINAUX, IMPRIMER LA LISTE DES UTILISATEURS SPESA ET L’ÉTABLISSEMENT 
+Aller à la réception, au bar, au service aux chambres et au banquet (si utilisé) pour fermer les terminaux Moneris.
+
+Aller à un terminal de POSitouch pour imprimer le rapport « Établissement » 
+Le terminal de la Spesa se ferme automatiquement à 3h00. Il faut aller récupérer l’information sur VNC :
+Se connecter sur VNC : 
+Aller dans CloseBATCH
+Sélectionner le dernier document publié et imprimer le document. 
+*Porter une attention particulière si vous voyez des lots qui ont été fermé en double à une heure inhabituel à la date d’aujourd’hui. *
+
+
+COMPLETER LE RAPPORT ADMIN/HOTEL PROM)
+Aller sur le bureau et cliquer sur l’icône HP du mois en cours
+Cliquer sur la flèche à côté de Date, désélectionner la date et sélectionner « VIDE » puis cliquer sur 
+
+Dans la colonne « Date », inscrire la date de la journée selon le nombre de factures que vous avez en ADMIN ou HOTEL PROM.
+
+Compléter les informations pour chacune des factures fermées ADMIN ou HOTEL PROM
+
+
+DÉFINITION DES COLONNES :
+Date : date de la facture (devrait toujours être celle avant minuit)
+Area : menu déroulant pour choisir le nom du département ex. : Piazza
+Nourriture : additionner tous les montants de nourriture ce qui inclus la nourriture, les jus, l’eau, tous les types de café
+Boisson : Additionner tous les forts, spiritueux et mix comportant de l’alcool.
+Bière : Additionner toutes les sortes de bières (tant les locales, les importés que les microbrasseries)
+Vin : Additionner tous les vins (vin blanc, vin rouge, vin rosé, vin mousseux, champagne…)
+Minéraux : Additionner tout ce qui a des bulles mais qui n’est alcoolisé. (Boisson gazeuse, eau minérale, Perrier, San pelligrino, Aquafina pétillant, Bubly, etc…)
+Tabagie : cette colonne reste vide, tout mettre les factures tabagie dans la colonne nourriture
+Autre : plus rare mais tout ce qui ne fait pas partie des autres catégories.  Souvent il s’agit de frais de banquet (ex. : location de salle)
+Pourboire : mettre le pourboire facturé (s’il y en a)
+Paiement : sélectionner dans le menu déroulant de la ligne soit ADMINISTRATION ou PROMOTION
+Total : c’est une formule automatique.  Elle sert à vérifier le total de la facture POSitouch avec les montant saisi.
+Raison : Transcrire ce qui est écrit dans le « memo » sur la facture ou à la main qui peut expliquer la raison que la facture est Hotel Promotion ou Admin.
+Autorisé par : Écrire le nom du maître d’hôtel, du superviseur ou du responsable de la Spesa qui a signé la facture. (À noter que parfois ils ne signent pas si la facture a été faite sous leur nom)
+
+
+
+
+
+Aller dans l’onglet « Journalier »
+Aller dans « Données » puis cliquer sur « actualiser tout ».
+Cliquer sur le menu déroulant de la date, sélectionner la date du jour puis cliquer sur ok
+Imprimer la page en appuyant sur les touches Ctrl + P
+Aller dans l’onglet « Donnée »
+Cliquer sur le menu déroulant de la date pour désélectionner le « VIDE », sélectionner la date de la journée puis cliquer sur « OK »
+
+Imprimer une copie en appuyant sur les touches Ctrl + P
+Sauvegarder et refermer le fichier.
+Attacher les factures fermées ADMINISTRATION et HOTEL PROMOTION avec les 2 pages Excel avec un trombone.  Mettre le tout à droite de l’écran avec les crayons. 
+
+IMPRIMER LE RAPPORT VNC - SALES JOURNAL
+Se connecter à VNC Viewer
+Cliquer sur « Reports and batches », puis sélectionner « Sales Journal Reports », saisir la date avant minuit et cliquer sur « Deposit ».
+
+
+
+
+
+
+
+
+Sélectionner « Server Cashout Totals » et « Print ». Conserver pour prochaine étape.
+
+
+
+COMPLÉTER LE FICHIER EXCEL SD (du mois en cours)
+Aller sur le bureau et ouvrir le dossier SD
+Sélectionner le fichier de la date
+
+Aller dans l’onglet de la date en cours.
+Écrire la date
+Écrire son nom au bas
+Compléter les lignes selon les informations contenu sur la feuille de « SOMMAIRE JOURNALIER DES DÉPÔTS » qui est sur le pad gris.
+Noter les montants inscrit sur positouch par employé/supposé » d’avoir été déposé dans la colonne 
+
+
+Noter les montants inscrit sur la feuille de dépôt (qui ont été mis dans le coffre) dans la colonne 
+
+**Ne pas imprimer le SD maintenant car il faut balancer le RECAP avant.  Il est possible qu’on le modifie pour balancer.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BALANCER L’ONGLET RECAP DU RJ (COMPTANT).
+Imprimer les pages 5 et 6 du Daily Revenue dans LightSpeed
+Marquer le total de variance (tel quel – ou +) du SD
+Marquer le total de Dueback
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+FINIR LES ONGLETS RECAP, DÉPÔT, SETD ET LE FICHIER SD
+
+Imprimer le RECAP
+Transférer les informations du RECAP dans le restant du RJ en cliquant sur
+Imprimer le fichier SD
+Mettre les copies imprimées du RECAP (Top) et du fichier SD (2e) sur le dessus des caisses des réceptionnistes.  
+Prendre la pile et la mettre sous la pile des Cashier Details à gauche du bureau.
+Copier les montants de la colonne « Montant Vérifié » du SD dans l’onglet « Dépôt » du RJ (l’onglet un peu sur la gauche)
+
+Transcrire les informations au sujet des variances (et des remboursements s’il y en a) dans l’onglet SetD du RJ
+
+
+
+BALANCER LE TRANSELECT (CARTES DE CREDIT ET INTERACT)
+Aller dans le fichier Excel RJ et aller dans l’onglet « Transelect »
+Utiliser le rapport POSitouch « Établissement » pour compléter la colonne « N » qui s’appel dans le tableau « POSITOUCH » (EX : INTERAC + PANNE INTERAC)
+Utiliser les rapports des terminaux MONERIS+BATCH POSITOUCH pour compléter les champs appropriés
+
+
+
+
+
+
+
+Sauvegarder le RJ
+Mettre les relevés des fermetures MONERIS sous l’écran des auditeurs.
+
+
+
+
+
+
+
+
+
+
+
+
+
+IMPRIMER ET TRIER LES RAPPORTS POSITOUCH. 
+Cliquer sur l’icône du VNC Viewer 
+Cliquer pour compléter la connexion au serveur. 
+Cliquer sur l’icône du DailySales.
+
+
+Faire les sélections suivantes :
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Cliquer sur « Yes » :
+
+
+
+
+
+Cliquer sur « OK »
+
+
+
+
+
+
+
+
+
+Imprimer 1 fois les 10 pages et 1 fois la première page seulement.
+
+Quitter la page et le système pour générer le DailySales.
+Aller dans le dossier « BATCH » 
+Cliquer pour imprimer 1X sur « ACHETEUR.BAT » et 1 fois sur « AUDIT.BAT »
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Refermer le dossier.
+Aller dans le « Back Office »
+
+
+Cliquer sur « Reports and batches », puis sélectionner « Sales Journal Reports », saisir la date avant minuit et cliquer sur « Deposit ».
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Sélectionner « Memo Listing », « Sales Journals », «…by Costcenter » et cliquer sur Print
+
+
+
+Déselectionner 
+et cliquer OK
+
+
+
+
+
+
+
+
+
+
+
+
+Classer les papiers imprimés :
+
+
+
+
+
+
+BALANCER LES FRAIS DE RESTAURANT FACTURÉ AUX CHAMBRES.
+
+Aller dans LightSpeed imprimer le Cashier Detail dept. : 4 à 28 all sub.
+
+
+
+Prendre les rapports de POSitouch « Memo listing » identifié « Chambre » et celui identifié « Panne lien »  (s’il y a des pannes liens)
+
+Faire le total sur celui panne lien du total des Panne Lien avec le Total Chambre.  Si des ajustements ont été fait directement dans LightSpeed par des usagers LightSpeed, il faut aussi les ajouter (ou les soustraire) au total.
+            Total Panne Lien + Total Chambre + ou - Ajustement LightSpeed = Total LightSpeed
+
+Comparer le total ainsi obtenu avec le total à la fin de « Cashier detail » département 4 à 28 tous les sous-départements
+
+Quand tout balance, prendre les Memo Listing, les mettre sur le dessus du Cashier Details, les brocher ensemble et les mettre à côté du dossier bleu daté sur la tablette.
+
+
+
+
+
+
+
+VÉRIFIER LES CHARGES TÉLÉPHONES
+
+Imprimer le « Cashier Details » des appel locaux (30.1) avec le rapport des appels locaux.
+Imprimer le « Cashier Details » d’appel longue distance (30.2)
+Imprimer le rapport « Call Accounting »
+Brocher les 2 feuilles avec suivi de Call Accounting.
+Mettre le tout sur la pile des « Cashier Detail » sur votre gauche
+*** Même si tous les rapports sont à « 0 », il faut les imprimer quand même et encercler les « 0 »***
+VÉRIFIER LES CHARGES SONIFI 
+
+Aller dans LightSpeed
+Aller dans les rapports pour générer un Cashier Detail avec le Departement 35 et le sous-département 2 
+Mettre le cashier detail sous l’écran de l’ordinateur des auditeurs.
+
+FEUX VERT POUR TOURNER LA NUIT
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+NOUVELLE JOURNÉE
+APRÈS PART
+
+ COMPLÉTER LA 2E PARTIE DE SONIFI
+a)	Imprimer le fichier PDF joint au courriel que l’on reçoit à 03h00am de SONIFI
+b)	Comparer le rapport que vous venez d’imprimer avec le « Cashier Detail » des 35.2 qui est sous l’écran.
+c) 	Compléter l’onglet du RJ qui s’appelle SONIFI si vous avez des charges.
+d)  	Mettre le rapport SONIFI sur le dessus et le « Cashier Detail » en arrière, brocher-les ensemble, et encercler puis initialiser les totaux.
+e)	Mettre les documents sur la pile de « Cashier Detail » sur votre gauche.
+
+COMPLÉTER L’ONGLET INTERNET (JAUNE) DU RJ (mettre les montants avant taxes)
+Prendre le Cashier Detail 36.1 pour compléter la colonne B (Rapport LightSpeed)
+Prendre le Cashier Detail 36.5 pour compléter les colonnes F (ADJ Marriott).
+Prendre les 2 « Cashier Detail » et les mettre sur la pile des « Cashier Detail » sur votre gauche.
+Prendre toute la pile des « Cashier Detail », avec le RECAP, les rapports des dépôts du coffre et les caisses des réceptionnistes et les mettre dans le dossier bleu daté sur la tablette blanche.
+
+DANS LA PILE DE RAPPORTS « AUDITEUR », SORTIR DE LA PILE LES 5 DOCUMENTS SUIVANTS :
+
+
+Mettre la pile DBRS (superviseur réception) de côté.  Vous en aurez besoin pour les statistiques à la fin de l’onglet JOUR et pour le DBRS.
+
+BALANCER LA DERNIERE SECTION DU TRANSELECT ET COMPLETER FREEDOM PAY.
+(compléter la section A et B du Transelect en utilisant le DailyRevenue et le rapport de FreedomPay)
+
+
+Cliquez sur Rapport : 
+
+
+
+Selectionner du Transaction Reports : Transaction Summary by Card Type
+
+Selectionner : Executer
+Aller sur l’onglet: Statut
+
+Ouvrir le fichier Excel en cliquant Télécharger
+Imprimer le document.
+Aller dans l’onglet « TRANSELECT » du fichier Excel RJ pour compléter les colonnes.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+BALANCER L’ONGLET GEAC/UX DU RJ
+
+Utiliser le rapport « Daily Cash Out » pour compléter les 2 lignes de la section DailyCash Out
+
+Compléter la section Daily Revenue
+ avec la page 6 du Daily Revenue
+
+Vérifier si le rapport balance.  S’il y a une variance, 
+vérifier la saisie de donnée.  S’il y a toujours une variance,
+envoyer un courriel à Roula et Mandy pour les informer.  
+Aucune correction possible de notre part sur ce type de
+variance.
+
+
+	
+
+
+
+
+
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Imprimer 1 copie en appuyant sur les Ctrl + la lettre P
+Les 2 pages imprimées doivent être mise face vers l’arrière sous la pile des cartes de crédit.
+***DOCUMENT DES CARTES DE CRÉDIT FINAL : Liste du devant vers l’arrière 
+	1)  Payment Breakdown (Fuseboxe) avec les fermetures des terminaux Moneris broché dessus
+	2)  Settlement Details (Fuseboxe)
+	3)  Pile imprimé par LightSpeed durant l’audition.  Le premier rapport est le « Credit Card Not in BLT File »
+	4)  2 copies du Transelect face vers l’arrière
+	5)  2 pages du GEAC/UX face vers l’arrière
+Une fois assemblé, brocher la pile dans le coin haut à gauche et mettre de côté avec les documents dont vous n’aurez plus besoin d’utiliser de l’audition.
+BALANCER L’ONGLET JOUR DU RJ
+Utiliser le « Departures/Arrivals/Stayovers » de la pile du DBRS pour compléter le nombre de client (colonne CO) ainsi que le nombre de chambre hors service (colonne CP).
+Utiliser les informations écrites à la main du rapport « Complimentary Rooms Report » pour compléter le nombre de chambres occupées (colonne CK) et le nombre de chambres complémentaires (colonne CN)
+Utiliser le montant de «Total Transfers » du « A/R Summary Report » pour compléter la colonne « Transfer to A/R » (colonne CF) - PAYMENT.
+Mettre le « A/R Summary Report » dans la feuille datée sur votre gauche.
+Aller à la colonne D.  Mettre en négatif le « Deposit on Hand Today » du « Advance Deposit Balance Sheet » et le dernier chiffre de la dernière page du Daily Revenue. ( + ou - New Balance)  
+Mettre le « Advance Deposit Balance Sheet » sur la pile des rapports dont vous n’avez plus besoin imprimé durant l’audition.
+Prendre les documents qui sont dans le porte crayon à droite de l’écran.  Vous y trouverez la SALES JOURNAL REPORT FOR…SALES JOURNAL for Entire house.  Ce document est déjà complet et fait généralement 2 pages.  
+
+Il y aura aussi les 2 pages du rapport Excel pour les Hotel Prom ainsi que les rapports de POSitouch Memo Listing « ADMIN » et « HOTEL PROM ».  
+Vous devez brocher les factures POSitouch ADMIN avec le Memo Listing ADMIN.
+Vous devez brocher les factures POSitouch Hotel Prom avec le Memo Listing Hotel Prom.
+Prendre le « Rapport Quotidien des factures Hôtel Promotion » et le mettre sur le dessus.  (Il est imprimé en mode « portrait »)
+Prendre le « Rapport Journalier Hôtel Promotion » et le mettre sur le dessous.  (Il est imprimé en mode « paysage »)  Il faut le mettre face vers l’arrière de la pile
+Brocher le tout au milieu dans le côté gauche.
+COMPLETER LA SECTION « RESTAURATION » DE L’ONGLET JOUR DU RJ : 
+Les colonnes E jusqu’à AJ + AU + AX + AY + BF (compléter onglet Diff_Forfait aussi) + BQ + BR.  Il arrive à l’occasion qu’il y est des frais d’internet dans les banquets, il faut les ajouter dans la colonne AW.
+		Utiliser les rapports suivants pour compléter les colonnes :
+Rapport de POSitouch « SALES JOURNAL for Entire House »
+Tableur Excel « Rapport Quotidien des factures Hôtel Promotion » : soustraire
+Toutes les « Cashier Details » pour les post manuels dans les catégories F&B (rare)
+
+Compléter les autres colonnes en utilisant les informations du Daily Revenue
+AK-AL-AM-AN-AO-AS-AT-AU-AV-AW-AX-AV-AW-AX-AY-AZ-BA-BB-BC-BD-BF-CB-CC
+À noter que parfois, il y a des « Forfait Location de salle » pour certains groupes.  Ils doivent être ajouté au « Location de salle » dans les banquets. (Colonne AG)
+À la fin de la saisi de donnée, la colonne Diff. Caisse (colonne C) devrait être à 0$.  À moins qu’il y a un variance dans le GEC/UX ou une différence dans les paiements de cartes de crédit.
+Aller sur l’onglet « CONTRÔLE » et cliquer sur le bouton 
+
+Mettre les copies imprimées dans les pigeonniers, sur le classeur pour le chef (en semaine seulement), sur le bureau des superviseurs et le « Vérification » sur la pile à gauche avec les papiers du part.
+Prendre les rapports que vous avez utilisé pour compléter l’onglet jour et les mettre sur la pile de documents à gauche.  Le résumé de la séquence est :	
+Rapport Excel « Rapport Journalier » - RJ  (copie Vérification).
+Rapport LightSpeed « Daily Revenue Report »
+Rapport LightSpeed « Advance Deposit Balance Sheet »
+Rapport POSitouch « Sales Journal for Entire house »
+Pile combine des cartes de credit
+Rapport Excel Hotel Prom/Admin (Rap. Quotidien/Factures brochées avec Memo Listing/Rap. Journalier au dos)
+Rapport LightSpeed « Complimentary Report »
+Rapport LightSpeed « Room Type Production » avec le calcul de 10$ de nourriture pour l’étage Club (G4)
+
+
+
+BALANCER LE QUASIMODO
+Aller sur le bureau et aller dans le dossier « Quasimodo » 
+Aller dans le dossier de l’année en cours :
+
+
+Aller dans le dossier du mois en cours :
+
+Copier l’un des fichiers excel et le renommer selon la date de la journée avant audition.
+
+
+
+Changer la date dans la cellule en jaune et au changement de mois changer le mois dans le titre de la colonne aussi
+
+
+
+
+
+
+
+
+
+
+
+
+
+À partir du transelect :
+
+
+
+À partir du RJ :
+
+
+
+
+
+
+
+COMPLÉTER L’ENVELOPPE BLANCHE 
+CONTENU DE L’ENVELOPPE BLANCHE
+Mettre dans le pigeonnier de la comptabilité
+SUR LE DOSSIER BLEU DATÉ :
+Pile de factures POSitouch fermées avec une portion Coupon Vert.
+Pile de factures POSitouch fermées par Cartes Débit/Visa/MasterCard/Amex.
+Pile de factures POSitouch fermées aux chambres ou compte maître avec les readings des serveurs par-dessus
+Rapport POSitouch « Sales Journal | Memo Listings: Bon d’Achat » broché avec les factures POSitouch fermées « Bon D’Achat » sur par-dessus (s’il y en a)
+Rapport POSitouch « Sales Journal | Memo Listings: Certificat Cadeau » broché avec les factures POSitouch fermées « Certificat cadeau » sur par-dessus (s’il y en a)
+Rapport POSitouch « Sales Journal | Memo Listings: Forfait » broché avec les factures POSitouch fermées « Forfait » sur par-dessus (s’il y en a)
+Rapport POSitouch « Daily Sales Report » de 9 pages (avec le rapport POSitouch « Établissement » broché sur le dessus)
+Rapport LightSpeed « Daily Cash Out Report » (broché par Auditeur front lors du classement « All cashier » sur le dessus)
+Rapport LightSpeed « Guest Ledger Summary Report »
+Rapport LightSpeed « Detail Ticket » 
+Rapport LightSpeed « Room Post Audit Report » 
+Rapport LightSpeed « Availability Rebuild Exception Report » 
+Rapport LightSpeed « Commercial Firm » (ne s’imprime plus actuellement)
+Rapport POSitouch « Sales Journal | Payment Totals » 
+Rapport POSitouch « Sales Journal | Memo Listings: Chambre » les chambres + panne lien + cashier detail 4-28 broché ensemble
+DANS LE DOSSIER BLEU DATÉ :
+Rapport Excel « Rapport Journalier » - RJ  (copie Vérification).
+Rapport LightSpeed « Daily Revenue Report »
+Rapport LightSpeed « Advance Deposit Balance Sheet »
+Rapport POSitouch « Sales Journal for Entire house »
+Pile combine des cartes de credit
+Payment Breakdown (imprimé de FuseBox) avec les fermetures des terminaux Moneris broché devant.
+Settlement Details (imprimé de FuseBox)
+Rapport des Pin Pad Tablette 
+Pile des cartes de crédit de LightSpeed avec le « Credit Not in BLT File sur le dessus »
+2 copies du Excel Transelect imprimées (inversée)
+2 pages du Excel GEAC/Ux (inversée)
+Rapport Excel Hotel Prom/Admin (Rap. Quotidien/Factures brochées avec Memo Listing/Rap. Journalier au dos)
+Rapport LightSpeed « Complimentary Report »
+Rapport LightSpeed « Room Type Production » avec le calcul du de 5$ de nourriture pour l’étage Club
+Pile des « Cashier Details » qui ont été brochés avec les feuilles d’ajustements et les factures plutôt
+Rapport Excel « Recap » imprimé
+Rapport Excel « Sommaire Journalier des Dépôts et Surplus et Déficits » (version imprimée avec les variances)
+Tableau imprimé « Sommaire Journalier des Dépôts » (feuille signée des dépôts dans le coffre durant la journée)
+Caisses des réceptionnistes et de Mandy
+Rapport LightSpeed « Group Delegates » et « Wholesalers »
+ALLER PORTER L’ENVELOPPE BLANCHE ET LE PIGEONNIER MOBILE
+
+REMONTER DES PAQUETS DE FEUILLE BLANCHE S’IL EN RESTE MOINS DE 2 PAQUETS
+
+BALANCER LE DBRS.
+Ouvrir les fichiers excel « DBRS formule » et le « DBRS master ».
+Compléter l’onglet « Market Segment » dans le fichier « DBRS formule » en utilisant la colonne « rooms » du Market Segment
+Compléter l’onglet « Daily Rev » dans le fichier « DBRS formule » en utilisant la colonne « Today » du Daily Revenue Report
+Vérifier la vraisemblance des données en vérifiant les ADR dans l’onglet « DBRS ».
+Cliquer sur le bouton « Sélectionner et copier » dans l’onglet « DBRS insertion »
+Aller dans le fichier « DBRS master » dans l’onglet du mois en cours.  Cliquer dans la première cellule de la date avant audit.  Faire un clique de droit sur la souris, sélectionner « collage spéciale… ».  Sélectionner les options suivantes :
+
+
+Utiliser le rapport « House Count » de la pile du DBRS pour compléter ces sections qui est après la zone que vous venez de coller :
+Aller dans l’onglet « Set up » changer la date pour celle avant audit :
+
+Aller dans l’onglet orange « DBRS cover » 
+
+Compléter le montant de revenue de la section « NoShow » du tableau du haut :
+
+Cliquer sur le bouton « Unhide OTB » pour afficher la section en jaune.
+Utiliser la colonne RESV du rapport « Allotement Overview » pour compléter la ligne en jaune « Group OTB ».
+Compléter les autres lignes en jaunes en utilisant le rapport « Departure / Arrival /  Stayover »
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+***LE POINT DE VÉRÉFICATION DE LA SAISIS DE DONNÉE EST LE ADR
+
+
+
+
+		
+	
+
+
+
+
+
+Descendre un peu plus bas pour compléter la section des prévisions des tarifs des autres hôtels.
+
+
+Sauvegarder et fermer l’Excel.
+
+Mettre la pile de documents du DBRS sur le bureau des superviseurs de la réception attaché avec un trombone. (Seulement le TravelClick va retourner sous l’écran de l’ordinateur auditeur)
+
+
+
+
+
+
+
+
+ Annexe : Correction d’une Facture Positouch
+**Ne jamais utilisé la touche Ajustement sur l’écran Menu de Positouch**
+Facture fermer à une chambre ou un Compte Maître :
+    ****(Ne jamais faire Reopen Close Check) ****
+ Écran Gérant  Remboursement InscrireRemboursement Générale  Continue  Remettre pouce (Prochaine Facture sera en Négative). Refaire la Même Facture (elle doit arriver au même montant que celle en positive)   Envoie (Sans fermer la Facture)  Reouvr adds Reprend ta Facture et appuyer sur Transfert add Changer serveur (Mettre le même serveur que la Facture originale pour que son pourboire ne soit pas affecté)  Reprendre Facture avec le bon nom du serveur et Reouvr Paiement (Fermer au même montant avec bon montant de pourboire et à la même chambre ou compte Maître que la Positive) 
+***La Facture est maintenant Annulée, vous repartez à zéro. Le serveur peut alors repuncher sa facture sans l’erreur en question. ***
+Facture Fermer en toute autre forme de Paiement :
+Écran Gérant  Remboursement InscrireReopen close check # Facture  Imp Payé  Faire la correction nécessaire.
+
+Machine Room Service :
+*Faire SYNC* | Machine Réception : | Machines Banquet :
+Numéro de Superviseur = 1
+Mot de passe = 9243661 | Mot de passe = 5683484 | Numéro de Superviseur = 1
+Mot de passe = 1aa66831
+Daily Revenue | Advance Deposit Balance Sheet | A/R Summary Report
+Daily Cash Out | Guest Ledger Summary Report | Guest Ledger Summary Report

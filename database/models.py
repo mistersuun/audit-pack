@@ -10,6 +10,7 @@ class Task(db.Model):
     order = db.Column(db.Integer, nullable=False)
     title_fr = db.Column(db.String(500), nullable=False)
     category = db.Column(db.String(100), nullable=False)  # pre_audit, part1, part2, end_shift
+    role = db.Column(db.String(20), nullable=False, default='front')  # front, back
     is_active = db.Column(db.Boolean, default=True)
 
     # Phase 2: Detailed instructions
@@ -29,6 +30,7 @@ class Task(db.Model):
             'order': self.order,
             'title_fr': self.title_fr,
             'category': self.category,
+            'role': self.role,
             'is_active': self.is_active,
             'description_fr': self.description_fr,
             'steps': json.loads(self.steps_json) if self.steps_json else [],

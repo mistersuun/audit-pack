@@ -87,6 +87,34 @@
                 <!-- Steps loaded via JS -->
             </div>
 
+            <!-- Document Generator Section -->
+            <div id="guide-generator" class="guide-generator" style="display: none;">
+                <div class="generator-header">
+                    <i data-feather="file-plus"></i>
+                    <h3 id="generator-title">Générer le document</h3>
+                </div>
+                <form id="generator-form" onsubmit="handleGenerateDocument(event)">
+                    <div id="generator-fields"></div>
+                    <button type="submit" class="generator-btn" id="generator-submit-btn">
+                        <i data-feather="download"></i>
+                        <span id="generator-btn-text">Générer et télécharger</span>
+                    </button>
+                    <div id="generator-message" class="generator-message"></div>
+                </form>
+            </div>
+
+            <!-- RJ Automation Section -->
+            <div id="guide-automation" class="guide-generator" style="display: none; background-color: #f0f7ff; border: 1px solid #cce5ff;">
+                <div class="generator-header" style="color: #004085;">
+                    <i data-feather="cpu"></i>
+                    <h3 id="automation-title">Automatisation RJ</h3>
+                </div>
+                <div id="automation-content">
+                    <!-- Dynamic content loaded via JS -->
+                </div>
+                <div id="automation-message" class="generator-message"></div>
+            </div>
+
             <button class="guide-action-btn" id="guide-action-btn" onclick="openSystemLink()">
                 <i data-feather="external-link"></i>
                 <span id="guide-action-text">Ouvrir le système</span>
@@ -103,6 +131,10 @@
                 <i data-feather="check"></i>
                 <span id="complete-btn-text">Marquer comme complété</span>
             </button>
+            <button class="next-step-btn" id="next-step-btn" onclick="goToNextStep()">
+                <span>Étape suivante</span>
+                <i data-feather="arrow-right"></i>
+            </button>
         </div>
     </div>
 
@@ -112,11 +144,12 @@
             <div class="resource-card-header">
                 <h3>Vidéo explicative</h3>
             </div>
-            <div class="video-placeholder">
-                <div class="video-play-btn">
+            <div class="video-placeholder" style="position: relative; background: #f5f5f5; border-radius: 8px; padding: 40px 20px; text-align: center;">
+                <div class="video-play-btn" style="opacity: 0.3; margin-bottom: 10px;">
                     <i data-feather="play"></i>
                 </div>
-                <span class="video-label">Tutoriel pas-à-pas</span>
+                <span class="video-label" style="display: block; color: #999; font-size: 14px;">Tutoriel pas-à-pas</span>
+                <span style="display: block; color: #666; font-size: 12px; margin-top: 5px;">Bientôt disponible</span>
             </div>
         </div>
 
@@ -125,23 +158,29 @@
                 <h3>Ressources additionnelles</h3>
             </div>
             <div class="resource-links">
-                <a href="#" class="resource-link">
-                    <i data-feather="file-text"></i>
-                    <span>Documentation Galaxy</span>
+                <a href="{{ url_for('checklist.documentation') }}" class="resource-link">
+                    <i data-feather="book-open"></i>
+                    <span>Documentation & Guides</span>
                     <i data-feather="chevron-right" class="arrow"></i>
                 </a>
-                <a href="#" class="resource-link">
+                <a href="{{ url_for('checklist.faq') }}" class="resource-link">
                     <i data-feather="help-circle"></i>
                     <span>FAQ</span>
                     <i data-feather="chevron-right" class="arrow"></i>
                 </a>
-                <a href="#" class="resource-link">
-                    <i data-feather="book-open"></i>
-                    <span>Guide complet</span>
-                    <i data-feather="chevron-right" class="arrow"></i>
-                </a>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div id="preview-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 id="preview-title" style="margin: 0;">Aperçu</h3>
+            <button onclick="document.getElementById('preview-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div id="preview-content"></div>
     </div>
 </div>
 {% endblock %}
@@ -160,26 +199,39 @@ let completions = new Set();
 let currentTask = null;
 
 async function loadData() {
-    const [tasksRes, shiftRes] = await Promise.all([
-        fetch('/api/tasks'),
-        fetch('/api/shifts/current')
-    ]);
+    console.log("Starting loadData...");
+    try {
+        const [tasksRes, shiftRes] = await Promise.all([
+            fetch('/api/tasks'),
+            fetch('/api/shifts/current')
+        ]);
 
-    tasks = await tasksRes.json();
-    const shiftData = await shiftRes.json();
+        if (!tasksRes.ok) throw new Error(`Tasks API failed: ${tasksRes.status}`);
+        if (!shiftRes.ok) throw new Error(`Shift API failed: ${shiftRes.status}`);
 
-    if (shiftData.completions) {
-        shiftData.completions.forEach(c => completions.add(c.task_id));
+        tasks = await tasksRes.json();
+        console.log(`Loaded ${tasks.length} tasks`);
+        
+        const shiftData = await shiftRes.json();
+        console.log("Shift data loaded", shiftData);
+
+        if (shiftData.completions) {
+            shiftData.completions.forEach(c => completions.add(c.task_id));
+        }
+
+        renderTimeline();
+        updateProgress();
+
+        if (!shiftData.shift) {
+            console.log("No active shift, creating one...");
+            fetch('/api/shifts', { method: 'POST' });
+        }
+
+        feather.replace();
+    } catch (error) {
+        console.error("Error in loadData:", error);
+        alert("Erreur lors du chargement de la checklist: " + error.message);
     }
-
-    renderTimeline();
-    updateProgress();
-
-    if (!shiftData.shift) {
-        fetch('/api/shifts', { method: 'POST' });
-    }
-
-    feather.replace();
 }
 
 function renderTimeline() {
@@ -352,13 +404,15 @@ function openGuide(taskId) {
         systemName.textContent = '';
     }
 
-    // Update action button
+    // Update action button (only if a link is configured)
     const actionBtn = document.getElementById('guide-action-btn');
     const actionText = document.getElementById('guide-action-text');
-    if (currentTask.system_used) {
-        actionText.textContent = `Ouvrir ${currentTask.system_used}`;
+    if (currentTask.system_link) {
+        actionText.textContent = `Ouvrir ${currentTask.system_used || 'le lien'}`;
+        actionBtn.dataset.link = currentTask.system_link;
         actionBtn.style.display = 'flex';
     } else {
+        actionBtn.dataset.link = '';
         actionBtn.style.display = 'none';
     }
 
@@ -377,6 +431,27 @@ function openGuide(taskId) {
 
     // Render category sidebar
     renderGuideSidebar();
+
+    // Show document generator if applicable
+    showGenerator(currentTask.order);
+
+    // Show automation tools if applicable
+    showAutomation(currentTask.order);
+
+    // Update next step button
+    const nextStepBtn = document.getElementById('next-step-btn');
+    // Sort tasks by order to ensure correct sequence
+    const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
+    const currentIndex = sortedTasks.findIndex(t => t.id === currentTask.id);
+    const isLastTask = currentIndex >= 0 && currentIndex === sortedTasks.length - 1;
+
+    if (isLastTask) {
+        nextStepBtn.disabled = true;
+        nextStepBtn.querySelector('span').textContent = 'Dernière étape';
+    } else {
+        nextStepBtn.disabled = false;
+        nextStepBtn.querySelector('span').textContent = 'Étape suivante';
+    }
 
     // Switch views
     document.getElementById('checklist-view').style.display = 'none';
@@ -447,6 +522,27 @@ function closeGuide() {
     currentTask = null;
 }
 
+function goToNextStep() {
+    if (!currentTask) return;
+
+    // Sort tasks by order to ensure correct sequence
+    const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
+    
+    // Find the current task index in sorted array
+    const currentIndex = sortedTasks.findIndex(t => t.id === currentTask.id);
+
+    // Check if there's a next task
+    if (currentIndex >= 0 && currentIndex < sortedTasks.length - 1) {
+        const nextTask = sortedTasks[currentIndex + 1];
+        openGuide(nextTask);
+    } else {
+        // Last task - disable the button or show message
+        const nextStepBtn = document.getElementById('next-step-btn');
+        nextStepBtn.disabled = true;
+        nextStepBtn.querySelector('span').textContent = 'Dernière étape';
+    }
+}
+
 async function toggleTaskFromGuide() {
     if (!currentTask) return;
     const isCompleted = completions.has(currentTask.id);
@@ -463,14 +559,463 @@ async function toggleTaskFromGuide() {
 }
 
 function openSystemLink() {
-    // Placeholder - will open actual system links when configured
-    alert('Cette fonctionnalité ouvrira le système ' + (currentTask?.system_used || 'approprié'));
+    if (!currentTask || !currentTask.system_link) {
+        alert('Aucun lien configuré pour cette tâche.');
+        return;
+    }
+    window.open(currentTask.system_link, '_blank', 'noopener');
+}
+
+// RJ Automation Functions
+function showAutomation(taskOrder) {
+    const section = document.getElementById('guide-automation');
+    const content = document.getElementById('automation-content');
+    const messageDiv = document.getElementById('automation-message');
+    
+    // Clear previous state
+    content.innerHTML = '';
+    messageDiv.style.display = 'none';
+    section.style.display = 'none';
+
+    // Only show RJ automations for Back Office role
+    if (!currentTask || currentTask.role !== 'back') {
+        return;
+    }
+
+    // Define automations for tasks
+    const automations = {
+        1: { // Mise en place (Start)
+            title: 'Initialisation du RJ',
+            html: `
+                <div style="background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h4 style="margin-top:0; color: #004085;">📂 Fichier RJ</h4>
+                    <p style="margin-bottom: 10px; font-size: 0.9em;">Veuillez téléverser le fichier RJ du jour (Rj-DATE.xls) pour activer les fonctions d'automatisation.</p>
+                    
+                    <div id="rj-upload-area">
+                        <input type="file" id="rj-file-input" accept=".xls,.xlsx" style="display: block; margin-bottom: 10px; width: 100%;">
+                        <button class="generator-btn" onclick="uploadRJFile()" style="width: 100%;">
+                            <i data-feather="upload"></i> Téléverser le fichier
+                        </button>
+                    </div>
+                    
+                    <div id="rj-file-info" style="display: none; margin-top: 10px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">
+                        <div style="display: flex; align-items: center; gap: 10px; color: #28a745; font-weight: 500;">
+                            <i data-feather="check-circle"></i>
+                            <span id="rj-status-text">Fichier chargé</span>
+                        </div>
+                        <button class="generator-btn" onclick="document.getElementById('rj-upload-area').style.display='block'; this.parentElement.style.display='none';" style="margin-top: 10px; background: #f8f9fa; color: #666; border: 1px solid #ddd; font-size: 0.8em; padding: 5px;">
+                            Remplacer le fichier
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                        <a href="/api/rj/download" class="generator-btn" style="background: #28a745; text-align: center; text-decoration: none; display: block;">
+                            <i data-feather="download"></i> Télécharger le RJ actuel
+                        </a>
+                        <p style="font-size: 0.8em; color: #666; margin-top: 5px; text-align: center;">
+                            Téléchargez régulièrement pour sauvegarder votre travail.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="rj-actions-area" style="opacity: 0.5; pointer-events: none;">
+                    <p>Une fois le fichier chargé, effacez les onglets pour la nouvelle journée.</p>
+                    <button class="generator-btn" onclick="runRJAutomation('/api/rj/reset')">
+                        <i data-feather="trash-2"></i> Effacer les onglets (Reset)
+                    </button>
+                </div>
+            `
+        },
+        3: { // Due Back / SetD
+            title: 'Synchronisation DueBack',
+            html: `
+                <p>Transférer automatiquement les montants du DueBack vers l'onglet SetD.</p>
+                <div class="generator-field">
+                    <label>Jour du mois (Laissez vide pour auto):</label>
+                    <input type="number" id="rj-day-input" placeholder="ex: 19" style="width: 80px;">
+                </div>
+                <button class="generator-btn" onclick="runSyncDueBack()">
+                    <i data-feather="refresh-cw"></i> Synchroniser DUBACK -> SetD
+                </button>
+            `
+        },
+        8: { // Recap
+            title: 'Saisie Recap (Comptant)',
+            html: `
+                <p>Saisir les montants pour l'onglet Recap.</p>
+                <div class="generator-field">
+                    <label>Comptant LightSpeed ($):</label>
+                    <input type="number" step="0.01" class="recap-input" data-field="comptant_lightspeed_lecture">
+                </div>
+                <div class="generator-field">
+                    <label>Comptant POSitouch ($):</label>
+                    <input type="number" step="0.01" class="recap-input" data-field="comptant_positouch_lecture">
+                </div>
+                <div class="generator-field">
+                    <label>Chèques ($):</label>
+                    <input type="number" step="0.01" class="recap-input" data-field="cheque_payment_register_lecture">
+                </div>
+                <div class="generator-field">
+                    <label>Dépôt Canadien ($):</label>
+                    <input type="number" step="0.01" class="recap-input" data-field="depot_canadien_lecture">
+                </div>
+                <button class="generator-btn" onclick="runSaveRecap()">
+                    <i data-feather="save"></i> Enregistrer Recap
+                </button>
+                <button class="generator-btn" onclick="showPreview('recap')" style="background: #17a2b8; margin-top: 5px;">
+                    <i data-feather="eye"></i> Visualiser
+                </button>
+            `
+        },
+        9: { // Dépôt
+            title: 'Mise à jour du Dépôt',
+            html: `
+                <p>Inscrire le montant vérifié dans l'onglet Dépôt.</p>
+                <div class="generator-field">
+                    <label>Montant Vérifié ($):</label>
+                    <input type="number" step="0.01" id="rj-deposit-amount" placeholder="0.00">
+                </div>
+                <button class="generator-btn" onclick="runUpdateDeposit()">
+                    <i data-feather="save"></i> Enregistrer le Dépôt
+                </button>
+            `
+        },
+        10: { // Transelect
+            title: 'Saisie Transelect',
+            html: `
+                <p>Saisir les montants pour l'onglet Transelect.</p>
+                
+                <div class="transelect-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div style="font-weight: bold;">Type</div>
+                    <div style="font-weight: bold;">BAR 701</div>
+                    <div style="font-weight: bold;">BAR 702</div>
+                    <div style="font-weight: bold;">SPESA 704</div>
+                    
+                    <div>DEBIT</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_debit">
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_debit">
+                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_debit">
+                    
+                    <div>VISA</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_visa">
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_visa">
+                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_visa">
+                    
+                    <div>MASTER</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_master">
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_master">
+                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_master">
+                    
+                    <div>AMEX</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_amex">
+                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_amex">
+                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_amex">
+                </div>
+                
+                <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ddd;">
+                
+                <div class="transelect-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div style="font-weight: bold;">Type</div>
+                    <div style="font-weight: bold;">Réception (Term)</div>
+                    <div style="font-weight: bold;">FuseBoxe (Bank)</div>
+                    
+                    <div>DEBIT</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="reception_debit">
+                    <input disabled style="background: #eee;">
+                    
+                    <div>VISA</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="reception_visa_term">
+                    <input type="number" step="0.01" class="ts-input" data-field="fusebox_visa">
+                    
+                    <div>MASTER</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="reception_master_term">
+                    <input type="number" step="0.01" class="ts-input" data-field="fusebox_master">
+                    
+                    <div>AMEX</div>
+                    <input type="number" step="0.01" class="ts-input" data-field="reception_amex_term">
+                    <input type="number" step="0.01" class="ts-input" data-field="fusebox_amex">
+                </div>
+
+                <button class="generator-btn" onclick="runSaveTranselect()">
+                    <i data-feather="save"></i> Enregistrer Transelect
+                </button>
+                <button class="generator-btn" onclick="showPreview('transelect')" style="background: #17a2b8; margin-top: 5px;">
+                    <i data-feather="eye"></i> Visualiser
+                </button>
+            `
+        },
+        13: { // GEAC/UX
+            title: 'Saisie GEAC/UX',
+            html: `
+                <p>Saisir les montants pour l'onglet GEAC/UX.</p>
+                <div class="transelect-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
+                    <div style="font-weight: bold;">Type</div>
+                    <div style="font-weight: bold;">Daily Cash Out</div>
+                    <div style="font-weight: bold;">Daily Revenue</div>
+                    
+                    <div>VISA</div>
+                    <input type="number" step="0.01" class="geac-input" data-field="visa_cash_out">
+                    <input type="number" step="0.01" class="geac-input" data-field="visa_daily_revenue">
+                    
+                    <div>MASTER</div>
+                    <input type="number" step="0.01" class="geac-input" data-field="master_cash_out">
+                    <input type="number" step="0.01" class="geac-input" data-field="master_daily_revenue">
+                    
+                    <div>AMEX</div>
+                    <input type="number" step="0.01" class="geac-input" data-field="amex_cash_out">
+                    <input type="number" step="0.01" class="geac-input" data-field="amex_daily_revenue">
+                </div>
+                <button class="generator-btn" onclick="runSaveGeac()">
+                    <i data-feather="save"></i> Enregistrer GEAC
+                </button>
+                <button class="generator-btn" onclick="showPreview('geac_ux')" style="background: #17a2b8; margin-top: 5px;">
+                    <i data-feather="eye"></i> Visualiser
+                </button>
+            `
+        }
+    };
+
+    if (automations[taskOrder]) {
+        document.getElementById('automation-title').textContent = automations[taskOrder].title;
+        content.innerHTML = automations[taskOrder].html;
+        section.style.display = 'block';
+        feather.replace();
+        
+        // Special check for Task 1
+        if (taskOrder === 1) {
+            checkRJStatus();
+        }
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+async function checkRJStatus() {
+    try {
+        const response = await fetch('/api/rj/status');
+        const data = await response.json();
+        
+        const uploadArea = document.getElementById('rj-upload-area');
+        const fileInfo = document.getElementById('rj-file-info');
+        const actionsArea = document.getElementById('rj-actions-area');
+        
+        if (data.uploaded) {
+            if(uploadArea) uploadArea.style.display = 'none';
+            if(fileInfo) {
+                fileInfo.style.display = 'block';
+                document.getElementById('rj-status-text').textContent = `Fichier chargé (${(data.file_size/1024).toFixed(1)} KB)`;
+            }
+            if(actionsArea) {
+                actionsArea.style.opacity = '1';
+                actionsArea.style.pointerEvents = 'auto';
+            }
+        }
+    } catch (e) {
+        console.error('Error checking RJ status:', e);
+    }
+}
+
+async function uploadRJFile() {
+    const fileInput = document.getElementById('rj-file-input');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        alert("Veuillez sélectionner un fichier.");
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('rj_file', file);
+    
+    const btn = document.querySelector('#rj-upload-area button');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i data-feather="loader"></i> Téléversement...';
+    feather.replace();
+    
+    try {
+        const response = await fetch('/api/rj/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            checkRJStatus(); // Refresh UI
+        } else {
+            alert("Erreur: " + result.error);
+        }
+    } catch (e) {
+        alert("Erreur de téléversement");
+        console.error(e);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+        feather.replace();
+    }
+}
+
+async function runSaveTranselect() {
+    const inputs = document.querySelectorAll('.ts-input');
+    const data = {};
+    
+    inputs.forEach(input => {
+        if (input.value) {
+            data[input.dataset.field] = parseFloat(input.value);
+        }
+    });
+    
+    if (Object.keys(data).length === 0) {
+        alert("Veuillez saisir au moins un montant.");
+        return;
+    }
+    
+    runRJAutomation('/api/rj/fill/transelect', data);
+}
+
+async function runSaveRecap() {
+    const inputs = document.querySelectorAll('.recap-input');
+    const data = {};
+    inputs.forEach(input => {
+        if (input.value) data[input.dataset.field] = parseFloat(input.value);
+    });
+    runRJAutomation('/api/rj/fill/recap', data);
+}
+
+async function runSaveGeac() {
+    const inputs = document.querySelectorAll('.geac-input');
+    const data = {};
+    inputs.forEach(input => {
+        if (input.value) data[input.dataset.field] = parseFloat(input.value);
+    });
+    runRJAutomation('/api/rj/fill/geac_ux', data);
+}
+
+async function runRJAutomation(endpoint, data = {}) {
+    const messageDiv = document.getElementById('automation-message');
+    const btn = document.querySelector('#automation-content button');
+    
+    if(btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-feather="loader"></i> Traitement...';
+        feather.replace();
+    }
+
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            messageDiv.className = 'generator-message success';
+            messageDiv.textContent = '✓ ' + result.message;
+            messageDiv.style.display = 'block';
+        } else {
+            throw new Error(result.error || 'Erreur inconnue');
+        }
+    } catch (error) {
+        messageDiv.className = 'generator-message error';
+        messageDiv.textContent = '✗ ' + error.message;
+        messageDiv.style.display = 'block';
+    } finally {
+        if(btn) {
+            btn.disabled = false;
+            // Restore icon based on button text context (simplified)
+            if (endpoint.includes('reset')) btn.innerHTML = '<i data-feather="trash-2"></i> Effacer les onglets (Reset)';
+            else if (endpoint.includes('sync')) btn.innerHTML = '<i data-feather="refresh-cw"></i> Synchroniser DUBACK -> SetD';
+            else btn.innerHTML = '<i data-feather="save"></i> Enregistrer';
+            feather.replace();
+        }
+        setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
+    }
+}
+
+function runSyncDueBack() {
+    const dayInput = document.getElementById('rj-day-input');
+    const day = dayInput.value ? parseInt(dayInput.value) : null;
+    runRJAutomation('/api/rj/sync', { day: day });
+}
+
+function runUpdateDeposit() {
+    const amountInput = document.getElementById('rj-deposit-amount');
+    const amount = amountInput.value ? parseFloat(amountInput.value) : null;
+    
+    if (!amount) {
+        alert("Veuillez entrer un montant valide.");
+        return;
+    }
+    
+    runRJAutomation('/api/rj/deposit', { amount: amount });
+}
+
+async function showPreview(sheetName) {
+    const modal = document.getElementById('preview-modal');
+    const content = document.getElementById('preview-content');
+    const title = document.getElementById('preview-title');
+    
+    content.innerHTML = '<div style="text-align: center; padding: 20px;"><i data-feather="loader"></i> Chargement...</div>';
+    title.textContent = `Aperçu: ${sheetName}`;
+    modal.style.display = 'flex';
+    feather.replace();
+    
+    try {
+        const response = await fetch(`/api/rj/read/${sheetName}`);
+        const result = await response.json();
+        
+        if (result.success) {
+            renderPreviewTable(result.data);
+        } else {
+            content.innerHTML = `<div style="color: red;">Erreur: ${result.error}</div>`;
+        }
+    } catch (e) {
+        content.innerHTML = `<div style="color: red;">Erreur de chargement: ${e.message}</div>`;
+    }
+}
+
+function renderPreviewTable(data) {
+    const content = document.getElementById('preview-content');
+    let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
+    
+    for (const [key, value] of Object.entries(data)) {
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+             continue; 
+        }
+        
+        html += `
+            <tr style="border-bottom: 1px solid #eee;">
+                <td style="padding: 8px; font-weight: 500; color: #555;">${formatKey(key)}</td>
+                <td style="padding: 8px; text-align: right;">${formatValue(value)}</td>
+            </tr>
+        `;
+    }
+    html += '</table>';
+    content.innerHTML = html;
+}
+
+function formatKey(key) {
+    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+function formatValue(val) {
+    if (val === null || val === undefined) return '-';
+    if (typeof val === 'number') return val.toFixed(2);
+    return val;
 }
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('guide-view').style.display === 'grid') {
-        closeGuide();
+    if (e.key === 'Escape') {
+        if (document.getElementById('guide-view').style.display === 'grid') {
+            closeGuide();
+        }
+        if (document.getElementById('preview-modal').style.display === 'flex') {
+            document.getElementById('preview-modal').style.display = 'none';
+        }
     }
 });
 
@@ -480,6 +1025,187 @@ document.getElementById('complete-shift-btn').addEventListener('click', async ()
         alert('Quart terminé avec succès!');
     }
 });
+
+// Document Generator Functions
+function showGenerator(taskOrder) {
+    const generatorSection = document.getElementById('guide-generator');
+    const fieldsContainer = document.getElementById('generator-fields');
+    const today = new Date().toISOString().split('T')[0];
+
+    // Define generators for specific tasks
+    const generators = {
+        6: { // Séparateur Daté
+            endpoint: '/api/generators/separateur-date',
+            autoDate: true,
+            fields: `
+                <input type="hidden" name="date" value="${today}">
+                <p class="generator-auto-info">📅 Document généré automatiquement avec la date d'aujourd'hui</p>
+            `
+        },
+        7: { // Checklist Tournée
+            endpoint: '/api/generators/checklist-tournee',
+            autoDate: true,
+            fields: `
+                <input type="hidden" name="date" value="${today}">
+                <p class="generator-auto-info">📅 Document généré automatiquement avec la date d'aujourd'hui</p>
+            `
+        },
+        8: { // Entretien Hiver
+            endpoint: '/api/generators/entretien-hiver',
+            autoDate: true,
+            fields: `
+                <input type="hidden" name="date" value="${today}">
+                <p class="generator-auto-info">📅 Document généré automatiquement avec la date d'aujourd'hui. Vous pourrez ajouter la capture météo manuellement après.</p>
+            `
+        },
+        19: { // Clés Banquets
+            endpoint: '/api/generators/cles-banquets',
+            fields: `
+                <div class="generator-field">
+                    <label>Date:</label>
+                    <input type="date" name="date" value="${today}" required>
+                </div>
+                <div id="banquet-events" class="banquet-events">
+                    <div class="banquet-event">
+                        <div class="generator-field">
+                            <label>Salon:</label>
+                            <input type="text" name="salon-0" placeholder="ex: Aut-Vimont" required>
+                        </div>
+                        <div class="generator-field">
+                            <label>Compagnie:</label>
+                            <input type="text" name="compagnie-0" placeholder="ex: SAPUTO" required>
+                        </div>
+                        <div class="generator-field">
+                            <label>Heure:</label>
+                            <input type="text" name="heure-0" placeholder="ex: 08:00-13:00" required>
+                        </div>
+                        <div class="generator-field">
+                            <label>Responsable:</label>
+                            <input type="text" name="responsable-0" placeholder="ex: JOANNA K." required>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="add-event-btn" onclick="addBanquetEvent(event)">+ Ajouter un événement</button>
+            `
+        }
+    };
+
+    if (generators[taskOrder]) {
+        const generator = generators[taskOrder];
+        fieldsContainer.innerHTML = generator.fields;
+        fieldsContainer.dataset.endpoint = generator.endpoint;
+
+        // Update button text and title based on whether it's auto-date
+        const btnText = document.getElementById('generator-btn-text');
+        const title = document.getElementById('generator-title');
+        if (generator.autoDate) {
+            btnText.textContent = 'Télécharger le document';
+            title.textContent = 'Document prêt à télécharger';
+        } else {
+            btnText.textContent = 'Générer et télécharger';
+            title.textContent = 'Générer le document';
+        }
+
+        generatorSection.style.display = 'block';
+        feather.replace();
+    } else {
+        generatorSection.style.display = 'none';
+    }
+}
+
+let banquetEventCounter = 1;
+function addBanquetEvent(e) {
+    e.preventDefault();
+    const container = document.getElementById('banquet-events');
+    const eventId = banquetEventCounter++;
+    const eventDiv = document.createElement('div');
+    eventDiv.className = 'banquet-event';
+    eventDiv.innerHTML = `
+        <div class="generator-field">
+            <label>Salon:</label>
+            <input type="text" name="salon-${eventId}" placeholder="ex: Aut-Vimont" required>
+        </div>
+        <div class="generator-field">
+            <label>Compagnie:</label>
+            <input type="text" name="compagnie-${eventId}" placeholder="ex: SAPUTO" required>
+        </div>
+        <div class="generator-field">
+            <label>Heure:</label>
+            <input type="text" name="heure-${eventId}" placeholder="ex: 08:00-13:00" required>
+        </div>
+        <div class="generator-field">
+            <label>Responsable:</label>
+            <input type="text" name="responsable-${eventId}" placeholder="ex: JOANNA K." required>
+        </div>
+        <button type="button" class="remove-event-btn" onclick="this.parentElement.remove()">Supprimer</button>
+    `;
+    container.appendChild(eventDiv);
+}
+
+async function handleGenerateDocument(e) {
+    e.preventDefault();
+    const form = e.target;
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const messageDiv = document.getElementById('generator-message');
+    const endpoint = document.getElementById('generator-fields').dataset.endpoint;
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i data-feather="loader"></i> Génération...';
+    feather.replace();
+
+    try {
+        const formData = new FormData(form);
+        let data = { date: formData.get('date') };
+
+        // Special handling for banquet events
+        if (endpoint.includes('cles-banquets')) {
+            data.events = [];
+            let eventId = 0;
+            while (formData.get(`salon-${eventId}`) !== null) {
+                data.events.push({
+                    salon: formData.get(`salon-${eventId}`),
+                    compagnie: formData.get(`compagnie-${eventId}`),
+                    heure: formData.get(`heure-${eventId}`),
+                    responsable: formData.get(`responsable-${eventId}`)
+                });
+                eventId++;
+            }
+        }
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            messageDiv.className = 'generator-message success';
+            messageDiv.textContent = '✓ Document généré avec succès!';
+            messageDiv.style.display = 'block';
+        } else {
+            const error = await response.json();
+            throw new Error(error.error || 'Erreur lors de la génération');
+        }
+    } catch (error) {
+        messageDiv.className = 'generator-message error';
+        messageDiv.textContent = '✗ ' + error.message;
+        messageDiv.style.display = 'block';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i data-feather="download"></i> Générer et télécharger';
+        feather.replace();
+        setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
+    }
+}
 
 loadData();
 </script>

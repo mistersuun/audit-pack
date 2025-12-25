@@ -1,3 +1,9 @@
 flask
 flask-sqlalchemy
 python-dotenv
+python-docx
+openpyxl
+playwright
+Pillow
+xlrd==1.2.0
+xlutils

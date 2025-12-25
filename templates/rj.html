@@ -1,0 +1,1241 @@
+{% extends "base.html" %}
+{% block title %}Gestion RJ{% endblock %}
+
+{% block content %}
+<div class="rj-page">
+  <div class="rj-hero">
+    <div>
+      <h1>Gestion Revenue Journal</h1>
+      <p>Upload RJ, DueBack (précédent/courant), Recap, Transelect, GEAC/UX, sync SetD.</p>
+      <div class="rj-stats">
+        <div class="rj-stat-card">
+          <div class="rj-stat-label">Fichier</div>
+          <div class="rj-stat-value" id="stat-file">Non chargé</div>
+        </div>
+        <div class="rj-stat-card">
+          <div class="rj-stat-label">Taille</div>
+          <div class="rj-stat-value" id="stat-size">-</div>
+        </div>
+        <div class="rj-stat-card">
+          <div class="rj-stat-label">Dernière action</div>
+          <div class="rj-stat-value" id="stat-action">-</div>
+        </div>
+      </div>
+    </div>
+    <div class="rj-card">
+      <h3>Fichier RJ</h3>
+      <div class="upload-zone" onclick="document.getElementById('rj-file-input').click()">
+        <div class="upload-title">📁 Choisir RJ (.xls/.xlsx)</div>
+        <div class="upload-subtitle" id="rj-file-label">Aucun fichier sélectionné</div>
+        <input type="file" id="rj-file-input" accept=".xls,.xlsx" style="display:none" onchange="uploadRJFile()">
+      </div>
+      <div class="form-actions">
+        <button class="rj-btn secondary" onclick="resetRJ()">
+          <i data-feather="refresh-cw"></i> Reset onglets
+        </button>
+        <button class="rj-btn secondary" onclick="downloadRJ()">
+          <i data-feather="download"></i> Télécharger
+        </button>
+        <button class="rj-btn secondary" onclick="checkRJStatus()">
+          <i data-feather="refresh-cw"></i> Rafraîchir
+        </button>
+      </div>
+      <div class="status-chip" id="rj-message" style="display:none; margin-top:1rem;"></div>
+    </div>
+  </div>
+
+  <div class="rj-layout">
+    <div class="rj-card">
+      <h3>DueBack (précédent / courant)</h3>
+      <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+        Choisissez le jour, chargez les réceptionnistes disponibles, puis remplissez le nombre de personnes nécessaires.
+      </p>
+      
+      <div class="form-group">
+        <label>Jour du mois</label>
+        <input type="number" id="dueback-day-adv" placeholder="ex: 19" min="1" max="31">
+      </div>
+      
+      <div class="form-actions">
+        <button class="rj-btn" onclick="loadDuebackReceptionists()">
+          <i data-feather="users"></i> Charger les réceptionnistes
+        </button>
+        <button class="rj-btn secondary" onclick="syncDueback()">
+          <i data-feather="refresh-cw"></i> Sync SetD
+        </button>
+      </div>
+
+      <div id="dueback-receptionists-list" style="display:none; margin-top:1.5rem; padding:1rem; background:var(--bg); border-radius:8px; border:1px solid var(--border-light);">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Nombre de réceptionnistes à remplir</label>
+            <input type="number" id="dueback-count" min="1" value="1" onchange="createDuebackInputs()" style="max-width:150px;">
+            <small style="color:var(--text-muted); font-size:0.75rem; display:block; margin-top:0.25rem;">
+              <span id="dueback-count-info">Chargement...</span>
+            </small>
+          </div>
+        <div id="dueback-inputs-container"></div>
+        <div class="form-actions" style="margin-top:1.5rem;">
+          <button class="rj-btn" onclick="saveDuebackTable()">
+            <i data-feather="save"></i> Enregistrer DueBack
+          </button>
+        </div>
+      </div>
+
+      <div id="dueback-message" style="margin-top:1rem; display:none;"></div>
+    </div>
+
+    <div class="rj-card">
+      <div class="forms">
+        <div class="form-tile">
+          <h4>Recap - Réconciliation Cash</h4>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+            Tableau interactif type Excel. Les signes sont gérés automatiquement. Le RECAP doit balancer à $0.00.
+          </p>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" id="recap-has-cheques" onchange="toggleCheques()" style="width:20px; height:20px; cursor:pointer;">
+                <span>Nous avons reçu des chèques</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+            <table id="recap-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
+              <thead>
+                <tr>
+                  <th class="excel-header excel-row-header"></th>
+                  <th class="excel-header">Description</th>
+                  <th class="excel-header">Lecture<br>(B)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="excel-row-header">6</td>
+                  <td class="excel-label">Comptant LightSpeed</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B6" data-field="comptant_lightspeed_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">7</td>
+                  <td class="excel-label">Comptant Positouch</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B7" data-field="comptant_positouch_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr id="recap-cheques-row" style="display:none;">
+                  <td class="excel-row-header">8</td>
+                  <td class="excel-label">Chèque payment register AR</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B8" data-field="cheque_payment_register_lecture" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">11</td>
+                  <td class="excel-label">Moins Remboursement Gratuité</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B11" data-field="remb_gratuite_lecture" data-always-negative="true" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">12</td>
+                  <td class="excel-label">Moins Remboursement Client</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B12" data-field="remb_client_lecture" data-always-negative="true" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">16</td>
+                  <td class="excel-label">Due Back Réception</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B16" data-field="due_back_reception_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">17</td>
+                  <td class="excel-label">Due Back N/B</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B17" data-field="due_back_nb_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">19</td>
+                  <td class="excel-label">Surplus/déficit (+ ou -)</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B19" data-field="surplus_deficit_lecture" placeholder="0.00"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">22</td>
+                  <td class="excel-label">Dépôt Canadien</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B22" data-field="depot_canadien_lecture" placeholder="0.00"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">24</td>
+                  <td class="excel-label">Argent Reçu</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B24" data-field="argent_recu" placeholder="0.00" min="0"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">26</td>
+                  <td class="excel-label">Préparé par</td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="B26" data-field="prepare_par" placeholder="Nom"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-bottom: 1.5rem; padding:1rem; background:var(--bg); border-radius:8px; border:1px solid var(--border-light);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+              <strong style="color:var(--text);">Balance RECAP:</strong>
+              <span id="recap-balance" style="font-size:1.25rem; font-weight:700; color:var(--text);">$0.00</span>
+            </div>
+            <small style="color:var(--text-muted);">Le RECAP doit balancer à $0.00</small>
+            <div id="recap-balance-status" style="margin-top:0.5rem; font-size:0.875rem; font-weight:600;"></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="rj-btn" onclick="saveRecap()" id="recap-save-btn">
+              <i data-feather="save"></i> Enregistrer Recap
+            </button>
+          </div>
+        </div>
+
+        <div class="form-tile">
+          <h4>Dépôt</h4>
+          <div class="form-group">
+            <label>Montant vérifié</label>
+            <input type="number" step="0.01" id="deposit-amount" placeholder="0.00">
+          </div>
+          <div class="form-actions">
+            <button class="rj-btn" onclick="updateDeposit()">
+              <i data-feather="save"></i> Enregistrer Dépôt
+            </button>
+          </div>
+        </div>
+
+        <div class="form-tile">
+          <h4>Transelect - Réconciliation CC/Interac</h4>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+            Tableau interactif type Excel. Cliquez sur une cellule pour éditer. Utilisez Tab/Enter pour naviguer.
+          </p>
+          
+          <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+            <table id="transelect-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 2000px;">
+              <thead>
+                <tr>
+                  <th class="excel-header excel-row-header"></th>
+                  <th class="excel-header">TYPE</th>
+                  <th class="excel-header">BAR<br>701</th>
+                  <th class="excel-header">BAR<br>702</th>
+                  <th class="excel-header">BAR<br>703</th>
+                  <th class="excel-header">SPESA<br>704</th>
+                  <th class="excel-header">ROOM<br>705</th>
+                  <th class="excel-header">EXTRA<br>G</th>
+                  <th class="excel-header">EXTRA<br>H</th>
+                  <th class="excel-header">EXTRA<br>I</th>
+                  <th class="excel-header">Banquet<br>J</th>
+                  <th class="excel-header">Banquet<br>K</th>
+                  <th class="excel-header">Banquet<br>L</th>
+                  <th class="excel-header">Banquet<br>M</th>
+                  <th class="excel-header">Banquet<br>N</th>
+                  <th class="excel-header">Banquet<br>O</th>
+                  <th class="excel-header">Banquet<br>P</th>
+                  <th class="excel-header">Banquet<br>Q</th>
+                  <th class="excel-header">Banquet<br>R</th>
+                  <th class="excel-header">Banquet<br>S</th>
+                  <th class="excel-header">Banquet<br>T</th>
+                  <th class="excel-header">Banquet<br>U</th>
+                  <th class="excel-header">TOTAL 1<br>V</th>
+                  <th class="excel-header">TOTAL 2<br>W</th>
+                  <th class="excel-header">POSITOUCH<br>X</th>
+                  <th class="excel-header">VARIANCE<br>Y</th>
+                  <th class="excel-header">ESCOMPTE<br>Z</th>
+                  <th class="excel-header">$<br>AA</th>
+                  <th class="excel-header">NET<br>AB</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 8: Terminal Numbers -->
+                <tr>
+                  <td class="excel-row-header">8</td>
+                  <td class="excel-label"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="B8" value="701" readonly style="background:#f5f5f5;"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="C8" value="702" readonly style="background:#f5f5f5;"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="D8" value="703" readonly style="background:#f5f5f5;"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="E8" value="704" readonly style="background:#f5f5f5;"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="F8" value="705" readonly style="background:#f5f5f5;"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="G8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="H8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="I8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="J8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="K8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="L8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="M8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="N8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="O8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="P8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="Q8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="R8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="S8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="T8" placeholder="Terminal"></td>
+                  <td class="excel-cell"><input type="text" class="excel-input" data-cell="U8" placeholder="Terminal"></td>
+                  <td class="excel-cell" colspan="6"></td>
+                </tr>
+                <!-- Row 9: DEBIT -->
+                <tr>
+                  <td class="excel-row-header">9</td>
+                  <td class="excel-label">DEBIT</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B9" data-field="bar_701_debit" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C9" data-field="bar_702_debit" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D9" data-field="bar_703_debit" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="E9" data-field="spesa_704_debit" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U9" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="V9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AB9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                </tr>
+                <!-- Row 10: VISA -->
+                <tr>
+                  <td class="excel-row-header">10</td>
+                  <td class="excel-label">VISA</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B10" data-field="bar_701_visa" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C10" data-field="bar_702_visa" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D10" data-field="bar_703_visa" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="E10" data-field="spesa_704_visa" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="F10" data-field="room_705_visa" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="V10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Z10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AA10" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AB10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                </tr>
+                <!-- Row 11: MASTER -->
+                <tr>
+                  <td class="excel-row-header">11</td>
+                  <td class="excel-label">MASTER</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B11" data-field="bar_701_master" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C11" data-field="bar_702_master" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D11" data-field="bar_703_master" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="E11" data-field="spesa_704_master" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="V11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Z11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AA11" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AB11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                </tr>
+                <!-- Row 12: DISCOVER -->
+                <tr>
+                  <td class="excel-row-header">12</td>
+                  <td class="excel-label">DISCOVER</td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T12" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U12" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Z12" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 13: AMEX -->
+                <tr>
+                  <td class="excel-row-header">13</td>
+                  <td class="excel-label">AMEX</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B13" data-field="bar_701_amex" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C13" data-field="bar_702_amex" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D13" data-field="bar_703_amex" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="E13" data-field="spesa_704_amex" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="V13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Z13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AA13" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AB13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                </tr>
+                <!-- Row 14: TOTAL -->
+                <tr>
+                  <td class="excel-row-header">14</td>
+                  <td class="excel-label">TOTAL</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="E14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="F14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="V14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AA14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AB14" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                </tr>
+                <!-- Row 20: DÉBIT (Bank/Reception) -->
+                <tr style="border-top: 2px solid var(--border);">
+                  <td class="excel-row-header">20</td>
+                  <td class="excel-label">DÉBIT</td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D20" data-field="reception_debit" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I20" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P20" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T20" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 21: VISA (Bank/Reception) -->
+                <tr>
+                  <td class="excel-row-header">21</td>
+                  <td class="excel-label">VISA</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B21" data-field="fusebox_visa" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D21" data-field="reception_visa_term" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I21" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P21" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R21" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S21" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T21" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 22: MASTER (Bank/Reception) -->
+                <tr>
+                  <td class="excel-row-header">22</td>
+                  <td class="excel-label">MASTER</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B22" data-field="fusebox_master" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D22" data-field="reception_master_term" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I22" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P22" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R22" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S22" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T22" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 24: AMEX (Bank/Reception) -->
+                <tr>
+                  <td class="excel-row-header">24</td>
+                  <td class="excel-label">AMEX</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B24" data-field="fusebox_amex" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D24" data-field="reception_amex_term" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I24" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P24" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R24" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S24" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T24" placeholder="0.00"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 25: TOTAL (Bank/Reception) -->
+                <tr>
+                  <td class="excel-row-header">25</td>
+                  <td class="excel-label">TOTAL</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B25" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D25" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I25" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P25" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S25" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T25" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                  <td class="excel-cell"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="form-actions">
+            <button class="rj-btn" onclick="saveTranselect()">
+              <i data-feather="save"></i> Enregistrer Transelect
+            </button>
+          </div>
+        </div>
+
+        <div class="form-tile">
+          <h4>GEAC / UX - Réconciliation finale CC</h4>
+          
+          <div style="margin-bottom: 1.5rem;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Daily Cash Out</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Visa Cash Out</label>
+                <input type="number" step="0.01" class="geac-input" data-field="visa_cash_out" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Master Cash Out</label>
+                <input type="number" step="0.01" class="geac-input" data-field="master_cash_out" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Amex Cash Out</label>
+                <input type="number" step="0.01" class="geac-input" data-field="amex_cash_out" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Total</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Visa Total</label>
+                <input type="number" step="0.01" class="geac-input" data-field="visa_total" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Master Total</label>
+                <input type="number" step="0.01" class="geac-input" data-field="master_total" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Amex Total</label>
+                <input type="number" step="0.01" class="geac-input" data-field="amex_total" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Discover Total</label>
+                <input type="number" step="0.01" class="geac-input" data-field="discover_total" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Daily Revenue</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Visa Daily Rev</label>
+                <input type="number" step="0.01" class="geac-input" data-field="visa_daily_revenue" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Master Daily Rev</label>
+                <input type="number" step="0.01" class="geac-input" data-field="master_daily_revenue" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Amex Daily Rev</label>
+                <input type="number" step="0.01" class="geac-input" data-field="amex_daily_revenue" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Balance</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Balance Previous Day</label>
+                <input type="number" step="0.01" class="geac-input" data-field="balance_previous" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Balance Today</label>
+                <input type="number" step="0.01" class="geac-input" data-field="balance_today" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>New Balance</label>
+                <input type="number" step="0.01" class="geac-input" data-field="new_balance" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Facture Direct</h5>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Facture Direct</label>
+                <input type="number" step="0.01" class="geac-input" data-field="facture_direct" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Facture Direct - Correction</label>
+                <input type="number" step="0.01" class="geac-input" data-field="facture_direct_corr" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <h5 style="font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em;">Adv Deposit</h5>
+          <div class="form-grid">
+              <div class="form-group">
+                <label>Adv Deposit</label>
+                <input type="number" step="0.01" class="geac-input" data-field="adv_deposit" placeholder="0.00">
+              </div>
+              <div class="form-group">
+                <label>Adv Deposit Applied</label>
+                <input type="number" step="0.01" class="geac-input" data-field="adv_deposit_applied" placeholder="0.00">
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="rj-btn" onclick="saveGeac()">
+              <i data-feather="save"></i> Enregistrer GEAC
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="status-chip" id="automation-message" style="display:none; margin-top:1.5rem;"></div>
+    </div>
+  </div>
+</div>
+<div id="notification-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  feather.replace();
+
+  function notify(msg, type='success') {
+    const n = document.createElement('div');
+    n.className = 'notification' + (type==='error' ? ' error' : '');
+    n.innerHTML = `<i data-feather="${type==='error'?'alert-triangle':'check-circle'}"></i> ${msg}`;
+    document.getElementById('notification-container').appendChild(n);
+    feather.replace();
+    setTimeout(()=>n.remove(), 4000);
+  }
+
+  async function checkRJStatus() {
+    try {
+      const res = await fetch('/api/rj/status');
+      const data = await res.json();
+      const uploaded = data.uploaded;
+      document.getElementById('stat-file').textContent = uploaded ? 'Chargé' : 'Non chargé';
+      document.getElementById('stat-size').textContent = uploaded ? ((data.file_size/1024).toFixed(1)+' KB') : '-';
+      document.getElementById('stat-action').textContent = data.updated_at || '-';
+      if (uploaded && data.filename) {
+        document.getElementById('rj-file-label').textContent = data.filename;
+      } else {
+        document.getElementById('rj-file-label').textContent = 'Aucun fichier sélectionné';
+      }
+    } catch (e) { console.error(e); }
+  }
+
+  async function uploadRJFile() {
+    const input = document.getElementById('rj-file-input');
+    const file = input.files[0];
+    if (!file) return;
+    document.getElementById('rj-file-label').textContent = file.name;
+    const fd = new FormData(); fd.append('rj_file', file);
+    const res = await fetch('/api/rj/upload', { method:'POST', body: fd });
+    const data = await res.json();
+    if (data.success) { notify('Fichier RJ chargé'); checkRJStatus(); }
+    else notify(data.error || 'Erreur upload', 'error');
+  }
+
+  async function resetRJ() {
+    const res = await fetch('/api/rj/reset', { method:'POST' });
+    const data = await res.json();
+    if (data.success) notify(data.message || 'Reset OK'); else notify(data.error || 'Erreur reset', 'error');
+  }
+  function downloadRJ() { window.open('/api/rj/download', '_blank'); }
+
+  async function syncDueback() {
+    const day = parseInt(document.getElementById('dueback-day-adv').value || 0);
+    const res = await fetch('/api/rj/sync', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ day: day || null }) });
+    const data = await res.json();
+    if (data.success) notify(data.message || 'Sync Done'); else notify(data.error || 'Erreur sync', 'error');
+  }
+
+  // Store receptionists globally
+  let availableReceptionists = [];
+  let currentDayData = {};
+
+  async function loadDuebackReceptionists() {
+    const day = parseInt(document.getElementById('dueback-day-adv').value || 0);
+    if (!day) {
+      notify('Veuillez entrer un jour (1-31)', 'error');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/rj/dueback/names?day=' + day);
+      const data = await res.json();
+      if (!data.success) {
+        notify(data.error || 'Erreur lors du chargement', 'error');
+        return;
+      }
+      
+      const { receptionists, days } = data.data;
+      availableReceptionists = receptionists;
+      currentDayData = days[String(day)] || {};
+      
+      // Render Excel-like table
+      renderDuebackTable();
+      
+      // Show table and save button
+      document.getElementById('dueback-table-container').style.display = 'block';
+      document.getElementById('dueback-save-btn').style.display = 'inline-flex';
+      
+      notify(`${receptionists.length} réceptionniste${receptionists.length > 1 ? 's' : ''} chargé${receptionists.length > 1 ? 's' : ''}`, 'success');
+    } catch (e) {
+      console.error(e);
+      notify('Erreur lors du chargement des réceptionnistes', 'error');
+    }
+  }
+
+  function renderDuebackTable() {
+    const tbody = document.getElementById('dueback-table-body');
+    tbody.innerHTML = '';
+    
+    availableReceptionists.forEach((recep, index) => {
+      const prev = currentDayData.previous?.[recep.col_letter]?.amount || '';
+      const curr = currentDayData.nouveau?.[recep.col_letter]?.amount || '';
+      
+      const row = `
+        <tr>
+          <td class="excel-row-header">${index + 1}</td>
+          <td class="excel-label">${recep.full_name}</td>
+          <td class="excel-cell">
+            <input type="number" step="0.01" class="excel-input" 
+              data-col="${recep.col_letter}" 
+              data-line="previous" 
+              data-day="${document.getElementById('dueback-day-adv').value}"
+              value="${prev}" 
+              placeholder="0.00">
+          </td>
+          <td class="excel-cell">
+            <input type="number" step="0.01" class="excel-input" 
+              data-col="${recep.col_letter}" 
+              data-line="nouveau" 
+              data-day="${document.getElementById('dueback-day-adv').value}"
+              value="${curr}" 
+              placeholder="0.00">
+          </td>
+        </tr>
+      `;
+      tbody.innerHTML += row;
+    });
+    
+    // Setup navigation
+    setupExcelNavigation('#dueback-table');
+  }
+
+  // DueBack functions now use Excel table - see renderDuebackTable() above
+
+  async function saveDuebackTable() {
+    const day = parseInt(document.getElementById('dueback-day-adv').value || 0);
+    if (!day) {
+      notify('Jour requis', 'error');
+      return;
+    }
+    
+    const items = [];
+    const inputs = document.querySelectorAll('#dueback-table .excel-input');
+    
+    inputs.forEach(input => {
+      if (!input.value) return;
+      
+      const colLetter = input.dataset.col;
+      const lineType = input.dataset.line;
+      let amount = parseFloat(input.value);
+      
+      // Ensure correct sign
+      if (lineType === 'previous') {
+        amount = amount < 0 ? amount : -Math.abs(amount);
+      } else { // nouveau
+        amount = amount > 0 ? amount : Math.abs(amount);
+      }
+      
+      items.push({ 
+        col_letter: colLetter, 
+        line_type: lineType, 
+        amount: amount
+      });
+    });
+    
+    if (!items.length) {
+      notify('Aucune valeur DueBack à enregistrer', 'error');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/rj/dueback/bulk', { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify({ day, items }) 
+      });
+    const data = await res.json();
+      if (data.success) {
+        notify(data.message || `${items.length} entrées DueBack enregistrées`, 'success');
+        // Reload to show updated values
+        loadDuebackReceptionists();
+      } else {
+        notify(data.error || 'Erreur DueBack', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      notify('Erreur lors de l\'enregistrement', 'error');
+    }
+  }
+
+  function toggleCheques() {
+    const checkbox = document.getElementById('recap-has-cheques');
+    const row = document.getElementById('recap-cheques-row');
+    row.style.display = checkbox.checked ? 'table-row' : 'none';
+    if (!checkbox.checked) {
+      // Clear cheque input when disabled
+      const chequeInput = document.querySelector('[data-field="cheque_payment_register_lecture"]');
+      if (chequeInput) chequeInput.value = '';
+    }
+    calculateRecapBalance();
+  }
+
+  function calculateRecapBalance() {
+    // Collect all values with proper signs
+    let total = 0;
+    
+    // Comptant (toujours positifs)
+    const ls = parseFloat(document.querySelector('[data-field="comptant_lightspeed_lecture"]')?.value || 0);
+    const posi = parseFloat(document.querySelector('[data-field="comptant_positouch_lecture"]')?.value || 0);
+    
+    total += Math.abs(ls) + Math.abs(posi);
+    
+    // Chèques (si activés, toujours positifs)
+    const hasCheques = document.getElementById('recap-has-cheques').checked;
+    if (hasCheques) {
+      const cheque = parseFloat(document.querySelector('[data-field="cheque_payment_register_lecture"]')?.value || 0);
+      total += Math.abs(cheque);
+    }
+    
+    // Remboursements (toujours négatifs - on entre positif, on convertit en négatif)
+    const remb_grat = parseFloat(document.querySelector('[data-field="remb_gratuite_lecture"]')?.value || 0);
+    const remb_client = parseFloat(document.querySelector('[data-field="remb_client_lecture"]')?.value || 0);
+    
+    total -= Math.abs(remb_grat) + Math.abs(remb_client);
+    
+    // DueBack (toujours positifs)
+    const dueback_recep = parseFloat(document.querySelector('[data-field="due_back_reception_lecture"]')?.value || 0);
+    const dueback_nb = parseFloat(document.querySelector('[data-field="due_back_nb_lecture"]')?.value || 0);
+    
+    total += Math.abs(dueback_recep) + Math.abs(dueback_nb);
+    
+    // Surplus/Déficit (peut être + ou -)
+    const surplus = parseFloat(document.querySelector('[data-field="surplus_deficit_lecture"]')?.value || 0);
+    
+    total += surplus;
+    
+    // Dépôt Canadien (positif)
+    const depot = parseFloat(document.querySelector('[data-field="depot_canadien_lecture"]')?.value || 0);
+    total += Math.abs(depot);
+    
+    // Afficher le balance
+    const balanceEl = document.getElementById('recap-balance');
+    const statusEl = document.getElementById('recap-balance-status');
+    const saveBtn = document.getElementById('recap-save-btn');
+    
+    const balance = Math.abs(total) < 0.01 ? 0 : total; // Round to 0 if very small
+    balanceEl.textContent = `$${balance.toFixed(2)}`;
+    
+    if (Math.abs(balance) < 0.01) {
+      balanceEl.style.color = 'var(--success)';
+      statusEl.innerHTML = '<span style="color:var(--success);">✅ RECAP balance correctement</span>';
+      saveBtn.disabled = false;
+      saveBtn.style.opacity = '1';
+    } else {
+      balanceEl.style.color = '#ef4444';
+      statusEl.innerHTML = `<span style="color:#ef4444;">⚠️ RECAP ne balance pas. Ajustez les montants pour obtenir $0.00</span>`;
+      saveBtn.disabled = false; // Allow save even if not balanced
+      saveBtn.style.opacity = '1';
+    }
+  }
+
+  // Setup Excel navigation for Recap table
+  function setupExcelNavigation(tableSelector) {
+    const table = document.querySelector(tableSelector);
+    if (!table) return;
+    
+    const inputs = Array.from(table.querySelectorAll('.excel-input:not([readonly])'));
+    inputs.forEach((input, index) => {
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab' || e.key === 'Enter') {
+          e.preventDefault();
+          const nextIndex = e.shiftKey ? index - 1 : index + 1;
+          if (nextIndex >= 0 && nextIndex < inputs.length) {
+            inputs[nextIndex].focus();
+            inputs[nextIndex].select();
+          }
+        }
+      });
+      
+      // Recalculate balance on input change for Recap
+      if (tableSelector === '#recap-table') {
+        input.addEventListener('input', calculateRecapBalance);
+        
+        // Handle sign conversion for always-positive/always-negative fields
+        if (input.dataset.alwaysPositive === 'true') {
+          input.addEventListener('input', function() {
+            if (this.value < 0) this.value = Math.abs(this.value);
+          });
+        }
+        if (input.dataset.alwaysNegative === 'true') {
+          input.addEventListener('input', function() {
+            if (this.value < 0) this.value = Math.abs(this.value);
+          });
+        }
+      }
+    });
+  }
+  
+  // Initialize Recap table navigation on load
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      setupExcelNavigation('#recap-table');
+    }, 100);
+  });
+
+  function collectInputs(selector) {
+    const data = {};
+    document.querySelectorAll(selector).forEach(inp => {
+      if (inp.value) {
+        let value = parseFloat(inp.value);
+        
+        // Apply sign rules
+        if (inp.dataset.alwaysNegative === 'true') {
+          // Convert to negative (user enters positive)
+          value = -Math.abs(value);
+        } else if (inp.dataset.alwaysPositive === 'true') {
+          // Ensure positive
+          value = Math.abs(value);
+        }
+        
+        data[inp.dataset.field] = value;
+      }
+    });
+    return data;
+  }
+
+  async function saveRecap() {
+    // Check if balance is correct
+    const balanceEl = document.getElementById('recap-balance');
+    const balanceText = balanceEl.textContent.replace('$', '').trim();
+    const balance = parseFloat(balanceText);
+    
+    if (Math.abs(balance) >= 0.01) {
+      if (!confirm(`Le RECAP ne balance pas ($${balance.toFixed(2)}). Voulez-vous quand même enregistrer?`)) {
+        return;
+      }
+    }
+    
+    const data = {};
+    
+    // Collect from Excel table inputs
+    document.querySelectorAll('#recap-table .excel-input').forEach(input => {
+      if (!input.value) return;
+      
+      const field = input.dataset.field;
+      if (!field) return;
+      
+      // Skip cheque if not enabled
+      if (field === 'cheque_payment_register_lecture' && !document.getElementById('recap-has-cheques').checked) {
+        return;
+      }
+      
+      let value = parseFloat(input.value);
+      
+      // Apply sign rules based on data attributes
+      if (input.dataset.alwaysPositive === 'true') {
+        value = Math.abs(value);
+      } else if (input.dataset.alwaysNegative === 'true') {
+        value = -Math.abs(value);
+      }
+      // Otherwise keep the sign as entered (for surplus/deficit, depot)
+      
+      data[field] = value;
+    });
+    
+    if (!Object.keys(data).length) {
+      notify('Saisir au moins un montant Recap', 'error');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/rj/fill/recap', { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify(data) 
+      });
+    const json = await res.json();
+      if (json.success) {
+        notify(json.message || 'Recap enregistré avec succès', 'success');
+        calculateRecapBalance(); // Recalculate after save
+      } else {
+        notify(json.error || 'Erreur Recap', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      notify('Erreur lors de l\'enregistrement', 'error');
+    }
+  }
+  // Mapping des cellules Excel aux champs du mapping
+  const TRANSELECT_CELL_MAPPING = {
+    'B9': 'bar_701_debit', 'C9': 'bar_702_debit', 'D9': 'bar_703_debit', 'E9': 'spesa_704_debit',
+    'B10': 'bar_701_visa', 'C10': 'bar_702_visa', 'D10': 'bar_703_visa', 'E10': 'spesa_704_visa', 'F10': 'room_705_visa',
+    'B11': 'bar_701_master', 'C11': 'bar_702_master', 'D11': 'bar_703_master', 'E11': 'spesa_704_master',
+    'B13': 'bar_701_amex', 'C13': 'bar_702_amex', 'D13': 'bar_703_amex', 'E13': 'spesa_704_amex',
+    'D20': 'reception_debit',
+    'B21': 'fusebox_visa', 'D21': 'reception_visa_term',
+    'B22': 'fusebox_master', 'D22': 'reception_master_term',
+    'B24': 'fusebox_amex', 'D24': 'reception_amex_term',
+  };
+
+  function collectTranselectData() {
+    const data = {};
+    
+    // Collecter depuis le tableau Excel
+    document.querySelectorAll('#transelect-table .excel-input').forEach(input => {
+      const cell = input.dataset.cell;
+      if (!cell || input.readOnly) return;
+      
+      const field = TRANSELECT_CELL_MAPPING[cell];
+      if (field && input.value) {
+        data[field] = parseFloat(input.value);
+      }
+    });
+    
+    return data;
+  }
+
+  async function saveTranselect() {
+    const data = collectTranselectData();
+    
+    if (!Object.keys(data).length) {
+      notify('Saisir au moins un montant Transelect', 'error');
+      return;
+    }
+    
+    try {
+      const res = await fetch('/api/rj/fill/transelect', { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify(data) 
+      });
+    const json = await res.json();
+      if (json.success) {
+        notify(json.message || 'Transelect enregistré avec succès', 'success');
+      } else {
+        notify(json.error || 'Erreur Transelect', 'error');
+      }
+    } catch (e) {
+      console.error(e);
+      notify('Erreur lors de l\'enregistrement', 'error');
+    }
+  }
+  
+  // Navigation Excel-like (Tab/Enter)
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const table = document.getElementById('transelect-table');
+      if (table) {
+        const inputs = Array.from(table.querySelectorAll('.excel-input:not([readonly])'));
+        inputs.forEach((input, index) => {
+          input.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab' || e.key === 'Enter') {
+              e.preventDefault();
+              const nextIndex = e.shiftKey ? index - 1 : index + 1;
+              if (nextIndex >= 0 && nextIndex < inputs.length) {
+                inputs[nextIndex].focus();
+                inputs[nextIndex].select();
+              }
+            }
+          });
+        });
+      }
+    }, 100);
+  });
+  async function saveGeac() {
+    const data = collectInputs('.geac-input');
+    const res = await fetch('/api/rj/fill/geac_ux', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(data) });
+    const json = await res.json();
+    if (json.success) notify(json.message || 'GEAC OK'); else notify(json.error || 'Erreur GEAC', 'error');
+  }
+
+  async function updateDeposit() {
+    const amount = parseFloat(document.getElementById('deposit-amount').value);
+    if (!amount) return alert('Montant requis');
+    const res = await fetch('/api/rj/deposit', { 
+      method:'POST', 
+      headers:{'Content-Type':'application/json'}, 
+      body: JSON.stringify({ amount }) 
+    });
+    const data = await res.json();
+    if (data.success) notify(data.message || 'Dépôt enregistré'); 
+    else notify(data.error || 'Erreur dépôt', 'error');
+  }
+
+  document.addEventListener('DOMContentLoaded', () => { 
+    checkRJStatus();
+    feather.replace();
+  });
+</script>
+{% endblock %}
