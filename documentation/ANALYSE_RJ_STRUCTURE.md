@@ -416,3 +416,4 @@ D'après le guide, l'ordre de remplissage est:
 **Fichier analysé:** Rj-19-12-2024.xls
 **Basé sur:** rj_mapper.py, rj_reader.py, GUIDE_RJ_ONGLETS.md
 
+

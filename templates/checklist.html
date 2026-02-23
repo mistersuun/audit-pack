@@ -1,1211 +1,1433 @@
 {% extends "base.html" %}
-
-{% block title %}Checklist{% endblock %}
+{% block title %}Checklist {{ 'Front Desk' if active_role == 'front' else 'Back Office' }}{% endblock %}
 
 {% block content %}
-<!-- Main Checklist View -->
-<div id="checklist-view" class="dashboard-container">
-    <div class="page-header">
-        <div class="page-title">
-            <h1>Dashboard</h1>
-            <p>Bienvenue dans votre checklist d'audit de nuit</p>
-        </div>
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN CHECKLIST VIEW
+     ═══════════════════════════════════════════════════════════ -->
+<div id="checklist-view" class="cl-page">
+
+  <!-- Header -->
+  <div class="cl-header">
+    <div>
+      <h1 class="cl-title" id="cl-title">Checklist</h1>
+      <p class="cl-subtitle" id="cl-subtitle">Chargement...</p>
     </div>
-
-    <!-- Getting Started Card with Timeline -->
-    <div class="getting-started-card">
-        <div class="getting-started-header">
-            <div class="getting-started-title">
-                <div class="icon">
-                    <i data-feather="check-circle"></i>
-                </div>
-                <h2>Checklist du Quart</h2>
-            </div>
-            <div class="progress-percentage">
-                <span id="progress-percent">0%</span> complété
-            </div>
-        </div>
-
-        <div class="progress-bar-container">
-            <div class="progress-bar-fill" id="progress-fill"></div>
-        </div>
-
-        <div id="timeline-view" class="timeline">
-            <!-- Timeline steps loaded via JavaScript -->
-        </div>
-    </div>
-
-    <div class="actions">
-        <button id="complete-shift-btn" class="btn btn-complete" disabled>
-            <i data-feather="check-circle"></i>
-            Terminer le quart
+    <div class="cl-header-right">
+      <div class="cl-role-toggle">
+        <button class="cl-role-btn {% if active_role == 'front' %}active{% endif %}" data-role="front" onclick="switchRole('front')">
+          <i data-feather="monitor"></i> Front Desk
         </button>
+        <button class="cl-role-btn {% if active_role == 'back' %}active{% endif %}" data-role="back" onclick="switchRole('back')">
+          <i data-feather="server"></i> Back Office
+        </button>
+      </div>
+      <button class="cl-btn-icon" onclick="loadData()" title="Actualiser"><i data-feather="refresh-cw"></i></button>
     </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="cl-stats-row">
+    <div class="cl-stat-card">
+      <div class="cl-stat-icon bg-indigo"><i data-feather="trending-up"></i></div>
+      <div>
+        <div class="cl-stat-label">Progression</div>
+        <div class="cl-stat-value" id="stat-pct">0%</div>
+      </div>
+      <div class="cl-stat-bar-wrap">
+        <div class="cl-stat-bar"><div class="cl-stat-fill" id="stat-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="cl-stat-card">
+      <div class="cl-stat-icon bg-green"><i data-feather="check-square"></i></div>
+      <div>
+        <div class="cl-stat-label">Tâches</div>
+        <div class="cl-stat-value" id="stat-tasks">0 / 0</div>
+      </div>
+    </div>
+    <div class="cl-stat-card">
+      <div class="cl-stat-icon bg-orange"><i data-feather="clock"></i></div>
+      <div>
+        <div class="cl-stat-label">Temps restant</div>
+        <div class="cl-stat-value" id="stat-time">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task Cards (rendered by JS) -->
+  <div id="task-list"></div>
+
+  <!-- Complete Shift -->
+  <div class="cl-footer-actions">
+    <button id="complete-shift-btn" class="cl-btn-complete" disabled onclick="completeShift()">
+      <i data-feather="check-circle"></i> Terminer le quart
+    </button>
+  </div>
 </div>
 
-<!-- Step-by-Step Guide View -->
-<div id="guide-view" class="guide-container" style="display: none;">
-    <!-- Left Sidebar - Category List -->
-    <div class="guide-sidebar">
-        <div class="guide-sidebar-title">Checklist Overview</div>
-        <div id="guide-category-list" class="guide-task-list">
-            <!-- Categories loaded via JS -->
-        </div>
+<!-- ═══════════════════════════════════════════════════════════
+     GUIDE VIEW (Step-by-Step)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="guide-view" class="gv-page" style="display:none;">
+  <!-- Left Sidebar -->
+  <div class="gv-sidebar">
+    <div class="gv-sidebar-title">Navigation</div>
+    <div id="guide-category-list" class="gv-cat-list"></div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="gv-main">
+    <div class="gv-header">
+      <button class="gv-back-btn" onclick="closeGuide()">
+        <i data-feather="arrow-left"></i> Retour
+      </button>
+      <div class="gv-header-meta">
+        <span class="gv-task-counter" id="guide-counter"></span>
+        <span class="gv-system-badge" id="guide-system-name"></span>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="guide-main">
-        <div class="guide-header">
-            <button class="back-btn" onclick="closeGuide()">
-                <i data-feather="arrow-left"></i>
-                Retour à la checklist
-            </button>
-            <div class="guide-progress-info">
-                <span id="guide-system-name"></span>
-            </div>
+    <div class="gv-content">
+      <!-- Title -->
+      <div class="gv-title-section">
+        <h2 id="guide-task-title" class="gv-title">—</h2>
+        <span id="guide-status-badge" class="gv-status not-completed">Non complété</span>
+      </div>
+
+      <!-- Description -->
+      <div id="guide-description" class="gv-desc-card" style="display:none;">
+        <p id="guide-desc-text"></p>
+      </div>
+
+      <!-- Steps -->
+      <div id="guide-steps" class="gv-steps"></div>
+
+      <!-- Screenshots -->
+      <div id="guide-screenshots" class="gv-screenshots" style="display:none;">
+        <h3 class="gv-section-title"><i data-feather="image"></i> Captures d'écran</h3>
+        <div id="guide-screenshots-grid" class="gv-screenshots-grid"></div>
+        <div id="guide-screenshots-empty" class="gv-screenshots-empty" style="display:none;">Aucune capture d'écran disponible</div>
+      </div>
+
+      <!-- Document Generator -->
+      <div id="guide-generator" class="gv-generator-card" style="display:none;">
+        <div class="gv-generator-header">
+          <i data-feather="file-plus"></i>
+          <h3 id="generator-title">Générer le document</h3>
         </div>
+        <form id="generator-form" onsubmit="handleGenerateDocument(event)">
+          <div id="generator-fields"></div>
+          <button type="submit" class="gv-gen-btn" id="generator-submit-btn">
+            <i data-feather="download"></i>
+            <span id="generator-btn-text">Générer et télécharger</span>
+          </button>
+          <div id="generator-message" class="gv-gen-msg"></div>
+        </form>
+      </div>
 
-        <div class="guide-content">
-            <div class="guide-task-title-section">
-                <div class="guide-task-icon">
-                    <i data-feather="edit-3"></i>
-                </div>
-                <div class="guide-task-title-info">
-                    <h2 id="guide-task-title">Titre de la tâche</h2>
-                    <span id="guide-status-badge" class="guide-task-status-badge not-completed">
-                        Status: Non complété
-                    </span>
-                </div>
-            </div>
-
-            <div id="guide-description" class="guide-description-card">
-                <h3>Description de la tâche</h3>
-                <p id="guide-desc-text"></p>
-            </div>
-
-            <div id="guide-steps" class="guide-steps">
-                <!-- Steps loaded via JS -->
-            </div>
-
-            <!-- Document Generator Section -->
-            <div id="guide-generator" class="guide-generator" style="display: none;">
-                <div class="generator-header">
-                    <i data-feather="file-plus"></i>
-                    <h3 id="generator-title">Générer le document</h3>
-                </div>
-                <form id="generator-form" onsubmit="handleGenerateDocument(event)">
-                    <div id="generator-fields"></div>
-                    <button type="submit" class="generator-btn" id="generator-submit-btn">
-                        <i data-feather="download"></i>
-                        <span id="generator-btn-text">Générer et télécharger</span>
-                    </button>
-                    <div id="generator-message" class="generator-message"></div>
-                </form>
-            </div>
-
-            <!-- RJ Automation Section -->
-            <div id="guide-automation" class="guide-generator" style="display: none; background-color: #f0f7ff; border: 1px solid #cce5ff;">
-                <div class="generator-header" style="color: #004085;">
-                    <i data-feather="cpu"></i>
-                    <h3 id="automation-title">Automatisation RJ</h3>
-                </div>
-                <div id="automation-content">
-                    <!-- Dynamic content loaded via JS -->
-                </div>
-                <div id="automation-message" class="generator-message"></div>
-            </div>
-
-            <button class="guide-action-btn" id="guide-action-btn" onclick="openSystemLink()">
-                <i data-feather="external-link"></i>
-                <span id="guide-action-text">Ouvrir le système</span>
-            </button>
-
-            <div id="guide-tips" class="guide-tips" style="display: none;">
-                <div class="guide-tips-icon">!</div>
-                <p id="guide-tips-text"></p>
-            </div>
+      <!-- RJ Automation -->
+      <div id="guide-automation" class="gv-automation-card" style="display:none;">
+        <div class="gv-automation-header">
+          <i data-feather="cpu"></i>
+          <h3 id="automation-title">Automatisation RJ</h3>
         </div>
+        <div id="automation-content"></div>
+        <div id="automation-message" class="gv-gen-msg"></div>
+      </div>
 
-        <div class="guide-footer">
-            <button class="complete-task-btn" id="complete-task-btn" onclick="toggleTaskFromGuide()">
-                <i data-feather="check"></i>
-                <span id="complete-btn-text">Marquer comme complété</span>
-            </button>
-            <button class="next-step-btn" id="next-step-btn" onclick="goToNextStep()">
-                <span>Étape suivante</span>
-                <i data-feather="arrow-right"></i>
-            </button>
-        </div>
+      <!-- System Link -->
+      <button class="gv-system-link" id="guide-action-btn" onclick="openSystemLink()" style="display:none;">
+        <i data-feather="external-link"></i>
+        <span id="guide-action-text">Ouvrir le système</span>
+      </button>
+
+      <!-- Tips -->
+      <div id="guide-tips" class="gv-tips-card" style="display:none;">
+        <div class="gv-tips-header"><i data-feather="lightbulb"></i> Conseil</div>
+        <p id="guide-tips-text"></p>
+      </div>
     </div>
 
-    <!-- Right Sidebar - Resources -->
-    <div class="guide-resources">
-        <div class="resource-card">
-            <div class="resource-card-header">
-                <h3>Vidéo explicative</h3>
-            </div>
-            <div class="video-placeholder" style="position: relative; background: #f5f5f5; border-radius: 8px; padding: 40px 20px; text-align: center;">
-                <div class="video-play-btn" style="opacity: 0.3; margin-bottom: 10px;">
-                    <i data-feather="play"></i>
-                </div>
-                <span class="video-label" style="display: block; color: #999; font-size: 14px;">Tutoriel pas-à-pas</span>
-                <span style="display: block; color: #666; font-size: 12px; margin-top: 5px;">Bientôt disponible</span>
-            </div>
-        </div>
-
-        <div class="resource-card">
-            <div class="resource-card-header">
-                <h3>Ressources additionnelles</h3>
-            </div>
-            <div class="resource-links">
-                <a href="{{ url_for('checklist.documentation') }}" class="resource-link">
-                    <i data-feather="book-open"></i>
-                    <span>Documentation & Guides</span>
-                    <i data-feather="chevron-right" class="arrow"></i>
-                </a>
-                <a href="{{ url_for('checklist.faq') }}" class="resource-link">
-                    <i data-feather="help-circle"></i>
-                    <span>FAQ</span>
-                    <i data-feather="chevron-right" class="arrow"></i>
-                </a>
-            </div>
-        </div>
+    <!-- Footer -->
+    <div class="gv-footer">
+      <button class="gv-btn-complete" id="complete-task-btn" onclick="toggleTaskFromGuide()">
+        <i data-feather="check"></i>
+        <span id="complete-btn-text">Marquer comme complété</span>
+      </button>
+      <button class="gv-btn-next" id="next-step-btn" onclick="goToNextStep()">
+        <span>Étape suivante</span>
+        <i data-feather="arrow-right"></i>
+      </button>
     </div>
+  </div>
+
+  <!-- Right Sidebar -->
+  <div class="gv-resources">
+    <div class="gv-res-card">
+      <h3 class="gv-res-title">Ressources</h3>
+      <div class="gv-res-links">
+        <a href="{{ url_for('checklist.documentation') }}" class="gv-res-link">
+          <i data-feather="book-open"></i> Documentation
+        </a>
+        <a href="{{ url_for('checklist.faq') }}" class="gv-res-link">
+          <i data-feather="help-circle"></i> FAQ
+        </a>
+        <a href="{{ url_for('generators.generators_page') }}" class="gv-res-link">
+          <i data-feather="printer"></i> Générateurs
+        </a>
+        <a href="/rj/native" class="gv-res-link">
+          <i data-feather="edit-3"></i> Rapport Journalier
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Preview Modal -->
-<div id="preview-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 id="preview-title" style="margin: 0;">Aperçu</h3>
-            <button onclick="document.getElementById('preview-modal').style.display='none'" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
-        </div>
-        <div id="preview-content"></div>
-    </div>
+<!-- Screenshot Modal -->
+<div id="screenshot-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:1001;align-items:center;justify-content:center;cursor:pointer;" onclick="closeScreenshotModal()">
+  <div style="position:relative;max-width:95%;max-height:95vh;display:flex;align-items:center;justify-content:center;">
+    <button onclick="closeScreenshotModal();event.stopPropagation();" style="position:absolute;top:-40px;right:0;background:rgba(255,255,255,0.9);border:none;font-size:2rem;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#333;z-index:1002;">&times;</button>
+    <img id="screenshot-modal-img" src="" alt="Screenshot" style="max-width:100%;max-height:95vh;object-fit:contain;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,0.5);" onclick="event.stopPropagation();">
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   MODERN CHECKLIST — Card Grid + Guide View
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+@keyframes pulse-green { 0%,100% { box-shadow:0 0 0 0 rgba(16,185,129,.3); } 50% { box-shadow:0 0 0 8px rgba(16,185,129,0); } }
+
+:root {
+  --cl-blue:#3b82f6; --cl-green:#10b981; --cl-purple:#8b5cf6;
+  --cl-orange:#f59e0b; --cl-pink:#ec4899; --cl-teal:#14b8a6;
+  --cl-red:#ef4444; --cl-indigo:#6366f1; --cl-rose:#f43f5e;
+}
+
+/* ── Page Layout ── */
+.cl-page { padding:1.25rem 1.75rem 2rem; max-width:1320px; margin:0 auto; }
+
+/* ── Header ── */
+.cl-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.25rem; animation:fadeUp .4s ease both; }
+.cl-title { font-size:1.4rem; font-weight:800; letter-spacing:-.03em; color:var(--text); }
+.cl-subtitle { font-size:.8rem; color:var(--text-muted); margin-top:.15rem; }
+.cl-header-right { display:flex; align-items:center; gap:.75rem; }
+.cl-btn-icon { width:34px; height:34px; border:1px solid var(--border); border-radius:9px; background:var(--card-bg); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted); transition:all 180ms ease; }
+.cl-btn-icon:hover { background:var(--border-light); color:var(--text); }
+.cl-btn-icon svg { width:15px; height:15px; }
+
+/* ── Role Toggle ── */
+.cl-role-toggle { display:flex; gap:0; padding:3px; background:var(--border-light); border-radius:10px; }
+.cl-role-btn { padding:.45rem .85rem; border:none; border-radius:8px; background:transparent; cursor:pointer; font-size:.8rem; font-weight:600; color:var(--text-muted); display:flex; align-items:center; gap:.35rem; transition:all 200ms ease; font-family:inherit; }
+.cl-role-btn svg { width:14px; height:14px; }
+.cl-role-btn.active { background:var(--card-bg); color:var(--primary); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.cl-role-btn:hover:not(.active) { color:var(--text); }
+
+/* ── Stats Row ── */
+.cl-stats-row { display:grid; grid-template-columns:1.5fr 1fr 1fr; gap:.75rem; margin-bottom:1.25rem; animation:fadeUp .45s ease both; }
+.cl-stat-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:.9rem 1.1rem; display:flex; align-items:center; gap:.85rem; transition:all 200ms ease; }
+.cl-stat-card:hover { box-shadow:var(--shadow); }
+.cl-stat-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cl-stat-icon svg { width:17px; height:17px; color:#fff; }
+.bg-indigo { background:var(--cl-indigo); }
+.bg-green { background:var(--cl-green); }
+.bg-orange { background:var(--cl-orange); }
+.cl-stat-label { font-size:.62rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:var(--text-muted); }
+.cl-stat-value { font-size:1.1rem; font-weight:800; color:var(--text); letter-spacing:-.02em; }
+.cl-stat-bar-wrap { flex:1; min-width:60px; }
+.cl-stat-bar { height:5px; background:var(--border-light); border-radius:3px; overflow:hidden; }
+.cl-stat-fill { height:100%; background:var(--cl-indigo); border-radius:3px; transition:width .5s ease; }
+
+/* ── Category Section ── */
+.cl-category { margin-bottom:1rem; animation:fadeUp .5s ease both; }
+.cl-cat-header { display:flex; align-items:center; gap:.65rem; padding:.5rem 0; margin-bottom:.6rem; }
+.cl-cat-badge { display:flex; align-items:center; gap:.4rem; padding:.35rem .75rem; border-radius:9px; color:#fff; font-size:.75rem; font-weight:700; letter-spacing:.02em; }
+.cl-cat-badge svg { width:13px; height:13px; }
+.cl-cat-progress { display:flex; align-items:center; gap:.5rem; margin-left:auto; }
+.cl-cat-bar { width:80px; height:4px; background:var(--border-light); border-radius:2px; overflow:hidden; }
+.cl-cat-bar-fill { height:100%; border-radius:2px; transition:width .3s ease; }
+.cl-cat-count { font-size:.7rem; color:var(--text-muted); font-weight:600; min-width:30px; text-align:right; }
+
+/* ── Task Cards Grid ── */
+.cl-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:.65rem; }
+.cl-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:1rem 1.15rem; display:flex; flex-direction:column; transition:all 200ms ease; cursor:default; position:relative; overflow:hidden; }
+.cl-card::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; border-radius:14px 0 0 14px; opacity:0; transition:opacity 200ms ease; }
+.cl-card:hover { box-shadow:var(--shadow); transform:translateY(-1px); }
+.cl-card:hover::before { opacity:1; }
+.cl-card.completed { opacity:.55; }
+.cl-card.completed:hover { opacity:.75; }
+
+.cl-card-top { display:flex; align-items:flex-start; gap:.65rem; margin-bottom:.5rem; }
+.cl-card-check { width:20px; height:20px; accent-color:var(--cl-green); cursor:pointer; flex-shrink:0; margin-top:2px; }
+.cl-card-title { font-size:.88rem; font-weight:700; color:var(--text); line-height:1.35; flex:1; }
+.cl-card-order { font-size:.6rem; color:var(--text-muted); font-weight:700; background:var(--border-light); padding:.1rem .4rem; border-radius:4px; flex-shrink:0; }
+
+.cl-card-desc { font-size:.78rem; color:var(--text-secondary); line-height:1.5; margin-bottom:.6rem; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+.cl-card-meta { display:flex; align-items:center; gap:.65rem; font-size:.7rem; color:var(--text-muted); margin-bottom:.65rem; }
+.cl-card-meta span { display:flex; align-items:center; gap:.25rem; }
+.cl-card-meta svg { width:12px; height:12px; }
+
+.cl-card-footer { display:flex; align-items:center; gap:.5rem; padding-top:.6rem; border-top:1px solid var(--border-light); margin-top:auto; }
+.cl-card-guide { flex:1; padding:.4rem .6rem; background:rgba(99,102,241,.06); border:1px solid rgba(99,102,241,.15); color:var(--cl-indigo); border-radius:8px; cursor:pointer; font-size:.75rem; font-weight:600; display:flex; align-items:center; justify-content:center; gap:.3rem; transition:all 180ms ease; font-family:inherit; }
+.cl-card-guide:hover { background:var(--cl-indigo); color:#fff; }
+.cl-card-guide svg { width:13px; height:13px; }
+.cl-card-gen { padding:.4rem .6rem; background:rgba(245,158,11,.08); border:1px solid rgba(245,158,11,.2); color:var(--cl-orange); border-radius:8px; cursor:pointer; font-size:.75rem; font-weight:600; display:flex; align-items:center; gap:.3rem; transition:all 180ms ease; font-family:inherit; border:none; }
+.cl-card-gen:hover { background:rgba(245,158,11,.15); }
+.cl-card-gen svg { width:12px; height:12px; }
+
+/* ── Complete Shift ── */
+.cl-footer-actions { text-align:center; padding:1.5rem 0; }
+.cl-btn-complete { padding:.65rem 1.5rem; border:none; border-radius:10px; background:var(--border-light); color:var(--text-muted); font-size:.9rem; font-weight:700; cursor:not-allowed; display:inline-flex; align-items:center; gap:.45rem; transition:all 250ms ease; font-family:inherit; }
+.cl-btn-complete:not(:disabled) { background:var(--cl-green); color:#fff; cursor:pointer; animation:pulse-green 2s infinite; }
+.cl-btn-complete:not(:disabled):hover { box-shadow:0 4px 16px rgba(16,185,129,.3); }
+.cl-btn-complete svg { width:17px; height:17px; }
+
+/* ═══ GUIDE VIEW ═══ */
+.gv-page { display:grid; grid-template-columns:240px 1fr 260px; gap:1rem; padding:1rem 1.5rem; animation:fadeUp .4s ease both; }
+
+/* Left Sidebar */
+.gv-sidebar { position:sticky; top:1rem; max-height:calc(100vh - 2rem); overflow-y:auto; }
+.gv-sidebar-title { font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:var(--text-muted); padding:0 .5rem .5rem; }
+.gv-cat-list { display:flex; flex-direction:column; gap:.2rem; }
+.gv-cat-item { display:flex; align-items:center; gap:.6rem; padding:.55rem .7rem; border-radius:10px; cursor:pointer; transition:all 150ms ease; }
+.gv-cat-item:hover { background:var(--border-light); }
+.gv-cat-item.active { background:rgba(99,102,241,.08); }
+.gv-cat-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.gv-cat-info { flex:1; min-width:0; }
+.gv-cat-name { font-size:.78rem; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.gv-cat-pct { font-size:.65rem; color:var(--text-muted); }
+.gv-cat-check { color:var(--cl-green); }
+.gv-cat-check svg { width:14px; height:14px; }
+
+/* Main Content */
+.gv-main { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; display:flex; flex-direction:column; min-height:0; }
+.gv-header { display:flex; align-items:center; justify-content:space-between; padding:1rem 1.25rem; border-bottom:1px solid var(--border-light); }
+.gv-back-btn { background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:.35rem; color:var(--text-muted); font-size:.82rem; font-weight:600; transition:color 150ms; font-family:inherit; }
+.gv-back-btn:hover { color:var(--text); }
+.gv-back-btn svg { width:15px; height:15px; }
+.gv-header-meta { display:flex; align-items:center; gap:.5rem; }
+.gv-task-counter { font-size:.7rem; color:var(--text-muted); font-weight:600; }
+.gv-system-badge { font-size:.65rem; padding:.2rem .55rem; background:var(--border-light); border-radius:6px; color:var(--text-secondary); font-weight:600; }
+
+.gv-content { flex:1; padding:1.5rem 1.5rem 1rem; overflow-y:auto; }
+
+.gv-title-section { margin-bottom:1.25rem; }
+.gv-title { font-size:1.15rem; font-weight:800; color:var(--text); margin-bottom:.35rem; }
+.gv-status { display:inline-block; padding:.2rem .6rem; border-radius:6px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.gv-status.not-completed { background:var(--border-light); color:var(--text-muted); }
+.gv-status.completed { background:rgba(16,185,129,.1); color:var(--cl-green); }
+
+.gv-desc-card { background:var(--border-light); border-radius:10px; padding:.85rem 1rem; margin-bottom:1.25rem; }
+.gv-desc-card p { font-size:.85rem; color:var(--text-secondary); line-height:1.6; margin:0; }
+
+/* Steps */
+.gv-steps { display:flex; flex-direction:column; gap:.5rem; margin-bottom:1.25rem; }
+.gv-step { display:grid; grid-template-columns:30px 1fr; gap:.65rem; padding:.75rem .85rem; background:var(--bg,var(--card-bg)); border-left:3px solid var(--primary); border-radius:0 8px 8px 0; }
+.gv-step-num { font-size:.82rem; font-weight:800; color:var(--primary); display:flex; align-items:flex-start; justify-content:center; padding-top:1px; }
+.gv-step-text { font-size:.85rem; line-height:1.65; color:var(--text); }
+
+/* Screenshots */
+.gv-section-title { font-size:.85rem; font-weight:700; color:var(--text); display:flex; align-items:center; gap:.4rem; margin-bottom:.75rem; }
+.gv-section-title svg { width:15px; height:15px; }
+.gv-screenshots-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.5rem; }
+.gv-screenshot-item { border-radius:8px; overflow:hidden; cursor:pointer; border:1px solid var(--border); transition:all 180ms ease; }
+.gv-screenshot-item:hover { box-shadow:var(--shadow); transform:scale(1.02); }
+.gv-screenshot-item img { width:100%; height:80px; object-fit:cover; display:block; }
+.gv-screenshots-empty { text-align:center; padding:1.5rem; color:var(--text-muted); font-size:.82rem; font-style:italic; }
+
+/* Generator Card */
+.gv-generator-card { background:var(--card-bg); border:1px solid var(--border); border-radius:12px; padding:1rem 1.15rem; margin-bottom:1rem; }
+.gv-generator-header { display:flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:700; color:var(--text); margin-bottom:.75rem; }
+.gv-generator-header svg { width:16px; height:16px; color:var(--cl-orange); }
+.gv-gen-btn { width:100%; padding:.55rem; background:var(--primary); color:#fff; border:none; border-radius:8px; font-size:.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.4rem; transition:all 180ms ease; font-family:inherit; }
+.gv-gen-btn:hover { opacity:.9; }
+.gv-gen-btn svg { width:14px; height:14px; }
+.gv-gen-msg { padding:.5rem .7rem; border-radius:8px; margin-top:.5rem; display:none; font-size:.78rem; font-weight:500; }
+.gv-gen-msg.success { background:rgba(16,185,129,.1); color:#059669; }
+.gv-gen-msg.error { background:rgba(239,68,68,.1); color:#dc2626; }
+
+/* Automation Card */
+.gv-automation-card { background:rgba(59,130,246,.04); border:1px solid rgba(59,130,246,.15); border-radius:12px; padding:1rem 1.15rem; margin-bottom:1rem; }
+.gv-automation-header { display:flex; align-items:center; gap:.5rem; font-size:.9rem; font-weight:700; color:var(--cl-blue); margin-bottom:.75rem; }
+.gv-automation-header svg { width:16px; height:16px; }
+
+/* System Link */
+.gv-system-link { display:flex; align-items:center; justify-content:center; gap:.4rem; width:100%; padding:.55rem; background:var(--border-light); border:1px solid var(--border); border-radius:8px; color:var(--text-secondary); font-size:.82rem; font-weight:600; cursor:pointer; transition:all 180ms ease; margin-bottom:1rem; font-family:inherit; }
+.gv-system-link:hover { background:var(--cl-blue); color:#fff; border-color:var(--cl-blue); }
+.gv-system-link svg { width:14px; height:14px; }
+
+/* Tips */
+.gv-tips-card { background:rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.2); border-left:3px solid var(--cl-orange); border-radius:0 10px 10px 0; padding:.85rem 1rem; margin-bottom:1rem; }
+.gv-tips-header { display:flex; align-items:center; gap:.4rem; font-size:.78rem; font-weight:700; color:var(--cl-orange); margin-bottom:.35rem; }
+.gv-tips-header svg { width:14px; height:14px; }
+.gv-tips-card p { font-size:.82rem; color:var(--text-secondary); line-height:1.55; margin:0; }
+
+/* Footer */
+.gv-footer { display:flex; gap:.65rem; padding:.85rem 1.25rem; border-top:1px solid var(--border-light); }
+.gv-btn-complete { flex:1; padding:.55rem; border:none; border-radius:8px; background:var(--cl-green); color:#fff; font-size:.82rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.35rem; transition:all 180ms ease; font-family:inherit; }
+.gv-btn-complete.completed { background:var(--border-light); color:var(--text-muted); }
+.gv-btn-complete svg { width:14px; height:14px; }
+.gv-btn-next { flex:1; padding:.55rem; border:1px solid var(--border); border-radius:8px; background:var(--card-bg); color:var(--text); font-size:.82rem; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:.35rem; transition:all 180ms ease; font-family:inherit; }
+.gv-btn-next:hover { background:var(--border-light); }
+.gv-btn-next:disabled { opacity:.4; cursor:not-allowed; }
+.gv-btn-next svg { width:14px; height:14px; }
+
+/* Right Sidebar */
+.gv-resources { position:sticky; top:1rem; }
+.gv-res-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:1rem; }
+.gv-res-title { font-size:.75rem; text-transform:uppercase; letter-spacing:.05em; font-weight:700; color:var(--text-muted); margin-bottom:.75rem; }
+.gv-res-links { display:flex; flex-direction:column; gap:.3rem; }
+.gv-res-link { display:flex; align-items:center; gap:.5rem; padding:.5rem .6rem; border-radius:8px; color:var(--text-secondary); font-size:.8rem; font-weight:500; text-decoration:none; transition:all 150ms ease; }
+.gv-res-link:hover { background:var(--border-light); color:var(--text); }
+.gv-res-link svg { width:14px; height:14px; }
+
+/* ── Generator form fields (reused from old) ── */
+.generator-field { margin-bottom:.6rem; }
+.generator-field label { display:block; margin-bottom:.25rem; font-size:.78rem; font-weight:600; color:var(--text); }
+.generator-field input, .generator-field select { width:100%; padding:.45rem .6rem; border:1px solid var(--border); border-radius:7px; font-size:.82rem; font-family:inherit; color:var(--text); background:var(--bg,var(--card-bg)); }
+.generator-field input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 2px rgba(233,30,99,.08); }
+.generator-auto-info { font-size:.78rem; color:var(--text-muted); padding:.4rem 0; }
+.banquet-event { padding:.5rem; border:1px solid var(--border-light); border-radius:8px; margin-bottom:.4rem; }
+.salon-ac-dropdown {
+  position:absolute; top:100%; left:0; right:0; z-index:50;
+  background:var(--bg-card); border:1px solid var(--border); border-radius:8px;
+  max-height:180px; overflow-y:auto; display:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.12);
+}
+.salon-ac-item {
+  padding:.4rem .7rem; cursor:pointer; font-size:.82rem;
+  transition:background .1s;
+}
+.salon-ac-item:hover { background:rgba(99,102,241,.08); color:var(--primary); }
+.add-event-btn { background:none; border:1px dashed var(--border); border-radius:7px; padding:.4rem; width:100%; cursor:pointer; color:var(--text-muted); font-size:.78rem; font-family:inherit; transition:all 150ms; }
+.add-event-btn:hover { border-color:var(--primary); color:var(--primary); }
+.multi-gen-tabs { display:flex; gap:.3rem; margin-bottom:.6rem; }
+.multi-gen-tab { flex:1; padding:.4rem .3rem; border:1px solid var(--border); border-radius:7px; background:var(--bg-card); cursor:pointer; font-size:.75rem; font-family:inherit; font-weight:500; color:var(--text-muted); display:flex; align-items:center; justify-content:center; gap:.25rem; transition:all 150ms; }
+.multi-gen-tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.multi-gen-tab:hover:not(.active) { border-color:var(--primary); color:var(--primary); }
+.multi-gen-tab svg { width:12px; height:12px; }
+.pilot-panel { padding:.5rem 0; }
+.crew-rows { display:flex; flex-direction:column; gap:.35rem; margin-bottom:.4rem; }
+.crew-row { display:flex; gap:.3rem; align-items:center; }
+.crew-row input { flex:1; padding:.35rem .5rem; border:1px solid var(--border); border-radius:6px; font-size:.8rem; font-family:inherit; background:var(--bg); color:var(--text); }
+.crew-row input:focus { border-color:var(--primary); outline:none; }
+.crew-row .remove-event-btn { width:24px; height:24px; padding:0; display:flex; align-items:center; justify-content:center; }
+.remove-event-btn { background:none; border:none; color:var(--cl-red); cursor:pointer; font-size:.75rem; font-family:inherit; padding:.2rem; }
+
+/* ── Step formatting (reused) ── */
+.step-separator { height:.5rem; }
+.step-sub-item { padding-left:1rem; margin-top:.25rem; font-size:.82rem; color:var(--text-secondary); }
+.sub-bullet { color:var(--primary); margin-right:.25rem; }
+.step-section-header { font-weight:700; color:var(--text); margin-top:.35rem; }
+code.menu-item { background:rgba(99,102,241,.08); color:var(--cl-indigo); padding:.1rem .35rem; border-radius:4px; font-size:.8rem; }
+code.dept-code { background:var(--border-light); padding:.1rem .3rem; border-radius:3px; font-family:'SF Mono',Monaco,Consolas,monospace; font-size:.78rem; }
+kbd.key { background:var(--border-light); border:1px solid var(--border); padding:.05rem .3rem; border-radius:3px; font-size:.75rem; }
+.warning-text { color:var(--cl-red); font-weight:700; }
+.action-btn { background:rgba(16,185,129,.1); color:var(--cl-green); padding:.05rem .3rem; border-radius:3px; font-weight:600; font-size:.8rem; }
+.system-name { color:var(--cl-blue); font-weight:600; }
+.file-ext { background:var(--border-light); padding:.05rem .25rem; border-radius:3px; font-family:monospace; font-size:.78rem; }
+.field-label { font-weight:600; color:var(--cl-purple); }
+.money-amount { font-weight:600; color:var(--cl-green); }
+.room-number { font-weight:700; color:var(--cl-orange); }
+.arrow-indicator { color:var(--primary); font-weight:700; margin:0 .15rem; }
+
+/* ── Responsive ── */
+@media (max-width:1200px) {
+  .gv-page { grid-template-columns:1fr; }
+  .gv-sidebar, .gv-resources { position:relative; top:0; max-height:none; }
+  .gv-sidebar { order:-1; }
+}
+@media (max-width:768px) {
+  .cl-header { flex-direction:column; align-items:flex-start; gap:.75rem; }
+  .cl-stats-row { grid-template-columns:1fr; }
+  .cl-cards { grid-template-columns:1fr; }
+  .gv-page { padding:.75rem; }
+}
+</style>
+
 <script>
-const CATEGORIES = {
-    'pre_audit': { name: 'Pré-Audit', color: '#e91e63', icon: 'clipboard' },
-    'part1': { name: 'Pre Audit Reports', color: '#4caf50', icon: 'file-text' },
-    'part2': { name: 'Post Audit', color: '#ff9800', icon: 'check-square' },
-    'end_shift': { name: 'Fin de quart', color: '#9c27b0', icon: 'log-out' }
+// ═══════════════════════════════════════════════════════════════
+// CATEGORY CONFIG — unified for front + back
+// ═══════════════════════════════════════════════════════════════
+
+const CATEGORY_CONFIG = {
+  // ── FRONT (6 catégories chronologiques — 8h de quart) ──
+  mise_en_place:  { name:'Mise en place',         color:'#3b82f6', icon:'clipboard',    role:'front' },
+  pre_audit_f:    { name:'Pré-audit & Rapports',  color:'#f59e0b', icon:'printer',      role:'front' },
+  tips:           { name:'Pourboires',             color:'#10b981', icon:'dollar-sign',  role:'front' },
+  coordination:   { name:'Coordination',           color:'#8b5cf6', icon:'users',        role:'front' },
+  post_audit_f:   { name:'Post-PART',              color:'#ef4444', icon:'check-circle', role:'front' },
+  fin_quart:      { name:'Fin de quart',           color:'#ec4899', icon:'log-out',      role:'front' },
+  // ── BACK (4 catégories) ──
+  pre_audit_b:    { name:'Mise en place',          color:'#e91e63', icon:'clipboard',    role:'back' },
+  part1:          { name:'Saisie & Balancement',   color:'#4caf50', icon:'file-text',    role:'back' },
+  part2:          { name:'Post-PART & Jour',       color:'#ff9800', icon:'check-square', role:'back' },
+  end_shift:      { name:'Finalisation',           color:'#9c27b0', icon:'log-out',      role:'back' },
+};
+
+// Map actual DB category names to config keys (front "pre_audit" ≠ back "pre_audit")
+function getCatKey(task) {
+  if (task.role === 'front') {
+    if (task.category === 'pre_audit') return 'pre_audit_f';
+    if (task.category === 'post_audit') return 'post_audit_f';
+    return task.category; // mise_en_place, tips, coordination, fin_quart
+  } else {
+    if (task.category === 'pre_audit') return 'pre_audit_b';
+    return task.category; // part1, part2, end_shift
+  }
+}
+
+// Generator map: task order → generator info (matches documentation order)
+// Single generator per task OR array of multiple generators
+const TASK_GENERATORS = {
+  7:  { endpoint:'/api/generators/separateur-date',    name:'Séparateur Daté',        autoDate:true },
+  8:  { endpoint:'/api/generators/checklist-tournee',  name:'Checklist Tournée',      autoDate:true },
+  9:  { endpoint:'/api/generators/entretien-hiver',    name:'Entretien Hiver',        autoDate:true },
+  14: [
+    { endpoint:'/api/generators/fedex',     name:'FedEx',      autoDate:false, icon:'package' },
+    { endpoint:'/api/generators/cargo-jet', name:'Cargo Jet',  autoDate:false, icon:'package' },
+  ],
+  18: { endpoint:'/api/generators/cles-banquets',      name:'Contrat Banquet',        autoDate:false },
+  19: { endpoint:'/api/generators/cles-banquets',      name:'Clés Banquets',          autoDate:false },
+};
+
+// RJ integration (back tasks only)
+const RJ_TASK_MAP = {
+  2:  { title:'Fichier RJ',     tab:null,         section:'Contrôle',    action:'upload' },
+  4:  { title:'DueBack',        tab:'dueback',    section:'DueBack',     action:'navigate' },
+  11: { title:'Recap',          tab:'recap',      section:'Recap',       action:'navigate' },
+  12: { title:'Dépôt / SD',     tab:'depot',      section:'Dépôt / SD',  action:'navigate' },
+  13: { title:'Transelect',     tab:'transelect', section:'Transelect',  action:'navigate' },
+  20: { title:'GEAC/UX',        tab:'geac',       section:'GEAC',        action:'navigate' },
+  25: { title:'Quasimodo',      tab:null,         section:null,          action:'quasimodo' }
 };
 
 let tasks = [];
 let completions = new Set();
 let currentTask = null;
+let currentRole = '{{ active_role | default("front") }}';
+
+// ═══════════════════════════════════════════════════════════════
+// DATA LOADING
+// ═══════════════════════════════════════════════════════════════
 
 async function loadData() {
-    console.log("Starting loadData...");
-    try {
-        const [tasksRes, shiftRes] = await Promise.all([
-            fetch('/api/tasks'),
-            fetch('/api/shifts/current')
-        ]);
+  try {
+    const [tasksRes, shiftRes] = await Promise.all([
+      fetch('/api/tasks'),
+      fetch('/api/shifts/current')
+    ]);
+    tasks = await tasksRes.json();
+    const shiftData = await shiftRes.json();
 
-        if (!tasksRes.ok) throw new Error(`Tasks API failed: ${tasksRes.status}`);
-        if (!shiftRes.ok) throw new Error(`Shift API failed: ${shiftRes.status}`);
-
-        tasks = await tasksRes.json();
-        console.log(`Loaded ${tasks.length} tasks`);
-        
-        const shiftData = await shiftRes.json();
-        console.log("Shift data loaded", shiftData);
-
-        if (shiftData.completions) {
-            shiftData.completions.forEach(c => completions.add(c.task_id));
-        }
-
-        renderTimeline();
-        updateProgress();
-
-        if (!shiftData.shift) {
-            console.log("No active shift, creating one...");
-            fetch('/api/shifts', { method: 'POST' });
-        }
-
-        feather.replace();
-    } catch (error) {
-        console.error("Error in loadData:", error);
-        alert("Erreur lors du chargement de la checklist: " + error.message);
+    completions.clear();
+    if (shiftData.completions) {
+      shiftData.completions.forEach(c => completions.add(c.task_id));
     }
+
+    if (!shiftData.shift) {
+      fetch('/api/shifts', { method:'POST' });
+    }
+
+    renderAll();
+  } catch (err) {
+    console.error('loadData error:', err);
+  }
 }
 
-function renderTimeline() {
-    const container = document.getElementById('timeline-view');
-    container.innerHTML = '';
+function switchRole(role) {
+  if (role === currentRole) return;
+  currentRole = role;
 
-    let currentCategory = null;
-    let stepNumber = 1;
+  // Update toggle UI
+  document.querySelectorAll('.cl-role-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.role === role);
+  });
 
-    tasks.forEach((task, index) => {
-        const isCompleted = completions.has(task.id);
-        const hasSteps = task.steps && task.steps.length > 0;
-        const isCurrent = !isCompleted && !tasks.slice(0, index).some(t => !completions.has(t.id) && t.category === task.category);
+  // Update sidebar active state
+  document.querySelectorAll('.menu-child').forEach(el => {
+    const href = el.getAttribute('href') || '';
+    el.classList.toggle('active', href.includes('role=' + role));
+  });
 
-        // Add category header if changed
-        if (task.category !== currentCategory) {
-            currentCategory = task.category;
-            const categoryInfo = CATEGORIES[currentCategory] || { name: currentCategory, color: '#9e9e9e' };
+  // Set role on server + reload tasks
+  fetch('/api/set-role', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({role})
+  }).then(() => loadData());
 
-            const categoryHeader = document.createElement('div');
-            categoryHeader.className = 'category-header';
-            categoryHeader.innerHTML = `
-                <div class="category-icon" style="background: ${categoryInfo.color}">
-                    <i data-feather="${categoryInfo.icon || 'folder'}"></i>
-                </div>
-                <span class="category-name">${categoryInfo.name}</span>
-                <span class="category-count" id="cat-${currentCategory}-count"></span>
-            `;
-            container.appendChild(categoryHeader);
-        }
-
-        const stepClass = isCompleted ? 'completed' : (isCurrent ? 'current' : '');
-        const categoryInfo = CATEGORIES[task.category] || { color: '#9e9e9e' };
-
-        const step = document.createElement('div');
-        step.className = `timeline-step ${stepClass}`;
-        step.innerHTML = `
-            <div class="step-indicator">
-                ${isCompleted ? '<i data-feather="check"></i>' : ''}
-            </div>
-            <div class="step-content">
-                <div class="step-label">Étape ${stepNumber}</div>
-                <div class="step-title">${task.title_fr}</div>
-                <div class="step-description">
-                    ${task.system_used ? task.system_used : ''}
-                    ${task.estimated_minutes ? ` • ~${task.estimated_minutes} min` : ''}
-                </div>
-            </div>
-            <div class="step-action">
-                <input type="checkbox"
-                       class="task-quick-check"
-                       ${isCompleted ? 'checked' : ''}
-                       onclick="event.stopPropagation(); toggleTask(${task.id}, this.checked)"
-                       title="Marquer comme ${isCompleted ? 'non complété' : 'complété'}">
-                ${hasSteps ? `
-                    <button class="btn-guide"
-                            onclick="event.stopPropagation(); openGuide(${task.id})">
-                        <i data-feather="book-open"></i>
-                        <span>Guide</span>
-                    </button>
-                ` : ''}
-            </div>
-        `;
-
-        container.appendChild(step);
-        stepNumber++;
-    });
-
-    updateCategoryCounts();
-    feather.replace();
+  // Update URL without reload
+  history.replaceState(null, '', '/checklist?role=' + role);
 }
 
-function updateCategoryCounts() {
-    const categoryCounts = {};
-    tasks.forEach(task => {
-        if (!categoryCounts[task.category]) {
-            categoryCounts[task.category] = { total: 0, done: 0 };
-        }
-        categoryCounts[task.category].total++;
-        if (completions.has(task.id)) {
-            categoryCounts[task.category].done++;
-        }
-    });
+// ═══════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════
 
-    Object.keys(categoryCounts).forEach(cat => {
-        const el = document.getElementById(`cat-${cat}-count`);
-        if (el) {
-            el.textContent = `${categoryCounts[cat].done}/${categoryCounts[cat].total}`;
-        }
-    });
+function renderAll() {
+  updateHeader();
+  renderTaskCards();
+  updateStats();
+  feather.replace();
 }
+
+function updateHeader() {
+  const roleLabel = currentRole === 'front' ? 'Front Desk' : 'Back Office';
+  document.getElementById('cl-title').textContent = 'Checklist ' + roleLabel;
+
+  const total = tasks.length;
+  const done = completions.size;
+  const remaining = tasks.filter(t => !completions.has(t.id)).reduce((s, t) => s + (t.estimated_minutes || 0), 0);
+  const h = Math.floor(remaining / 60);
+  const m = remaining % 60;
+  const timeStr = h > 0 ? `~${h}h${m > 0 ? m.toString().padStart(2,'0') : ''}` : `~${m} min`;
+  document.getElementById('cl-subtitle').textContent = `${total} tâches • ${done} complétées • ${timeStr} restant`;
+}
+
+function updateStats() {
+  const total = tasks.length;
+  const done = completions.size;
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  const remaining = tasks.filter(t => !completions.has(t.id)).reduce((s, t) => s + (t.estimated_minutes || 0), 0);
+  const h = Math.floor(remaining / 60);
+  const m = remaining % 60;
+
+  document.getElementById('stat-pct').textContent = pct + '%';
+  document.getElementById('stat-fill').style.width = pct + '%';
+  document.getElementById('stat-tasks').textContent = `${done} / ${total}`;
+  document.getElementById('stat-time').textContent = h > 0 ? `${h}h${m > 0 ? m.toString().padStart(2,'0') : ''}` : `${m} min`;
+
+  const btn = document.getElementById('complete-shift-btn');
+  btn.disabled = done < total;
+}
+
+function renderTaskCards() {
+  const container = document.getElementById('task-list');
+  container.innerHTML = '';
+
+  // Group tasks by category (preserve order)
+  const groups = [];
+  const seen = new Set();
+  tasks.forEach(task => {
+    const key = getCatKey(task);
+    if (!seen.has(key)) {
+      seen.add(key);
+      groups.push({ key, tasks: [] });
+    }
+    groups.find(g => g.key === key).tasks.push(task);
+  });
+
+  groups.forEach((group, gi) => {
+    const config = CATEGORY_CONFIG[group.key] || { name:group.key, color:'#9e9e9e', icon:'folder' };
+    const done = group.tasks.filter(t => completions.has(t.id)).length;
+    const total = group.tasks.length;
+    const pct = Math.round(done / total * 100);
+
+    // Category section
+    const section = document.createElement('div');
+    section.className = 'cl-category';
+    section.style.animationDelay = (gi * 0.06) + 's';
+
+    section.innerHTML = `
+      <div class="cl-cat-header">
+        <div class="cl-cat-badge" style="background:${config.color}">
+          <i data-feather="${config.icon}"></i> ${config.name}
+        </div>
+        <div class="cl-cat-progress">
+          <div class="cl-cat-bar">
+            <div class="cl-cat-bar-fill" style="width:${pct}%;background:${config.color}"></div>
+          </div>
+          <span class="cl-cat-count">${done}/${total}</span>
+        </div>
+      </div>
+      <div class="cl-cards" id="cards-${group.key}"></div>
+    `;
+    container.appendChild(section);
+
+    const cardsEl = section.querySelector('.cl-cards');
+    group.tasks.forEach(task => {
+      const isDone = completions.has(task.id);
+      const hasSteps = task.steps && task.steps.length > 0;
+      const gen = currentRole === 'front' ? TASK_GENERATORS[task.order] : null;
+
+      const card = document.createElement('div');
+      card.className = 'cl-card' + (isDone ? ' completed' : '');
+      card.style.setProperty('--cat-color', config.color);
+      card.innerHTML = `
+        <style>.cl-card[style*="--cat-color: ${config.color}"]::before { background:${config.color}; }</style>
+        <div class="cl-card-top">
+          <input type="checkbox" class="cl-card-check" ${isDone ? 'checked' : ''}
+                 onchange="toggleTask(${task.id}, this.checked)">
+          <div class="cl-card-title">${task.title_fr}</div>
+          <span class="cl-card-order">#${task.order}</span>
+        </div>
+        ${task.description_fr ? `<div class="cl-card-desc">${task.description_fr}</div>` : ''}
+        <div class="cl-card-meta">
+          ${task.system_used ? `<span><i data-feather="monitor"></i> ${task.system_used}</span>` : ''}
+          ${task.estimated_minutes ? `<span><i data-feather="clock"></i> ${task.estimated_minutes} min</span>` : ''}
+        </div>
+        <div class="cl-card-footer">
+          ${hasSteps ? `<button class="cl-card-guide" onclick="openGuide(${task.id})"><i data-feather="book-open"></i> Guide</button>` : '<div style="flex:1"></div>'}
+          ${gen ? (Array.isArray(gen)
+            ? gen.map(g => `<button class="cl-card-gen" onclick="openGuide(${task.id})" title="${g.name}"><i data-feather="${g.icon||'download'}"></i> ${g.name}</button>`).join('')
+            : `<button class="cl-card-gen" onclick="${gen.autoDate ? `quickDownload('${gen.endpoint}')` : `openGuide(${task.id})`}" title="${gen.name}"><i data-feather="download"></i> Doc</button>`)
+          : ''}
+        </div>
+      `;
+      cardsEl.appendChild(card);
+    });
+  });
+}
+
+// Quick download for auto-date generators
+async function quickDownload(endpoint) {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const resp = await fetch(endpoint, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRF-Token':getCsrfToken()},
+      body: JSON.stringify({date: today})
+    });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const cd = resp.headers.get('Content-Disposition') || '';
+      let fname = 'document';
+      const m = cd.match(/filename=([^\s;]+)/);
+      if (m) fname = m[1].replace(/"/g,'');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = fname;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+  } catch (e) { console.error('quickDownload error:', e); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TASK COMPLETION
+// ═══════════════════════════════════════════════════════════════
 
 async function toggleTask(taskId, completed) {
-    const endpoint = completed ? 'complete' : 'uncomplete';
-    await fetch(`/api/tasks/${taskId}/${endpoint}`, { method: 'POST' });
-
-    if (completed) {
-        completions.add(taskId);
-    } else {
-        completions.delete(taskId);
-    }
-
-    renderTimeline();
-    updateProgress();
+  const endpoint = completed ? 'complete' : 'uncomplete';
+  await fetch(`/api/tasks/${taskId}/${endpoint}`, { method:'POST' });
+  if (completed) completions.add(taskId); else completions.delete(taskId);
+  renderAll();
 }
 
-function updateProgress() {
-    const total = tasks.length;
-    const done = completions.size;
-    const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-
-    document.getElementById('progress-percent').textContent = `${percent}%`;
-    document.getElementById('progress-fill').style.width = `${percent}%`;
-
-    const completeBtn = document.getElementById('complete-shift-btn');
-    completeBtn.disabled = done < total;
-
-    if (done === total && total > 0) {
-        completeBtn.classList.add('ready');
-    } else {
-        completeBtn.classList.remove('ready');
-    }
-}
-
-// ========== GUIDE VIEW ==========
+// ═══════════════════════════════════════════════════════════════
+// GUIDE VIEW
+// ═══════════════════════════════════════════════════════════════
 
 function openGuide(taskId) {
-    currentTask = tasks.find(t => t.id === taskId);
-    if (!currentTask) return;
+  currentTask = tasks.find(t => t.id === taskId);
+  if (!currentTask) return;
 
-    // Update title and status
-    document.getElementById('guide-task-title').textContent = currentTask.title_fr;
+  // Title + status
+  document.getElementById('guide-task-title').textContent = currentTask.title_fr;
+  const isDone = completions.has(currentTask.id);
+  const badge = document.getElementById('guide-status-badge');
+  badge.className = 'gv-status ' + (isDone ? 'completed' : 'not-completed');
+  badge.textContent = isDone ? 'Complété' : 'Non complété';
 
-    const isCompleted = completions.has(currentTask.id);
-    const statusBadge = document.getElementById('guide-status-badge');
-    statusBadge.className = `guide-task-status-badge ${isCompleted ? 'completed' : 'not-completed'}`;
-    statusBadge.textContent = `Status: ${isCompleted ? 'Complété' : 'Non complété'}`;
+  // Counter
+  const sortedTasks = [...tasks].sort((a,b) => a.order - b.order);
+  const idx = sortedTasks.findIndex(t => t.id === currentTask.id);
+  document.getElementById('guide-counter').textContent = `${idx+1} / ${sortedTasks.length}`;
 
-    // Update description
-    const descSection = document.getElementById('guide-description');
-    const descText = document.getElementById('guide-desc-text');
-    if (currentTask.description_fr) {
-        descText.textContent = currentTask.description_fr;
-        descSection.style.display = 'block';
-    } else {
-        descSection.style.display = 'none';
-    }
+  // System
+  const sys = document.getElementById('guide-system-name');
+  sys.textContent = currentTask.system_used || '';
+  sys.style.display = currentTask.system_used ? 'inline-block' : 'none';
 
-    // Update steps
-    const stepsContainer = document.getElementById('guide-steps');
-    stepsContainer.innerHTML = '';
+  // Description
+  const descSec = document.getElementById('guide-description');
+  if (currentTask.description_fr) {
+    document.getElementById('guide-desc-text').textContent = currentTask.description_fr;
+    descSec.style.display = 'block';
+  } else { descSec.style.display = 'none'; }
 
-    if (currentTask.steps && currentTask.steps.length > 0) {
-        currentTask.steps.forEach((stepText, index) => {
-            const step = document.createElement('div');
-            step.className = 'guide-step';
-            step.innerHTML = `
-                <div class="guide-step-number">${index + 1}</div>
-                <div class="guide-step-text">${stepText}</div>
-            `;
-            stepsContainer.appendChild(step);
-        });
-    }
+  // Steps
+  const stepsEl = document.getElementById('guide-steps');
+  stepsEl.innerHTML = '';
+  if (currentTask.steps && currentTask.steps.length > 0) {
+    currentTask.steps.forEach((text, i) => {
+      const step = document.createElement('div');
+      step.className = 'gv-step';
+      step.innerHTML = `<div class="gv-step-num">${i+1}</div><div class="gv-step-text">${formatStepText(text)}</div>`;
+      stepsEl.appendChild(step);
+    });
+  }
 
-    // Update system name in header
-    const systemName = document.getElementById('guide-system-name');
-    if (currentTask.system_used) {
-        systemName.textContent = currentTask.system_used;
-    } else {
-        systemName.textContent = '';
-    }
+  // Screenshots
+  const ssSection = document.getElementById('guide-screenshots');
+  const ssGrid = document.getElementById('guide-screenshots-grid');
+  const ssEmpty = document.getElementById('guide-screenshots-empty');
+  ssGrid.innerHTML = '';
+  if (currentTask.screenshots && currentTask.screenshots.length > 0) {
+    ssSection.style.display = 'block';
+    ssEmpty.style.display = 'none';
+    ssGrid.style.display = 'grid';
+    currentTask.screenshots.forEach((name, i) => {
+      const div = document.createElement('div');
+      div.className = 'gv-screenshot-item';
+      div.innerHTML = `<img src="/static/screenshots/${name}" alt="Screenshot ${i+1}" onclick="openScreenshotModal('/static/screenshots/${name}')" loading="lazy">`;
+      ssGrid.appendChild(div);
+    });
+  } else {
+    ssSection.style.display = 'none';
+  }
 
-    // Update action button (only if a link is configured)
-    const actionBtn = document.getElementById('guide-action-btn');
-    const actionText = document.getElementById('guide-action-text');
-    if (currentTask.system_link) {
-        actionText.textContent = `Ouvrir ${currentTask.system_used || 'le lien'}`;
-        actionBtn.dataset.link = currentTask.system_link;
-        actionBtn.style.display = 'flex';
-    } else {
-        actionBtn.dataset.link = '';
-        actionBtn.style.display = 'none';
-    }
+  // System link
+  const actionBtn = document.getElementById('guide-action-btn');
+  if (currentTask.system_link) {
+    document.getElementById('guide-action-text').textContent = `Ouvrir ${currentTask.system_used || 'le lien'}`;
+    actionBtn.dataset.link = currentTask.system_link;
+    actionBtn.style.display = 'flex';
+  } else { actionBtn.style.display = 'none'; }
 
-    // Update tips
-    const tipsSection = document.getElementById('guide-tips');
-    const tipsText = document.getElementById('guide-tips-text');
-    if (currentTask.tips_fr) {
-        tipsText.textContent = currentTask.tips_fr;
-        tipsSection.style.display = 'flex';
-    } else {
-        tipsSection.style.display = 'none';
-    }
+  // Tips
+  const tipsSec = document.getElementById('guide-tips');
+  if (currentTask.tips_fr) {
+    document.getElementById('guide-tips-text').textContent = currentTask.tips_fr;
+    tipsSec.style.display = 'block';
+  } else { tipsSec.style.display = 'none'; }
 
-    // Update complete button
-    updateCompleteButton();
+  // Complete button
+  updateCompleteButton();
 
-    // Render category sidebar
-    renderGuideSidebar();
+  // Sidebar categories
+  renderGuideSidebar();
 
-    // Show document generator if applicable
-    showGenerator(currentTask.order);
+  // Generator + Automation
+  showGenerator(currentTask.order);
+  showAutomation(currentTask.order);
 
-    // Show automation tools if applicable
-    showAutomation(currentTask.order);
+  // Next button
+  const nextBtn = document.getElementById('next-step-btn');
+  const isLast = idx >= 0 && idx === sortedTasks.length - 1;
+  nextBtn.disabled = isLast;
+  nextBtn.querySelector('span').textContent = isLast ? 'Dernière étape' : 'Étape suivante';
 
-    // Update next step button
-    const nextStepBtn = document.getElementById('next-step-btn');
-    // Sort tasks by order to ensure correct sequence
-    const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
-    const currentIndex = sortedTasks.findIndex(t => t.id === currentTask.id);
-    const isLastTask = currentIndex >= 0 && currentIndex === sortedTasks.length - 1;
-
-    if (isLastTask) {
-        nextStepBtn.disabled = true;
-        nextStepBtn.querySelector('span').textContent = 'Dernière étape';
-    } else {
-        nextStepBtn.disabled = false;
-        nextStepBtn.querySelector('span').textContent = 'Étape suivante';
-    }
-
-    // Switch views
-    document.getElementById('checklist-view').style.display = 'none';
-    document.getElementById('guide-view').style.display = 'grid';
-    window.scrollTo(0, 0);
-
-    feather.replace();
+  // Switch views
+  document.getElementById('checklist-view').style.display = 'none';
+  document.getElementById('guide-view').style.display = 'grid';
+  window.scrollTo(0, 0);
+  feather.replace();
 }
 
 function renderGuideSidebar() {
-    const container = document.getElementById('guide-category-list');
-    container.innerHTML = '';
+  const container = document.getElementById('guide-category-list');
+  container.innerHTML = '';
 
-    const categoryCounts = {};
-    tasks.forEach(task => {
-        if (!categoryCounts[task.category]) {
-            categoryCounts[task.category] = { total: 0, done: 0, tasks: [] };
-        }
-        categoryCounts[task.category].total++;
-        categoryCounts[task.category].tasks.push(task);
-        if (completions.has(task.id)) {
-            categoryCounts[task.category].done++;
-        }
-    });
+  const groups = [];
+  const seen = new Set();
+  tasks.forEach(task => {
+    const key = getCatKey(task);
+    if (!seen.has(key)) { seen.add(key); groups.push({ key, tasks:[] }); }
+    groups.find(g => g.key === key).tasks.push(task);
+  });
 
-    Object.keys(CATEGORIES).forEach(catKey => {
-        if (!categoryCounts[catKey]) return;
+  const currentKey = currentTask ? getCatKey(currentTask) : null;
 
-        const cat = categoryCounts[catKey];
-        const info = CATEGORIES[catKey];
-        const isComplete = cat.done === cat.total;
-        const isActive = currentTask && currentTask.category === catKey;
+  groups.forEach(group => {
+    const config = CATEGORY_CONFIG[group.key] || { name:group.key, color:'#9e9e9e' };
+    const done = group.tasks.filter(t => completions.has(t.id)).length;
+    const total = group.tasks.length;
+    const allDone = done === total;
+    const isActive = group.key === currentKey;
 
-        const item = document.createElement('div');
-        item.className = `guide-task-item ${isComplete ? 'completed' : ''} ${isActive ? 'active' : ''}`;
-        item.innerHTML = `
-            <div class="guide-task-status ${isComplete ? 'completed' : 'pending'}">
-                ${isComplete ? '<i data-feather="check"></i>' : '<span class="status-count">' + cat.done + '</span>'}
-            </div>
-            <div class="guide-task-info">
-                <div class="guide-task-name">${info.name}</div>
-                <div class="guide-task-progress">${cat.done} / ${cat.total} Complété</div>
-            </div>
-        `;
-        container.appendChild(item);
-    });
-
-    feather.replace();
+    const item = document.createElement('div');
+    item.className = 'gv-cat-item' + (isActive ? ' active' : '');
+    item.innerHTML = `
+      <div class="gv-cat-dot" style="background:${config.color}"></div>
+      <div class="gv-cat-info">
+        <div class="gv-cat-name">${config.name}</div>
+        <div class="gv-cat-pct">${done}/${total}</div>
+      </div>
+      ${allDone ? '<div class="gv-cat-check"><i data-feather="check-circle"></i></div>' : ''}
+    `;
+    container.appendChild(item);
+  });
+  feather.replace();
 }
 
 function updateCompleteButton() {
-    const btn = document.getElementById('complete-task-btn');
-    const btnText = document.getElementById('complete-btn-text');
-    const isCompleted = completions.has(currentTask.id);
-
-    if (isCompleted) {
-        btn.classList.add('completed');
-        btnText.textContent = 'Marquer comme non complété';
-    } else {
-        btn.classList.remove('completed');
-        btnText.textContent = 'Marquer comme complété';
-    }
+  const btn = document.getElementById('complete-task-btn');
+  const text = document.getElementById('complete-btn-text');
+  const isDone = completions.has(currentTask.id);
+  btn.classList.toggle('completed', isDone);
+  text.textContent = isDone ? 'Marquer non complété' : 'Marquer complété';
 }
 
 function closeGuide() {
-    document.getElementById('guide-view').style.display = 'none';
-    document.getElementById('checklist-view').style.display = 'block';
-    currentTask = null;
+  document.getElementById('guide-view').style.display = 'none';
+  document.getElementById('checklist-view').style.display = 'block';
+  currentTask = null;
+  renderAll();
 }
 
 function goToNextStep() {
-    if (!currentTask) return;
-
-    // Sort tasks by order to ensure correct sequence
-    const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
-    
-    // Find the current task index in sorted array
-    const currentIndex = sortedTasks.findIndex(t => t.id === currentTask.id);
-
-    // Check if there's a next task
-    if (currentIndex >= 0 && currentIndex < sortedTasks.length - 1) {
-        const nextTask = sortedTasks[currentIndex + 1];
-        openGuide(nextTask);
-    } else {
-        // Last task - disable the button or show message
-        const nextStepBtn = document.getElementById('next-step-btn');
-        nextStepBtn.disabled = true;
-        nextStepBtn.querySelector('span').textContent = 'Dernière étape';
-    }
+  if (!currentTask) return;
+  const sorted = [...tasks].sort((a,b) => a.order - b.order);
+  const idx = sorted.findIndex(t => t.id === currentTask.id);
+  if (idx >= 0 && idx < sorted.length - 1) openGuide(sorted[idx+1].id);
 }
 
 async function toggleTaskFromGuide() {
-    if (!currentTask) return;
-    const isCompleted = completions.has(currentTask.id);
-    await toggleTask(currentTask.id, !isCompleted);
-
-    // Update guide view
-    const statusBadge = document.getElementById('guide-status-badge');
-    const newStatus = completions.has(currentTask.id);
-    statusBadge.className = `guide-task-status-badge ${newStatus ? 'completed' : 'not-completed'}`;
-    statusBadge.textContent = `Status: ${newStatus ? 'Complété' : 'Non complété'}`;
-
-    updateCompleteButton();
-    renderGuideSidebar();
+  if (!currentTask) return;
+  const isDone = completions.has(currentTask.id);
+  await toggleTask(currentTask.id, !isDone);
+  const badge = document.getElementById('guide-status-badge');
+  const newDone = completions.has(currentTask.id);
+  badge.className = 'gv-status ' + (newDone ? 'completed' : 'not-completed');
+  badge.textContent = newDone ? 'Complété' : 'Non complété';
+  updateCompleteButton();
+  renderGuideSidebar();
 }
 
 function openSystemLink() {
-    if (!currentTask || !currentTask.system_link) {
-        alert('Aucun lien configuré pour cette tâche.');
-        return;
-    }
-    window.open(currentTask.system_link, '_blank', 'noopener');
+  const btn = document.getElementById('guide-action-btn');
+  if (btn.dataset.link) window.open(btn.dataset.link, '_blank', 'noopener');
 }
 
-// RJ Automation Functions
-function showAutomation(taskOrder) {
-    const section = document.getElementById('guide-automation');
-    const content = document.getElementById('automation-content');
-    const messageDiv = document.getElementById('automation-message');
-    
-    // Clear previous state
-    content.innerHTML = '';
-    messageDiv.style.display = 'none';
-    section.style.display = 'none';
+// ═══════════════════════════════════════════════════════════════
+// GENERATORS & AUTOMATION (preserved logic)
+// ═══════════════════════════════════════════════════════════════
 
-    // Only show RJ automations for Back Office role
-    if (!currentTask || currentTask.role !== 'back') {
-        return;
-    }
-
-    // Define automations for tasks
-    const automations = {
-        1: { // Mise en place (Start)
-            title: 'Initialisation du RJ',
-            html: `
-                <div style="background: #e8f0fe; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-                    <h4 style="margin-top:0; color: #004085;">📂 Fichier RJ</h4>
-                    <p style="margin-bottom: 10px; font-size: 0.9em;">Veuillez téléverser le fichier RJ du jour (Rj-DATE.xls) pour activer les fonctions d'automatisation.</p>
-                    
-                    <div id="rj-upload-area">
-                        <input type="file" id="rj-file-input" accept=".xls,.xlsx" style="display: block; margin-bottom: 10px; width: 100%;">
-                        <button class="generator-btn" onclick="uploadRJFile()" style="width: 100%;">
-                            <i data-feather="upload"></i> Téléverser le fichier
-                        </button>
-                    </div>
-                    
-                    <div id="rj-file-info" style="display: none; margin-top: 10px; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px;">
-                        <div style="display: flex; align-items: center; gap: 10px; color: #28a745; font-weight: 500;">
-                            <i data-feather="check-circle"></i>
-                            <span id="rj-status-text">Fichier chargé</span>
-                        </div>
-                        <button class="generator-btn" onclick="document.getElementById('rj-upload-area').style.display='block'; this.parentElement.style.display='none';" style="margin-top: 10px; background: #f8f9fa; color: #666; border: 1px solid #ddd; font-size: 0.8em; padding: 5px;">
-                            Remplacer le fichier
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
-                        <a href="/api/rj/download" class="generator-btn" style="background: #28a745; text-align: center; text-decoration: none; display: block;">
-                            <i data-feather="download"></i> Télécharger le RJ actuel
-                        </a>
-                        <p style="font-size: 0.8em; color: #666; margin-top: 5px; text-align: center;">
-                            Téléchargez régulièrement pour sauvegarder votre travail.
-                        </p>
-                    </div>
-                </div>
-
-                <div id="rj-actions-area" style="opacity: 0.5; pointer-events: none;">
-                    <p>Une fois le fichier chargé, effacez les onglets pour la nouvelle journée.</p>
-                    <button class="generator-btn" onclick="runRJAutomation('/api/rj/reset')">
-                        <i data-feather="trash-2"></i> Effacer les onglets (Reset)
-                    </button>
-                </div>
-            `
-        },
-        3: { // Due Back / SetD
-            title: 'Synchronisation DueBack',
-            html: `
-                <p>Transférer automatiquement les montants du DueBack vers l'onglet SetD.</p>
-                <div class="generator-field">
-                    <label>Jour du mois (Laissez vide pour auto):</label>
-                    <input type="number" id="rj-day-input" placeholder="ex: 19" style="width: 80px;">
-                </div>
-                <button class="generator-btn" onclick="runSyncDueBack()">
-                    <i data-feather="refresh-cw"></i> Synchroniser DUBACK -> SetD
-                </button>
-            `
-        },
-        8: { // Recap
-            title: 'Saisie Recap (Comptant)',
-            html: `
-                <p>Saisir les montants pour l'onglet Recap.</p>
-                <div class="generator-field">
-                    <label>Comptant LightSpeed ($):</label>
-                    <input type="number" step="0.01" class="recap-input" data-field="comptant_lightspeed_lecture">
-                </div>
-                <div class="generator-field">
-                    <label>Comptant POSitouch ($):</label>
-                    <input type="number" step="0.01" class="recap-input" data-field="comptant_positouch_lecture">
-                </div>
-                <div class="generator-field">
-                    <label>Chèques ($):</label>
-                    <input type="number" step="0.01" class="recap-input" data-field="cheque_payment_register_lecture">
-                </div>
-                <div class="generator-field">
-                    <label>Dépôt Canadien ($):</label>
-                    <input type="number" step="0.01" class="recap-input" data-field="depot_canadien_lecture">
-                </div>
-                <button class="generator-btn" onclick="runSaveRecap()">
-                    <i data-feather="save"></i> Enregistrer Recap
-                </button>
-                <button class="generator-btn" onclick="showPreview('recap')" style="background: #17a2b8; margin-top: 5px;">
-                    <i data-feather="eye"></i> Visualiser
-                </button>
-            `
-        },
-        9: { // Dépôt
-            title: 'Mise à jour du Dépôt',
-            html: `
-                <p>Inscrire le montant vérifié dans l'onglet Dépôt.</p>
-                <div class="generator-field">
-                    <label>Montant Vérifié ($):</label>
-                    <input type="number" step="0.01" id="rj-deposit-amount" placeholder="0.00">
-                </div>
-                <button class="generator-btn" onclick="runUpdateDeposit()">
-                    <i data-feather="save"></i> Enregistrer le Dépôt
-                </button>
-            `
-        },
-        10: { // Transelect
-            title: 'Saisie Transelect',
-            html: `
-                <p>Saisir les montants pour l'onglet Transelect.</p>
-                
-                <div class="transelect-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                    <div style="font-weight: bold;">Type</div>
-                    <div style="font-weight: bold;">BAR 701</div>
-                    <div style="font-weight: bold;">BAR 702</div>
-                    <div style="font-weight: bold;">SPESA 704</div>
-                    
-                    <div>DEBIT</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_debit">
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_debit">
-                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_debit">
-                    
-                    <div>VISA</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_visa">
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_visa">
-                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_visa">
-                    
-                    <div>MASTER</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_master">
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_master">
-                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_master">
-                    
-                    <div>AMEX</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_701_amex">
-                    <input type="number" step="0.01" class="ts-input" data-field="bar_702_amex">
-                    <input type="number" step="0.01" class="ts-input" data-field="spesa_704_amex">
-                </div>
-                
-                <hr style="margin: 15px 0; border: 0; border-top: 1px solid #ddd;">
-                
-                <div class="transelect-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                    <div style="font-weight: bold;">Type</div>
-                    <div style="font-weight: bold;">Réception (Term)</div>
-                    <div style="font-weight: bold;">FuseBoxe (Bank)</div>
-                    
-                    <div>DEBIT</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="reception_debit">
-                    <input disabled style="background: #eee;">
-                    
-                    <div>VISA</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="reception_visa_term">
-                    <input type="number" step="0.01" class="ts-input" data-field="fusebox_visa">
-                    
-                    <div>MASTER</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="reception_master_term">
-                    <input type="number" step="0.01" class="ts-input" data-field="fusebox_master">
-                    
-                    <div>AMEX</div>
-                    <input type="number" step="0.01" class="ts-input" data-field="reception_amex_term">
-                    <input type="number" step="0.01" class="ts-input" data-field="fusebox_amex">
-                </div>
-
-                <button class="generator-btn" onclick="runSaveTranselect()">
-                    <i data-feather="save"></i> Enregistrer Transelect
-                </button>
-                <button class="generator-btn" onclick="showPreview('transelect')" style="background: #17a2b8; margin-top: 5px;">
-                    <i data-feather="eye"></i> Visualiser
-                </button>
-            `
-        },
-        13: { // GEAC/UX
-            title: 'Saisie GEAC/UX',
-            html: `
-                <p>Saisir les montants pour l'onglet GEAC/UX.</p>
-                <div class="transelect-grid" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                    <div style="font-weight: bold;">Type</div>
-                    <div style="font-weight: bold;">Daily Cash Out</div>
-                    <div style="font-weight: bold;">Daily Revenue</div>
-                    
-                    <div>VISA</div>
-                    <input type="number" step="0.01" class="geac-input" data-field="visa_cash_out">
-                    <input type="number" step="0.01" class="geac-input" data-field="visa_daily_revenue">
-                    
-                    <div>MASTER</div>
-                    <input type="number" step="0.01" class="geac-input" data-field="master_cash_out">
-                    <input type="number" step="0.01" class="geac-input" data-field="master_daily_revenue">
-                    
-                    <div>AMEX</div>
-                    <input type="number" step="0.01" class="geac-input" data-field="amex_cash_out">
-                    <input type="number" step="0.01" class="geac-input" data-field="amex_daily_revenue">
-                </div>
-                <button class="generator-btn" onclick="runSaveGeac()">
-                    <i data-feather="save"></i> Enregistrer GEAC
-                </button>
-                <button class="generator-btn" onclick="showPreview('geac_ux')" style="background: #17a2b8; margin-top: 5px;">
-                    <i data-feather="eye"></i> Visualiser
-                </button>
-            `
-        }
-    };
-
-    if (automations[taskOrder]) {
-        document.getElementById('automation-title').textContent = automations[taskOrder].title;
-        content.innerHTML = automations[taskOrder].html;
-        section.style.display = 'block';
-        feather.replace();
-        
-        // Special check for Task 1
-        if (taskOrder === 1) {
-            checkRJStatus();
-        }
-    } else {
-        section.style.display = 'none';
-    }
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute('content') : '';
 }
 
-async function checkRJStatus() {
-    try {
-        const response = await fetch('/api/rj/status');
-        const data = await response.json();
-        
-        const uploadArea = document.getElementById('rj-upload-area');
-        const fileInfo = document.getElementById('rj-file-info');
-        const actionsArea = document.getElementById('rj-actions-area');
-        
-        if (data.uploaded) {
-            if(uploadArea) uploadArea.style.display = 'none';
-            if(fileInfo) {
-                fileInfo.style.display = 'block';
-                document.getElementById('rj-status-text').textContent = `Fichier chargé (${(data.file_size/1024).toFixed(1)} KB)`;
-            }
-            if(actionsArea) {
-                actionsArea.style.opacity = '1';
-                actionsArea.style.pointerEvents = 'auto';
-            }
-        }
-    } catch (e) {
-        console.error('Error checking RJ status:', e);
-    }
-}
-
-async function uploadRJFile() {
-    const fileInput = document.getElementById('rj-file-input');
-    const file = fileInput.files[0];
-    
-    if (!file) {
-        alert("Veuillez sélectionner un fichier.");
-        return;
-    }
-    
-    const formData = new FormData();
-    formData.append('rj_file', file);
-    
-    const btn = document.querySelector('#rj-upload-area button');
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i data-feather="loader"></i> Téléversement...';
-    feather.replace();
-    
-    try {
-        const response = await fetch('/api/rj/upload', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            checkRJStatus(); // Refresh UI
-        } else {
-            alert("Erreur: " + result.error);
-        }
-    } catch (e) {
-        alert("Erreur de téléversement");
-        console.error(e);
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        feather.replace();
-    }
-}
-
-async function runSaveTranselect() {
-    const inputs = document.querySelectorAll('.ts-input');
-    const data = {};
-    
-    inputs.forEach(input => {
-        if (input.value) {
-            data[input.dataset.field] = parseFloat(input.value);
-        }
-    });
-    
-    if (Object.keys(data).length === 0) {
-        alert("Veuillez saisir au moins un montant.");
-        return;
-    }
-    
-    runRJAutomation('/api/rj/fill/transelect', data);
-}
-
-async function runSaveRecap() {
-    const inputs = document.querySelectorAll('.recap-input');
-    const data = {};
-    inputs.forEach(input => {
-        if (input.value) data[input.dataset.field] = parseFloat(input.value);
-    });
-    runRJAutomation('/api/rj/fill/recap', data);
-}
-
-async function runSaveGeac() {
-    const inputs = document.querySelectorAll('.geac-input');
-    const data = {};
-    inputs.forEach(input => {
-        if (input.value) data[input.dataset.field] = parseFloat(input.value);
-    });
-    runRJAutomation('/api/rj/fill/geac_ux', data);
-}
-
-async function runRJAutomation(endpoint, data = {}) {
-    const messageDiv = document.getElementById('automation-message');
-    const btn = document.querySelector('#automation-content button');
-    
-    if(btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i data-feather="loader"></i> Traitement...';
-        feather.replace();
-    }
-
-    try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            messageDiv.className = 'generator-message success';
-            messageDiv.textContent = '✓ ' + result.message;
-            messageDiv.style.display = 'block';
-        } else {
-            throw new Error(result.error || 'Erreur inconnue');
-        }
-    } catch (error) {
-        messageDiv.className = 'generator-message error';
-        messageDiv.textContent = '✗ ' + error.message;
-        messageDiv.style.display = 'block';
-    } finally {
-        if(btn) {
-            btn.disabled = false;
-            // Restore icon based on button text context (simplified)
-            if (endpoint.includes('reset')) btn.innerHTML = '<i data-feather="trash-2"></i> Effacer les onglets (Reset)';
-            else if (endpoint.includes('sync')) btn.innerHTML = '<i data-feather="refresh-cw"></i> Synchroniser DUBACK -> SetD';
-            else btn.innerHTML = '<i data-feather="save"></i> Enregistrer';
-            feather.replace();
-        }
-        setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
-    }
-}
-
-function runSyncDueBack() {
-    const dayInput = document.getElementById('rj-day-input');
-    const day = dayInput.value ? parseInt(dayInput.value) : null;
-    runRJAutomation('/api/rj/sync', { day: day });
-}
-
-function runUpdateDeposit() {
-    const amountInput = document.getElementById('rj-deposit-amount');
-    const amount = amountInput.value ? parseFloat(amountInput.value) : null;
-    
-    if (!amount) {
-        alert("Veuillez entrer un montant valide.");
-        return;
-    }
-    
-    runRJAutomation('/api/rj/deposit', { amount: amount });
-}
-
-async function showPreview(sheetName) {
-    const modal = document.getElementById('preview-modal');
-    const content = document.getElementById('preview-content');
-    const title = document.getElementById('preview-title');
-    
-    content.innerHTML = '<div style="text-align: center; padding: 20px;"><i data-feather="loader"></i> Chargement...</div>';
-    title.textContent = `Aperçu: ${sheetName}`;
-    modal.style.display = 'flex';
-    feather.replace();
-    
-    try {
-        const response = await fetch(`/api/rj/read/${sheetName}`);
-        const result = await response.json();
-        
-        if (result.success) {
-            renderPreviewTable(result.data);
-        } else {
-            content.innerHTML = `<div style="color: red;">Erreur: ${result.error}</div>`;
-        }
-    } catch (e) {
-        content.innerHTML = `<div style="color: red;">Erreur de chargement: ${e.message}</div>`;
-    }
-}
-
-function renderPreviewTable(data) {
-    const content = document.getElementById('preview-content');
-    let html = '<table style="width: 100%; border-collapse: collapse; margin-top: 10px;">';
-    
-    for (const [key, value] of Object.entries(data)) {
-        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-             continue; 
-        }
-        
-        html += `
-            <tr style="border-bottom: 1px solid #eee;">
-                <td style="padding: 8px; font-weight: 500; color: #555;">${formatKey(key)}</td>
-                <td style="padding: 8px; text-align: right;">${formatValue(value)}</td>
-            </tr>
-        `;
-    }
-    html += '</table>';
-    content.innerHTML = html;
-}
-
-function formatKey(key) {
-    return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
-
-function formatValue(val) {
-    if (val === null || val === undefined) return '-';
-    if (typeof val === 'number') return val.toFixed(2);
-    return val;
-}
-
-// Keyboard shortcuts
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        if (document.getElementById('guide-view').style.display === 'grid') {
-            closeGuide();
-        }
-        if (document.getElementById('preview-modal').style.display === 'flex') {
-            document.getElementById('preview-modal').style.display = 'none';
-        }
-    }
-});
-
-document.getElementById('complete-shift-btn').addEventListener('click', async () => {
-    if (confirm('Êtes-vous sûr de vouloir terminer le quart?')) {
-        await fetch('/api/shifts/complete', { method: 'POST' });
-        alert('Quart terminé avec succès!');
-    }
-});
-
-// Document Generator Functions
 function showGenerator(taskOrder) {
-    const generatorSection = document.getElementById('guide-generator');
-    const fieldsContainer = document.getElementById('generator-fields');
-    const today = new Date().toISOString().split('T')[0];
+  const section = document.getElementById('guide-generator');
+  const fields = document.getElementById('generator-fields');
+  const today = new Date().toISOString().split('T')[0];
+  // Clean up any multi-gen panel from previous task
+  const prevMulti = document.getElementById('multi-gen-container');
+  if (prevMulti) prevMulti.remove();
+  document.getElementById('generator-form').style.display = '';
 
-    // Define generators for specific tasks
-    const generators = {
-        6: { // Séparateur Daté
-            endpoint: '/api/generators/separateur-date',
-            autoDate: true,
-            fields: `
-                <input type="hidden" name="date" value="${today}">
-                <p class="generator-auto-info">📅 Document généré automatiquement avec la date d'aujourd'hui</p>
-            `
-        },
-        7: { // Checklist Tournée
-            endpoint: '/api/generators/checklist-tournee',
-            autoDate: true,
-            fields: `
-                <input type="hidden" name="date" value="${today}">
-                <p class="generator-auto-info">📅 Document généré automatiquement avec la date d'aujourd'hui</p>
-            `
-        },
-        8: { // Entretien Hiver
-            endpoint: '/api/generators/entretien-hiver',
-            autoDate: true,
-            fields: `
-                <input type="hidden" name="date" value="${today}">
-                <p class="generator-auto-info">📅 Document généré automatiquement avec la date d'aujourd'hui. Vous pourrez ajouter la capture météo manuellement après.</p>
-            `
-        },
-        19: { // Clés Banquets
-            endpoint: '/api/generators/cles-banquets',
-            fields: `
-                <div class="generator-field">
-                    <label>Date:</label>
-                    <input type="date" name="date" value="${today}" required>
-                </div>
-                <div id="banquet-events" class="banquet-events">
+  const generators = {
+    7: { endpoint:'/api/generators/separateur-date', autoDate:true,
+         fields:`<input type="hidden" name="date" value="${today}"><p class="generator-auto-info">Document généré automatiquement avec la date d'aujourd'hui</p>` },
+    8: { endpoint:'/api/generators/checklist-tournee', autoDate:true,
+         fields:`<input type="hidden" name="date" value="${today}"><p class="generator-auto-info">Document généré automatiquement avec la date d'aujourd'hui</p>` },
+    9: { endpoint:'/api/generators/entretien-hiver', autoDate:true,
+         fields:`<input type="hidden" name="date" value="${today}"><p class="generator-auto-info">Document généré automatiquement avec la date d'aujourd'hui</p>` },
+    14: { multi: true },
+    18: { endpoint:'/api/generators/cles-banquets',
+          fields:`<div class="generator-field"><label>Date:</label><input type="date" name="date" value="${today}" required></div>
+                  <div id="banquet-events" class="banquet-events">
                     <div class="banquet-event">
-                        <div class="generator-field">
-                            <label>Salon:</label>
-                            <input type="text" name="salon-0" placeholder="ex: Aut-Vimont" required>
-                        </div>
-                        <div class="generator-field">
-                            <label>Compagnie:</label>
-                            <input type="text" name="compagnie-0" placeholder="ex: SAPUTO" required>
-                        </div>
-                        <div class="generator-field">
-                            <label>Heure:</label>
-                            <input type="text" name="heure-0" placeholder="ex: 08:00-13:00" required>
-                        </div>
-                        <div class="generator-field">
-                            <label>Responsable:</label>
-                            <input type="text" name="responsable-0" placeholder="ex: JOANNA K." required>
-                        </div>
+                      <div class="generator-field"><label>Salon:</label><input type="text" name="salon-0" class="salon-autocomplete" placeholder="ex: Auteuil" required autocomplete="off"></div>
+                      <div class="generator-field"><label>Compagnie:</label><input type="text" name="compagnie-0" placeholder="ex: SAPUTO" required></div>
+                      <div class="generator-field"><label>Heure:</label><input type="text" name="heure-0" placeholder="ex: 08:00-13:00" required></div>
+                      <div class="generator-field"><label>Responsable:</label><input type="text" name="responsable-0" placeholder="ex: JOANNA K." required></div>
                     </div>
-                </div>
-                <button type="button" class="add-event-btn" onclick="addBanquetEvent(event)">+ Ajouter un événement</button>
-            `
-        }
-    };
+                  </div>
+                  <button type="button" class="add-event-btn" onclick="addBanquetEvent(event)">+ Ajouter un événement</button>` },
+    19: { endpoint:'/api/generators/cles-banquets',
+          fields:`<div class="generator-field"><label>Date:</label><input type="date" name="date" value="${today}" required></div>
+                  <div id="banquet-events" class="banquet-events">
+                    <div class="banquet-event">
+                      <div class="generator-field"><label>Salon:</label><input type="text" name="salon-0" class="salon-autocomplete" placeholder="ex: Auteuil" required autocomplete="off"></div>
+                      <div class="generator-field"><label>Compagnie:</label><input type="text" name="compagnie-0" placeholder="ex: SAPUTO" required></div>
+                      <div class="generator-field"><label>Heure:</label><input type="text" name="heure-0" placeholder="ex: 08:00-13:00" required></div>
+                      <div class="generator-field"><label>Responsable:</label><input type="text" name="responsable-0" placeholder="ex: JOANNA K." required></div>
+                    </div>
+                  </div>
+                  <button type="button" class="add-event-btn" onclick="addBanquetEvent(event)">+ Ajouter un événement</button>` }
+  };
 
-    if (generators[taskOrder]) {
-        const generator = generators[taskOrder];
-        fieldsContainer.innerHTML = generator.fields;
-        fieldsContainer.dataset.endpoint = generator.endpoint;
-
-        // Update button text and title based on whether it's auto-date
-        const btnText = document.getElementById('generator-btn-text');
-        const title = document.getElementById('generator-title');
-        if (generator.autoDate) {
-            btnText.textContent = 'Télécharger le document';
-            title.textContent = 'Document prêt à télécharger';
-        } else {
-            btnText.textContent = 'Générer et télécharger';
-            title.textContent = 'Générer le document';
-        }
-
-        generatorSection.style.display = 'block';
-        feather.replace();
-    } else {
-        generatorSection.style.display = 'none';
+  if (generators[taskOrder]) {
+    const gen = generators[taskOrder];
+    if (gen.multi) {
+      // Multi-generator: replace the single form with multiple panels
+      showMultiGenerators(taskOrder, today);
+      return;
     }
+    fields.innerHTML = gen.fields;
+    fields.dataset.endpoint = gen.endpoint;
+    const btnText = document.getElementById('generator-btn-text');
+    const title = document.getElementById('generator-title');
+    if (gen.autoDate) { btnText.textContent = 'Télécharger'; title.textContent = 'Document prêt'; }
+    else { btnText.textContent = 'Générer et télécharger'; title.textContent = 'Générer le document'; }
+    section.style.display = 'block';
+    feather.replace();
+  } else { section.style.display = 'none'; }
+}
+
+// Multi-generator panel for tasks with multiple document generators (e.g., FedEx + Cargo Jet)
+function showMultiGenerators(taskOrder, today) {
+  const section = document.getElementById('guide-generator');
+  // Hide the default form, show custom multi-panel
+  document.getElementById('generator-form').style.display = 'none';
+  document.getElementById('generator-title').textContent = 'Feuilles de contrôle pilotes';
+
+  // Remove previous multi-gen container if exists
+  let multiContainer = document.getElementById('multi-gen-container');
+  if (multiContainer) multiContainer.remove();
+
+  const tomorrow = new Date(new Date().getTime() + 86400000).toISOString().split('T')[0];
+
+  multiContainer = document.createElement('div');
+  multiContainer.id = 'multi-gen-container';
+  multiContainer.innerHTML = `
+    <div class="generator-field" style="margin-bottom:.75rem;">
+      <label>Date (lendemain):</label>
+      <input type="date" id="pilot-date" value="${tomorrow}">
+    </div>
+
+    <div class="multi-gen-tabs">
+      <button type="button" class="multi-gen-tab active" onclick="switchPilotTab('fedex',this)">
+        <i data-feather="package"></i> FedEx
+      </button>
+      <button type="button" class="multi-gen-tab" onclick="switchPilotTab('cargo',this)">
+        <i data-feather="package"></i> Cargo Jet
+      </button>
+      <button type="button" class="multi-gen-tab" onclick="switchPilotTab('ups',this)">
+        <i data-feather="globe"></i> UPS (externe)
+      </button>
+    </div>
+
+    <div id="pilot-panel-fedex" class="pilot-panel">
+      <p style="font-size:.8rem;color:var(--text-muted);margin:0 0 .5rem;">Entrez les noms d'équipage FedEx et leurs chambres.</p>
+      <div id="fedex-crew" class="crew-rows">
+        <div class="crew-row">
+          <input type="text" placeholder="Nom" class="crew-name">
+          <input type="text" placeholder="# Empl." class="crew-empno" style="width:70px;">
+          <input type="text" placeholder="Vol" class="crew-flight" style="width:60px;">
+          <input type="text" placeholder="Ch." class="crew-room" style="width:55px;">
+        </div>
+      </div>
+      <button type="button" class="add-event-btn" onclick="addCrewRow('fedex')">+ Ajouter</button>
+      <button type="button" class="gv-gen-btn" style="margin-top:.5rem;" onclick="downloadPilotSheet('fedex')">
+        <i data-feather="download"></i> Télécharger FedEx
+      </button>
+    </div>
+
+    <div id="pilot-panel-cargo" class="pilot-panel" style="display:none;">
+      <p style="font-size:.8rem;color:var(--text-muted);margin:0 0 .5rem;">Entrez les noms d'équipage Cargo Jet et leurs chambres.</p>
+      <div id="cargo-crew" class="crew-rows">
+        <div class="crew-row">
+          <input type="text" placeholder="Nom" class="crew-name">
+          <input type="text" placeholder="Ch." class="crew-room" style="width:55px;">
+        </div>
+      </div>
+      <button type="button" class="add-event-btn" onclick="addCrewRow('cargo')">+ Ajouter</button>
+      <button type="button" class="gv-gen-btn" style="margin-top:.5rem;" onclick="downloadPilotSheet('cargo')">
+        <i data-feather="download"></i> Télécharger Cargo Jet
+      </button>
+    </div>
+
+    <div id="pilot-panel-ups" class="pilot-panel" style="display:none;">
+      <p style="font-size:.8rem;color:var(--text-muted);margin:0 0 .5rem;">UPS utilise un système externe. Cliquez pour ouvrir le UPS Plugin dans un nouvel onglet.</p>
+      <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 .75rem;"><strong>Étapes :</strong> Home → Login → Sign in sheet → View and Print</p>
+      <a href="https://www.ups.com" target="_blank" class="gv-gen-btn" style="text-decoration:none;text-align:center;background:var(--cl-brown,#78350f);">
+        <i data-feather="external-link"></i> Ouvrir UPS Plugin
+      </a>
+    </div>
+
+    <p style="font-size:.75rem;color:var(--text-muted);margin-top:.75rem;font-style:italic;">
+      <i data-feather="info" style="width:12px;height:12px;"></i>
+      Imprimer les 3 feuilles, les plier en 3 et les agrafer ensemble. Placer dans le bac des réceptionnistes.
+    </p>
+  `;
+
+  section.querySelector('.gv-generator-header').after(multiContainer);
+  section.style.display = 'block';
+  feather.replace();
+}
+
+function switchPilotTab(tab, btn) {
+  document.querySelectorAll('.pilot-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.multi-gen-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`pilot-panel-${tab}`).style.display = 'block';
+  btn.classList.add('active');
+}
+
+function addCrewRow(type) {
+  const container = document.getElementById(`${type}-crew`);
+  const div = document.createElement('div');
+  div.className = 'crew-row';
+  if (type === 'fedex') {
+    div.innerHTML = `
+      <input type="text" placeholder="Nom" class="crew-name">
+      <input type="text" placeholder="# Empl." class="crew-empno" style="width:70px;">
+      <input type="text" placeholder="Vol" class="crew-flight" style="width:60px;">
+      <input type="text" placeholder="Ch." class="crew-room" style="width:55px;">
+      <button type="button" class="remove-event-btn" onclick="this.parentElement.remove()" title="Supprimer">×</button>
+    `;
+  } else {
+    div.innerHTML = `
+      <input type="text" placeholder="Nom" class="crew-name">
+      <input type="text" placeholder="Ch." class="crew-room" style="width:55px;">
+      <button type="button" class="remove-event-btn" onclick="this.parentElement.remove()" title="Supprimer">×</button>
+    `;
+  }
+  container.appendChild(div);
+}
+
+async function downloadPilotSheet(type) {
+  const date = document.getElementById('pilot-date').value;
+  if (!date) { alert('Veuillez entrer une date.'); return; }
+
+  const containerId = `${type}-crew`;
+  const rows = document.querySelectorAll(`#${containerId} .crew-row`);
+  const crew = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.crew-name')?.value?.trim();
+    if (!name) return;
+    const member = { name, room: row.querySelector('.crew-room')?.value?.trim() || '' };
+    if (type === 'fedex') {
+      member.employee_no = row.querySelector('.crew-empno')?.value?.trim() || '';
+      member.flight = row.querySelector('.crew-flight')?.value?.trim() || '';
+    }
+    crew.push(member);
+  });
+
+  const endpoint = type === 'fedex' ? '/api/generators/fedex' : '/api/generators/cargo-jet';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ date, crew })
+    });
+    if (!res.ok) throw new Error('Erreur de génération');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = res.headers.get('content-disposition')?.match(/filename="?(.+)"?/)?.[1] || `${type}_${date}.xlsx`;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('Erreur: ' + err.message);
+  }
 }
 
 let banquetEventCounter = 1;
 function addBanquetEvent(e) {
-    e.preventDefault();
-    const container = document.getElementById('banquet-events');
-    const eventId = banquetEventCounter++;
-    const eventDiv = document.createElement('div');
-    eventDiv.className = 'banquet-event';
-    eventDiv.innerHTML = `
-        <div class="generator-field">
-            <label>Salon:</label>
-            <input type="text" name="salon-${eventId}" placeholder="ex: Aut-Vimont" required>
-        </div>
-        <div class="generator-field">
-            <label>Compagnie:</label>
-            <input type="text" name="compagnie-${eventId}" placeholder="ex: SAPUTO" required>
-        </div>
-        <div class="generator-field">
-            <label>Heure:</label>
-            <input type="text" name="heure-${eventId}" placeholder="ex: 08:00-13:00" required>
-        </div>
-        <div class="generator-field">
-            <label>Responsable:</label>
-            <input type="text" name="responsable-${eventId}" placeholder="ex: JOANNA K." required>
-        </div>
-        <button type="button" class="remove-event-btn" onclick="this.parentElement.remove()">Supprimer</button>
-    `;
-    container.appendChild(eventDiv);
+  e.preventDefault();
+  const container = document.getElementById('banquet-events');
+  const id = banquetEventCounter++;
+  const div = document.createElement('div');
+  div.className = 'banquet-event';
+  div.innerHTML = `
+    <div class="generator-field"><label>Salon:</label><input type="text" name="salon-${id}" class="salon-autocomplete" placeholder="ex: Auteuil" required autocomplete="off"></div>
+    <div class="generator-field"><label>Compagnie:</label><input type="text" name="compagnie-${id}" placeholder="ex: SAPUTO" required></div>
+    <div class="generator-field"><label>Heure:</label><input type="text" name="heure-${id}" placeholder="ex: 08:00-13:00" required></div>
+    <div class="generator-field"><label>Responsable:</label><input type="text" name="responsable-${id}" placeholder="ex: JOANNA K." required></div>
+    <button type="button" class="remove-event-btn" onclick="this.parentElement.remove()">Supprimer</button>
+  `;
+  container.appendChild(div);
+  // Init autocomplete on new salon input
+  initSalonAutocomplete(div.querySelector('.salon-autocomplete'));
 }
+
+/* ── Salon Autocomplete ── */
+let salonList = null;
+async function loadSalons() {
+  if (salonList) return salonList;
+  try {
+    const r = await fetch('/api/generators/salons');
+    salonList = await r.json();
+  } catch(e) { salonList = []; }
+  return salonList;
+}
+
+function initSalonAutocomplete(input) {
+  if (!input || input.dataset.acInit) return;
+  input.dataset.acInit = 'true';
+
+  let dropdown = document.createElement('div');
+  dropdown.className = 'salon-ac-dropdown';
+  input.parentElement.style.position = 'relative';
+  input.parentElement.appendChild(dropdown);
+
+  input.addEventListener('focus', async () => {
+    const salons = await loadSalons();
+    showSalonSuggestions(input, dropdown, salons, input.value);
+  });
+  input.addEventListener('input', async () => {
+    const salons = await loadSalons();
+    showSalonSuggestions(input, dropdown, salons, input.value);
+  });
+  input.addEventListener('blur', () => {
+    setTimeout(() => dropdown.style.display = 'none', 150);
+  });
+}
+
+function showSalonSuggestions(input, dropdown, salons, query) {
+  const q = (query || '').toLowerCase();
+  const filtered = q ? salons.filter(s => s.toLowerCase().includes(q)) : salons;
+  if (filtered.length === 0) { dropdown.style.display = 'none'; return; }
+  dropdown.innerHTML = filtered.map(s => `<div class="salon-ac-item" onmousedown="selectSalon(this, '${s.replace(/'/g, "\\'")}')">${s}</div>`).join('');
+  dropdown.style.display = 'block';
+}
+
+function selectSalon(el, salon) {
+  const input = el.closest('.generator-field').querySelector('.salon-autocomplete');
+  input.value = salon;
+  el.parentElement.style.display = 'none';
+}
+
+// Init autocomplete on any salon inputs already rendered
+function initAllSalonAutocompletes() {
+  document.querySelectorAll('.salon-autocomplete').forEach(initSalonAutocomplete);
+}
+
+// Hook into showGenerator to init autocomplete after fields are rendered
+const origShowGenerator = showGenerator;
+showGenerator = function(taskOrder) {
+  origShowGenerator(taskOrder);
+  setTimeout(initAllSalonAutocompletes, 50);
+};
 
 async function handleGenerateDocument(e) {
-    e.preventDefault();
-    const form = e.target;
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const messageDiv = document.getElementById('generator-message');
-    const endpoint = document.getElementById('generator-fields').dataset.endpoint;
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('button[type="submit"]');
+  const msg = document.getElementById('generator-message');
+  const endpoint = document.getElementById('generator-fields').dataset.endpoint;
 
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i data-feather="loader"></i> Génération...';
-    feather.replace();
+  btn.disabled = true;
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = '<i data-feather="loader"></i> Génération...';
+  feather.replace();
 
-    try {
-        const formData = new FormData(form);
-        let data = { date: formData.get('date') };
-
-        // Special handling for banquet events
-        if (endpoint.includes('cles-banquets')) {
-            data.events = [];
-            let eventId = 0;
-            while (formData.get(`salon-${eventId}`) !== null) {
-                data.events.push({
-                    salon: formData.get(`salon-${eventId}`),
-                    compagnie: formData.get(`compagnie-${eventId}`),
-                    heure: formData.get(`heure-${eventId}`),
-                    responsable: formData.get(`responsable-${eventId}`)
-                });
-                eventId++;
-            }
-        }
-
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
-
-        if (response.ok) {
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-
-            messageDiv.className = 'generator-message success';
-            messageDiv.textContent = '✓ Document généré avec succès!';
-            messageDiv.style.display = 'block';
-        } else {
-            const error = await response.json();
-            throw new Error(error.error || 'Erreur lors de la génération');
-        }
-    } catch (error) {
-        messageDiv.className = 'generator-message error';
-        messageDiv.textContent = '✗ ' + error.message;
-        messageDiv.style.display = 'block';
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i data-feather="download"></i> Générer et télécharger';
-        feather.replace();
-        setTimeout(() => { messageDiv.style.display = 'none'; }, 5000);
+  try {
+    const fd = new FormData(form);
+    let data = { date: fd.get('date') };
+    if (endpoint.includes('cles-banquets')) {
+      data.events = [];
+      let i = 0;
+      while (fd.get(`salon-${i}`) !== null) {
+        data.events.push({ salon:fd.get(`salon-${i}`), compagnie:fd.get(`compagnie-${i}`), heure:fd.get(`heure-${i}`), responsable:fd.get(`responsable-${i}`) });
+        i++;
+      }
     }
+    const resp = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':getCsrfToken()}, body:JSON.stringify(data) });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const cd = resp.headers.get('Content-Disposition') || '';
+      const m = cd.match(/filename=([^\s;]+)/);
+      a.href = url; a.download = m ? m[1].replace(/"/g,'') : 'document';
+      document.body.appendChild(a); a.click(); a.remove();
+      msg.className = 'gv-gen-msg success'; msg.textContent = '✓ Document généré!'; msg.style.display = 'block';
+    } else { throw new Error((await resp.json()).error || 'Erreur'); }
+  } catch (err) {
+    msg.className = 'gv-gen-msg error'; msg.textContent = '✗ ' + err.message; msg.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.innerHTML = origHTML; feather.replace();
+    setTimeout(() => { msg.style.display = 'none'; }, 5000);
+  }
 }
+
+// ═══════════════════════════════════════════════════════════════
+// RJ AUTOMATION (preserved logic)
+// ═══════════════════════════════════════════════════════════════
+
+let _rjStatusCache = null;
+let _rjStatusCacheTime = 0;
+
+async function fetchRJStatus(force = false) {
+  const now = Date.now();
+  if (!force && _rjStatusCache && (now - _rjStatusCacheTime) < 10000) return _rjStatusCache;
+  try {
+    const [statusRes, progressRes] = await Promise.all([fetch('/api/rj/status'), fetch('/api/rj/progress')]);
+    const status = await statusRes.json();
+    const progress = await progressRes.json();
+    _rjStatusCache = { status, progress };
+    _rjStatusCacheTime = now;
+    return _rjStatusCache;
+  } catch (e) { return { status:{ uploaded:false }, progress:{ success:false, sections:[] } }; }
+}
+
+function showAutomation(taskOrder) {
+  const section = document.getElementById('guide-automation');
+  const content = document.getElementById('automation-content');
+  const msg = document.getElementById('automation-message');
+  content.innerHTML = ''; msg.style.display = 'none'; section.style.display = 'none';
+
+  if (!currentTask || currentTask.role !== 'back') return;
+  const info = RJ_TASK_MAP[taskOrder];
+  if (!info) return;
+
+  document.getElementById('automation-title').textContent = 'Automatisation: ' + info.title;
+  section.style.display = 'block';
+  content.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted);font-size:.82rem;">Vérification du statut RJ...</div>';
+
+  if (info.action === 'upload') { renderUploadPanel(content); return; }
+  fetchRJStatus().then(({ status, progress }) => renderSmartPanel(content, info, status, progress, taskOrder));
+}
+
+function renderUploadPanel(content) {
+  content.innerHTML = `
+    <div style="padding:10px;">
+      <p style="margin:0 0 10px;font-size:.82rem;color:var(--text-secondary);">Charger le fichier RJ du jour pour activer les automatisations.</p>
+      <div id="rj-upload-area">
+        <input type="file" id="rj-file-input" accept=".xls,.xlsx" style="display:block;margin-bottom:8px;width:100%;font-size:.82rem;">
+        <button class="gv-gen-btn" onclick="uploadRJFile()"><i data-feather="upload"></i> Téléverser</button>
+      </div>
+      <div id="rj-file-info" style="display:none;margin-top:8px;padding:8px;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:6px;">
+        <span style="color:var(--cl-green);font-weight:600;font-size:.82rem;" id="rj-status-text">Fichier chargé</span>
+      </div>
+      <div id="rj-actions-area" style="opacity:.5;pointer-events:none;margin-top:8px;">
+        <button class="gv-gen-btn" style="background:var(--cl-red);" onclick="runRJAutomation('/api/rj/reset')"><i data-feather="trash-2"></i> Effacer les onglets</button>
+      </div>
+      <a href="/audit/rj" style="display:block;text-align:center;margin-top:8px;color:var(--cl-blue);font-size:.78rem;">Gestion RJ complète →</a>
+    </div>`;
+  feather.replace();
+  checkRJStatus();
+}
+
+function renderSmartPanel(content, info, status, progress, taskOrder) {
+  const loaded = status.uploaded || status.file_loaded;
+  let sectionStatus = null;
+  if (progress.success && progress.sections) sectionStatus = progress.sections.find(s => s.name === info.section);
+  const isDone = sectionStatus ? sectionStatus.done : false;
+  const detail = sectionStatus ? sectionStatus.detail : 'Statut inconnu';
+
+  let html = '<div style="padding:8px;">';
+  if (!loaded) {
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;margin-bottom:8px;">
+      <i data-feather="alert-triangle" style="width:16px;height:16px;color:var(--cl-orange);flex-shrink:0;"></i>
+      <span style="font-size:.8rem;color:var(--cl-orange);">Aucun fichier RJ chargé.</span></div>`;
+  } else {
+    const col = isDone ? 'var(--cl-green)' : 'var(--cl-red)';
+    const icon = isDone ? 'check-circle' : 'x-circle';
+    html += `<div style="display:flex;align-items:center;gap:8px;padding:10px;background:${isDone ? 'rgba(16,185,129,.06)' : 'var(--border-light)'};border:1px solid ${isDone ? 'rgba(16,185,129,.2)' : 'var(--border)'};border-radius:6px;margin-bottom:10px;">
+      <i data-feather="${icon}" style="width:16px;height:16px;color:${col};flex-shrink:0;"></i>
+      <div><div style="font-weight:600;color:${col};font-size:.85rem;">${info.title}: ${isDone ? 'Données présentes' : 'En attente'}</div>
+      <div style="font-size:.75rem;color:var(--text-muted);margin-top:2px;">${detail}</div></div></div>`;
+    if (info.tab) html += `<a href="/audit/rj?tab=${info.tab}" class="gv-gen-btn" style="text-decoration:none;background:var(--cl-blue);"><i data-feather="external-link"></i> Ouvrir ${info.title}</a>`;
+    if (info.action === 'quasimodo') html += `<a href="/audit/rj" class="gv-gen-btn" style="text-decoration:none;background:var(--cl-blue);"><i data-feather="credit-card"></i> Ouvrir Quasimodo</a>`;
+    if (taskOrder === 4 && loaded) {
+      html += `<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border-light);display:flex;gap:6px;">
+        <input type="number" id="rj-day-input" placeholder="Jour" style="width:60px;padding:5px 7px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;">
+        <button class="gv-gen-btn" style="flex:1;" onclick="runSyncDueBack()"><i data-feather="refresh-cw"></i> Sync DueBack → SetD</button></div>`;
+    }
+  }
+  html += '</div>';
+  content.innerHTML = html;
+  feather.replace();
+}
+
+async function checkRJStatus() {
+  try {
+    const r = await fetch('/api/rj/status');
+    const d = await r.json();
+    if (d.uploaded) {
+      const el = document.getElementById('rj-upload-area'); if(el) el.style.display = 'none';
+      const info = document.getElementById('rj-file-info'); if(info) { info.style.display = 'block'; document.getElementById('rj-status-text').textContent = `Fichier chargé (${(d.file_size/1024).toFixed(1)} KB)`; }
+      const act = document.getElementById('rj-actions-area'); if(act) { act.style.opacity = '1'; act.style.pointerEvents = 'auto'; }
+    }
+  } catch (e) {}
+}
+
+async function uploadRJFile() {
+  const input = document.getElementById('rj-file-input');
+  if (!input.files[0]) { alert('Sélectionnez un fichier.'); return; }
+  const fd = new FormData(); fd.append('rj_file', input.files[0]);
+  try {
+    const r = await fetch('/api/rj/upload', { method:'POST', headers:{'X-CSRF-Token':getCsrfToken()}, body:fd });
+    const res = await r.json();
+    if (res.success) checkRJStatus(); else alert('Erreur: ' + res.error);
+  } catch (e) { alert('Erreur de téléversement'); }
+}
+
+async function runRJAutomation(endpoint, data = {}) {
+  const msg = document.getElementById('automation-message');
+  try {
+    const r = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json','X-CSRF-Token':getCsrfToken()}, body:JSON.stringify(data) });
+    const res = await r.json();
+    if (res.success) { msg.className = 'gv-gen-msg success'; msg.textContent = '✓ ' + res.message; }
+    else throw new Error(res.error || 'Erreur');
+  } catch (e) { msg.className = 'gv-gen-msg error'; msg.textContent = '✗ ' + e.message; }
+  msg.style.display = 'block';
+  setTimeout(() => { msg.style.display = 'none'; }, 5000);
+}
+
+function runSyncDueBack() {
+  const day = document.getElementById('rj-day-input')?.value;
+  runRJAutomation('/api/rj/sync', { day: day ? parseInt(day) : null });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TEXT FORMATTING (preserved)
+// ═══════════════════════════════════════════════════════════════
+
+function formatStepText(text) {
+  if (!text) return '';
+  if (text.trim() === '') return '<div class="step-separator"></div>';
+  const isSubItem = /^(\s{2,})-\s/.test(text);
+  if (isSubItem) return `<div class="step-sub-item"><span class="sub-bullet">•</span> ${formatInlineText(text.replace(/^(\s{2,})-\s/, ''))}</div>`;
+  const isSectionHeader = /^[A-Za-zÀ-ÿ\s\-]+\s*:\s*$/.test(text.trim());
+  if (isSectionHeader) return `<div class="step-section-header">${text.trim()}</div>`;
+  return formatInlineText(text);
+}
+
+function formatInlineText(text) {
+  text = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  text = text.replace(/(?<![a-zà-ÿA-ZÀ-Ÿ])'([^']+)'(?![a-zà-ÿA-ZÀ-Ÿ])/g, '<code class="menu-item">$1</code>');
+  text = text.replace(/"([^"]+)"/g, '<code class="menu-item">$1</code>');
+  text = text.replace(/→/g, '<span class="arrow-indicator">→</span>');
+  text = text.replace(/\b(\d{1,2})\.(\d{1,2})\b/g, '<code class="dept-code">$1.$2</code>');
+  text = text.replace(/\b(Contrôle|Ctrl|Shift|Alt|Enter|Tab|Échap|Escape)\b/gi, '<kbd class="key">$1</kbd>');
+  text = text.replace(/\b(IMPORTANT|ATTENTION|NE PAS|NOTE|À NOTER)\s*:?/gi, '<strong class="warning-text">$1:</strong>');
+  text = text.replace(/\b(Submit|Print|Apply|Save|Post|OK|Oui|Yes)\b/gi, '<span class="action-btn">$1</span>');
+  text = text.replace(/\b(Lightspeed|LightSpeed|POSitouch|Moneris|FreedomPay|Espresso|Empower|VNC|Galaxy|FuseBox[e]?|Enoclient)\b/gi, '<span class="system-name">$1</span>');
+  text = text.replace(/\b(\.xls|\.xlsx|\.pdf|\.docx?)\b/gi, '<code class="file-ext">$1</code>');
+  text = text.replace(/\b(Ref|Note|Amount|Montant|Date|Folio|Dept|Sub Dept|Sub Department)\s*:/gi, '<span class="field-label">$1:</span>');
+  text = text.replace(/(\$?\d+[.,]\d{2})\$/g, '<span class="money-amount">$1$</span>');
+  text = text.replace(/\b(\d+[.,]\d{2})\s*\$/g, '<span class="money-amount">$1 $</span>');
+  text = text.replace(/\b(chambre|room|#)\s*(\d{3,4})\b/gi, '$1 <span class="room-number">$2</span>');
+  text = text.replace(/^([A-Za-zÀ-ÿ\s]+)\s*:\s*/g, '<span class="step-label">$1:</span> ');
+  return text;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SCREENSHOTS & KEYBOARD
+// ═══════════════════════════════════════════════════════════════
+
+function openScreenshotModal(src) {
+  const modal = document.getElementById('screenshot-modal');
+  document.getElementById('screenshot-modal-img').src = src;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeScreenshotModal() {
+  document.getElementById('screenshot-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    if (document.getElementById('guide-view').style.display === 'grid') closeGuide();
+    if (document.getElementById('screenshot-modal').style.display === 'flex') closeScreenshotModal();
+  }
+});
+
+async function completeShift() {
+  if (confirm('Êtes-vous sûr de vouloir terminer le quart?')) {
+    await fetch('/api/shifts/complete', { method:'POST' });
+    alert('Quart terminé avec succès!');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
 
 loadData();
 </script>

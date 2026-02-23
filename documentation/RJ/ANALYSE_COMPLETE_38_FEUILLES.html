@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RJ Workbook — Analyse complète des 38 feuilles</title>
+<style>
+:root { --bg: #0f1117; --card: #1a1d27; --border: #2a2d3a; --accent: #6366f1; --accent2: #818cf8; --green: #34d399; --yellow: #fbbf24; --red: #f87171; --text: #e2e8f0; --muted: #94a3b8; --orange: #fb923c; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+h1 { font-size: 1.8rem; margin-bottom: 8px; }
+.subtitle { color: var(--muted); margin-bottom: 32px; font-size: 0.95rem; }
+.stats-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; flex: 1; min-width: 140px; }
+.stat-card .num { font-size: 1.8rem; font-weight: 700; color: var(--accent2); }
+.stat-card .label { color: var(--muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.flow-diagram { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 32px; overflow-x: auto; }
+.flow-diagram pre { color: var(--green); font-size: 0.75rem; line-height: 1.5; }
+.tabs { display: flex; gap: 4px; margin-bottom: 0; flex-wrap: wrap; background: var(--card); padding: 8px 8px 0; border-radius: 12px 12px 0 0; border: 1px solid var(--border); border-bottom: none; }
+.tab { padding: 8px 16px; background: transparent; border: none; color: var(--muted); cursor: pointer; border-radius: 8px 8px 0 0; font-size: 0.82rem; transition: all 0.2s; }
+.tab:hover { color: var(--text); background: rgba(99,102,241,0.1); }
+.tab.active { color: var(--accent2); background: var(--bg); font-weight: 600; }
+.tab-content { display: none; background: var(--bg); border: 1px solid var(--border); border-top: none; border-radius: 0 0 12px 12px; padding: 24px; margin-bottom: 32px; }
+.tab-content.active { display: block; }
+.sheet-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.sheet-card h3 { color: var(--accent2); margin-bottom: 4px; font-size: 1.1rem; }
+.sheet-card .meta { color: var(--muted); font-size: 0.82rem; margin-bottom: 12px; }
+.sheet-card p { margin-bottom: 8px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge.core { background: rgba(99,102,241,0.2); color: var(--accent2); }
+.badge.support { background: rgba(52,211,153,0.2); color: var(--green); }
+.badge.report { background: rgba(251,191,36,0.2); color: var(--yellow); }
+.badge.vendor { background: rgba(251,146,60,0.2); color: var(--orange); }
+.badge.empty { background: rgba(248,113,113,0.15); color: var(--red); }
+.badge.implemented { background: rgba(52,211,153,0.25); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+.badge.partial { background: rgba(251,191,36,0.2); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+.badge.not-impl { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.85rem; }
+th { background: rgba(99,102,241,0.1); color: var(--accent2); text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--border); font-weight: 600; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+tr:hover td { background: rgba(99,102,241,0.05); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 768px) { .cols { grid-template-columns: 1fr; } }
+.code { background: rgba(99,102,241,0.08); padding: 2px 6px; border-radius: 3px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: var(--accent2); }
+.section-title { font-size: 1.2rem; color: var(--text); margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+ul { padding-left: 20px; margin: 8px 0; }
+li { margin-bottom: 4px; }
+.search-box { width: 100%; padding: 10px 16px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; margin-bottom: 24px; }
+.search-box:focus { outline: none; border-color: var(--accent); }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Rapport Journalier (RJ) — Analyse complète</h1>
+<p class="subtitle">Classeur Excel avec 38 feuilles · Fichier: Rj 08-02-2026.xls · Sheraton Laval (340 chambres)</p>
+
+<div class="stats-row">
+<div class="stat-card"><div class="num">38</div><div class="label">Feuilles totales</div></div>
+<div class="stat-card"><div class="num">14</div><div class="label">Implémentées (RJ Natif)</div></div>
+<div class="stat-card"><div class="num">3</div><div class="label">Feuilles vides</div></div>
+<div class="stat-card"><div class="num">~1200</div><div class="label">Colonnes de données</div></div>
+<div class="stat-card"><div class="num">2 Mo</div><div class="label">Taille fichier</div></div>
+</div>
+
+<input type="text" class="search-box" placeholder="Rechercher une feuille, un champ, un terme..." oninput="filterSheets(this.value)">
+
+<!-- TABS -->
+<div class="tabs">
+<button class="tab active" onclick="switchTab('overview')">Vue d'ensemble</button>
+<button class="tab" onclick="switchTab('core')">Feuilles principales (0-12)</button>
+<button class="tab" onclick="switchTab('support')">Feuilles support (13-25)</button>
+<button class="tab" onclick="switchTab('reports')">Rapports & Budget (26-37)</button>
+<button class="tab" onclick="switchTab('flow')">Flux de données</button>
+<button class="tab" onclick="switchTab('impl')">État d'implémentation</button>
+</div>
+
+<!-- OVERVIEW -->
+<div id="overview" class="tab-content active">
+<h2 class="section-title">Les 38 feuilles en un coup d'œil</h2>
+<table>
+<thead><tr><th>#</th><th>Nom</th><th>Dim.</th><th>Catégorie</th><th>Description</th><th>Web App</th></tr></thead>
+<tbody>
+<tr><td>0</td><td><strong>EJ</strong></td><td>233×8</td><td><span class="badge core">Core</span></td><td>Grand Livre — codes GL, descriptions, montants</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>1</td><td><strong>controle</strong></td><td>33×92</td><td><span class="badge core">Core</span></td><td>Configuration: date, auditeur, météo, chambres à refaire, KPIs</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>2</td><td><strong>Analyse 101100</strong></td><td>60×92</td><td><span class="badge support">Support</span></td><td>Analyse compte transitoire GL 101100 (DT/CT/Solde)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>3</td><td><strong>Analyse 100401</strong></td><td>18×8</td><td><span class="badge support">Support</span></td><td>Transferts bancaires GL 100401</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>4</td><td><strong>Diff.Caisse#</strong></td><td>38×39</td><td><span class="badge support">Support</span></td><td>Différences de caisse quotidiennes (31 jours)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>5</td><td><strong>Feuil8</strong></td><td>0×0</td><td><span class="badge empty">Vide</span></td><td>—</td><td>—</td></tr>
+<tr><td>6</td><td><strong>autre GL</strong></td><td>180×61</td><td><span class="badge support">Support</span></td><td>Autres Grand Livre — 59 comptes GL avec variances</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>7</td><td><strong>rj</strong></td><td>69×95</td><td><span class="badge core">Core</span></td><td>Résumé principal: revenus F&B, chambres, stats, balance ouv/ferm</td><td><span class="badge partial">Partiel</span></td></tr>
+<tr><td>8</td><td><strong>salaires</strong></td><td>132×92</td><td><span class="badge report">Rapport</span></td><td>Masse salariale par département (heures + coûts)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>9</td><td><strong>jour</strong></td><td>233×117</td><td><span class="badge core">Core</span></td><td>★ Journal maître — TOUTES les catégories de revenus quotidiens</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>10</td><td><strong>Feuil1</strong></td><td>40×98</td><td><span class="badge support">Support</span></td><td>Suivi heures/coûts main-d'œuvre par département</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>11</td><td><strong>depot</strong></td><td>54×16</td><td><span class="badge core">Core</span></td><td>Enveloppes de dépôt (Client 6 & Client 8)</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>12</td><td><strong>diff_forfait</strong></td><td>44×92</td><td><span class="badge support">Support</span></td><td>Variance des forfaits (Club Level, ADPQ, Davinci, Platinum…)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>13</td><td><strong>Sonifi</strong></td><td>65×94</td><td><span class="badge vendor">Fournisseur</span></td><td>Revenus Sonifi (divertissement en chambre) par tarif</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>14</td><td><strong>Internet</strong></td><td>41×94</td><td><span class="badge vendor">Fournisseur</span></td><td>Revenus Internet DataValet — Lightspeed vs ajustements</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>15</td><td><strong>SOCAN</strong></td><td>57×13</td><td><span class="badge vendor">Fournisseur</span></td><td>Droits musicaux SOCAN (événements, danse/sans danse)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>16</td><td><strong>Ré:sonne</strong></td><td>57×13</td><td><span class="badge vendor">Fournisseur</span></td><td>Droits musicaux Ré:sonne (même format que SOCAN)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>17</td><td><strong>Vestiaire#</strong></td><td>45×7</td><td><span class="badge vendor">Fournisseur</span></td><td>Vestiaire (factures François Dubuc)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>18</td><td><strong>DUBACK#</strong></td><td>67×23</td><td><span class="badge core">Core</span></td><td>DueBack par réceptionniste (2 lignes/jour, 20+ employés)</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>19</td><td><strong>somm_nettoyeur</strong></td><td>103×9</td><td><span class="badge support">Support</span></td><td>Résumé ménage — facture vs client vs RJ</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>20</td><td><strong>Nettoyeur</strong></td><td>352×36</td><td><span class="badge support">Support</span></td><td>Détail ménage — heures/jour par employé (320+ employés)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>21</td><td><strong>SetD</strong></td><td>44×165</td><td><span class="badge core">Core</span></td><td>Set-Déjeuner personnel — 150+ employés par département</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>22</td><td><strong>AD</strong></td><td>41×60</td><td><span class="badge report">Rapport</span></td><td>Journal administratif — miroir du Jour (F&B, taxes, occupation)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>23</td><td><strong>Massage</strong></td><td>36×9</td><td><span class="badge vendor">Fournisseur</span></td><td>Revenus massage — R/J vs facture + variance</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>24</td><td><strong>transelect</strong></td><td>40×32</td><td><span class="badge core">Core</span></td><td>Réconciliation terminaux carte (Restaurant + Réception)</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>25</td><td><strong>201802 Ristourne</strong></td><td>34×41</td><td><span class="badge support">Support</span></td><td>Ristournes contrats groupe (38 comptes clients)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>26</td><td><strong>Recap</strong></td><td>26×14</td><td><span class="badge core">Core</span></td><td>Réconciliation cash (lecture/correction/net, dépôts)</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>27</td><td><strong>geac_ux</strong></td><td>58×11</td><td><span class="badge core">Core</span></td><td>Balance GEAC — cashout vs daily revenue par carte</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>28</td><td><strong>Auditeur</strong></td><td>5×2</td><td><span class="badge support">Support</span></td><td>Liste des auditeurs (lookup pour dropdown)</td><td><span class="badge implemented">Oui</span></td></tr>
+<tr><td>29</td><td><strong>Ristourne Analyse</strong></td><td>34×7</td><td><span class="badge support">Support</span></td><td>Analyse détaillée des ristournes (date, provenance, DT/CT)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>30</td><td><strong>Rapp_p1</strong></td><td>53×9</td><td><span class="badge report">Rapport</span></td><td>Sommaire des revenus — chambres, F&B, main-d'œuvre</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>31</td><td><strong>Rapp_p2</strong></td><td>33×8</td><td><span class="badge report">Rapport</span></td><td>Sommaire Heures & Employés par département</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>32</td><td><strong>Rapp_p3</strong></td><td>57×25</td><td><span class="badge report">Rapport</span></td><td>Analyse détaillée revenus vs main-d'œuvre vs budget</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>33</td><td><strong>Etat rev</strong></td><td>53×8</td><td><span class="badge report">Rapport</span></td><td>État des revenus & dépenses (P&L quotidien)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>34</td><td><strong>Budget</strong></td><td>134×17</td><td><span class="badge report">Rapport</span></td><td>Budget annuel (revenus, masse salariale, ratios coûts)</td><td><span class="badge not-impl">Non</span></td></tr>
+<tr><td>35</td><td><strong>Feuil6</strong></td><td>0×0</td><td><span class="badge empty">Vide</span></td><td>—</td><td>—</td></tr>
+<tr><td>36</td><td><strong>Feuil7</strong></td><td>28×20</td><td><span class="badge support">Support</span></td><td>Données éparses (feuille de travail)</td><td>—</td></tr>
+<tr><td>37</td><td><strong>Feuil2</strong></td><td>0×0</td><td><span class="badge empty">Vide</span></td><td>—</td><td>—</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- CORE SHEETS 0-12 -->
+<div id="core" class="tab-content">
+<h2 class="section-title">Feuilles principales (0-12)</h2>
+
+<div class="sheet-card" data-search="ej grand livre gl montant code">
+<h3>#0 — EJ (Écriture Journal / Grand Livre)</h3>
+<div class="meta">233 lignes × 8 colonnes · <span class="badge support">Support</span></div>
+<p>Grand livre exporté du système comptable. Chaque ligne = une écriture avec code GL, centre de coûts, description et montant.</p>
+<table><thead><tr><th>Colonne</th><th>Contenu</th></tr></thead><tbody>
+<tr><td>A (0)</td><td>Code GL (ex: 075001, 051000, 201802)</td></tr>
+<tr><td>B (1)</td><td>Centre de coûts (CC1)</td></tr>
+<tr><td>C (2)</td><td>Centre de coûts (CC2)</td></tr>
+<tr><td>D-E (3-4)</td><td>Descriptions (libellé comptable)</td></tr>
+<tr><td>F (5)</td><td>Source du document</td></tr>
+<tr><td>G (6)</td><td>Montant ($)</td></tr>
+</tbody></table>
+<p><strong>Exemples GL:</strong> 075001-075047 (hospitalité), 201802 (ristournes), 202020 (TPS), 202040 (TVH)</p>
+</div>
+
+<div class="sheet-card" data-search="controle date auditeur meteo temperature chambres refaire">
+<h3>#1 — controle (Configuration)</h3>
+<div class="meta">33 lignes × 92 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Point d'entrée de la session d'audit. Contient les paramètres globaux utilisés par toutes les autres feuilles via des plages nommées.</p>
+<table><thead><tr><th>Cellule</th><th>Plage nommée</th><th>Contenu</th></tr></thead><tbody>
+<tr><td>B1</td><td>—</td><td>Nom de l'auditeur (ex: "Sherley Derisca")</td></tr>
+<tr><td>B3</td><td><span class="code">vjour</span></td><td>Jour du mois (numéro)</td></tr>
+<tr><td>B4</td><td>—</td><td>Année (2026)</td></tr>
+<tr><td>B5-B6</td><td>—</td><td>Température + condition météo</td></tr>
+<tr><td>B8</td><td><span class="code">vchmp</span></td><td># chambres à refaire</td></tr>
+<tr><td>B9-B16</td><td>—</td><td>Stats ventes YTD, occupation</td></tr>
+<tr><td>B20</td><td><span class="code">vcie</span></td><td>Nom de l'hôtel</td></tr>
+<tr><td>B28</td><td><span class="code">idate</span></td><td>Date courante (date sérielle Excel)</td></tr>
+</tbody></table>
+</div>
+
+<div class="sheet-card" data-search="analyse 101100 transitoire debit credit solde">
+<h3>#2 — Analyse 101100 autre (Compte transitoire)</h3>
+<div class="meta">60 lignes × 92 colonnes · <span class="badge support">Support</span></div>
+<p>Analyse du compte GL 101100 (compte transitoire). Colonnes: DESCRIPTION | DT (débit) | CT (crédit) | SOLDE | CORRECTION. Utilisé pour rapprocher les écritures en suspens.</p>
+</div>
+
+<div class="sheet-card" data-search="analyse 100401 transfert bancaire">
+<h3>#3 — Analyse 100401 (Transferts bancaires)</h3>
+<div class="meta">18 lignes × 8 colonnes · <span class="badge support">Support</span></div>
+<p>Journal du compte GL 100401 "Transfert Bancaire". Transactions datées (codes SA, CO, GR…) avec montants en colonnes DT/CT/SOLDE.</p>
+</div>
+
+<div class="sheet-card" data-search="diff caisse difference cash geac">
+<h3>#4 — Diff.Caisse# (Différences de caisse)</h3>
+<div class="meta">38 lignes × 39 colonnes · <span class="badge support">Support</span></div>
+<p>Registre mensuel des différences de caisse. 31 lignes (1 par jour) avec montants et variance cumulative. Ligne 33 = total mensuel. Référence "geac ux" dans les en-têtes.</p>
+</div>
+
+<div class="sheet-card" data-search="autre gl grand livre 59 comptes abonnement chq nsf dueback">
+<h3>#6 — autre GL (Autres Grand Livre)</h3>
+<div class="meta">180 lignes × 61 colonnes · <span class="badge support">Support</span></div>
+<p>Suivi détaillé de 59 comptes GL secondaires. Lignes = jours du mois, colonnes = comptes (Abonnement, Transf Bank, CHQ NSF, Due Back, etc.). Codes GL en ligne 4 (45778, 935052, 100401…).</p>
+</div>
+
+<div class="sheet-card" data-search="rj resume principal revenus depenses balance fermeture ouverture">
+<h3>#7 — rj (Résumé principal)</h3>
+<div class="meta">69 lignes × 95 colonnes · <span class="badge core">Core</span> · <span class="badge partial">Partiel</span></div>
+<p>LE rapport principal. Consolide tous les revenus et dépenses en un résumé avec comparaisons.</p>
+<table><thead><tr><th>Section</th><th>Lignes</th><th>Contenu</th></tr></thead><tbody>
+<tr><td>En-tête</td><td>1-3</td><td>Auditeur, date, signatures</td></tr>
+<tr><td>Colonnes</td><td>4</td><td>DESCRIPTION | JOUR | MOIS À DATE | MOIS AN DERNIER | ÉCART M.A.D. | BUDGET MOIS | ÉCART BUDGET | STATS CHAMBRE</td></tr>
+<tr><td>Balance ouverture</td><td>5</td><td>-1,209,058.08$</td></tr>
+<tr><td>Revenus F&B</td><td>6-24</td><td>Chambres, Nourriture, Boisson, Location Salles, Téléphones…</td></tr>
+<tr><td>Dépenses/Transferts</td><td>25-66</td><td>Masse salariale, coûts variables, fixes</td></tr>
+<tr><td>Balance fermeture</td><td>67</td><td>-1,123,500.32$</td></tr>
+<tr><td>Vérification</td><td>68</td><td>0 | 0 (doit être zéro)</td></tr>
+</tbody></table>
+</div>
+
+<div class="sheet-card" data-search="salaires payroll departement heures taux reception chambre cuisine">
+<h3>#8 — salaires (Masse salariale)</h3>
+<div class="meta">132 lignes × 92 colonnes · <span class="badge report">Rapport</span></div>
+<p>Masse salariale ventilée par département et poste. Départements: Réception, Chambre, Piazza, Giotto/Marché, Banquet, Cuisine, Bar, Buanderie, Maintenance, Admin. Colonnes: Département | HRES | ESC | TAUX | TOTAL HRES | $ TOTAL.</p>
+</div>
+
+<div class="sheet-card" data-search="jour journal maitre fb nourriture boisson taxes occupation kpi chambres">
+<h3>#9 — jour (Journal maître) ★</h3>
+<div class="meta">233 lignes × 117 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p><strong>LA feuille la plus importante.</strong> Toutes les catégories de revenus quotidiens sur 117 colonnes.</p>
+<table><thead><tr><th>Colonnes</th><th>Section</th></tr></thead><tbody>
+<tr><td>0-2</td><td>JOUR, Balance ouverture, Diff.Caisse</td></tr>
+<tr><td>4-8</td><td>Pause Spesa/Link (Nour/Boi/Bie/Min/Vin)</td></tr>
+<tr><td>9-13</td><td>Piazza/Cupola</td></tr>
+<tr><td>14-18</td><td>Marché La Spesa</td></tr>
+<tr><td>19-23</td><td>Service aux Chambres</td></tr>
+<tr><td>24-28</td><td>Banquet</td></tr>
+<tr><td>35</td><td>Tabagie</td></tr>
+<tr><td>36</td><td>Chambres (Room Revenue)</td></tr>
+<tr><td>49-51</td><td>Taxes (TVQ, TPS, Taxe Hébergement)</td></tr>
+<tr><td>60-65</td><td>Cartes (Amex, Discover, Visa, MC, Débit)</td></tr>
+<tr><td>88-95</td><td>Occupation (Simple, Double, Suite, Comp, # clients, Hors usage, À refaire, Disponible)</td></tr>
+<tr><td>110-116</td><td>Sous-totaux F&B</td></tr>
+</tbody></table>
+<p>Lignes 2-9 = jours 1-8 (février 2026). Lignes 230-232 = métadonnées (v_nbch, vchmp, v_client).</p>
+</div>
+
+<div class="sheet-card" data-search="feuil1 heures cout main oeuvre departement">
+<h3>#10 — Feuil1 (Heures & coûts main-d'œuvre)</h3>
+<div class="meta">40 lignes × 98 colonnes · <span class="badge support">Support</span></div>
+<p>39 départements de main-d'œuvre (REC_ADM, REC_PROM, REC_AUDIT, PIAZZA SERV, BQT_SERV, CUISINE, BAR…). Structure: Heures (cols 0-39) | Coûts (40-78) | Distribution pourboires (79-97).</p>
+</div>
+
+<div class="sheet-card" data-search="depot enveloppe banque client 6 8 montant signature">
+<h3>#11 — depot (Enveloppes de dépôt)</h3>
+<div class="meta">54 lignes × 16 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Deux comptes bancaires: <strong>Client 6</strong> (Compte 1844-22) et <strong>Client 8</strong> (Compte 4743-66). Chaque entrée = DATE | MONTANT | SIGNATURE. Exemple: 1 fév = 816.50$, 2 fév = 16,542.30$.</p>
+</div>
+
+<div class="sheet-card" data-search="diff forfait package club level adpq davinci platinum variance">
+<h3>#12 — diff_forfait (Variances forfaits)</h3>
+<div class="meta">44 lignes × 92 colonnes · <span class="badge support">Support</span></div>
+<p>Vérification des variances sur 17 types de forfaits: Club Level, Restaurant, ADPQ, Davinci, Platinum, etc. 1 ligne/jour + variance cumulative.</p>
+</div>
+</div>
+
+<!-- SUPPORT SHEETS 13-25 -->
+<div id="support" class="tab-content">
+<h2 class="section-title">Feuilles support & fournisseurs (13-25)</h2>
+
+<div class="sheet-card" data-search="sonifi divertissement films tarif innvue">
+<h3>#13 — Sonifi (Divertissement en chambre)</h3>
+<div class="meta">65 lignes × 94 colonnes · <span class="badge vendor">Fournisseur</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Réconciliation revenus Sonifi (films à la carte). Tarifs: 3.00$ à 32.99$ par palier. Colonnes: InnVue | FILMS $ | AJUST. | TOTAL RJ | DIFF. Lignes 62-64: Ventes brutes, Refus/Remboursements, Ventes nettes.</p>
+</div>
+
+<div class="sheet-card" data-search="internet datavalet lightspeed ajustement banquets forfait bnc">
+<h3>#14 — Internet (DataValet)</h3>
+<div class="meta">41 lignes × 94 colonnes · <span class="badge vendor">Fournisseur</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Revenus internet DataValet. Colonnes: JOUR | Rapport LightSpeed | Ajustement Chambre | BANQUETS | SPESA | ADJ MARRIOTT | Forfait BNC | Forfait internet | R.J. | Variance.</p>
+</div>
+
+<div class="sheet-card" data-search="socan musique droit auteur evenement danse salle">
+<h3>#15 — SOCAN (Droits musicaux)</h3>
+<div class="meta">57 lignes × 13 colonnes · <span class="badge vendor">Fournisseur</span></div>
+<p>Frais SOCAN par événement. Fournisseur: Toronto, compte 04044563-40-04. Colonnes: Date | $ | Nom événement | Salle | Capacité | Danse | Sans danse | R.J. | Variance. Total à payer: 132.34$.</p>
+</div>
+
+<div class="sheet-card" data-search="resonne musique droit toronto">
+<h3>#16 — Ré:sonne (Droits musicaux)</h3>
+<div class="meta">57 lignes × 13 colonnes · <span class="badge vendor">Fournisseur</span></div>
+<p>Même format que SOCAN mais pour le fournisseur Ré:sonne (1235 rue Bay, Toronto). Total à payer: 76.53$.</p>
+</div>
+
+<div class="sheet-card" data-search="vestiaire manteau francois dubuc montreal facture">
+<h3>#17 — Vestiaire# (Service vestiaire)</h3>
+<div class="meta">45 lignes × 7 colonnes · <span class="badge vendor">Fournisseur</span></div>
+<p>Facturation vestiaire (Interventions, François Dubuc, Montréal). Colonnes: JOUR | Vestiaire $ | Facture vestiaire. Données éparses, variance finale: -337.50$.</p>
+</div>
+
+<div class="sheet-card" data-search="dueback duback receptionniste employe deficit surplus">
+<h3>#18 — DUBACK# (DueBack par réceptionniste)</h3>
+<div class="meta">67 lignes × 23 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Réconciliation DueBack par employé. 20+ réceptionnistes en colonnes (Araujo, Caron, Thankarajah, Cindy, Manolo, Mouatarif, Kray…). 2 lignes par jour (balance + ajustements). Total RJ: -5,961.04$.</p>
+</div>
+
+<div class="sheet-card" data-search="sommaire nettoyeur menage facture client payer variance">
+<h3>#19 — somm_nettoyeur (Résumé ménage)</h3>
+<div class="meta">103 lignes × 9 colonnes · <span class="badge support">Support</span></div>
+<p>Résumé facturation ménage: JOUR | FACTURE TOTALE | CLIENT | R.J. | S.V. | À PAYER | VARIANCE CLIENT | VARIANCE FACTURE | REMARQUES. Approbation et vérification en bas de page.</p>
+</div>
+
+<div class="sheet-card" data-search="nettoyeur detail employe heures total payer">
+<h3>#20 — Nettoyeur (Détail heures ménage)</h3>
+<div class="meta">352 lignes × 36 colonnes · <span class="badge support">Support</span></div>
+<p>La plus grande feuille en nombre de lignes. 320+ employés avec heures par jour (cols 1-31). Lignes finales: TOTAL À PAYER (379.75$, 135.25$, 108.65$…), facture, variance.</p>
+</div>
+
+<div class="sheet-card" data-search="setd set dejeuner personnel employe departement comptab banquet spesa">
+<h3>#21 — SetD (Set-Déjeuner personnel)</h3>
+<div class="meta">44 lignes × 165 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>La feuille la plus large: 165 colonnes pour 150+ employés. Départements: COMPTAB, BANQUET, SPESA, MD BANQUET, MD RESTAURANT. Ligne 3: codes GL (2-946000, 2-101100…). Jours 1-31 avec montant RJ + détail par employé. Suspend: 601.22$.</p>
+</div>
+
+<div class="sheet-card" data-search="ad administratif journal giotto piazza marche banquet occupation">
+<h3>#22 — AD (Journal Administratif)</h3>
+<div class="meta">41 lignes × 60 colonnes · <span class="badge report">Rapport</span></div>
+<p>Miroir du Jour en format condensé. 60 colonnes: Giotto (5 cat.) | Piazza (5) | Marché (5) | Chambres Svc (5) | Banquet (5) | Pourboires | Équipement | Loc. Salle | Chambres | Taxes (TVQ/TPS/TVH) | Massage | Tabagie | Occupation.</p>
+</div>
+
+<div class="sheet-card" data-search="massage revenus facture sans taxes variance">
+<h3>#23 — Massage</h3>
+<div class="meta">36 lignes × 9 colonnes · <span class="badge vendor">Fournisseur</span></div>
+<p>Réconciliation revenus massage: R/J | SANS TAXES | FACTURE | # facture | sans taxe | total | VARIANCE. Données éparses (jour 4: 383.30$ seule entrée).</p>
+</div>
+
+<div class="sheet-card" data-search="transelect carte terminal bar spesa room debit visa master amex discover freedompay">
+<h3>#24 — transelect (Terminaux carte)</h3>
+<div class="meta">40 lignes × 32 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Deux sections: <strong>Restaurant</strong> (terminaux BAR A/B/C, SPESA, ROOM, EXTRA × 5 types carte) et <strong>Réception</strong> (FreedomPay, rapport bancaire). Ligne 38: codes carte (ax, dc, mc, visa, débit). Facteur AMEX en ligne 36-39.</p>
+</div>
+
+<div class="sheet-card" data-search="ristourne 201802 contrat groupe client rabais cn cl su">
+<h3>#25 — 201802 Ristourne (Rabais contrats)</h3>
+<div class="meta">34 lignes × 41 colonnes · <span class="badge support">Support</span></div>
+<p>Suivi mensuel des ristournes par contrat. 38 comptes clients: CN8026-CNAM, CL8895 Club Hockey, SU8814 Cumberland, FC7858-FCSSQ, SU8663 Ice Breakers, SU8720 JHD, SU8963 Kaldec, MA8611 Maple Soft… Colonnes R.J. et Variance. Total: 460.00$.</p>
+</div>
+</div>
+
+<!-- REPORTS & BUDGET 26-37 -->
+<div id="reports" class="tab-content">
+<h2 class="section-title">Rapports & Budget (26-37)</h2>
+
+<div class="sheet-card" data-search="recap cash reconciliation lecture correction net depot cdn us remboursement dueback surplus deficit">
+<h3>#26 — Recap (Réconciliation cash)</h3>
+<div class="meta">26 lignes × 14 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>8 lignes de réconciliation (Lecture + Correction = NET):</p>
+<ul>
+<li>Comptant LightSpeed / Comptant Positouch</li>
+<li>Chèque payment register AR / Chèque Daily Revenue</li>
+<li>Remboursements (Gratuité, Client, Loterie)</li>
+<li>Due Back (Réception, N/B)</li>
+<li>Dépôt US / Dépôt Canadien</li>
+<li>Argent Reçu (total)</li>
+</ul>
+<p>Préparé par: Sherley Derisca. Variance référence: -1,249.71$.</p>
+</div>
+
+<div class="sheet-card" data-search="geac ux cashout daily revenue balance amex diners master visa facture direct">
+<h3>#27 — geac_ux (Balance GEAC)</h3>
+<div class="meta">58 lignes × 11 colonnes · <span class="badge core">Core</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Réconciliation système GEAC. Sections: Daily Cash Out | Daily Revenue | Balance Previous Day | Balance Today | Facture Direct | Today Moved In/Out | New Balance. Types carte: Amex, Diners, Master, Visa. Propriété 858.</p>
+</div>
+
+<div class="sheet-card" data-search="auditeur liste dropdown khalil taha souleymane sherley">
+<h3>#28 — Auditeur (Liste auditeurs)</h3>
+<div class="meta">5 lignes × 2 colonnes · <span class="badge support">Support</span> · <span class="badge implemented">Implémenté</span></div>
+<p>Table de lookup pour le dropdown auditeur: Khalil Mouatarif, Taha Abdelmoumen, Souleymane Camara, Sherley Derisca.</p>
+</div>
+
+<div class="sheet-card" data-search="ristourne analyse detail provenance debit credit solde ej10">
+<h3>#29 — Ristourne Analyse (Détail ristournes)</h3>
+<div class="meta">34 lignes × 7 colonnes · <span class="badge support">Support</span></div>
+<p>Analyse détaillée des ristournes: date | provenance | description | P | N | débit | crédit | solde. Source: ej10.</p>
+</div>
+
+<div class="sheet-card" data-search="rapp p1 sommaire revenus chambres louees taux moyen restaurant giotto piazza banquets">
+<h3>#30 — Rapp_p1 (Sommaire des revenus)</h3>
+<div class="meta">53 lignes × 9 colonnes · <span class="badge report">Rapport</span></div>
+<p>Rapport Direction page 1. Colonnes: CE JOUR ($) | CE MOIS ($) | BUDGET CE JOUR | BUDGET CE MOIS. Sections: Chambres Louées (237 ch., 1408 mois), Taux Moyen (212.68$), Restaurant (Giotto, Piazza, Cupola, Banquets), F&B, Main-d'œuvre par département.</p>
+</div>
+
+<div class="sheet-card" data-search="rapp p2 heures employes departement fixes variables travaillees">
+<h3>#31 — Rapp_p2 (Heures & Employés)</h3>
+<div class="meta">33 lignes × 8 colonnes · <span class="badge report">Rapport</span></div>
+<p>Rapport Direction page 2. DÉPARTEMENTS | HEURES (FIXES/VARIABLES) | HEURES TRAVAILLÉES (CE JOUR/CE MOIS) | EMPLOYÉS/JOUR. Départements: Réception, Femme de chambre, Équipier, Gouvernante, Buanderie, Giotto, Piazza, Cupola, Banquets.</p>
+</div>
+
+<div class="sheet-card" data-search="rapp p3 detail revenus heures salaires ecart budget journalier mensuel chambres nourriture boisson">
+<h3>#32 — Rapp_p3 (Analyse détaillée)</h3>
+<div class="meta">57 lignes × 25 colonnes · <span class="badge report">Rapport</span></div>
+<p>Rapport Direction page 3 — matrice complexe. Colonnes: JOURNALIER | MENSUEL À CE JOUR | BUDGET À CE JOUR | Écart Actuel vs Budget (Revenus, Hres Travaillées, Nbr Employés, Salaires, %). Sections: CHAMBRES (55,972.19$ jour, 324,232.11$ mois, écart -3,724.14$), NOURRITURE (20,520.06$), PIAZZA (6,982.85$), Banquet, Boisson, Buanderie, Entretien. TOTAL HÔTEL: 98,071.13$.</p>
+</div>
+
+<div class="sheet-card" data-search="etat rev revenus depenses profit perte loyer amortissement interet marketing administration entretien">
+<h3>#33 — Etat rev (P&L quotidien)</h3>
+<div class="meta">53 lignes × 8 colonnes · <span class="badge report">Rapport</span></div>
+<p>État des Revenus et Dépenses (mini P&L). Sections:</p>
+<ul>
+<li><strong>CHAMBRES:</strong> 94% occupation, 55,972.19$ revenu quotidien</li>
+<li><strong>BANQUETS:</strong> Location, Salaires (48.5%), Coûts variables (6.09%)</li>
+<li><strong>RESTAURATION:</strong> 28.8% des ventes, Coûts variables (35.4%)</li>
+<li><strong>COÛTS FIXES:</strong> Marketing (33,204$, 1.2%), Admin (157,633$, 5.7%), Entretien (58,134$, 2.1%), Énergie (59,790$, 2.2%), Taxes (77,204$, 2.8%), Amortissement (58,333$, 2.1%), Intérêts (56,083$, 2.0%)</li>
+<li><strong>PROFIT AVANT LOYER:</strong> 53.9%</li>
+<li><strong>LOYER:</strong> 180,000$ (6.6%)</li>
+<li><strong>BÉNÉFICE NET:</strong> 47.3%</li>
+</ul>
+</div>
+
+<div class="sheet-card" data-search="budget annuel revenus salaires ratio cout nourriture alcool biere vin marges">
+<h3>#34 — Budget (Budget annuel)</h3>
+<div class="meta">134 lignes × 17 colonnes · <span class="badge report">Rapport</span></div>
+<p>Budget complet avec codes GL (BU_VE_*).</p>
+<table><thead><tr><th>Section</th><th>Détails</th></tr></thead><tbody>
+<tr><td>Revenus</td><td>Chambres 1,311,825$, Piazza/Bar 185,000$, Banquet 310,000$, Marché 29,000$, Location 215,000$. Total: 2,347,579$</td></tr>
+<tr><td>Occupation</td><td>Disponibles: 7,056, Occupées: 5,955, Louées: 5,925 (83.97%), Taux moyen: 221.41$</td></tr>
+<tr><td>Salaires</td><td>Réception 29,432$, Commis 27,956$, Audition 14,817$, Chefs 10,309-50,148$, Serveurs 1,308-21,023$</td></tr>
+<tr><td>Ratios coûts</td><td>Nourriture 38%, Alcool 19.4%, Bière 31.75%, Vin 34.5%, Minéraux 23%, Marges bénéficiaires 42-47.4%</td></tr>
+</tbody></table>
+</div>
+
+<div class="sheet-card" data-search="feuil6 feuil7 feuil2 vide travail">
+<h3>#35, 36, 37 — Feuilles de travail</h3>
+<div class="meta"><span class="badge empty">Feuil6 & Feuil2: Vides</span> · Feuil7: 28×20 données éparses</div>
+<p>Feuilles de travail temporaires. Feuil7 contient des données numériques éparses (possiblement des calculs intermédiaires).</p>
+</div>
+</div>
+
+<!-- FLOW DIAGRAM -->
+<div id="flow" class="tab-content">
+<h2 class="section-title">Flux de données entre feuilles</h2>
+<div class="flow-diagram">
+<pre>
+  ┌──────────────────────────────────────────────────────────────────────────────┐
+  │                          CONTROLE (#1)                                       │
+  │   vjour (jour), idate (date), vcie (hôtel), vchmp (chambres à refaire)      │
+  └──────────┬───────────────────────┬──────────────────────┬───────────────────┘
+             │                       │                      │
+             ▼                       ▼                      ▼
+  ┌──────────────────┐   ┌──────────────────┐   ┌──────────────────┐
+  │  TRANSELECT (#24)│   │   JOUR (#9) ★    │   │  GEAC_UX (#27)   │
+  │  Terminaux POS   │   │  Journal maître  │   │  Balance système │
+  │  5 types cartes  │──▶│  117 colonnes    │◀──│  4 types cartes  │
+  │  Rest + Récept.  │   │  F&B + Taxes +   │   │  Cashout vs Rev  │
+  └────────┬─────────┘   │  Occupation      │   └────────┬─────────┘
+           │              └────────┬─────────┘            │
+           │   ┌───────────────────┼──────────────────┐   │
+           │   │                   │                  │   │
+           │   ▼                   ▼                  ▼   │
+           │ ┌──────────┐ ┌──────────────┐ ┌───────────┐ │
+           │ │RECAP (#26)│ │ DUBACK (#18) │ │DEPOT (#11)│ │
+           │ │Cash réconcil│ │DueBack/récept│ │Enveloppes│ │
+           │ │8 lignes    │ │20+ employés  │ │Client 6&8│ │
+           │ └─────┬──────┘ └──────┬───────┘ └──────────┘ │
+           │       │               │                       │
+           │       └───────┬───────┘                       │
+           │               ▼                               │
+           │    ┌──────────────────┐                       │
+           │    │    RJ (#7)       │                       │
+           ├───▶│ Résumé principal │◀──────────────────────┘
+           │    │ Balance ouv/ferm │
+           │    │ Revenus/Dépenses │
+           │    └────────┬─────────┘
+           │             │
+           │             ▼
+  ┌────────┴──────────────────────────────────────────────────────────────┐
+  │                     FEUILLES SUPPORT                                  │
+  │                                                                       │
+  │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐            │
+  │  │SetD (#21) │ │Nettoy(#20)│ │Somm_N(#19)│ │EJ (#0)    │            │
+  │  │Personnel  │ │Heures     │ │Résumé     │ │Grand Livre│            │
+  │  │Set-déj.   │ │ménage     │ │ménage     │ │Écritures  │            │
+  │  └───────────┘ └───────────┘ └───────────┘ └───────────┘            │
+  │                                                                       │
+  │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐            │
+  │  │Sonifi(#13)│ │Intern(#14)│ │Massage(23)│ │Diff.Cais4 │            │
+  │  │Films/TV   │ │DataValet  │ │Spa        │ │Cash diff  │            │
+  │  └───────────┘ └───────────┘ └───────────┘ └───────────┘            │
+  │                                                                       │
+  │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐            │
+  │  │SOCAN (#15)│ │Réson.(#16)│ │Vesti.(#17)│ │Ristou(#25)│            │
+  │  │Musique    │ │Musique    │ │Vestiaire  │ │Contrats   │            │
+  │  └───────────┘ └───────────┘ └───────────┘ └───────────┘            │
+  └───────────────────────────────────────────────────────────────────────┘
+           │
+           ▼
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                     RAPPORTS DIRECTION                                │
+  │                                                                       │
+  │  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌───────────┐            │
+  │  │Rapp_p1(30)│ │Rapp_p2(31)│ │Rapp_p3(32)│ │Etat rev33 │            │
+  │  │Sommaire   │ │Heures &   │ │Analyse    │ │P&L        │            │
+  │  │Revenus    │ │Employés   │ │Détaillée  │ │Quotidien  │            │
+  │  └───────────┘ └───────────┘ └───────────┘ └───────────┘            │
+  │                                                                       │
+  │  ┌───────────┐ ┌───────────┐ ┌───────────┐                          │
+  │  │Budget(#34)│ │Salair(#8) │ │AD (#22)   │                          │
+  │  │Annuel     │ │Masse sal. │ │Jour admin │                          │
+  │  └───────────┘ └───────────┘ └───────────┘                          │
+  └───────────────────────────────────────────────────────────────────────┘
+</pre>
+</div>
+
+<h2 class="section-title">Macros VBA — Transferts de données</h2>
+<table>
+<thead><tr><th>Macro</th><th>Source</th><th>Destination</th><th>Action</th></tr></thead>
+<tbody>
+<tr><td><span class="code">envoie_dans_jour()</span></td><td>Recap H19:N19</td><td>jour ar_[day]</td><td>Copie "Argent Reçu" dans Jour</td></tr>
+<tr><td><span class="code">calcul_carte()</span></td><td>transelect</td><td>jour CC_[day]</td><td>Copie totaux cartes dans Jour</td></tr>
+<tr><td><span class="code">calcul_sal()</span></td><td>controle</td><td>salaires</td><td>Calcule masse salariale</td></tr>
+<tr><td><span class="code">aller_jour()</span></td><td>—</td><td>jour j_[day]</td><td>Navigation au jour courant</td></tr>
+<tr><td><span class="code">efface_recap()</span></td><td>—</td><td>Recap</td><td>Efface les champs pour nouveau jour</td></tr>
+<tr><td><span class="code">eff_trans()</span></td><td>—</td><td>transelect</td><td>Efface les champs Transelect</td></tr>
+<tr><td><span class="code">Eff_depot()</span></td><td>—</td><td>depot</td><td>Efface les champs Dépôt</td></tr>
+</tbody>
+</table>
+
+<h2 class="section-title">Plages nommées clés</h2>
+<table>
+<thead><tr><th>Nom</th><th>Emplacement</th><th>Usage</th></tr></thead>
+<tbody>
+<tr><td><span class="code">vjour</span></td><td>controle B3</td><td>Jour courant (sélection colonne)</td></tr>
+<tr><td><span class="code">idate</span></td><td>controle B28</td><td>Date courante (en-têtes)</td></tr>
+<tr><td><span class="code">vcie</span></td><td>controle B20</td><td>Nom de l'hôtel</td></tr>
+<tr><td><span class="code">vchmp</span></td><td>controle B8</td><td>Chambres à refaire</td></tr>
+<tr><td><span class="code">ar_[1-31]</span></td><td>jour</td><td>Lignes "Argent Reçu"</td></tr>
+<tr><td><span class="code">CC_[1-31]</span></td><td>jour</td><td>Lignes "Cartes Crédit"</td></tr>
+<tr><td><span class="code">j_[1-31]</span></td><td>jour</td><td>Navigation par jour</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- IMPLEMENTATION STATUS -->
+<div id="impl" class="tab-content">
+<h2 class="section-title">État d'implémentation — Web App RJ Natif</h2>
+<p style="margin-bottom:16px; color: var(--muted);">14 onglets implémentés dans l'application web sur les 38 feuilles Excel. Les feuilles non implémentées sont soit des rapports de direction, soit des feuilles de support/fournisseur peu utilisées.</p>
+
+<div class="cols">
+<div>
+<h3 style="color: var(--green); margin-bottom: 12px;">✓ Implémentées (14)</h3>
+<table>
+<thead><tr><th>Tab Web</th><th>Feuille Excel</th></tr></thead>
+<tbody>
+<tr><td>Contrôle</td><td>#1 controle</td></tr>
+<tr><td>DueBack</td><td>#18 DUBACK#</td></tr>
+<tr><td>Recap</td><td>#26 Recap</td></tr>
+<tr><td>Transelect</td><td>#24 transelect</td></tr>
+<tr><td>GEAC</td><td>#27 geac_ux</td></tr>
+<tr><td>SD/Dépôt</td><td>#11 depot + SD</td></tr>
+<tr><td>SetD</td><td>#21 SetD</td></tr>
+<tr><td>HP/Admin</td><td>(HP Excel externe)</td></tr>
+<tr><td>Internet</td><td>#14 Internet</td></tr>
+<tr><td>Sonifi</td><td>#13 Sonifi</td></tr>
+<tr><td>Jour</td><td>#9 jour</td></tr>
+<tr><td>Quasimodo</td><td>(Réconciliation globale)</td></tr>
+<tr><td>DBRS</td><td>(Marriott corporate)</td></tr>
+<tr><td>Sommaire</td><td>(Validation + submit)</td></tr>
+</tbody>
+</table>
+</div>
+<div>
+<h3 style="color: var(--red); margin-bottom: 12px;">✗ Non implémentées (21)</h3>
+<table>
+<thead><tr><th>Feuille</th><th>Priorité</th></tr></thead>
+<tbody>
+<tr><td>#0 EJ (Grand Livre)</td><td>Basse</td></tr>
+<tr><td>#2 Analyse 101100</td><td>Basse</td></tr>
+<tr><td>#3 Analyse 100401</td><td>Basse</td></tr>
+<tr><td>#4 Diff.Caisse#</td><td>Moyenne</td></tr>
+<tr><td>#6 autre GL</td><td>Basse</td></tr>
+<tr><td>#7 rj (résumé)</td><td><strong>Haute</strong></td></tr>
+<tr><td>#8 salaires</td><td>Moyenne</td></tr>
+<tr><td>#10 Feuil1 (heures)</td><td>Basse</td></tr>
+<tr><td>#12 diff_forfait</td><td>Moyenne</td></tr>
+<tr><td>#15 SOCAN</td><td>Basse</td></tr>
+<tr><td>#16 Ré:sonne</td><td>Basse</td></tr>
+<tr><td>#17 Vestiaire#</td><td>Basse</td></tr>
+<tr><td>#19 somm_nettoyeur</td><td>Basse</td></tr>
+<tr><td>#20 Nettoyeur</td><td>Basse</td></tr>
+<tr><td>#22 AD</td><td>Basse</td></tr>
+<tr><td>#23 Massage</td><td>Basse</td></tr>
+<tr><td>#25 Ristourne</td><td>Moyenne</td></tr>
+<tr><td>#29 Ristourne Analyse</td><td>Basse</td></tr>
+<tr><td>#30-32 Rapp_p1/p2/p3</td><td><strong>Haute (Direction)</strong></td></tr>
+<tr><td>#33 Etat rev (P&L)</td><td><strong>Haute (Direction)</strong></td></tr>
+<tr><td>#34 Budget</td><td><strong>Haute (Direction)</strong></td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+</div><!-- container -->
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function filterSheets(q) {
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.sheet-card').forEach(card => {
+    const text = (card.getAttribute('data-search') || '') + ' ' + card.textContent.toLowerCase();
+    card.classList.toggle('hidden', q.length > 1 && !text.includes(q));
+  });
+  document.querySelectorAll('table tbody tr').forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = (q.length > 1 && !text.includes(q)) ? 'none' : '';
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+<div class="rj-card">
+  <h3 style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+    <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 0.5rem; border-radius: 8px;">
+      <i data-feather="calendar" style="color: white; width: 24px; height: 24px;"></i>
+    </div>
+    Configuration Nouveau Jour
+  </h3>
+
+  <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6;">
+    <strong>Workflow de démarrage:</strong> Quand vous commencez un nouveau jour d'audit, vous devez:<br>
+    1. Charger votre fichier RJ<br>
+    2. Mettre à jour la date dans <em>controle</em><br>
+    3. Effacer les onglets de données (Recap, Transelect, GEAC, Dépôt)
+  </p>
+
+  <!-- Section 1: Controle -->
+  <div style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #3b82f6;">
+    <h4 style="margin: 0 0 1rem 0; color: #1e40af; display: flex; align-items: center; gap: 0.5rem;">
+      <i data-feather="settings" style="width: 20px; height: 20px;"></i>
+      Étape 1: Configurer la date (controle)
+    </h4>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+      <!-- Jour -->
+      <div>
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e40af; margin-bottom: 0.5rem;">
+          Jour (vjour)
+        </label>
+        <select id="controle-vjour" style="width: 100%; padding: 0.75rem; border: 2px solid #93c5fd; border-radius: 8px; font-size: 1rem; background: white;">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+          <option value="18">18</option>
+          <option value="19">19</option>
+          <option value="20">20</option>
+          <option value="21">21</option>
+          <option value="22">22</option>
+          <option value="23">23</option>
+          <option value="24">24</option>
+          <option value="25">25</option>
+          <option value="26">26</option>
+          <option value="27">27</option>
+          <option value="28">28</option>
+          <option value="29">29</option>
+          <option value="30">30</option>
+          <option value="31">31</option>
+        </select>
+      </div>
+
+      <!-- Mois -->
+      <div>
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e40af; margin-bottom: 0.5rem;">
+          Mois
+        </label>
+        <select id="controle-mois" style="width: 100%; padding: 0.75rem; border: 2px solid #93c5fd; border-radius: 8px; font-size: 1rem; background: white;">
+          <option value="1">Janvier (01)</option>
+          <option value="2">Février (02)</option>
+          <option value="3">Mars (03)</option>
+          <option value="4">Avril (04)</option>
+          <option value="5">Mai (05)</option>
+          <option value="6">Juin (06)</option>
+          <option value="7">Juillet (07)</option>
+          <option value="8">Août (08)</option>
+          <option value="9">Septembre (09)</option>
+          <option value="10">Octobre (10)</option>
+          <option value="11">Novembre (11)</option>
+          <option value="12">Décembre (12)</option>
+        </select>
+      </div>
+
+      <!-- Année -->
+      <div>
+        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #1e40af; margin-bottom: 0.5rem;">
+          Année
+        </label>
+        <select id="controle-annee" style="width: 100%; padding: 0.75rem; border: 2px solid #93c5fd; border-radius: 8px; font-size: 1rem; background: white;">
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+        </select>
+      </div>
+    </div>
+
+    <button onclick="updateControle(event)" class="rj-btn" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 0.75rem 1.5rem; font-weight: 600; width: 100%;">
+      <i data-feather="save"></i> Appliquer la date dans controle
+    </button>
+  </div>
+
+  <!-- Section 2: Effacement des onglets -->
+  <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #f59e0b;">
+    <h4 style="margin: 0 0 1rem 0; color: #92400e; display: flex; align-items: center; gap: 0.5rem;">
+      <i data-feather="trash-2" style="width: 20px; height: 20px;"></i>
+      Étape 2: Effacer les données du jour précédent
+    </h4>
+
+    <p style="font-size: 0.85rem; color: #92400e; margin-bottom: 1rem;">
+      Cliquez sur chaque bouton pour effacer les données de l'onglet correspondant, ou utilisez "Effacer TOUS" pour tout nettoyer d'un coup.
+    </p>
+
+    <!-- Individual reset buttons -->
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
+      <button onclick="resetSheet('recap')" class="rj-btn" style="background: #dc2626; color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="dollar-sign" style="width: 18px; height: 18px;"></i>
+        Effacer Recap
+      </button>
+      <button onclick="resetSheet('transelect')" class="rj-btn" style="background: #dc2626; color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="credit-card" style="width: 18px; height: 18px;"></i>
+        Effacer Transelect
+      </button>
+      <button onclick="resetSheet('geac')" class="rj-btn" style="background: #dc2626; color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="layers" style="width: 18px; height: 18px;"></i>
+        Effacer GEAC
+      </button>
+      <button onclick="resetSheet('depot')" class="rj-btn" style="background: #dc2626; color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="archive" style="width: 18px; height: 18px;"></i>
+        Effacer Dépôt
+      </button>
+    </div>
+
+    <!-- Reset ALL button -->
+    <button onclick="resetAllSheets()" class="rj-btn" style="background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 1rem; font-weight: 700; width: 100%; font-size: 1.1rem;">
+      <i data-feather="zap"></i> EFFACER TOUS LES ONGLETS
+    </button>
+  </div>
+
+  <!-- Section 3: Macro Actions (after completing daily entries) -->
+  <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #10b981;">
+    <h4 style="margin: 0 0 1rem 0; color: #065f46; display: flex; align-items: center; gap: 0.5rem;">
+      <i data-feather="send" style="width: 20px; height: 20px;"></i>
+      Étape 3: Actions de fin de journée (Macros)
+    </h4>
+
+    <p style="font-size: 0.85rem; color: #065f46; margin-bottom: 1rem;">
+      Ces actions copient les données calculées vers le journal (jour). Exécutez-les après avoir rempli Recap et Transelect.
+    </p>
+
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; margin-bottom: 1rem;">
+      <!-- Envoie dans jour (Recap → jour) -->
+      <button onclick="macroEnvoieDansJour(event)" class="rj-btn" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="arrow-right-circle" style="width: 18px; height: 18px;"></i>
+        Copier Recap → Jour
+      </button>
+
+      <!-- Calcul Carte (transelect → jour) -->
+      <button onclick="macroCalculCarte(event)" class="rj-btn" style="background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%); color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="credit-card" style="width: 18px; height: 18px;"></i>
+        Copier Cartes → Jour
+      </button>
+
+      <!-- Effacer Daily -->
+      <button onclick="resetSheet('daily')" class="rj-btn" style="background: #dc2626; color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
+        Effacer Daily
+      </button>
+
+      <!-- Execute Both Macros -->
+      <button onclick="macroExecuteAll(event)" class="rj-btn" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+        <i data-feather="play-circle" style="width: 18px; height: 18px;"></i>
+        Tout Copier → Jour
+      </button>
+    </div>
+
+    <p style="font-size: 0.8rem; color: #047857; margin: 0;">
+      <i data-feather="info" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+      <strong>Envoie Recap:</strong> Copie H19:N19 → jour (ar_[jour]) | <strong>Calcul Cartes:</strong> Copie totaux transelect → jour (CC_[jour])
+    </p>
+  </div>
+
+  <!-- Section 4: Status -->
+  <div id="nouveau-jour-status" style="display: none; padding: 1rem; border-radius: 8px; margin-top: 1rem;"></div>
+
+  <!-- Section 4: Excel Preview -->
+  <div style="background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; border: 2px solid #6366f1;">
+    <h4 style="margin: 0 0 1rem 0; color: #4338ca; display: flex; align-items: center; gap: 0.5rem;">
+      <i data-feather="eye" style="width: 20px; height: 20px;"></i>
+      Aperçu Excel en Temps Réel
+      <button onclick="refreshControlePreview()" class="rj-btn" style="margin-left: auto; padding: 0.4rem 0.75rem; font-size: 0.8rem; background: #4f46e5; color: white;">
+        <i data-feather="refresh-cw" style="width: 14px; height: 14px;"></i> Actualiser
+      </button>
+    </h4>
+
+    <!-- Sheet selector -->
+    <div style="margin-bottom: 1rem;">
+      <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #4338ca; margin-bottom: 0.5rem;">
+        Feuille à visualiser:
+      </label>
+      <select id="preview-sheet-selector" onchange="loadSheetPreview()" style="width: 100%; padding: 0.5rem; border: 2px solid #a5b4fc; border-radius: 8px; font-size: 0.9rem; background: white;">
+        <option value="controle">controle (Configuration)</option>
+        <option value="Recap">Recap (Caisse)</option>
+        <option value="transelect">transelect (Cartes)</option>
+        <option value="geac_ux">geac_ux (GEAC)</option>
+        <option value="depot">depot (Dépôt)</option>
+        <option value="DUBACK#">DUBACK# (DueBack)</option>
+        <option value="rj">rj (Rapport)</option>
+        <option value="jour">jour (Journal)</option>
+      </select>
+    </div>
+
+    <!-- Preview table container -->
+    <div id="excel-preview-container" style="background: white; border-radius: 8px; overflow: hidden; max-height: 400px; overflow-y: auto; border: 1px solid #c7d2fe;">
+      <div id="excel-preview-loading" style="padding: 2rem; text-align: center; color: #6b7280;">
+        <i data-feather="upload" style="width: 32px; height: 32px; margin-bottom: 0.5rem;"></i>
+        <p style="margin: 0;">Chargez un fichier RJ pour voir l'aperçu</p>
+      </div>
+      <table id="excel-preview-table" style="width: 100%; border-collapse: collapse; font-size: 0.75rem; display: none;">
+        <thead id="excel-preview-header"></thead>
+        <tbody id="excel-preview-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Quick info display -->
+    <div id="excel-preview-info" style="margin-top: 0.75rem; padding: 0.75rem; background: #f5f3ff; border-radius: 6px; font-size: 0.8rem; color: #5b21b6; display: none;">
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;">
+        <div><strong>Jour (vjour):</strong> <span id="preview-vjour">-</span></div>
+        <div><strong>Mois:</strong> <span id="preview-mois">-</span></div>
+        <div><strong>Année:</strong> <span id="preview-annee">-</span></div>
+        <div><strong>Date (idate):</strong> <span id="preview-idate">-</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Workflow Summary -->
+  <div style="background: #f0fdf4; padding: 1rem; border-radius: 8px; border: 1px solid #86efac;">
+    <h5 style="margin: 0 0 0.5rem 0; color: #166534; font-size: 0.9rem;">
+      <i data-feather="check-circle" style="width: 16px; height: 16px; vertical-align: middle;"></i>
+      Une fois terminé, vous pouvez commencer le workflow:
+    </h5>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; font-size: 0.85rem; color: #15803d;">
+      <span style="background: #dcfce7; padding: 0.25rem 0.75rem; border-radius: 999px;">1. SD</span>
+      <span>→</span>
+      <span style="background: #dcfce7; padding: 0.25rem 0.75rem; border-radius: 999px;">2. Dépôt</span>
+      <span>→</span>
+      <span style="background: #dcfce7; padding: 0.25rem 0.75rem; border-radius: 999px;">3. DueBack</span>
+      <span>→</span>
+      <span style="background: #dcfce7; padding: 0.25rem 0.75rem; border-radius: 999px;">4. Recap</span>
+      <span>→</span>
+      <span style="background: #dcfce7; padding: 0.25rem 0.75rem; border-radius: 999px;">5. Transelect</span>
+      <span>→</span>
+      <span style="background: #dcfce7; padding: 0.25rem 0.75rem; border-radius: 999px;">6. GEAC</span>
+    </div>
+  </div>
+</div>
+{% endif %}

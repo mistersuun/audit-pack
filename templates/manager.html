@@ -1,0 +1,2500 @@
+{% extends "base.html" %}
+{% block title %}Executive Intelligence{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   MANAGER DASHBOARD TOKENS
+   ═══════════════════════════════════════ */
+.mgr{
+  --bg-subtle:#f1f3f6;
+  --white:#ffffff;
+  --card:#ffffff;
+  --card-hover:#fafbfd;
+  --border-light:#f0f1f4;
+  --border-focus:rgba(233,30,99,0.25);
+  --text-tertiary:#6b7280;
+  --primary-bg:rgba(233,30,99,0.06);
+  --primary-bg-strong:rgba(233,30,99,0.10);
+  --gradient:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --gradient-subtle:linear-gradient(135deg, rgba(102,126,234,0.06), rgba(118,75,162,0.06), rgba(240,147,251,0.04));
+  --emerald:#10b981;--emerald-bg:rgba(16,185,129,0.08);
+  --rose:#ef4444;--rose-bg:rgba(239,68,68,0.08);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.08);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.08);
+  --violet:#8b5cf6;--violet-bg:rgba(139,92,246,0.08);
+  --teal:#0d9488;--teal-bg:rgba(13,148,136,0.08);
+  --shadow-xs:0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow2:0 4px 6px rgba(0,0,0,0.04),0 2px 4px rgba(0,0,0,0.02);
+  --shadow-md:0 8px 16px rgba(0,0,0,0.06),0 2px 6px rgba(0,0,0,0.03);
+  --shadow-lg:0 16px 32px rgba(0,0,0,0.08),0 4px 8px rgba(0,0,0,0.04);
+  --radius:14px;
+  --radius-sm:10px;
+  --radius-xs:6px;
+  --mono:'JetBrains Mono','SF Mono',monospace;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+}
+
+/* ═══════════════════════════════════════
+   PAGE HEADER
+   ═══════════════════════════════════════ */
+.mgr-page{
+  padding: 1.5rem 2rem 4rem;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+.mgr-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:1.25rem;margin-bottom:0.5rem;
+  border-bottom:1px solid var(--border);
+}
+.mgr-header h1{font-size:1.35rem;font-weight:700;letter-spacing:-0.3px;color:var(--text)}
+.mgr-header p{font-size:0.82rem;color:var(--text-secondary);margin-top:2px}
+.mgr-header-right{display:flex;align-items:center;gap:12px}
+.mgr-badge{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:11px;font-weight:500;
+  color:var(--emerald);
+  padding:5px 12px;border-radius:20px;
+  background:var(--emerald-bg);
+  border:1px solid rgba(16,185,129,0.12);
+}
+.mgr-badge::before{
+  content:'';width:6px;height:6px;border-radius:50%;
+  background:var(--emerald);
+  box-shadow:0 0 6px rgba(16,185,129,0.4);
+  animation:pulse-dot 2s ease infinite;
+}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.mgr-period{
+  font-size:12px;color:var(--text-muted);
+  font-family:var(--mono);
+}
+
+/* ═══════════════════════════════════════
+   FILTER BAR
+   ═══════════════════════════════════════ */
+.filters{
+  padding:12px 0;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  margin-bottom:1.5rem;
+}
+.filter-group{display:flex;gap:4px}
+.filter-btn{
+  padding:7px 16px;border-radius:8px;font-size:12.5px;font-weight:500;
+  background:transparent;border:1px solid var(--border);
+  color:var(--text-tertiary);cursor:pointer;
+  transition:all .2s var(--ease);
+  font-family:inherit;
+}
+.filter-btn:hover{
+  background:var(--bg-subtle);color:var(--text-secondary);
+  border-color:var(--border);
+}
+.filter-btn.active{
+  background:var(--primary-bg-strong);
+  border-color:var(--border-focus);
+  color:var(--primary);
+  font-weight:600;
+}
+.filter-dates{display:flex;gap:6px;margin-left:auto;align-items:center}
+.filter-dates input[type="date"]{
+  background:var(--white);border:1px solid var(--border);
+  color:var(--text-secondary);padding:7px 10px;border-radius:8px;
+  font-size:12px;font-family:var(--mono);outline:none;
+  transition:border-color .2s;
+}
+.filter-dates input:focus{border-color:var(--primary)}
+.filter-apply{
+  padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;
+  background:var(--primary);border:none;color:#fff;cursor:pointer;
+  font-family:inherit;transition:all .2s;
+}
+.filter-apply:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(233,30,99,0.25)}
+
+/* ═══════════════════════════════════════
+   SECTION DIVIDERS
+   ═══════════════════════════════════════ */
+.section{margin-top:40px}
+.section:first-child{margin-top:0}
+.section-title{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:18px;
+}
+.section-title h2{
+  font-size:13px;font-weight:600;
+  text-transform:uppercase;letter-spacing:1px;
+  color:var(--text-muted);
+}
+.section-title .dot{
+  width:6px;height:6px;border-radius:50%;flex-shrink:0;
+}
+.section-title .line{
+  flex:1;height:1px;
+  background:linear-gradient(90deg, var(--border), transparent 70%);
+}
+
+/* ═══════════════════════════════════════
+   KPI HERO CARDS
+   ═══════════════════════════════════════ */
+.kpi-row{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+}
+.kpi{
+  position:relative;
+  background:var(--card);
+  border:1px solid var(--border-light);
+  border-radius:var(--radius);
+  padding:24px 26px 22px;
+  overflow:hidden;
+  transition:all .3s var(--ease);
+  box-shadow:var(--shadow-xs);
+}
+.kpi:hover{
+  border-color:var(--border);
+  transform:translateY(-2px);
+  box-shadow:var(--shadow-md);
+}
+.kpi-accent{
+  position:absolute;top:0;left:0;right:0;height:3px;
+}
+.kpi-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;
+}
+.kpi-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:grid;place-items:center;
+}
+.kpi-icon svg{width:18px;height:18px}
+.kpi-label{
+  font-size:11.5px;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.6px;
+  color:var(--text-muted);
+}
+.kpi-value{
+  font-size:32px;font-weight:800;
+  letter-spacing:-1.5px;line-height:1;
+  color:var(--text);
+  margin-bottom:10px;
+  font-feature-settings:'tnum';
+}
+.kpi-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.kpi-sub{font-size:12.5px;color:var(--text-muted);font-weight:400}
+.kpi-annualized{
+  font-size:11px;color:var(--text-muted);margin-top:6px;
+  font-family:var(--mono);
+}
+
+/* ═══════════════════════════════════════
+   METRIC STRIP
+   ═══════════════════════════════════════ */
+.metric-strip{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:10px;
+  margin-top:14px;
+}
+.metric{
+  background:var(--card);
+  border:1px solid var(--border-light);
+  border-radius:var(--radius-sm);
+  padding:16px 18px;
+  box-shadow:var(--shadow-xs);
+  transition:all .2s;
+}
+.metric:hover{border-color:var(--border);box-shadow:var(--shadow-sm)}
+.metric-label{
+  font-size:10.5px;font-weight:500;
+  text-transform:uppercase;letter-spacing:0.5px;
+  color:var(--text-muted);margin-bottom:5px;
+}
+.metric-value{
+  font-size:20px;font-weight:700;
+  letter-spacing:-0.5px;color:var(--text);
+  font-feature-settings:'tnum';
+}
+.metric-note{
+  font-size:11px;color:var(--text-muted);margin-top:3px;
+  font-family:var(--mono);
+}
+
+/* ═══════════════════════════════════════
+   DATA TABLE
+   ═══════════════════════════════════════ */
+.table-wrap{
+  background:var(--card);
+  border:1px solid var(--border-light);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow-xs);
+}
+.dtable{width:100%;border-collapse:collapse;font-size:13px}
+.dtable thead{background:var(--bg-subtle)}
+.dtable th{
+  text-align:left;padding:12px 16px;
+  font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.7px;
+  color:var(--text-muted);
+  border-bottom:1px solid var(--border);
+}
+.dtable td{
+  padding:11px 16px;
+  border-bottom:1px solid var(--border-light);
+  transition:background .1s;
+}
+.dtable tbody tr:hover td{background:var(--bg-subtle)}
+.dtable tbody tr:last-child td{border-bottom:none}
+.dtable .col-year{font-weight:700;color:var(--violet);font-family:var(--mono)}
+.dtable .col-money{font-weight:600;font-family:var(--mono);font-feature-settings:'tnum'}
+.dtable .delta-up{color:var(--emerald);font-weight:600;font-size:11px;font-family:var(--mono)}
+.dtable .delta-down{color:var(--rose);font-weight:600;font-size:11px;font-family:var(--mono)}
+
+/* ═══════════════════════════════════════
+   CHART PANELS
+   ═══════════════════════════════════════ */
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-2-1{grid-template-columns:2fr 1fr}
+.grid-1-2{grid-template-columns:1fr 2fr}
+
+.panel{
+  background:var(--card);
+  border:1px solid var(--border-light);
+  border-radius:var(--radius);
+  padding:24px 26px;
+  box-shadow:var(--shadow-xs);
+  overflow:hidden;
+  transition:all .2s;
+}
+.panel:hover{border-color:var(--border);box-shadow:var(--shadow-sm)}
+.panel-title{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-0.1px;margin-bottom:3px}
+.panel-desc{font-size:12px;color:var(--text-muted);margin-bottom:18px}
+.panel canvas{width:100%!important}
+
+/* ═══════════════════════════════════════
+   DOW CELLS
+   ═══════════════════════════════════════ */
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.dow-item{
+  background:var(--card);border:1px solid var(--border-light);
+  border-radius:var(--radius-sm);padding:18px 12px;text-align:center;
+  box-shadow:var(--shadow-xs);
+  transition:all .25s var(--ease);
+}
+.dow-item:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}
+.dow-item.peak{border-color:rgba(16,185,129,0.35);background:rgba(16,185,129,0.04)}
+.dow-item.low{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.03)}
+.dow-label{
+  font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:0.8px;
+  color:var(--text-muted);margin-bottom:10px;
+}
+.dow-amount{
+  font-size:22px;font-weight:800;letter-spacing:-0.8px;
+  color:var(--text);font-feature-settings:'tnum';margin-bottom:4px;
+}
+.dow-detail{font-size:10.5px;color:var(--text-muted);font-family:var(--mono)}
+
+/* ═══════════════════════════════════════
+   OPPORTUNITY CARDS
+   ═══════════════════════════════════════ */
+.opp-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;
+}
+.opp{
+  background:var(--card);border:1px solid var(--border-light);
+  border-radius:var(--radius);padding:24px 26px;
+  position:relative;overflow:hidden;
+  box-shadow:var(--shadow-xs);
+  transition:all .3s var(--ease);
+}
+.opp:hover{border-color:var(--border);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.opp-num{
+  position:absolute;top:14px;right:18px;
+  font-size:42px;font-weight:900;
+  color:rgba(0,0,0,0.03);line-height:1;
+  font-family:var(--mono);
+}
+.opp-category{
+  display:inline-block;font-size:9.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;
+  padding:3px 9px;border-radius:5px;margin-bottom:12px;
+}
+.cat-pricing{background:var(--blue-bg);color:var(--blue)}
+.cat-operations{background:var(--amber-bg);color:var(--amber)}
+.cat-revenue{background:var(--emerald-bg);color:var(--emerald)}
+.cat-costs{background:var(--violet-bg);color:var(--violet)}
+.opp h4{font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-0.2px}
+.opp-text{font-size:12.5px;color:var(--text-tertiary);line-height:1.55;margin-bottom:18px}
+.opp-footer{
+  display:flex;align-items:baseline;gap:8px;
+  padding-top:14px;border-top:1px solid var(--border-light);
+}
+.opp-amount{
+  font-size:26px;font-weight:800;letter-spacing:-1px;
+  color:var(--emerald);font-feature-settings:'tnum';
+}
+.opp-unit{font-size:12px;color:var(--text-muted)}
+.opp-diff{margin-left:auto;font-size:10px;font-weight:600;padding:3px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px}
+.opp-diff-easy{background:var(--emerald-bg);color:var(--emerald)}
+.opp-diff-med{background:var(--amber-bg);color:var(--amber)}
+.opp-diff-hard{background:var(--rose-bg);color:var(--rose)}
+
+/* Potential Banner */
+.potential-banner{
+  background:var(--gradient-subtle);
+  border:1px solid rgba(102,126,234,0.15);
+  border-radius:var(--radius);
+  padding:28px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:14px;
+}
+.potential-left h3{font-size:12px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.potential-value{
+  font-size:44px;font-weight:900;letter-spacing:-2px;
+  background:var(--gradient);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.potential-right{text-align:right}
+.potential-stat{font-size:12.5px;color:var(--text-tertiary);margin-bottom:3px}
+.potential-stat strong{color:var(--text-secondary);font-weight:700}
+
+/* ═══════════════════════════════════════
+   INSIGHT BLOCKS
+   ═══════════════════════════════════════ */
+.insight-band{
+  flex:1;text-align:center;
+  padding:20px 14px;
+  background:var(--bg-subtle);
+  border:1px solid var(--border-light);
+  border-radius:var(--radius-sm);
+  transition:all .2s;
+}
+.insight-band:hover{border-color:var(--border);box-shadow:var(--shadow-xs)}
+.insight-band-label{font-size:10.5px;font-weight:500;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:2px}
+.insight-band-sub{font-size:10.5px;margin:3px 0;font-weight:600}
+.insight-band-value{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--text);font-feature-settings:'tnum'}
+.insight-band-detail{font-size:10.5px;color:var(--text-muted);font-family:var(--mono);margin-top:4px}
+
+/* Callout Center */
+.callout-center{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:24px}
+.callout-label{font-size:11px;font-weight:500;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.callout-huge{font-size:52px;font-weight:900;letter-spacing:-2.5px;line-height:1;font-feature-settings:'tnum'}
+.callout-desc{font-size:12.5px;color:var(--text-tertiary);margin-top:10px;max-width:260px;line-height:1.5}
+.callout-box{margin-top:16px;padding:16px 20px;border-radius:var(--radius-sm);text-align:center;width:100%}
+.callout-box-value{font-size:30px;font-weight:800;letter-spacing:-1px;font-feature-settings:'tnum'}
+.callout-box-note{font-size:11px;margin-top:3px}
+
+/* Outlet rows */
+.outlet-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--border-light);transition:background .15s}
+.outlet-row:last-child{border-bottom:none}
+.outlet-row:hover{background:var(--bg-subtle);margin:0 -12px;padding-left:12px;padding-right:12px;border-radius:6px}
+.outlet-name{width:110px;font-size:13px;font-weight:600;color:var(--text)}
+.outlet-rev{width:90px;font-size:12px;color:var(--text-secondary);font-family:var(--mono)}
+.outlet-share{width:50px;font-size:11px;color:var(--text-muted)}
+.outlet-bar-wrap{flex:1;display:flex;align-items:center;gap:8px}
+.outlet-bar{flex:1;height:6px;background:var(--bg-subtle);border-radius:3px;overflow:hidden}
+.outlet-bar-fill{height:100%;border-radius:3px;transition:width .6s var(--ease)}
+.outlet-corr{width:44px;text-align:right;font-size:12px;font-weight:600;font-family:var(--mono)}
+.outlet-tag{width:90px;text-align:right;font-size:10.5px;font-weight:500}
+
+/* WW Table */
+.ww-table{width:100%;border-collapse:collapse}
+.ww-table th{padding:10px 14px;text-align:center;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.7px;color:var(--text-muted);border-bottom:1px solid var(--border)}
+.ww-table th:first-child{text-align:left}
+.ww-table td{padding:10px 14px;text-align:center;border-bottom:1px solid var(--border-light);font-size:13px}
+.ww-table td:first-child{text-align:left;font-weight:600;color:var(--text-secondary)}
+.ww-table .ww-we{font-weight:600;font-family:var(--mono)}
+
+/* OOS */
+.oos-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.oos-cell{padding:18px;background:var(--bg-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);text-align:center}
+.oos-cell-wide{grid-column:span 2}
+.oos-cell-label{font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.oos-cell-value{font-size:30px;font-weight:800;letter-spacing:-1px;margin:4px 0;font-feature-settings:'tnum'}
+.oos-cell-sub{font-size:10.5px;color:var(--text-muted)}
+.oos-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.oos-bar-label{width:36px;font-weight:600;font-size:12px;font-family:var(--mono)}
+.oos-bar{flex:1;height:5px;background:var(--bg-subtle);border-radius:3px;overflow:hidden}
+.oos-bar-fill{height:100%;border-radius:3px}
+.oos-bar-val{width:50px;text-align:right;font-size:11px;font-family:var(--mono)}
+
+/* ═══════════════════════════════════════
+   LOADING & EMPTY
+   ═══════════════════════════════════════ */
+.mgr .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:50vh;gap:16px}
+.loading-spinner{
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid var(--border);border-top-color:var(--primary);
+  animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-label{font-size:13px;color:var(--text-muted)}
+.empty{text-align:center;padding:80px 20px}
+.empty h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty p{color:var(--text-muted);font-size:13px}
+
+/* ═══════════════════════════════════════
+   NARRATIVE STORY
+   ═══════════════════════════════════════ */
+.story-banner{
+  background:linear-gradient(135deg, #1e2761 0%, #3b82f6 100%);
+  border-radius:var(--radius);padding:28px 32px;color:#fff;
+  margin-bottom:20px;position:relative;overflow:hidden;
+}
+.story-banner::before{
+  content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;
+  background:radial-gradient(circle,rgba(255,255,255,0.06) 0%,transparent 70%);
+  border-radius:50%;
+}
+.story-headline{font-size:18px;font-weight:700;line-height:1.4;margin-bottom:16px;position:relative}
+.story-row{display:flex;gap:16px;flex-wrap:wrap;position:relative}
+.story-card{
+  flex:1;min-width:200px;
+  background:rgba(255,255,255,0.1);backdrop-filter:blur(8px);
+  border-radius:var(--radius-sm);padding:14px 16px;
+  border:1px solid rgba(255,255,255,0.12);
+}
+.story-card-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;opacity:0.7;margin-bottom:6px}
+.story-card-title{font-size:13px;font-weight:600;margin-bottom:4px}
+.story-card-detail{font-size:11.5px;opacity:0.85;line-height:1.4}
+.story-card-metric{font-family:var(--mono);font-size:15px;font-weight:700;margin-top:6px}
+.story-card.positive .story-card-metric{color:#86efac}
+.story-card.negative .story-card-metric{color:#fca5a5}
+.story-card.opportunity .story-card-metric{color:#fde68a}
+.story-action{
+  margin-top:16px;padding:12px 16px;
+  background:rgba(255,255,255,0.08);border-radius:var(--radius-xs);
+  font-size:12px;display:flex;align-items:center;gap:8px;
+  border-left:3px solid #fde68a;position:relative;
+}
+.story-action strong{color:#fde68a}
+.story-total{
+  position:absolute;top:28px;right:32px;text-align:right;
+}
+.story-total-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;opacity:0.6}
+.story-total-value{font-family:var(--mono);font-size:28px;font-weight:800;color:#86efac}
+.kpi-context{margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;position:relative}
+.kpi-context-item{
+  flex:1;min-width:160px;padding:10px 12px;
+  background:rgba(255,255,255,0.06);border-radius:var(--radius-xs);
+  font-size:11px;line-height:1.4;opacity:0.85;
+}
+.kpi-context-item strong{display:block;font-size:11.5px;margin-bottom:2px;opacity:1}
+
+/* ═══════════════════════════════════════
+   REGIME & STAFFING CARDS
+   ═══════════════════════════════════════ */
+.regime-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.regime-card{
+  background:var(--card);border:1px solid var(--border-light);
+  border-radius:var(--radius);padding:20px;position:relative;overflow:hidden;
+}
+.regime-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.regime-card.peak::before{background:var(--emerald)}
+.regime-card.normal::before{background:var(--blue)}
+.regime-card.low::before{background:var(--amber)}
+.regime-label{font-size:10.5px;text-transform:uppercase;letter-spacing:0.8px;color:var(--text-muted);margin-bottom:8px}
+.regime-occ{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--text)}
+.regime-days{font-size:12px;color:var(--text-secondary);margin-top:2px}
+.regime-detail{margin-top:12px;font-size:12px;color:var(--text-secondary);line-height:1.6}
+.regime-detail span{display:block}
+.staffing-bar{
+  display:flex;align-items:center;gap:8px;margin-top:6px;
+}
+.staffing-bar-label{font-size:11px;color:var(--text-secondary);min-width:100px}
+.staffing-bar-track{flex:1;height:8px;background:var(--bg-subtle);border-radius:4px;overflow:hidden}
+.staffing-bar-fill{height:100%;border-radius:4px;transition:width .6s var(--ease)}
+.staffing-bar-val{font-family:var(--mono);font-size:11px;color:var(--text);min-width:40px;text-align:right}
+
+/* ═══════════════════════════════════════
+   VARIANCE & ELASTICITY
+   ═══════════════════════════════════════ */
+.variance-bar{display:flex;align-items:center;gap:10px;padding:8px 0}
+.variance-label{font-size:12px;color:var(--text-secondary);min-width:80px}
+.variance-track{flex:1;height:12px;background:var(--bg-subtle);border-radius:6px;overflow:hidden}
+.variance-fill{height:100%;border-radius:6px;transition:width .8s var(--ease)}
+.variance-pct{font-family:var(--mono);font-size:12px;font-weight:600;min-width:45px;text-align:right}
+
+.elasticity-gauge{
+  text-align:center;padding:24px;
+}
+.gauge-value{font-family:var(--mono);font-size:42px;font-weight:800;color:var(--primary)}
+.gauge-label{font-size:12px;color:var(--text-muted);margin-top:4px}
+.gauge-interp{
+  margin-top:12px;padding:10px 14px;
+  background:var(--primary-bg);border-radius:var(--radius-xs);
+  font-size:12.5px;color:var(--text-secondary);line-height:1.5;
+}
+
+@media(max-width:1200px){
+  .regime-grid{grid-template-columns:1fr}
+  .story-total{position:static;text-align:left;margin-bottom:10px}
+}
+
+/* ═══════════════════════════════════════
+   AUTOMATION DASHBOARD
+   ═══════════════════════════════════════ */
+.auto-gauge{
+  position:relative;width:160px;height:160px;margin:0 auto 12px;
+}
+.auto-gauge svg{transform:rotate(-90deg)}
+.auto-gauge-bg{fill:none;stroke:var(--border-light);stroke-width:10}
+.auto-gauge-fill{fill:none;stroke:var(--emerald);stroke-width:10;stroke-linecap:round;
+  transition:stroke-dashoffset 1.2s var(--ease)}
+.auto-gauge-text{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;
+}
+.auto-gauge-pct{font-size:36px;font-weight:800;letter-spacing:-2px;font-feature-settings:'tnum';color:var(--text)}
+.auto-gauge-label{font-size:11px;color:var(--text-muted);margin-top:2px}
+
+.auto-source-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.auto-source{
+  padding:14px 16px;background:var(--bg-subtle);border:1px solid var(--border-light);
+  border-radius:var(--radius-sm);text-align:center;transition:all .2s var(--ease);
+}
+.auto-source:hover{border-color:var(--border-focus);box-shadow:var(--shadow-xs)}
+.auto-source-count{font-size:22px;font-weight:800;font-feature-settings:'tnum';letter-spacing:-1px;color:var(--text)}
+.auto-source-name{font-size:10.5px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+.auto-health-bar{
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:var(--bg-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);
+  margin-bottom:8px;
+}
+.auto-health-track{flex:1;height:8px;background:var(--border-light);border-radius:4px;overflow:hidden}
+.auto-health-fill{height:100%;border-radius:4px;transition:width .8s var(--ease)}
+.auto-health-label{font-size:12px;font-weight:600;color:var(--text-secondary);min-width:100px}
+.auto-health-val{font-size:13px;font-weight:700;font-family:var(--mono);min-width:50px;text-align:right}
+
+.auto-task-list{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.auto-task{
+  display:flex;align-items:center;gap:8px;padding:6px 10px;
+  border-radius:var(--radius-xs);font-size:12px;
+}
+.auto-task-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.auto-task-name{color:var(--text-secondary);flex:1}
+
+.auto-rank-row{
+  display:flex;align-items:center;gap:10px;padding:8px 0;
+  border-bottom:1px solid var(--border-light);
+}
+.auto-rank-row:last-child{border-bottom:none}
+.auto-rank-num{font-size:11px;font-weight:700;color:var(--text-muted);width:22px;text-align:center;font-family:var(--mono)}
+.auto-rank-name{flex:1;font-size:12.5px;color:var(--text-secondary);font-weight:500}
+.auto-rank-val{font-size:13px;font-weight:700;font-family:var(--mono);color:var(--text)}
+
+.auto-hp-mini{display:flex;align-items:flex-end;gap:3px;height:60px;padding:8px 0}
+.auto-hp-bar{flex:1;background:var(--blue);border-radius:3px 3px 0 0;min-width:8px;transition:height .6s var(--ease)}
+
+@media(max-width:1200px){
+  .auto-source-grid{grid-template-columns:repeat(2,1fr)}
+  .auto-task-list{grid-template-columns:1fr}
+}
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════ */
+@keyframes reveal{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.reveal{animation:reveal .4s cubic-bezier(0,0,0.2,1) both}
+.d1{animation-delay:.03s}.d2{animation-delay:.06s}.d3{animation-delay:.09s}
+.d4{animation-delay:.12s}.d5{animation-delay:.15s}.d6{animation-delay:.18s}
+.d7{animation-delay:.21s}.d8{animation-delay:.24s}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════ */
+@media(max-width:1200px){
+  .kpi-row{grid-template-columns:repeat(2,1fr)}
+  .metric-strip{grid-template-columns:repeat(3,1fr)}
+  .grid-2,.grid-2-1,.grid-1-2{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .mgr-page{padding:1rem}
+  .kpi-row{grid-template-columns:1fr}
+  .metric-strip{grid-template-columns:repeat(2,1fr)}
+  .dow{grid-template-columns:repeat(4,1fr)}
+  .kpi-value{font-size:26px}
+  .callout-huge{font-size:38px}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mgr">
+  <div class="mgr-page">
+    <!-- HEADER -->
+    <div class="mgr-header">
+      <div>
+        <h1>Executive Intelligence</h1>
+        <p>Tableau de bord analytique — Sheraton Laval</p>
+      </div>
+      <div class="mgr-header-right">
+        <span class="mgr-badge" id="data-badge">—</span>
+        <span class="mgr-period" id="period-label"></span>
+      </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <div class="filter-group">
+        <button class="filter-btn" onclick="setPeriod(30)">30 jours</button>
+        <button class="filter-btn" onclick="setPeriod(90)">3 mois</button>
+        <button class="filter-btn" onclick="setPeriod(365)">12 mois</button>
+        <button class="filter-btn active" onclick="setPeriod(0)">Tout</button>
+        <button class="filter-btn" onclick="setPeriod(-1)">Personnalisé</button>
+      </div>
+      <div class="filter-dates">
+        <input type="date" id="inp-start">
+        <input type="date" id="inp-end">
+        <button class="filter-apply" onclick="loadCustom()">Appliquer</button>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <div class="loading-label">Chargement des données...</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let DATA = null;
+let YEARS = null;
+let charts = {};
+
+const fmt = (v, dec=0) => {
+  if(v === null || v === undefined) return '—';
+  return new Intl.NumberFormat('fr-CA',{minimumFractionDigits:dec,maximumFractionDigits:dec}).format(v);
+};
+const fmtM = v => {
+  if(!v) return '$0';
+  if(Math.abs(v) >= 1000000) return '$' + fmt(v/1000000,1) + 'M';
+  if(Math.abs(v) >= 1000) return '$' + fmt(v/1000,0) + 'K';
+  return '$' + fmt(v,0);
+};
+const fmtD = v => '$'+fmt(v,0);
+const pct = v => v !== null && v !== undefined ? fmt(v,1)+'%' : '—';
+
+// ═══════════════════════════════════════
+// PERIOD SELECTION
+// ═══════════════════════════════════════
+function setPeriod(days) {
+  document.querySelectorAll('.filter-btn').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  if(days === -1) return;
+  if(days === 0) { loadData(); }
+  else {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - days);
+    loadData(start.toISOString().split('T')[0], end.toISOString().split('T')[0]);
+  }
+}
+
+function loadCustom() {
+  const s = document.getElementById('inp-start').value;
+  const e = document.getElementById('inp-end').value;
+  if(s && e) loadData(s, e);
+}
+
+// ═══════════════════════════════════════
+// LOAD DATA
+// ═══════════════════════════════════════
+async function loadData(startDate, endDate) {
+  document.getElementById('dashboard').innerHTML = `
+    <div class="loading"><div class="loading-spinner"></div>
+    <div class="loading-label">Chargement des données...</div></div>`;
+
+  let url = '/api/manager/overview';
+  const params = [];
+  if(startDate) params.push('start_date=' + startDate);
+  if(endDate) params.push('end_date=' + endDate);
+  if(params.length) url += '?' + params.join('&');
+
+  try {
+    const [overview, yearly] = await Promise.all([
+      fetch(url).then(r => r.json()),
+      fetch('/api/manager/yearly-comparison').then(r => r.json())
+    ]);
+    if(!overview.has_data) {
+      document.getElementById('dashboard').innerHTML = `
+        <div class="empty"><h2>Aucune donnée disponible</h2>
+        <p>Importez des fichiers RJ via le portail d'audit pour alimenter le dashboard.</p></div>`;
+      return;
+    }
+    DATA = overview;
+    YEARS = yearly.years || [];
+    render();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('dashboard').innerHTML = `<div class="empty"><h2>Erreur de chargement</h2><p>${e.message}</p></div>`;
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════
+function render() {
+  const d = DATA, k = d.kpis, adv = d.advanced || {};
+  const ins = d.insights;
+
+  document.getElementById('data-badge').textContent = `${d.data_status?.total_days||0} jours · ${d.data_status?.years_covered||0} ans`;
+  document.getElementById('period-label').textContent = `${d.period.start} → ${d.period.end}`;
+
+  let html = '';
+
+  // ══════ KPI HERO ══════
+  html += `<div class="kpi-row reveal">
+    ${buildKPI('trending-up','Revenu Total',fmtM(k.total_revenue),`${fmtD(k.avg_daily_revenue)}/jour`,'var(--primary)','var(--primary-bg)',adv.annual_total_revenue)}
+    ${buildKPI('home','ADR','$'+fmt(k.adr,2),`RevPAR $${fmt(k.revpar,2)}`,'var(--blue)','var(--blue-bg)',null)}
+    ${buildKPI('percent','Taux d\'Occupation',pct(k.occupancy_rate),`${fmt(k.rooms_sold)} ch. vendues`,'var(--emerald)','var(--emerald-bg)',null)}
+    ${buildKPI('coffee','Revenus F&B',fmtM(k.fb_revenue),`${fmtD(adv.fb_per_guest||0)}/client`,'var(--violet)','var(--violet-bg)',null)}
+  </div>`;
+
+  // ══════ METRIC STRIP ══════
+  html += `<div class="metric-strip reveal d1">
+    ${buildMetric('TRevPAR','$'+fmt(k.trevpar,2),'rev. totaux/ch. dispo')}
+    ${buildMetric('Effective ADR','$'+fmt(adv.effective_adr||0,2),'excl. comps')}
+    ${buildMetric('F&B RevPAR','$'+fmt(adv.fb_revpar||0,2),'F&B/ch. dispo')}
+    ${buildMetric('Clients/jour',fmt(k.avg_clients_per_day,1),fmt(k.total_clients)+' total')}
+    ${buildMetric('Comps',fmt(k.rooms_comp),pct(adv.comp_rate_pct)+' du total')}
+    ${buildMetric('OOS/jour',fmt(adv.oos_rooms_avg||0,1),fmtM(adv.annual_oos_cost)+'/an')}
+  </div>`;
+
+  // ══════ NARRATIVE STORY ══════
+  if(ins && ins.narrative_story && ins.narrative_story.has_insights) {
+    const story = ins.narrative_story;
+    html += `<div class="story-banner reveal d1">
+      <div class="story-total"><div class="story-total-label">Opportunité totale</div><div class="story-total-value">${fmtM(story.total_opportunity)}</div></div>
+      <div class="story-headline">${story.headline || ''}</div>
+      <div class="story-row">`;
+    (story.strengths || []).forEach(s => {
+      html += `<div class="story-card positive"><div class="story-card-label">Force</div><div class="story-card-title">${s.title}</div><div class="story-card-detail">${s.detail}</div><div class="story-card-metric">${s.metric||''}</div></div>`;
+    });
+    (story.warnings || []).forEach(w => {
+      html += `<div class="story-card negative"><div class="story-card-label">Attention</div><div class="story-card-title">${w.title}</div><div class="story-card-detail">${w.detail}</div><div class="story-card-metric">${w.metric||''}</div></div>`;
+    });
+    (story.opportunities || []).slice(0,2).forEach(o => {
+      html += `<div class="story-card opportunity"><div class="story-card-label">Opportunité</div><div class="story-card-title">${o.title}</div><div class="story-card-detail">${o.detail}</div><div class="story-card-metric">+${fmtM(o.value)}</div></div>`;
+    });
+    html += `</div>`;
+    if(story.tomorrow_action) {
+      html += `<div class="story-action"><strong>Action demain :</strong> ${story.tomorrow_action}</div>`;
+    }
+    if(story.kpi_context) {
+      html += `<div class="kpi-context">`;
+      Object.entries(story.kpi_context).forEach(([k,v]) => {
+        html += `<div class="kpi-context-item"><strong>${k}</strong>${v}</div>`;
+      });
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+
+
+  // ══════ YOY ══════
+  if(YEARS && YEARS.length > 1) {
+    html += buildSection('Évolution Annuelle','var(--blue)');
+    html += `<div class="table-wrap reveal d2">${renderYoYTable()}</div>`;
+  }
+
+  // ══════ TRENDS ══════
+  html += buildSection('Tendances','var(--primary)');
+  html += `<div class="grid grid-2-1 reveal d3">
+    <div class="panel"><div class="panel-title">Revenus quotidiens</div><div class="panel-desc">Hébergement · F&B · Autres</div><canvas id="chart-revenue" height="220"></canvas></div>
+    <div class="panel"><div class="panel-title">Mix revenus</div><div class="panel-desc">Répartition par catégorie</div><canvas id="chart-mix" height="220"></canvas></div>
+  </div>`;
+
+  // ══════ DOW ══════
+  if(d.dow && d.dow.by_dow) {
+    html += buildSection('Performance par Jour','var(--teal)');
+    html += renderDOW(d.dow);
+  }
+
+  // ══════ DETAIL ══════
+  html += buildSection('Analyse Détaillée','var(--violet)');
+  html += `<div class="grid grid-2 reveal d5">
+    <div class="panel"><div class="panel-title">Paiements par type</div><div class="panel-desc">Répartition cartes de crédit / débit</div><canvas id="chart-payments" height="200"></canvas></div>
+    <div class="panel"><div class="panel-title">F&B par point de vente</div><div class="panel-desc">Performance des restaurants et bars</div><canvas id="chart-fb" height="200"></canvas></div>
+  </div>`;
+
+  // ══════ MONTHLY ══════
+  if(d.monthly && d.monthly.length > 2) {
+    html += `<div class="grid grid-2 reveal d6" style="margin-top:14px">
+      <div class="panel"><div class="panel-title">RevPAR mensuel</div><div class="panel-desc">Évolution mois par mois</div><canvas id="chart-monthly-revpar" height="200"></canvas></div>
+      <div class="panel"><div class="panel-title">Occupation mensuelle</div><div class="panel-desc">Taux d'occupation par mois</div><canvas id="chart-monthly-occ" height="200"></canvas></div>
+    </div>`;
+  }
+
+  // ══════ GOPPAR ══════
+  html += buildSection('Rentabilité (GOPPAR)','var(--emerald)');
+  html += `<div id="goppar-section" class="reveal">
+    <div class="panel" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div class="panel-title">Profit Opérationnel Brut par Chambre Disponible</div>
+        <div class="panel-desc">Entrez les dépenses mensuelles pour calculer le GOPPAR et le seuil de rentabilité</div></div>
+        <button onclick="openExpenseModal()" style="padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;background:var(--primary);border:none;color:#fff;cursor:pointer;font-family:inherit">+ Dépenses mensuelles</button>
+      </div>
+      <div id="goppar-data" style="margin-top:18px"><div class="loading-label" style="text-align:center;padding:20px;color:var(--text-muted)">Chargement GOPPAR...</div></div>
+    </div>
+  </div>`;
+
+  // ══════ LABOR ANALYTICS ══════
+  html += buildSection('Analyse Main-d\'Œuvre','var(--violet)');
+  html += `<div id="labor-section" class="reveal">
+    <div class="panel" style="margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div><div class="panel-title">Analyse des Coûts de Main-d'Œuvre et Efficacité par Département</div>
+        <div class="panel-desc">Suivez les coûts de main-d'œuvre, l'efficacité et l'analyse budgétaire</div></div>
+        <button onclick="openLaborModal()" style="padding:8px 18px;border-radius:8px;font-size:12px;font-weight:600;background:var(--primary);border:none;color:#fff;cursor:pointer;font-family:inherit">+ Main-d'œuvre</button>
+      </div>
+      <div id="labor-data" style="margin-top:18px"><div class="loading-label" style="text-align:center;padding:20px;color:var(--text-muted)">Chargement données...</div></div>
+    </div>
+  </div>`;
+
+  // ══════ RISK ══════
+  html += buildSection('Risques & Coûts','var(--rose)');
+  html += `<div class="metric-strip reveal d7">
+    ${buildMetric('Volatilité RevPAR','$'+fmt(adv.revpar_volatility||0,2),'écart-type')}
+    ${buildMetric('Volatilité ADR','$'+fmt(adv.adr_volatility||0,2),'écart-type')}
+    ${buildMetric('Volatilité Occ.',pct(adv.occ_volatility),'écart-type')}
+    ${buildMetric('Frais cartes/an',fmtM(adv.annual_processing_cost),pct(adv.processing_pct)+' du rev.')}
+    ${buildMetric('Perte comps/an',fmtM(adv.annual_comp_loss),fmt(k.rooms_comp)+' chambres')}
+    ${buildMetric('Jours opportunité',fmt(adv.opportunity_days_count),fmtM(adv.annual_opp_revenue)+' potentiel')}
+  </div>`;
+
+  // ══════ OPPORTUNITIES ══════
+  if(d.opportunities) {
+    html += buildSection('Opportunités de Revenus','var(--emerald)');
+    html += renderOpportunities(d.opportunities);
+  }
+
+  // ══════ INSIGHTS ══════
+  if(ins && ins.has_insights) {
+    // NEW: RevPOR & F&B Capture (guest value)
+    if(ins.revpor || ins.fb_capture) { html += buildSection('Valeur par Client','var(--primary)'); html += renderGuestValue(ins.revpor, ins.fb_capture); }
+    // NEW: Demand Forecast
+    if(ins.demand_forecast && ins.demand_forecast.next_3_months_forecast?.length) { html += buildSection('Prévisions de Demande','var(--blue)'); html += renderForecast(ins.demand_forecast); }
+    // NEW: Moving Averages
+    if(ins.moving_averages) { html += buildSection('Tendances & Momentum','var(--teal)'); html += `<div class="grid grid-2 reveal"><div class="panel"><div class="panel-title">ADR — Moyenne Mobile</div><div class="panel-desc">7j · 30j · 90j</div><canvas id="chart-ma-adr" height="200"></canvas></div><div class="panel"><div class="panel-title">RevPAR — Moyenne Mobile</div><div class="panel-desc">7j · 30j · 90j</div><canvas id="chart-ma-revpar" height="200"></canvas></div></div>`; }
+    // Existing
+    if(ins.pricing_power) { html += buildSection('Pouvoir de Pricing','var(--amber)'); html += renderPricingPower(ins.pricing_power); }
+    // NEW: Suite Premium
+    if(ins.suite_premium && ins.suite_premium.high_suite_days > 5) { html += buildSection('Prime Suites','var(--violet)'); html += renderSuitePremium(ins.suite_premium); }
+    // Existing
+    if(ins.fb_elasticity) { html += buildSection('Élasticité F&B vs Occupation','var(--rose)'); html += renderFBElasticity(ins.fb_elasticity); }
+    // NEW: Guest Density
+    if(ins.guest_density && ins.guest_density.bands?.length > 1) { html += buildSection('Densité Clients & Impact F&B','var(--emerald)'); html += renderGuestDensity(ins.guest_density); }
+    // Existing
+    if(ins.outlet_performance) { html += buildSection('Performance Points de Vente','var(--violet)'); html += renderOutlets(ins.outlet_performance); }
+    // NEW: Banquet Impact
+    if(ins.banquet_impact && (ins.banquet_impact.banquet_days?.days || ins.banquet_impact.banquet_days) > 10) { html += buildSection('Effet Banquets sur l\'Hôtel','var(--amber)'); html += renderBanquetImpact(ins.banquet_impact); }
+    // Existing
+    if(ins.seasonality) { html += buildSection('Saisonnalité','var(--teal)'); html += `<div class="panel reveal"><canvas id="chart-seasonality" height="240"></canvas></div>`; }
+    if(ins.weekend_vs_weekday) { html += buildSection('Weekend vs Semaine','var(--blue)'); html += renderWeekendWeekday(ins.weekend_vs_weekday); }
+    // NEW: Revenue Concentration
+    if(ins.revenue_concentration) { html += buildSection('Concentration des Revenus','var(--rose)'); html += renderRevenueConcentration(ins.revenue_concentration); }
+    // NEW: Comp ROI
+    if(ins.comp_roi && ins.comp_roi.high_comp_days > 5) { html += buildSection('ROI Chambres Gratuites','var(--amber)'); html += renderCompROI(ins.comp_roi); }
+    // Existing
+    if(ins.oos_analysis && ins.oos_analysis.avg_oos_per_day > 0) { html += buildSection('Chambres Hors-Service','var(--rose)'); html += renderOOS(ins.oos_analysis); }
+    // NEW: Tax Efficiency
+    if(ins.tax_efficiency && ins.tax_efficiency.has_data) { html += buildSection('Efficacité Fiscale','var(--text-muted)'); html += renderTaxEfficiency(ins.tax_efficiency); }
+    // Existing
+    // NEW: Operating Regimes & Staffing
+    if(ins.operating_regimes || ins.staffing_optimization) { html += buildSection('Régimes d\'Exploitation & Personnel','var(--blue)'); html += renderRegimesStaffing(ins.operating_regimes, ins.staffing_optimization); }
+    // NEW: Price Elasticity & ADR Compression
+    if(ins.price_elasticity || ins.adr_compression) { html += buildSection('Élasticité des Prix','var(--primary)'); html += renderElasticity(ins.price_elasticity, ins.adr_compression); }
+    // NEW: Variance Decomposition
+    if(ins.variance_decomposition && ins.variance_decomposition.sufficient_data) { html += buildSection('Décomposition de la Variance','var(--violet)'); html += renderVariance(ins.variance_decomposition); }
+    // NEW: Pareto Analysis
+    if(ins.pareto_analysis) { html += buildSection('Analyse de Pareto','var(--teal)'); html += renderPareto(ins.pareto_analysis); }
+    // NEW: Marginal Room Revenue
+    if(ins.marginal_room_revenue && (Array.isArray(ins.marginal_room_revenue) ? ins.marginal_room_revenue.length : ins.marginal_room_revenue.bands?.length)) { html += buildSection('Revenu Marginal par Chambre','var(--emerald)'); html += renderMarginalRevenue(ins.marginal_room_revenue); }
+    if(ins.anomalies && ins.anomalies.revenue_outliers?.length) { html += buildSection('Jours Anomaliques','var(--amber)'); html += renderAnomalies(ins.anomalies); }
+  }
+
+  // ══════ AUTOMATION & DATA SOURCES ══════
+  html += buildSection('Automatisation & Données','var(--primary)');
+  html += `<div id="automation-section" class="reveal">
+    <div class="panel" style="margin-bottom:14px">
+      <div class="panel-title">Centre de Contrôle de l'Automatisation</div>
+      <div class="panel-desc">Vue consolidée de toutes les sources de données et du niveau d'automatisation</div>
+      <div id="automation-data" style="margin-top:18px"><div class="loading-label" style="text-align:center;padding:20px;color:var(--text-muted)">Chargement des statistiques...</div></div>
+    </div>
+  </div>`;
+
+  document.getElementById('dashboard').innerHTML = html;
+  requestAnimationFrame(() => {
+    renderRevenueChart(); renderMixChart(); renderPaymentsChart(); renderFBChart();
+    if(d.monthly && d.monthly.length > 2) { renderMonthlyRevpar(); renderMonthlyOcc(); }
+    if(ins && ins.has_insights) {
+      if(ins.seasonality) renderSeasonalityChart(ins.seasonality);
+      if(ins.moving_averages) { renderMAChart('chart-ma-adr', ins.moving_averages.adr, 'ADR', '$'); renderMAChart('chart-ma-revpar', ins.moving_averages.revpar, 'RevPAR', '$'); }
+      if(ins.demand_forecast) renderForecastChart(ins.demand_forecast);
+    }
+    feather.replace();
+  });
+  // Load GOPPAR data separately
+  loadGOPPAR();
+  // Load Labor Analytics data separately
+  loadLaborAnalytics();
+  // Load Automation stats
+  loadAutomationStats();
+}
+
+// ═══════════════════════════════════════
+// BUILDERS
+// ═══════════════════════════════════════
+function buildKPI(icon, label, value, sub, color, bgColor, annualized) {
+  const ann = annualized ? `<div class="kpi-annualized">Annualisé: ${fmtM(annualized)}</div>` : '';
+  return `<div class="kpi">
+    <div class="kpi-accent" style="background:linear-gradient(90deg, ${color}, transparent)"></div>
+    <div class="kpi-header">
+      <div class="kpi-icon" style="background:${bgColor};color:${color}"><i data-feather="${icon}"></i></div>
+      <div class="kpi-label">${label}</div>
+    </div>
+    <div class="kpi-value">${value}</div>
+    <div class="kpi-meta"><span class="kpi-sub">${sub}</span></div>
+    ${ann}
+  </div>`;
+}
+
+function buildMetric(label, value, note) {
+  return `<div class="metric"><div class="metric-label">${label}</div><div class="metric-value">${value}</div><div class="metric-note">${note}</div></div>`;
+}
+
+function buildSection(title, dotColor) {
+  return `<div class="section"><div class="section-title">
+    <div class="dot" style="background:${dotColor}"></div>
+    <h2>${title}</h2><div class="line"></div>
+  </div></div>`;
+}
+
+// ═══════════════════════════════════════
+// YOY TABLE
+// ═══════════════════════════════════════
+function renderYoYTable() {
+  let html = `<table class="dtable"><thead><tr>
+    <th>Année</th><th>Jours</th><th>ADR moy.</th><th>Occ. moy.</th><th>RevPAR</th><th>TRevPAR</th><th>Revenu Total</th><th>F&B/Client</th><th>OOS</th>
+  </tr></thead><tbody>`;
+  for(let i=0;i<YEARS.length;i++){
+    const y=YEARS[i],prev=i>0?YEARS[i-1]:null;
+    const adrD=prev?((y.avg_adr-prev.avg_adr)/prev.avg_adr*100):null;
+    const occD=prev?(y.avg_occ-prev.avg_occ):null;
+    const revD=prev&&prev.total_revenue?((y.total_revenue-prev.total_revenue)/prev.total_revenue*100):null;
+    html+=`<tr><td class="col-year">${y.year}</td><td>${y.days}</td>
+      <td class="col-money">$${fmt(y.avg_adr,2)} ${deltaTag(adrD)}</td>
+      <td>${pct(y.avg_occ)} ${deltaTag(occD,true)}</td>
+      <td class="col-money">$${fmt(y.avg_revpar,2)}</td><td class="col-money">$${fmt(y.avg_trevpar,2)}</td>
+      <td class="col-money">${fmtM(y.total_revenue)} ${deltaTag(revD)}</td>
+      <td class="col-money">$${fmt(y.fb_per_guest,2)}</td><td>${fmt(y.oos_rooms)}</td></tr>`;
+  }
+  return html+'</tbody></table>';
+}
+
+function deltaTag(val,isAbs){
+  if(val===null||val===undefined)return '';
+  const cls=val>0?'delta-up':val<0?'delta-down':'';
+  const arrow=val>0?'↑':val<0?'↓':'';
+  const display=isAbs?(val>0?'+':'')+fmt(val,1)+'pp':(val>0?'+':'')+fmt(val,1)+'%';
+  return `<span class="${cls}">${arrow}${display}</span>`;
+}
+
+// ═══════════════════════════════════════
+// DOW
+// ═══════════════════════════════════════
+function renderDOW(dow){
+  const days=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+  const best=dow.best_day,worst=dow.worst_day;
+  let html='<div class="dow reveal d4">';
+  for(let i=0;i<7;i++){
+    const d=dow.by_dow[i];if(!d)continue;
+    const cls=d.dow_name===best?.dow_name?'peak':d.dow_name===worst?.dow_name?'low':'';
+    html+=`<div class="dow-item ${cls}"><div class="dow-label">${days[i]}</div>
+      <div class="dow-amount">$${fmt(d.avg_revenue,0)}</div>
+      <div class="dow-detail">ADR $${fmt(d.avg_adr,0)} · ${pct(d.avg_occ)}</div></div>`;
+  }
+  return html+'</div>';
+}
+
+// ═══════════════════════════════════════
+// OPPORTUNITIES
+// ═══════════════════════════════════════
+function renderOpportunities(opps){
+  const items=opps.opportunities||[],total=opps.total_annual_potential||0;
+  let html=`<div class="potential-banner reveal"><div class="potential-left">
+    <h3>Potentiel annuel total identifié</h3><div class="potential-value">${fmtM(total)}</div></div>
+    <div class="potential-right"><div class="potential-stat"><strong>${items.length}</strong> opportunités identifiées</div>
+    <div class="potential-stat">Basé sur <strong>${opps.data_period_days||0}</strong> jours de données</div></div></div>`;
+  const sorted=[...items].sort((a,b)=>(b.annual_impact||0)-(a.annual_impact||0));
+  html+='<div class="opp-grid reveal">';
+  sorted.forEach((o,i)=>{
+    const catCls=o.category==='pricing'?'cat-pricing':o.category==='operations'?'cat-operations':o.category==='revenue'?'cat-revenue':'cat-costs';
+    const diffCls=o.difficulty==='facile'?'opp-diff-easy':o.difficulty==='moyen'?'opp-diff-med':'opp-diff-hard';
+    html+=`<div class="opp"><div class="opp-num">${String(i+1).padStart(2,'0')}</div>
+      <span class="opp-category ${catCls}">${o.category||'autre'}</span>
+      <h4>${o.title}</h4><div class="opp-text">${o.description}</div>
+      <div class="opp-footer"><span class="opp-amount">${fmtM(o.annual_impact)}</span><span class="opp-unit">/ an</span>
+      <span class="opp-diff ${diffCls}">${o.difficulty||'—'}</span></div></div>`;
+  });
+  return html+'</div>';
+}
+
+// ═══════════════════════════════════════
+// CHARTS
+// ═══════════════════════════════════════
+const C={room:'#667eea',fb:'#764ba2',other:'#0d9488',grid:'rgba(0,0,0,0.04)',tick:'#9ca3af'};
+const baseScales={
+  x:{grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,maxTicksLimit:15,font:{size:10,family:'Inter'}}},
+  y:{grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:10,family:'Inter'},callback:v=>'$'+fmt(v)}}
+};
+
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id]}}
+
+function renderRevenueChart(){
+  const trend=DATA.trend||[];if(!trend.length)return;
+  const agg=trend.length>90?aggregateMonthly(trend):trend;
+  destroyChart('revenue');
+  const ctx=document.getElementById('chart-revenue');if(!ctx)return;
+  charts['revenue']=new Chart(ctx,{type:'bar',
+    data:{labels:agg.map(d=>d.label||d.date||('J'+d.day)),
+      datasets:[
+        {label:'Hébergement',data:agg.map(d=>d.room_revenue),backgroundColor:C.room+'cc',borderRadius:3,barPercentage:.8},
+        {label:'F&B',data:agg.map(d=>d.fb_revenue||d.fb),backgroundColor:C.fb+'cc',borderRadius:3,barPercentage:.8},
+        {label:'Autres',data:agg.map(d=>d.other_revenue||d.other||0),backgroundColor:C.other+'cc',borderRadius:3,barPercentage:.8}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:16}}},
+      scales:{x:{stacked:true,...baseScales.x},y:{stacked:true,...baseScales.y}}}
+  });
+}
+
+function aggregateMonthly(trend){
+  const byMonth={};
+  trend.forEach(d=>{const key=d.date?d.date.substring(0,7):'unknown';
+    if(!byMonth[key])byMonth[key]={label:key,room_revenue:0,fb_revenue:0,other_revenue:0};
+    byMonth[key].room_revenue+=d.room_revenue||0;byMonth[key].fb_revenue+=(d.fb_revenue||d.fb||0);byMonth[key].other_revenue+=(d.other_revenue||d.other||0);});
+  return Object.values(byMonth).sort((a,b)=>a.label.localeCompare(b.label));
+}
+
+function renderMixChart(){
+  const k=DATA.kpis;destroyChart('mix');const ctx=document.getElementById('chart-mix');if(!ctx)return;
+  charts['mix']=new Chart(ctx,{type:'doughnut',
+    data:{labels:['Hébergement','F&B','Autres'],datasets:[{data:[k.room_revenue,k.fb_revenue,k.other_revenue],backgroundColor:[C.room,C.fb,C.other],borderWidth:0,hoverOffset:6,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',
+      plugins:{legend:{position:'bottom',labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:16}}}}
+  });
+}
+
+function renderPaymentsChart(){
+  const p=DATA.payments;if(!p)return;destroyChart('payments');const ctx=document.getElementById('chart-payments');if(!ctx)return;
+  const labels=[],values=[];const colors=['#667eea','#e91e63','#f59e0b','#ef4444','#10b981','#8b5cf6'];
+  if(p.by_type){p.by_type.forEach(t=>{if(t.total>0){labels.push(t.type);values.push(t.total)}});}else{const k=DATA.kpis;if(k.total_cards>0){labels.push('Total Cartes');values.push(k.total_cards)}}
+  charts['payments']=new Chart(ctx,{type:'doughnut',
+    data:{labels,datasets:[{data:values,backgroundColor:colors.slice(0,values.length),borderWidth:0,hoverOffset:5,borderRadius:2}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'right',labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:14}}}}
+  });
+}
+
+function renderFBChart(){
+  const fb=DATA.fb;if(!fb||!fb.outlets)return;destroyChart('fb');const ctx=document.getElementById('chart-fb');if(!ctx)return;
+  const outlets=fb.outlets.filter(o=>o.total>0).sort((a,b)=>b.total-a.total);
+  const colors=['#764ba2','#667eea','#e91e63','#0d9488','#10b981'];
+  charts['fb']=new Chart(ctx,{type:'bar',
+    data:{labels:outlets.map(o=>o.name),datasets:[{label:'Revenus F&B',data:outlets.map(o=>o.total),backgroundColor:colors.slice(0,outlets.length),borderRadius:6,barPercentage:.55}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:10,family:'Inter'},callback:v=>fmtM(v)}},
+        y:{grid:{display:false},ticks:{color:'#4b5563',font:{size:11,weight:600,family:'Inter'}}}}}
+  });
+}
+
+function renderMonthlyRevpar(){
+  const monthly=DATA.monthly||[];if(!monthly.length)return;destroyChart('monthly-revpar');const ctx=document.getElementById('chart-monthly-revpar');if(!ctx)return;
+  const labels=monthly.map(m=>`${m.year}-${String(m.month).padStart(2,'0')}`);
+  charts['monthly-revpar']=new Chart(ctx,{type:'line',
+    data:{labels,datasets:[
+      {label:'RevPAR',data:monthly.map(m=>m.avg_revpar),borderColor:'#667eea',backgroundColor:'rgba(102,126,234,0.08)',fill:true,tension:.35,pointRadius:1.5,borderWidth:2,pointHoverRadius:5},
+      {label:'ADR',data:monthly.map(m=>m.avg_adr),borderColor:'#764ba2',backgroundColor:'transparent',borderDash:[4,4],tension:.35,pointRadius:0,borderWidth:1.5}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:16}}},scales:baseScales}
+  });
+}
+
+function renderMonthlyOcc(){
+  const monthly=DATA.monthly||[];if(!monthly.length)return;destroyChart('monthly-occ');const ctx=document.getElementById('chart-monthly-occ');if(!ctx)return;
+  const labels=monthly.map(m=>`${m.year}-${String(m.month).padStart(2,'0')}`);
+  charts['monthly-occ']=new Chart(ctx,{type:'bar',
+    data:{labels,datasets:[{label:'Occupation %',data:monthly.map(m=>m.avg_occ),
+      backgroundColor:monthly.map(m=>m.avg_occ>=80?'rgba(16,185,129,0.6)':m.avg_occ>=60?'rgba(245,158,11,0.6)':'rgba(239,68,68,0.6)'),borderRadius:4,barPercentage:.65}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{...baseScales.x},y:{...baseScales.y,max:100,ticks:{...baseScales.y.ticks,callback:v=>v+'%'}}}}
+  });
+}
+
+// ═══════════════════════════════════════
+// INSIGHT RENDERERS
+// ═══════════════════════════════════════
+
+function renderPricingPower(pp){
+  const bands=['low','mid','high'];
+  const labels={'low':'Basse occ.','mid':'Moyenne occ.','high':'Haute occ.'};
+  const colors={'low':'var(--rose)','mid':'var(--amber)','high':'var(--emerald)'};
+  let html='<div class="grid grid-2 reveal">';
+  html+='<div class="panel"><div class="panel-title">ADR par bande d\'occupation</div><div class="panel-desc">Le premium haute demande est-il exploité?</div>';
+  html+='<div style="display:flex;gap:10px;margin-top:8px">';
+  bands.forEach(b=>{const d=pp[b];if(!d||!d.days)return;
+    html+=`<div class="insight-band"><div class="insight-band-label">${labels[b]}</div>
+      <div class="insight-band-sub" style="color:${colors[b]}">${d.label}</div>
+      <div class="insight-band-value">$${fmt(d.avg_adr,0)}</div>
+      <div class="insight-band-detail">${d.days}j · ${pct(d.avg_occ)}</div>
+      <div class="insight-band-detail">${fmtD(d.avg_revenue)}/jour</div></div>`;});
+  html+='</div></div>';
+  html+=`<div class="panel callout-center"><div class="callout-label">Premium haute occupation</div>
+    <div class="callout-huge" style="color:var(--amber)">+${fmt(pp.premium_pct,1)}%</div>
+    <div class="callout-desc">seulement de prime ADR à haute demande</div>
+    <div class="callout-box" style="background:var(--emerald-bg);border:1px solid rgba(16,185,129,0.15)">
+      <div style="font-size:11px;color:var(--text-tertiary)">Si +10% ADR les jours >85% occ.</div>
+      <div class="callout-box-value" style="color:var(--emerald)">${fmtM(pp.uplift_10pct_annual)}</div>
+      <div class="callout-box-note" style="color:var(--emerald)">revenus additionnels / an</div></div></div>`;
+  return html+'</div>';
+}
+
+function renderFBElasticity(fb){
+  const bands=fb.bands||[];
+  const colorVal=fb.elasticity==='declining'?'var(--rose)':fb.elasticity==='growing'?'var(--emerald)':'var(--amber)';
+  const label=fb.elasticity==='declining'?'DÉCLINANT':fb.elasticity==='growing'?'CROISSANT':'STABLE';
+  let html='<div class="grid grid-2 reveal">';
+  html+='<div class="panel"><div class="panel-title">F&B par client selon l\'occupation</div><div class="panel-desc">Les clients dépensent-ils plus quand l\'hôtel est plein?</div>';
+  html+='<div style="display:flex;gap:8px;margin-top:12px">';
+  bands.forEach((b,i)=>{const barH=Math.max(24,b.fb_per_guest/1.8);
+    const barColor=i===0?'var(--emerald)':i===bands.length-1?'var(--rose)':'var(--blue)';
+    html+=`<div style="flex:1;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--text);font-feature-settings:'tnum'">$${fmt(b.fb_per_guest,0)}</div>
+      <div style="height:${barH}px;background:${barColor};border-radius:4px;margin:8px auto;width:55%;opacity:.6"></div>
+      <div style="font-size:10.5px;color:var(--text-muted)">${b.label}</div>
+      <div style="font-size:10px;color:var(--text-muted);font-family:var(--mono)">${b.days}j</div></div>`;});
+  html+='</div></div>';
+  html+=`<div class="panel callout-center"><div class="callout-label" style="color:${colorVal}">${label}</div>
+    <div class="callout-huge" style="color:${colorVal}">${fmt(fb.change_pct,1)}%</div>
+    <div class="callout-desc">${fb.elasticity==='declining'?'Le F&B/client baisse quand l\'hôtel est plein — goulots de capacité ou manque d\'upselling':fb.elasticity==='growing'?'Bonne capture F&B en haute occupation':'F&B stable indépendamment de l\'occupation'}</div></div>`;
+  return html+'</div>';
+}
+
+function renderOutlets(outlets){
+  let html='<div class="panel reveal"><div class="panel-title">Corrélation occupation ↔ revenu par outlet</div><div class="panel-desc">Corrélation proche de 0 = croissance possible indépendante des chambres</div><div style="margin-top:12px">';
+  outlets.forEach(o=>{
+    const corrColor=o.occ_correlation>0.3?'var(--emerald)':o.occ_correlation<0?'var(--rose)':'var(--amber)';
+    const corrWidth=Math.abs(o.occ_correlation)*100;
+    const corrLabel=o.occ_correlation>0.3?'Lié à l\'occ.':o.occ_correlation<0?'Indépendant':'Faible lien';
+    html+=`<div class="outlet-row"><div class="outlet-name">${o.name}</div><div class="outlet-rev">${fmtM(o.total_revenue)}</div><div class="outlet-share">${o.fb_share_pct}%</div>
+      <div class="outlet-bar-wrap"><div class="outlet-bar"><div class="outlet-bar-fill" style="width:${corrWidth}%;background:${corrColor}"></div></div>
+      <span class="outlet-corr" style="color:${corrColor}">${o.occ_correlation.toFixed(2)}</span></div>
+      <div class="outlet-tag" style="color:${corrColor}">${corrLabel}</div></div>`;});
+  return html+'</div></div>';
+}
+
+function renderWeekendWeekday(ww){
+  const we=ww.weekend,wd=ww.weekday;
+  let html='<div class="grid grid-2 reveal">';
+  const metrics=[{label:'Revenu/jour',we:fmtD(we.avg_revenue),wd:fmtD(wd.avg_revenue),delta:ww.revenue_premium_pct},
+    {label:'Hébergement/jour',we:fmtD(we.avg_room_rev),wd:fmtD(wd.avg_room_rev)},
+    {label:'F&B/jour',we:fmtD(we.avg_fb_rev),wd:fmtD(wd.avg_fb_rev),delta:ww.fb_premium_pct},
+    {label:'Occupation',we:pct(we.avg_occ),wd:pct(wd.avg_occ)},
+    {label:'ADR',we:'$'+fmt(we.avg_adr,0),wd:'$'+fmt(wd.avg_adr,0)},
+    {label:'Pourboires/jour',we:fmtD(we.avg_tips),wd:fmtD(wd.avg_tips)}];
+  html+='<div class="panel"><div class="panel-title">Comparaison Weekend vs Semaine</div><div class="panel-desc">Ven-Dim vs Lun-Jeu</div>';
+  html+=`<table class="ww-table" style="margin-top:12px"><tr><th></th><th>Weekend (${we.days}j)</th><th>Semaine (${wd.days}j)</th><th>Écart</th></tr>`;
+  metrics.forEach(m=>{const delta=m.delta!==undefined?(m.delta>0?`<span class="delta-up">+${fmt(m.delta,1)}%</span>`:`<span class="delta-down">${fmt(m.delta,1)}%</span>`):'';
+    html+=`<tr><td>${m.label}</td><td class="ww-we">${m.we}</td><td>${m.wd}</td><td>${delta}</td></tr>`;});
+  html+='</table></div>';
+  const higherOccWd=wd.avg_occ>we.avg_occ;
+  html+=`<div class="panel callout-center"><div class="callout-label">Premium Weekend</div>
+    <div class="callout-huge" style="color:var(--emerald)">+${fmt(ww.revenue_premium_pct,0)}%</div>
+    <div class="callout-desc">de revenus les weekends</div>
+    ${higherOccWd?`<div class="callout-box" style="background:var(--amber-bg);border:1px solid rgba(245,158,11,0.15)">
+      <div style="font-size:11px;color:var(--amber)">L'occupation est plus haute en semaine (${pct(wd.avg_occ)}) qu'en weekend (${pct(we.avg_occ)})</div>
+      <div style="font-size:11px;color:var(--amber);margin-top:4px">Le F&B drive +${fmt(ww.fb_premium_pct,0)}% de revenus le weekend</div></div>`:''}</div>`;
+  return html+'</div>';
+}
+
+function renderOOS(oos){
+  let html='<div class="grid grid-2 reveal">';
+  html+=`<div class="panel"><div class="panel-title">Impact des chambres hors-service</div>
+    <div class="oos-grid" style="margin-top:14px">
+      <div class="oos-cell"><div class="oos-cell-label">OOS moyen/jour</div><div class="oos-cell-value" style="color:var(--rose)">${fmt(oos.avg_oos_per_day,1)}</div><div class="oos-cell-sub">chambres</div></div>
+      <div class="oos-cell"><div class="oos-cell-label">Coût annuel estimé</div><div class="oos-cell-value" style="color:var(--rose)">${fmtM(oos.annual_cost)}</div><div class="oos-cell-sub">revenus perdus</div></div>
+      <div class="oos-cell oos-cell-wide" style="background:var(--emerald-bg);border-color:rgba(16,185,129,0.12)">
+        <div class="oos-cell-label" style="color:var(--emerald)">Réduction de 30% des OOS =</div>
+        <div class="oos-cell-value" style="color:var(--emerald)">${fmtM(oos.reduction_30pct_saving)}/an</div></div></div></div>`;
+  html+='<div class="panel"><div class="panel-title">OOS par mois</div><div class="panel-desc">Pires et meilleurs mois</div><div style="margin-top:14px">';
+  html+='<div style="font-size:10.5px;color:var(--rose);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Pires mois</div>';
+  (oos.worst_months||[]).forEach(([mo,val])=>{html+=`<div class="oos-bar-row"><span class="oos-bar-label">${mo}</span><div class="oos-bar"><div class="oos-bar-fill" style="width:${val/20*100}%;background:var(--rose)"></div></div><span class="oos-bar-val" style="color:var(--rose)">${fmt(val,1)}/j</span></div>`;});
+  html+='<div style="font-size:10.5px;color:var(--emerald);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin:14px 0 10px">Meilleurs mois</div>';
+  (oos.best_months||[]).forEach(([mo,val])=>{html+=`<div class="oos-bar-row"><span class="oos-bar-label">${mo}</span><div class="oos-bar"><div class="oos-bar-fill" style="width:${val/20*100}%;background:var(--emerald)"></div></div><span class="oos-bar-val" style="color:var(--emerald)">${fmt(val,1)}/j</span></div>`;});
+  return html+'</div></div></div>';
+}
+
+function renderAnomalies(anom){
+  const outliers=anom.revenue_outliers||[];
+  let html=`<div class="table-wrap reveal"><div style="padding:18px 20px 0">
+    <div class="panel-title">${anom.total_outlier_days} jours anomaliques détectés</div>
+    <div class="panel-desc">Revenus à ±2 écarts-types de la moyenne (${fmtD(anom.avg_revenue)} ± ${fmtD(anom.std_revenue)})</div></div>
+    <table class="dtable" style="margin-top:8px"><thead><tr><th>Date</th><th>Revenu</th><th>Z-Score</th><th>Occ.</th><th>ADR</th><th>Type</th></tr></thead><tbody>`;
+  outliers.slice(0,10).forEach(o=>{const cls=o.direction==='high'?'delta-up':'delta-down';const label=o.direction==='high'?'Exceptionnel':'Anormal';
+    html+=`<tr><td style="font-family:var(--mono);font-size:12px">${o.date}</td><td class="col-money">${fmtD(o.revenue)}</td>
+      <td><span class="${cls}">${o.z_score>0?'+':''}${fmt(o.z_score,2)}σ</span></td>
+      <td>${pct(o.occ)}</td><td class="col-money">$${fmt(o.adr,0)}</td><td style="font-size:12px">${label}</td></tr>`;});
+  return html+'</tbody></table></div>';
+}
+
+function renderSeasonalityChart(season){
+  const monthly=season.monthly||[];if(!monthly.length)return;
+  destroyChart('seasonality');const ctx=document.getElementById('chart-seasonality');if(!ctx)return;
+  const labels=monthly.map(m=>m.label);
+  charts['seasonality']=new Chart(ctx,{type:'bar',
+    data:{labels,datasets:[
+      {label:'Revenu/jour',data:monthly.map(m=>m.avg_revenue),backgroundColor:'rgba(102,126,234,0.5)',borderRadius:4,yAxisID:'y',barPercentage:.65},
+      {label:'F&B/jour',data:monthly.map(m=>m.avg_fb),backgroundColor:'rgba(118,75,162,0.5)',borderRadius:4,yAxisID:'y',barPercentage:.65},
+      {label:'Occupation',data:monthly.map(m=>m.avg_occ),type:'line',borderColor:'#10b981',backgroundColor:'transparent',yAxisID:'y1',tension:.35,pointRadius:3,borderWidth:2,pointHoverRadius:6}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:16}}},
+      scales:{x:{grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:11,family:'Inter'}}},
+        y:{position:'left',grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:10,family:'Inter'},callback:v=>fmtM(v)}},
+        y1:{position:'right',min:0,max:100,grid:{display:false},ticks:{color:'#10b981',font:{size:10,family:'Inter'},callback:v=>v+'%'}}}}
+  });
+}
+
+// ═══════════════════════════════════════
+// NEW INSIGHT RENDERERS
+// ═══════════════════════════════════════
+
+function renderGuestValue(revpor, fbc) {
+  let html = '<div class="grid grid-3 reveal">';
+  if(revpor) {
+    html += `<div class="panel callout-center">
+      <div class="callout-label">RevPOR</div>
+      <div class="callout-huge" style="color:var(--primary)">$${fmt(revpor.avg_revpor,0)}</div>
+      <div class="callout-desc">Revenu total par chambre occupée</div>
+      <div style="display:flex;gap:12px;margin-top:16px;width:100%">
+        <div style="flex:1;text-align:center;padding:10px;background:var(--bg-subtle);border-radius:8px">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase">Chambre</div>
+          <div style="font-size:18px;font-weight:700;color:var(--blue);font-feature-settings:'tnum'">$${fmt(revpor.room_only_revpor,0)}</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:10px;background:var(--bg-subtle);border-radius:8px">
+          <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase">Ancillaire</div>
+          <div style="font-size:18px;font-weight:700;color:var(--violet);font-feature-settings:'tnum'">$${fmt(revpor.ancillary_revpor,0)}</div>
+          <div style="font-size:10px;color:var(--text-muted)">${pct(revpor.ancillary_pct_of_revpor)} du total</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  if(fbc) {
+    const benchColor = fbc.vs_benchmark === 'above' ? 'var(--emerald)' : fbc.vs_benchmark === 'below' ? 'var(--rose)' : 'var(--amber)';
+    const benchLabel = fbc.vs_benchmark === 'above' ? 'Au-dessus' : fbc.vs_benchmark === 'below' ? 'En-dessous' : 'Dans la norme';
+    html += `<div class="panel callout-center">
+      <div class="callout-label">Capture F&B</div>
+      <div class="callout-huge" style="color:${benchColor}">$${fmt(fbc.avg_fb_per_room,0)}</div>
+      <div class="callout-desc">F&B par chambre occupée</div>
+      <div style="margin-top:12px;padding:8px 14px;border-radius:8px;background:${benchColor === 'var(--emerald)' ? 'var(--emerald-bg)' : benchColor === 'var(--rose)' ? 'var(--rose-bg)' : 'var(--amber-bg)'}">
+        <div style="font-size:11px;font-weight:600;color:${benchColor}">${benchLabel} du benchmark</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${pct(fbc.avg_fb_pct_of_room_rev)} du rev. chambres (norme: 15-25%)</div>
+      </div>
+    </div>`;
+    html += `<div class="panel">
+      <div class="panel-title">Capture F&B Mensuelle</div>
+      <div class="panel-desc">F&B par chambre occupée par mois</div>
+      <div style="margin-top:12px">`;
+    const maxFb = Math.max(...(fbc.monthly_trend||[]).map(m=>m.fb_per_room));
+    (fbc.monthly_trend||[]).slice(-12).forEach(m => {
+      const w = maxFb > 0 ? (m.fb_per_room / maxFb * 100) : 0;
+      html += `<div class="oos-bar-row"><span class="oos-bar-label">${m.month||m.label}</span><div class="oos-bar"><div class="oos-bar-fill" style="width:${w}%;background:var(--violet)"></div></div><span class="oos-bar-val">$${fmt(m.fb_per_room,0)}</span></div>`;
+    });
+    html += '</div></div>';
+  }
+  return html + '</div>';
+}
+
+function renderForecast(fc) {
+  const forecasts = fc.next_3_months_forecast || [];
+  if(!forecasts.length) return '';
+  const months_fr = {1:'Janvier',2:'Février',3:'Mars',4:'Avril',5:'Mai',6:'Juin',7:'Juillet',8:'Août',9:'Septembre',10:'Octobre',11:'Novembre',12:'Décembre'};
+  let html = '<div class="grid grid-2 reveal">';
+  // Forecast cards
+  html += '<div class="panel"><div class="panel-title">Prévisions 3 prochains mois</div><div class="panel-desc">Basées sur les tendances saisonnières historiques</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px">';
+  forecasts.forEach(f => {
+    const confRange = (f.confidence_high && f.confidence_low) ? (f.confidence_high - f.confidence_low) / f.forecasted_revenue : 2;
+    const confLevel = confRange < 1.0 ? 'high' : confRange < 1.5 ? 'medium' : 'low';
+    const confColor = confLevel === 'high' ? 'var(--emerald)' : confLevel === 'medium' ? 'var(--amber)' : 'var(--rose)';
+    const confLabel = confLevel === 'high' ? 'Haute' : confLevel === 'medium' ? 'Moyenne' : 'Faible';
+    const monthLabel = typeof f.month === 'number' ? (months_fr[f.month] || f.month) : f.month;
+    html += `<div style="text-align:center;padding:16px;background:var(--bg-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm)">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">${monthLabel}</div>
+      <div style="font-size:24px;font-weight:800;color:var(--text);margin:8px 0;font-feature-settings:'tnum'">${pct(f.forecasted_occ)}</div>
+      <div style="font-size:10px;color:var(--text-muted)">occ. prévue</div>
+      <div style="font-size:16px;font-weight:700;color:var(--blue);margin-top:8px;font-feature-settings:'tnum'">$${fmt(f.forecasted_adr,0)}</div>
+      <div style="font-size:10px;color:var(--text-muted)">ADR prévu</div>
+      <div style="font-size:14px;font-weight:700;color:var(--primary);margin-top:8px;font-feature-settings:'tnum'">${fmtM(f.forecasted_revenue)}</div>
+      <div style="font-size:10px;color:var(--text-muted)">rev/jour prévu</div>
+      <div style="margin-top:8px;padding:3px 8px;border-radius:4px;font-size:9px;font-weight:600;display:inline-block;background:${confColor === 'var(--emerald)' ? 'var(--emerald-bg)' : confColor === 'var(--amber)' ? 'var(--amber-bg)' : 'var(--rose-bg)'};color:${confColor}">Confiance: ${confLabel}</div>
+    </div>`;
+  });
+  html += '</div></div>';
+  // Forecast chart
+  html += '<div class="panel"><div class="panel-title">Patron Saisonnier</div><div class="panel-desc">Revenus moyens historiques par mois avec prévisions</div><canvas id="chart-forecast" height="220"></canvas></div>';
+  return html + '</div>';
+}
+
+function renderForecastChart(fc) {
+  const hist = fc.historical_by_month || [];
+  if(!hist.length) return;
+  destroyChart('forecast');
+  const ctx = document.getElementById('chart-forecast');
+  if(!ctx) return;
+  const months_fr_short = {1:'Jan',2:'Fév',3:'Mar',4:'Avr',5:'Mai',6:'Jun',7:'Jul',8:'Aoû',9:'Sep',10:'Oct',11:'Nov',12:'Déc'};
+  const labels = hist.map(h => months_fr_short[h.month] || h.month);
+  charts['forecast'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {label:'Rev. moyen/jour',data:hist.map(h=>h.avg_revenue),backgroundColor:'rgba(102,126,234,0.5)',borderRadius:4,barPercentage:.6,yAxisID:'y'},
+        {label:'Occupation moy.',data:hist.map(h=>h.avg_occ),type:'line',borderColor:'#10b981',backgroundColor:'transparent',yAxisID:'y1',tension:.35,pointRadius:3,borderWidth:2}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:16}}},
+      scales:{x:{grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:11,family:'Inter'}}},
+        y:{position:'left',grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:10,family:'Inter'},callback:v=>fmtM(v)}},
+        y1:{position:'right',min:0,max:100,grid:{display:false},ticks:{color:'#10b981',font:{size:10,family:'Inter'},callback:v=>v+'%'}}}}
+  });
+}
+
+function renderMAChart(canvasId, maData, label, prefix) {
+  if(!maData) return;
+  destroyChart(canvasId);
+  const ctx = document.getElementById(canvasId);
+  if(!ctx) return;
+  const ma7 = maData.ma_7 || [];
+  const ma30 = maData.ma_30 || [];
+  const ma90 = maData.ma_90 || [];
+  const maxLen = Math.max(ma7.length, ma30.length, ma90.length);
+  const labels = Array.from({length: maxLen}, (_, i) => '');
+  // Only show last 120 points to keep chart readable
+  const slice = v => v.length > 120 ? v.slice(-120) : v;
+  const sliceLabels = labels.length > 120 ? labels.slice(-120) : labels;
+  const momentum = maData.momentum || maData.momentum_7 || 'flat';
+  const momColor = momentum === 'up' ? '#10b981' : momentum === 'down' ? '#ef4444' : '#f59e0b';
+  charts[canvasId] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sliceLabels,
+      datasets: [
+        {label:'7 jours',data:slice(ma7),borderColor:'#667eea',backgroundColor:'rgba(102,126,234,0.05)',fill:false,tension:.3,pointRadius:0,borderWidth:2},
+        {label:'30 jours',data:slice(ma30),borderColor:'#e91e63',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+        {label:'90 jours',data:slice(ma90),borderColor:'#f59e0b',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[8,4]}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6b7280',font:{size:10,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:12}},
+        title:{display:true,text:`Momentum: ${momentum === 'up' ? '↑ Haussier' : momentum === 'down' ? '↓ Baissier' : '→ Stable'}`,color:momColor,font:{size:11,weight:'bold'},align:'end'}},
+      scales:{x:{display:false},y:{grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:10,family:'Inter'},callback:v=>prefix+fmt(v,0)}}}}
+  });
+}
+
+function renderSuitePremium(sp) {
+  const positive = sp.premium_adr_pct > 0;
+  const color = positive ? 'var(--emerald)' : 'var(--rose)';
+  const hi = sp.high_suite_days || {};
+  const lo = sp.low_suite_days || {};
+  let html = '<div class="grid grid-2 reveal">';
+  html += `<div class="panel"><div class="panel-title">Impact des suites sur les revenus</div>
+    <div class="panel-desc">Comparaison des jours avec plus vs moins de suites vendues (médiane: ${sp.median_suite_count})</div>
+    <div style="display:flex;gap:12px;margin-top:16px">
+      <div class="insight-band"><div class="insight-band-label">Jours +suites</div><div class="insight-band-sub" style="color:var(--emerald)">${hi.days||0} jours</div>
+        <div class="insight-band-value">$${fmt(hi.avg_adr||0,0)}</div><div class="insight-band-detail">ADR moyen</div>
+        <div style="margin-top:6px;font-size:12px;font-weight:600;color:var(--emerald);font-feature-settings:'tnum'">$${fmt(hi.avg_revenue||0,0)}/j</div></div>
+      <div class="insight-band"><div class="insight-band-label">Jours -suites</div><div class="insight-band-sub" style="color:var(--amber)">${lo.days||0} jours</div>
+        <div class="insight-band-value">$${fmt(lo.avg_adr||0,0)}</div><div class="insight-band-detail">ADR moyen</div>
+        <div style="margin-top:6px;font-size:12px;font-weight:600;color:var(--amber);font-feature-settings:'tnum'">$${fmt(lo.avg_revenue||0,0)}/j</div></div>
+    </div></div>`;
+  const uplift = sp.estimated_annual_uplift || sp.estimated_uplift_10pct_annual || 0;
+  html += `<div class="panel callout-center"><div class="callout-label">Prime ADR Suites</div>
+    <div class="callout-huge" style="color:${color}">${positive?'+':''}${fmt(sp.premium_adr_pct,1)}%</div>
+    <div class="callout-desc">d'ADR supplémentaire les jours avec plus de suites</div>
+    ${uplift ? `<div class="callout-box" style="background:var(--emerald-bg);border:1px solid rgba(16,185,129,0.15)">
+      <div style="font-size:11px;color:var(--text-tertiary)">Uplift estimé (+10% suites)</div>
+      <div class="callout-box-value" style="color:var(--emerald)">${fmtM(uplift)}</div>
+      <div class="callout-box-note" style="color:var(--emerald)">revenus additionnels / an</div></div>`:''}</div>`;
+  return html + '</div>';
+}
+
+function renderGuestDensity(gd) {
+  const bands = gd.bands || [];
+  const corrColor = gd.correlation_density_to_fb > 0.3 ? 'var(--emerald)' : gd.correlation_density_to_fb < 0 ? 'var(--rose)' : 'var(--amber)';
+  let html = '<div class="grid grid-2 reveal">';
+  html += `<div class="panel"><div class="panel-title">F&B par chambre selon la densité clients</div>
+    <div class="panel-desc">Plus de clients/chambre = plus de dépenses F&B?</div>
+    <div style="display:flex;gap:6px;margin-top:14px;align-items:flex-end">`;
+  const maxFb = Math.max(...bands.map(b => b.fb_per_room||b.avg_fb_per_room||0));
+  bands.forEach((b, i) => {
+    const fbVal = b.fb_per_room||b.avg_fb_per_room||0;
+    const h = maxFb > 0 ? Math.max(30, fbVal / maxFb * 120) : 30;
+    const barColor = i === bands.length - 1 ? 'var(--emerald)' : i === 0 ? 'var(--amber)' : 'var(--blue)';
+    html += `<div style="flex:1;text-align:center">
+      <div style="font-size:16px;font-weight:800;color:var(--text);font-feature-settings:'tnum'">$${fmt(fbVal,0)}</div>
+      <div style="height:${h}px;background:${barColor};border-radius:4px 4px 0 0;margin:6px auto;width:70%;opacity:.65"></div>
+      <div style="font-size:10px;font-weight:600;color:var(--text-muted)">${b.band||b.label}</div>
+      <div style="font-size:9px;color:var(--text-muted)">${b.days}j</div></div>`;
+  });
+  html += '</div></div>';
+  html += `<div class="panel callout-center"><div class="callout-label">Corrélation densité ↔ F&B</div>
+    <div class="callout-huge" style="color:${corrColor}">${gd.correlation_density_to_fb > 0 ? '+' : ''}${fmt(gd.correlation_density_to_fb * 100, 0)}%</div>
+    <div class="callout-desc">Plus de clients par chambre = ${gd.correlation_density_to_fb > 0 ? 'plus' : 'moins'} de revenus F&B</div>
+    ${gd.estimated_fb_gain_per_0_1_density ? `<div class="callout-box" style="background:var(--emerald-bg);border:1px solid rgba(16,185,129,0.15)">
+      <div style="font-size:11px;color:var(--text-tertiary)">Si densité +0.1 client/chambre</div>
+      <div class="callout-box-value" style="color:var(--emerald)">${fmtM(gd.estimated_fb_gain_per_0_1_density)}</div>
+      <div class="callout-box-note" style="color:var(--emerald)">F&B additionnel / an</div></div>` : ''}</div>`;
+  return html + '</div>';
+}
+
+function renderBanquetImpact(bi) {
+  const upliftPositive = bi.total_revenue_uplift_pct > 0;
+  const color = upliftPositive ? 'var(--emerald)' : 'var(--rose)';
+  const bq = bi.banquet_days || {};
+  const no = bi.no_banquet_days || {};
+  const bqDays = typeof bi.banquet_days === 'object' ? bq.days : bi.banquet_days;
+  const noDays = typeof bi.no_banquet_days === 'object' ? no.days : bi.no_banquet_days;
+  let html = '<div class="grid grid-2 reveal">';
+  // Comparison table
+  const metrics = [
+    {label:'Revenu total/jour', bqv: fmtD(bq.avg_total_revenue||0), nov: fmtD(no.avg_total_revenue||0)},
+    {label:'Rev. chambres/jour', bqv: fmtD(bq.avg_room_revenue||0), nov: fmtD(no.avg_room_revenue||0)},
+    {label:'Rev. F&B/jour (hors banq.)', bqv: fmtD(bq.avg_fb_revenue_excl_banquet||0), nov: fmtD(no.avg_fb_revenue_excl_banquet||0)},
+    {label:'Occupation', bqv: pct(bq.avg_occupancy||0), nov: pct(no.avg_occupancy||0)},
+    {label:'ADR', bqv: '$'+fmt(bq.avg_adr||0,0), nov: '$'+fmt(no.avg_adr||0,0)},
+    {label:'Pourboires/jour', bqv: fmtD(bq.avg_tips||0), nov: fmtD(no.avg_tips||0)},
+  ];
+  html += `<div class="panel"><div class="panel-title">Jours avec vs sans banquets</div>
+    <div class="panel-desc">${bqDays} jours avec banquet · ${noDays} jours sans</div>
+    <table class="ww-table" style="margin-top:12px"><tr><th></th><th>Avec banquet</th><th>Sans banquet</th></tr>`;
+  metrics.forEach(m => { html += `<tr><td>${m.label}</td><td class="ww-we">${m.bqv}</td><td>${m.nov}</td></tr>`; });
+  html += '</table></div>';
+  html += `<div class="panel callout-center"><div class="callout-label">Effet halo banquets</div>
+    <div class="callout-huge" style="color:${color}">${upliftPositive?'+':''}${fmt(bi.total_revenue_uplift_pct,1)}%</div>
+    <div class="callout-desc">de revenus totaux les jours avec banquets</div>
+    <div style="margin-top:16px;padding:12px;background:var(--bg-subtle);border-radius:8px;width:100%">
+      <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase">Rev. banquet moyen/jour</div>
+      <div style="font-size:22px;font-weight:800;color:var(--violet);font-feature-settings:'tnum'">${fmtD(bi.avg_daily_banquet_revenue)}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Corrélation banquet ↔ chambres: ${fmt(bi.banquet_to_room_correlation * 100, 0)}%</div>
+    </div></div>`;
+  return html + '</div>';
+}
+
+function renderRevenueConcentration(rc) {
+  const hhi = rc.herfindahl_index || 0;
+  const risk = rc.risk_total_rev_if_room_down_10pct || 0;
+  const divLabel = hhi > 5000 ? 'Très concentré' : hhi > 3500 ? 'Concentré' : hhi > 2500 ? 'Modéré' : 'Diversifié';
+  const divColor = hhi > 5000 ? 'var(--rose)' : hhi > 3500 ? 'var(--amber)' : 'var(--emerald)';
+  let html = '<div class="grid grid-2 reveal">';
+  // Diversification breakdown
+  html += `<div class="panel"><div class="panel-title">Répartition des revenus</div>
+    <div class="panel-desc">Chambres · F&B · Autres</div>
+    <div style="margin-top:16px">
+      <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;margin-bottom:14px">
+        <div style="width:${rc.avg_room_pct||70}%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">${pct(rc.avg_room_pct)}</div>
+        <div style="width:${rc.avg_fb_pct||20}%;background:var(--violet);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">${pct(rc.avg_fb_pct)}</div>
+        <div style="width:${rc.avg_other_pct||10}%;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700">${pct(rc.avg_other_pct)}</div>
+      </div>
+      <div style="display:flex;gap:16px;font-size:12px;color:var(--text-muted)">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--blue);margin-right:4px"></span>Chambres</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--violet);margin-right:4px"></span>F&B</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--teal);margin-right:4px"></span>Autres</span>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:14px;background:var(--rose-bg);border:1px solid rgba(239,68,68,0.12);border-radius:8px">
+      <div style="font-size:11px;font-weight:600;color:var(--rose)">Analyse de risque</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">Si les revenus chambres baissent de 10%, le revenu total baisse de <strong style="color:var(--rose)">${pct(risk)}</strong></div>
+    </div></div>`;
+  html += `<div class="panel callout-center"><div class="callout-label">Indice de diversification</div>
+    <div class="callout-huge" style="color:${divColor}">${fmt(hhi,0)}</div>
+    <div class="callout-desc">${divLabel} (Herfindahl: <2500 = diversifié)</div>
+    <div style="margin-top:14px;font-size:11px;color:var(--text-muted)">Tendance: ${rc.diversification_trend === 'improving' ? '<span style="color:var(--emerald)">↑ En amélioration</span>' : rc.diversification_trend === 'declining' ? '<span style="color:var(--rose)">↓ En déclin</span>' : '<span style="color:var(--amber)">→ Stable</span>'}</div></div>`;
+  return html + '</div>';
+}
+
+function renderCompROI(cr) {
+  const roi = cr.roi_pct || cr.comp_roi_pct || 0;
+  const roiColor = roi > 50 ? 'var(--emerald)' : roi > 0 ? 'var(--amber)' : 'var(--rose)';
+  let html = '<div class="grid grid-2 reveal">';
+  html += `<div class="panel"><div class="panel-title">Chambres gratuites — Coût vs Bénéfice</div>
+    <div class="panel-desc">Les comps génèrent-elles assez de revenus ancillaires?</div>
+    <div class="oos-grid" style="margin-top:14px">
+      <div class="oos-cell"><div class="oos-cell-label">Coût annuel comps</div><div class="oos-cell-value" style="color:var(--rose)">${fmtM(cr.estimated_comp_cost_annual)}</div><div class="oos-cell-sub">ADR × comps</div></div>
+      <div class="oos-cell"><div class="oos-cell-label">Rev. ancillaire comps</div><div class="oos-cell-value" style="color:var(--emerald)">${fmtM(cr.estimated_ancillary_from_comps_annual)}</div><div class="oos-cell-sub">F&B + tips + autres</div></div>
+    </div></div>`;
+  html += `<div class="panel callout-center"><div class="callout-label">ROI Chambres Gratuites</div>
+    <div class="callout-huge" style="color:${roiColor}">${fmt(roi,0)}%</div>
+    <div class="callout-desc">${roi >= 100 ? 'Les comps se rentabilisent!' : roi > 50 ? 'Récupération partielle du coût' : 'Faible retour sur investissement'}</div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-muted)">Médiane: ${fmt(cr.median_comp_count,0)} comp/jour · ${cr.high_comp_days} jours analysés</div></div>`;
+  return html + '</div>';
+}
+
+function renderTaxEfficiency(te) {
+  const flagged = te.flagged_dates || [];
+  const anomPct = te.anomaly_pct || 0;
+  const statusColor = anomPct > 10 ? 'var(--rose)' : anomPct > 5 ? 'var(--amber)' : 'var(--emerald)';
+  const statusLabel = anomPct > 10 ? 'Vérification requise' : anomPct > 5 ? 'Quelques écarts' : 'Conforme';
+  // Compute avg rates from monthly_trend
+  const mt = te.monthly_trend || [];
+  const avgTps = mt.length ? mt.reduce((s,m) => s + (m.avg_tps_rate||0), 0) / mt.length : 0;
+  const avgTvq = mt.length ? mt.reduce((s,m) => s + (m.avg_tvq_rate||0), 0) / mt.length : 0;
+  const avgTvh = mt.length ? mt.reduce((s,m) => s + (m.avg_tvh_rate||0), 0) / mt.length : 0;
+  let html = '<div class="grid grid-2 reveal">';
+  html += `<div class="panel"><div class="panel-title">Taux effectifs de taxation</div>
+    <div class="panel-desc">Écarts par rapport aux taux statutaires</div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <div class="insight-band"><div class="insight-band-label">TPS</div>
+        <div class="insight-band-value">${pct(avgTps)}</div>
+        <div class="insight-band-detail">Statutaire: 5.0%</div></div>
+      <div class="insight-band"><div class="insight-band-label">TVQ</div>
+        <div class="insight-band-value">${pct(avgTvq)}</div>
+        <div class="insight-band-detail">Statutaire: 9.975%</div></div>
+      <div class="insight-band"><div class="insight-band-label">TVH</div>
+        <div class="insight-band-value">${pct(avgTvh)}</div>
+        <div class="insight-band-detail">Hébergement: 3.5%</div></div>
+    </div></div>`;
+  html += `<div class="panel callout-center"><div class="callout-label">Statut fiscal</div>
+    <div class="callout-huge" style="color:${statusColor}">${fmt(anomPct,1)}%</div>
+    <div class="callout-desc">de jours avec écarts >0.5%</div>
+    <div style="margin-top:10px;padding:8px 14px;border-radius:8px;background:${statusColor === 'var(--emerald)' ? 'var(--emerald-bg)' : statusColor === 'var(--amber)' ? 'var(--amber-bg)' : 'var(--rose-bg)'};font-size:11px;font-weight:600;color:${statusColor}">${statusLabel}</div>
+    <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">${te.flagged_anomalies || 0} jours avec anomalies sur ${te.total_records} analysés</div></div>`;
+  return html + '</div>';
+}
+
+// ═══════════════════════════════════════
+// GOPPAR & EXPENSE MANAGEMENT
+// ═══════════════════════════════════════
+
+async function loadGOPPAR() {
+  const container = document.getElementById('goppar-data');
+  if(!container) return;
+  try {
+    const r = await fetch('/api/manager/goppar');
+    const data = await r.json();
+    if(!data.has_data) {
+      container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted)">
+        <div style="font-size:13px;margin-bottom:8px">Aucune donnée de dépenses saisie</div>
+        <div style="font-size:12px">Cliquez sur "+ Dépenses mensuelles" pour commencer l'analyse GOPPAR</div></div>`;
+      return;
+    }
+    renderGOPPARData(data);
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--rose);text-align:center;padding:20px">${e.message}</div>`;
+  }
+}
+
+function renderGOPPARData(data) {
+  const s = data.summary;
+  const monthly = data.monthly || [];
+  let html = '';
+
+  // Summary KPIs
+  html += `<div class="kpi-row" style="margin-bottom:14px">
+    ${buildKPI('dollar-sign','GOPPAR','$'+fmt(s.avg_goppar,2),'par chambre disponible','var(--emerald)','var(--emerald-bg)',null)}
+    ${buildKPI('percent','Marge GOP',pct(s.avg_margin_pct),'GOP/Revenus','var(--blue)','var(--blue-bg)',null)}
+    ${buildKPI('users','LCPOR','$'+fmt(s.avg_lcpor,2),'coût main-d\'œuvre/ch. occ.','var(--amber)','var(--amber-bg)',null)}
+    ${buildKPI('activity','Couverture','${s.months_covered} mois','${s.total_days} jours analysés','var(--violet)','var(--violet-bg)',null)}
+  </div>`;
+
+  // Monthly table
+  html += `<div class="table-wrap"><table class="dtable"><thead><tr>
+    <th>Période</th><th>Revenus</th><th>Dépenses</th><th>GOP</th><th>GOPPAR</th><th>Marge</th><th>LCPOR</th><th>Seuil rent.</th>
+  </tr></thead><tbody>`;
+  monthly.forEach(m => {
+    const gopColor = m.gop > 0 ? 'var(--emerald)' : 'var(--rose)';
+    html += `<tr><td style="font-weight:600">${m.label}</td>
+      <td class="col-money">${fmtM(m.total_revenue)}</td>
+      <td class="col-money" style="color:var(--rose)">${fmtM(m.total_expenses)}</td>
+      <td class="col-money" style="color:${gopColor};font-weight:700">${fmtM(m.gop)}</td>
+      <td class="col-money" style="color:${gopColor}">$${fmt(m.goppar,2)}</td>
+      <td>${pct(m.margin_pct)}</td>
+      <td class="col-money">$${fmt(m.lcpor,2)}</td>
+      <td>${pct(m.break_even_occ)}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+
+  // Chart
+  if(monthly.length > 1) {
+    html += `<div class="grid grid-2" style="margin-top:14px">
+      <div class="panel"><div class="panel-title">GOPPAR mensuel</div><canvas id="chart-goppar" height="200"></canvas></div>
+      <div class="panel"><div class="panel-title">Seuil de rentabilité vs Occupation</div><canvas id="chart-breakeven" height="200"></canvas></div>
+    </div>`;
+  }
+
+  document.getElementById('goppar-data').innerHTML = html;
+  feather.replace();
+
+  // Render charts
+  if(monthly.length > 1) {
+    requestAnimationFrame(() => {
+      // GOPPAR chart
+      destroyChart('goppar');
+      const ctx1 = document.getElementById('chart-goppar');
+      if(ctx1) {
+        charts['goppar'] = new Chart(ctx1, {type:'bar',
+          data:{labels:monthly.map(m=>m.label),
+            datasets:[{label:'GOPPAR',data:monthly.map(m=>m.goppar),
+              backgroundColor:monthly.map(m=>m.goppar>=0?'rgba(16,185,129,0.6)':'rgba(239,68,68,0.6)'),
+              borderRadius:4,barPercentage:.6}]},
+          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+            scales:{x:{...baseScales.x},y:{...baseScales.y}}}
+        });
+      }
+      // Break-even chart
+      destroyChart('breakeven');
+      const ctx2 = document.getElementById('chart-breakeven');
+      if(ctx2) {
+        charts['breakeven'] = new Chart(ctx2, {type:'line',
+          data:{labels:monthly.map(m=>m.label),
+            datasets:[
+              {label:'Occupation réelle',data:monthly.map(m=>m.avg_occ),borderColor:'#667eea',backgroundColor:'rgba(102,126,234,0.08)',fill:true,tension:.3,pointRadius:3,borderWidth:2},
+              {label:'Seuil rentabilité',data:monthly.map(m=>m.break_even_occ),borderColor:'#ef4444',backgroundColor:'transparent',borderDash:[6,3],tension:.3,pointRadius:2,borderWidth:2}
+            ]},
+          options:{responsive:true,maintainAspectRatio:false,
+            plugins:{legend:{labels:{color:'#6b7280',font:{size:11,family:'Inter'},usePointStyle:true,pointStyle:'circle',padding:16}}},
+            scales:{x:{...baseScales.x},y:{min:0,max:100,grid:{color:C.grid,drawBorder:false},ticks:{color:C.tick,font:{size:10,family:'Inter'},callback:v=>v+'%'}}}}
+        });
+      }
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LABOR ANALYTICS & STAFFING MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+async function loadLaborAnalytics() {
+  const container = document.getElementById('labor-data');
+  if(!container) return;
+
+  try {
+    const r = await fetch('/api/manager/labor-analytics');
+    const data = await r.json();
+
+    if(!data.has_data) {
+      container.innerHTML = `<div style="font-size:12px;text-align:center;padding:20px;color:var(--text-muted)">
+        Cliquez sur "+ Main-d'œuvre" pour commencer l'entrée de données</div>`;
+      return;
+    }
+
+    renderLaborData(data);
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--rose);padding:20px">Erreur: ${e.message}</div>`;
+  }
+}
+
+function renderLaborData(data) {
+  const s = data.summary;
+  const analytics = data.analytics || [];
+
+  let html = `
+  <div class="kpi-row">
+    ${buildKPI('dollar-sign', 'LCPOR', '$' + fmt(s.lcpor, 2), 'par chambre occupée', 'var(--violet)', 'var(--violet-bg)', null)}
+    ${buildKPI('percent', 'Main-d\'œuvre %', pct(s.labor_pct_revenue), 'du revenu', 'var(--amber)', 'var(--amber-bg)', null)}
+    ${buildKPI('trending-up', 'Revenu/Heure', '$' + fmt(s.total_labor_cost > 0 ? 10000 / (s.total_labor_cost / s.total_hours) : 0, 2), 'productivité', 'var(--emerald)', 'var(--emerald-bg)', null)}
+    ${buildKPI('clock', 'Heures Supp. %', pct(s.avg_overtime_pct), 'du total', 'var(--rose)', 'var(--rose-bg)', null)}
+  </div>
+
+  <div class="grid grid-2 reveal" style="margin-top:20px">
+    <div class="panel">
+      <div class="panel-title">Efficacité par Département</div>
+      <div class="panel-desc">Classé par revenu par heure travaillée</div>
+      <canvas id="chart-labor-efficiency" height="200"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Variance Budgétaire</div>
+      <div class="panel-desc">Réel vs Budget par département</div>
+      <canvas id="chart-labor-variance" height="200"></canvas>
+    </div>
+  </div>
+
+  <table class="dtable" style="margin-top:20px">
+    <thead><tr>
+      <th>Département</th>
+      <th>Heures</th>
+      <th>Coût</th>
+      <th>Taux/h</th>
+      <th>Budget</th>
+      <th>Écart %</th>
+      <th>Rév./h</th>
+      <th>Rég</th>
+    </tr></thead>
+    <tbody>
+  `;
+
+  for(const a of analytics) {
+    const varColor = a.budget_variance_pct > 5 ? 'var(--rose)' : a.budget_variance_pct < -5 ? 'var(--emerald)' : 'var(--text-secondary)';
+    html += `<tr>
+      <td class="col-dept">${a.department}</td>
+      <td>${fmt(a.total_hours, 1)}</td>
+      <td class="col-money">$${fmt(a.total_labor_cost, 0)}</td>
+      <td class="col-money">$${fmt(a.avg_hourly_rate, 2)}</td>
+      <td class="col-money">$${fmt(a.budget_cost, 0)}</td>
+      <td style="color:${varColor};font-weight:600">${a.budget_variance_pct > 0 ? '+' : ''}${fmt(a.budget_variance_pct, 1)}%</td>
+      <td class="col-money">$${fmt(a.revenue_per_labor_hour, 2)}</td>
+      <td>${a.efficiency_rank}</td>
+    </tr>`;
+  }
+
+  html += `</tbody></table>
+
+  <div class="grid grid-2 reveal" style="margin-top:20px">
+    <div class="panel">
+      <div class="panel-title">Tendance Mensuelle</div>
+      <div class="panel-desc">Coûts vs Revenu (axes doubles)</div>
+      <canvas id="chart-labor-trend" height="200"></canvas>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Analyse Heures Supplémentaires</div>
+      <div class="panel-desc">Ratio HS % par département</div>
+      <canvas id="chart-labor-ot" height="200"></canvas>
+    </div>
+  </div>
+  `;
+
+  document.getElementById('labor-data').innerHTML = html;
+
+  requestAnimationFrame(() => {
+    renderLaborEfficiencyChart(analytics);
+    renderLaborVarianceChart(analytics);
+    renderLaborTrendChart(data.monthly);
+    renderLaborOTChart(analytics);
+    feather.replace();
+  });
+}
+
+function renderLaborEfficiencyChart(analytics) {
+  const C = {grid:'#e5e7eb',tick:'#6b7280'};
+  const ctx = document.getElementById('chart-labor-efficiency');
+  if(!ctx) return;
+
+  const sortedByRevenue = [...analytics].sort((a, b) => b.revenue_per_labor_hour - a.revenue_per_labor_hour);
+  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6'];
+
+  charts['labor-eff'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sortedByRevenue.map(a => a.department),
+      datasets: [{
+        label: 'Revenu par heure',
+        data: sortedByRevenue.map(a => a.revenue_per_labor_hour),
+        backgroundColor: sortedByRevenue.map((_, i) => colors[i % colors.length]),
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: {legend: {display: false}},
+      scales: {
+        x: {grid: {color: C.grid, drawBorder: false}, ticks: {color: C.tick, font: {size: 10}}, max: Math.max(...sortedByRevenue.map(a => a.revenue_per_labor_hour)) * 1.1}
+      }
+    }
+  });
+}
+
+function renderLaborVarianceChart(analytics) {
+  const C = {grid:'#e5e7eb',tick:'#6b7280'};
+  const ctx = document.getElementById('chart-labor-variance');
+  if(!ctx) return;
+
+  const colors = analytics.map(a => a.budget_variance_pct > 0 ? '#ef4444' : '#10b981');
+
+  charts['labor-var'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: analytics.map(a => a.department),
+      datasets: [{
+        label: 'Variance % (positif=dépassement)',
+        data: analytics.map(a => a.budget_variance_pct),
+        backgroundColor: colors,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend: {display: false}},
+      scales: {
+        y: {grid: {color: C.grid, drawBorder: false}, ticks: {color: C.tick, font: {size: 10}}, callback: v => v + '%'}
+      }
+    }
+  });
+}
+
+function renderLaborTrendChart(monthly) {
+  const C = {grid:'#e5e7eb',tick:'#6b7280'};
+  const ctx = document.getElementById('chart-labor-trend');
+  if(!ctx) return;
+
+  // Group by month and sum
+  const byMonth = {};
+  for(const m of monthly) {
+    const key = m.label;
+    if(!byMonth[key]) byMonth[key] = {cost: 0, revenue: 0, count: 0};
+    byMonth[key].cost += m.cost || 0;
+    byMonth[key].revenue += m.revenue || 0;
+    byMonth[key].count++;
+  }
+
+  const labels = Object.keys(byMonth).slice(-12);
+  const costs = labels.map(k => byMonth[k].cost);
+  const revenues = labels.map(k => byMonth[k].revenue);
+
+  const maxRev = Math.max(...revenues);
+  const maxCost = Math.max(...costs);
+
+  charts['labor-trend'] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Coûts main-d\'œuvre',
+          data: costs,
+          borderColor: '#8b5cf6',
+          backgroundColor: 'rgba(139,92,246,0.08)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: 3,
+          borderWidth: 2,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Revenu total',
+          data: revenues,
+          borderColor: '#10b981',
+          backgroundColor: 'transparent',
+          tension: 0.3,
+          pointRadius: 3,
+          borderWidth: 2,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {mode: 'index', intersect: false},
+      plugins: {legend: {labels: {color: '#6b7280', font: {size: 11}, usePointStyle: true, padding: 16}}},
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          grid: {color: C.grid, drawBorder: false},
+          ticks: {color: C.tick, font: {size: 10}, callback: v => '$' + fmt(v, 0)},
+          max: maxCost * 1.1,
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          grid: {display: false},
+          ticks: {color: C.tick, font: {size: 10}, callback: v => '$' + fmt(v, 0)},
+          max: maxRev * 1.1,
+        },
+        x: {grid: {color: C.grid, drawBorder: false}, ticks: {color: C.tick, font: {size: 10}}}
+      }
+    }
+  });
+}
+
+function renderLaborOTChart(analytics) {
+  const C = {grid:'#e5e7eb',tick:'#6b7280'};
+  const ctx = document.getElementById('chart-labor-ot');
+  if(!ctx) return;
+
+  const colors = analytics.map(a => a.overtime_pct > 10 ? '#ef4444' : a.overtime_pct > 5 ? '#f59e0b' : '#10b981');
+
+  charts['labor-ot'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: analytics.map(a => a.department),
+      datasets: [{
+        label: 'Heures supplémentaires %',
+        data: analytics.map(a => a.overtime_pct),
+        backgroundColor: colors,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend: {display: false}},
+      scales: {
+        y: {grid: {color: C.grid, drawBorder: false}, ticks: {color: C.tick, font: {size: 10}}, callback: v => v + '%', max: 20}
+      }
+    }
+  });
+}
+
+function openExpenseModal() {
+  const now = new Date();
+  const modal = document.createElement('div');
+  modal.id = 'expense-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  modal.innerHTML = `<div style="background:var(--card-bg);border-radius:16px;padding:32px;max-width:640px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.15)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 style="font-size:16px;font-weight:700">Saisie des dépenses mensuelles</h3>
+      <button onclick="closeExpenseModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Année</label>
+        <input type="number" id="exp-year" value="${now.getFullYear()}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--mono)"></div>
+      <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Mois</label>
+        <select id="exp-month" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}" ${m===now.getMonth()+1?'selected':''}>${['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][m-1]}</option>`).join('')}
+        </select></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px">Main-d'œuvre</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      ${expField('labor_rooms','Réception & Housekeeping')}
+      ${expField('labor_fb','F&B (cuisine, service)')}
+      ${expField('labor_admin','Administration')}
+      ${expField('labor_maintenance','Maintenance')}
+      ${expField('labor_other','Autres départements')}
+    </div>
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px">Dépenses opérationnelles</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      ${expField('utilities','Services publics (eau, électricité, gaz)')}
+      ${expField('supplies','Fournitures & amenities')}
+      ${expField('maintenance_costs','Réparations & entretien')}
+      ${expField('marketing','Marketing & ventes')}
+      ${expField('insurance','Assurances')}
+      ${expField('franchise_fees','Frais franchise Marriott')}
+      ${expField('technology','Technologie & PMS')}
+      ${expField('other_expenses','Autres dépenses')}
+    </div>
+    <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Notes</label>
+      <textarea id="exp-notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical"></textarea></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button onclick="closeExpenseModal()" style="padding:10px 20px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:transparent;cursor:pointer">Annuler</button>
+      <button onclick="saveExpense()" style="padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;border:none;background:var(--primary);color:#fff;cursor:pointer">Sauvegarder</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) closeExpenseModal(); });
+}
+
+function expField(id, label) {
+  return `<div><label style="font-size:10.5px;color:var(--text-muted)">${label}</label>
+    <input type="number" id="exp-${id}" value="0" step="100" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>`;
+}
+
+function closeExpenseModal() {
+  const modal = document.getElementById('expense-modal');
+  if(modal) modal.remove();
+}
+
+async function saveExpense() {
+  const fields = ['labor_rooms','labor_fb','labor_admin','labor_maintenance','labor_other',
+    'utilities','supplies','maintenance_costs','marketing','insurance','franchise_fees','technology','other_expenses'];
+  const data = {
+    year: parseInt(document.getElementById('exp-year').value),
+    month: parseInt(document.getElementById('exp-month').value),
+    notes: document.getElementById('exp-notes').value
+  };
+  fields.forEach(f => { data[f] = parseFloat(document.getElementById('exp-' + f).value) || 0; });
+
+  try {
+    const r = await fetch('/api/manager/expenses', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)});
+    const result = await r.json();
+    if(result.success) {
+      closeExpenseModal();
+      loadGOPPAR();
+    } else {
+      alert('Erreur: ' + (result.error || 'Inconnue'));
+    }
+  } catch(e) { alert('Erreur: ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LABOR DATA ENTRY MODAL
+// ═══════════════════════════════════════════════════════════════
+
+function openLaborModal() {
+  const now = new Date();
+  const departments = ['RECEPTION', 'KITCHEN', 'BANQUET', 'RESTAURANT', 'ADMINISTRATION', 'SALES', 'ROOMS', 'MAINTENANCE', 'BAR', 'OTHER'];
+
+  const modal = document.createElement('div');
+  modal.id = 'labor-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+  modal.innerHTML = `<div style="background:var(--card-bg);border-radius:16px;padding:32px;max-width:680px;width:90%;max-height:85vh;overflow-y:auto;box-shadow:0 24px 48px rgba(0,0,0,0.15)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h3 style="font-size:16px;font-weight:700">Saisie Main-d'Œuvre par Département</h3>
+      <button onclick="closeLaborModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-muted)">✕</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
+      <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Année</label>
+        <input type="number" id="lab-year" value="${now.getFullYear()}" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:var(--mono)"></div>
+      <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Mois</label>
+        <select id="lab-month" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => `<option value="${m}" ${m===now.getMonth()+1?'selected':''}>${['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'][m-1]}</option>`).join('')}
+        </select></div>
+      <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Département</label>
+        <select id="lab-department" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+          ${departments.map(d => `<option value="${d}">${d}</option>`).join('')}
+        </select></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px">Heures</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Heures régulières</label>
+        <input type="number" id="lab-regular_hours" value="0" step="10" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Heures supplémentaires</label>
+        <input type="number" id="lab-overtime_hours" value="0" step="5" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px">Salaires & Avantages</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Salaires réguliers</label>
+        <input type="number" id="lab-regular_wages" value="0" step="100" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Salaires supplémentaires (HS)</label>
+        <input type="number" id="lab-overtime_wages" value="0" step="100" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Avantages sociaux</label>
+        <input type="number" id="lab-benefits" value="0" step="100" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Effectifs (head count)</label>
+        <input type="number" id="lab-headcount" value="0" step="1" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+    </div>
+
+    <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:.5px">Pourboires & Budget</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Pourboires collectés</label>
+        <input type="number" id="lab-tips_collected" value="0" step="50" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Pourboires distribués</label>
+        <input type="number" id="lab-tips_distributed" value="0" step="50" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Heures budgétées</label>
+        <input type="number" id="lab-budget_hours" value="0" step="10" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+      <div><label style="font-size:10.5px;color:var(--text-muted)">Coût budgété</label>
+        <input type="number" id="lab-budget_cost" value="0" step="100" min="0" style="width:100%;padding:7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:var(--mono)"></div>
+    </div>
+
+    <div><label style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase">Notes</label>
+      <textarea id="lab-notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;font-size:13px;resize:vertical"></textarea></div>
+
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
+      <button onclick="closeLaborModal()" style="padding:10px 20px;border-radius:8px;font-size:13px;border:1px solid var(--border);background:transparent;cursor:pointer">Annuler</button>
+      <button onclick="saveLabor()" style="padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;border:none;background:var(--primary);color:#fff;cursor:pointer">Sauvegarder</button>
+    </div>
+  </div>`;
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if(e.target === modal) closeLaborModal(); });
+}
+
+function closeLaborModal() {
+  const modal = document.getElementById('labor-modal');
+  if(modal) modal.remove();
+}
+
+async function saveLabor() {
+  const fields = ['regular_hours', 'overtime_hours', 'regular_wages', 'overtime_wages', 'benefits',
+                  'headcount', 'tips_collected', 'tips_distributed', 'budget_hours', 'budget_cost'];
+  const data = {
+    year: parseInt(document.getElementById('lab-year').value),
+    month: parseInt(document.getElementById('lab-month').value),
+    department: document.getElementById('lab-department').value,
+    notes: document.getElementById('lab-notes').value
+  };
+
+  fields.forEach(f => { data[f] = parseFloat(document.getElementById('lab-' + f).value) || 0; });
+
+  try {
+    const r = await fetch('/api/manager/labor', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(data)
+    });
+    const result = await r.json();
+    if(result.success) {
+      closeLaborModal();
+      loadLaborAnalytics();
+    } else {
+      alert('Erreur: ' + (result.error || 'Inconnue'));
+    }
+  } catch(e) {
+    alert('Erreur: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════
+// NARRATIVE RENDERERS
+// ═══════════════════════════════════════
+function renderRegimesStaffing(regimes, staffing) {
+  let html = '<div class="regime-grid reveal">';
+  const rData = staffing?.regimes || regimes?.clusters || [];
+  const labels = {peak_occupancy:'Haute saison',normal_occupancy:'Occupation normale',low_occupancy:'Basse saison'};
+  const cls = {peak_occupancy:'peak',normal_occupancy:'normal',low_occupancy:'low'};
+  rData.forEach(r => {
+    const name = r.regime || r.name || 'regime';
+    html += `<div class="regime-card ${cls[name]||'normal'}">
+      <div class="regime-label">${labels[name]||name}</div>
+      <div class="regime-occ">${fmt(r.avg_occupancy||r.avg_occ,1)}%</div>
+      <div class="regime-days">${r.days} jours · Rev. moy. ${fmtD(r.avg_revenue||r.avg_rev)}/jour</div>
+      <div class="regime-detail">`;
+    if(r.staffing) {
+      const depts = [
+        ['Ménage','housekeeping_hours'],['Réception','reception_hours'],
+        ['F&B Service','fb_service_hours'],['Cuisine','kitchen_hours'],
+        ['Buanderie','laundry_hours'],['Maintenance','maintenance_hours']
+      ];
+      const maxH = Math.max(...depts.map(([,k])=>r.staffing[k]||0), 1);
+      depts.forEach(([label,key]) => {
+        const val = r.staffing[key] || 0;
+        if(val > 0) {
+          const pctW = (val/maxH*100).toFixed(0);
+          const color = cls[name]==='peak'?'var(--emerald)':cls[name]==='low'?'var(--amber)':'var(--blue)';
+          html += `<div class="staffing-bar"><span class="staffing-bar-label">${label}</span><div class="staffing-bar-track"><div class="staffing-bar-fill" style="width:${pctW}%;background:${color}"></div></div><span class="staffing-bar-val">${fmt(val,0)}h</span></div>`;
+        }
+      });
+      html += `<div style="margin-top:8px;font-family:var(--mono);font-size:13px;font-weight:600">Total: ${fmt(r.staffing.total_daily_hours,0)}h/jour</div>`;
+    }
+    html += `</div></div>`;
+  });
+  html += '</div>';
+  if(staffing?.estimated_annual_savings_potential > 0) {
+    html += `<div class="panel reveal" style="margin-top:14px;text-align:center;padding:18px">
+      <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">Économies potentielles annuelles</div>
+      <div style="font-family:var(--mono);font-size:28px;font-weight:800;color:var(--emerald);margin-top:6px">${fmtM(staffing.estimated_annual_savings_potential)}</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px">En alignant le personnel sur les régimes d'occupation</div>
+    </div>`;
+  }
+  if(staffing?.recommendations?.length) {
+    html += `<div class="panel reveal" style="margin-top:14px"><div class="panel-title">Recommandations</div>`;
+    staffing.recommendations.forEach(r => {
+      html += `<div style="padding:8px 0;font-size:12.5px;color:var(--text-secondary);border-bottom:1px solid var(--border-light)">• ${r}</div>`;
+    });
+    html += `</div>`;
+  }
+  return html;
+}
+
+function renderElasticity(pe, adr) {
+  let html = '<div class="grid grid-2 reveal">';
+  if(pe) {
+    const coeff = pe.elasticity_coefficient || 0;
+    const interp = Math.abs(coeff) < 0.5 ? 'Très inélastique — le prix peut augmenter sans perdre de clients'
+                 : Math.abs(coeff) < 1 ? 'Inélastique — marge de manœuvre tarifaire favorable'
+                 : 'Élastique — attention aux hausses de prix';
+    html += `<div class="panel"><div class="panel-title">Élasticité prix-demande</div>
+      <div class="panel-desc">Impact d'une variation de prix sur l'occupation</div>
+      <div class="elasticity-gauge">
+        <div class="gauge-value">${fmt(Math.abs(coeff),2)}</div>
+        <div class="gauge-label">${Math.abs(coeff) < 1 ? 'Inélastique' : 'Élastique'}</div>
+        <div class="gauge-interp">${interp}</div>
+      </div>
+      ${pe.revenue_maximizing_adr ? `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--text-muted)">ADR optimal estimé: <strong style="color:var(--primary)">$${fmt(pe.revenue_maximizing_adr,2)}</strong></div>` : ''}
+    </div>`;
+  }
+  if(adr) {
+    html += `<div class="panel"><div class="panel-title">Compression ADR</div>
+      <div class="panel-desc">Écart de tarif selon le niveau d'occupation</div>`;
+    // Build tiers from backend structure
+    const tierDefs = [
+      {key:'high_occupancy_95plus', label:'Haute (>95%)', color:'var(--emerald)'},
+      {key:'mid_occupancy_70_95', label:'Normale (70-95%)', color:'var(--blue)'},
+      {key:'low_occupancy_below70', label:'Basse (<70%)', color:'var(--rose)'}
+    ];
+    const tiers = tierDefs.filter(t => adr[t.key]?.avg_adr).map(t => ({label:t.label, avg_adr:adr[t.key].avg_adr, days:adr[t.key].days, color:t.color}));
+    if(tiers.length) {
+      const maxAdr = Math.max(...tiers.map(x=>x.avg_adr),1);
+      tiers.forEach(t => {
+        const pctW = (t.avg_adr/maxAdr*100).toFixed(0);
+        html += `<div class="variance-bar"><span class="variance-label">${t.label}</span><div class="variance-track"><div class="variance-fill" style="width:${pctW}%;background:${t.color}"></div></div><span class="variance-pct">$${fmt(t.avg_adr,0)}</span></div>`;
+      });
+    }
+    const prem = adr.premium_high_vs_mid_pct;
+    if(prem !== undefined && prem > -100) {
+      html += `<div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-muted)">Prime haute occupation: <strong style="color:${prem > 10 ? 'var(--emerald)' : 'var(--rose)'}">${fmt(prem,1)}%</strong> ${prem < 15 ? '(cible: 15-25%)' : ''}</div>`;
+    }
+    html += `<div style="text-align:center;margin-top:6px;font-size:11px;color:var(--text-muted)">Yield management: <strong>${adr.yield_management_strength || '—'}</strong></div>`;
+    html += `</div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderVariance(vd) {
+  // Build factors array from individual fields
+  const factors = [
+    {name:'Occupation', pct: vd.occupancy_contribution_pct||0, corr: vd.occupancy_correlation||0},
+    {name:'ADR', pct: vd.adr_contribution_pct||0, corr: vd.adr_correlation||0},
+    {name:'F&B/Chambre', pct: vd.fb_per_room_contribution_pct||0, corr: vd.fb_per_room_correlation||0},
+    {name:'Clients', pct: vd.clients_contribution_pct||0, corr: vd.clients_correlation||0}
+  ].sort((a,b) => b.pct - a.pct);
+  let html = '<div class="grid grid-2-1 reveal">';
+  html += `<div class="panel"><div class="panel-title">Contribution à la variance du revenu</div>
+    <div class="panel-desc">Quels facteurs influencent le plus vos résultats ?</div>`;
+  const colors = ['var(--primary)','var(--blue)','var(--violet)','var(--teal)'];
+  factors.forEach((f, i) => {
+    const pctW = Math.min(f.pct, 100);
+    html += `<div class="variance-bar"><span class="variance-label">${f.name}</span><div class="variance-track"><div class="variance-fill" style="width:${pctW}%;background:${colors[i%4]}"></div></div><span class="variance-pct">${fmt(pctW,1)}%</span></div>`;
+  });
+  html += `</div>`;
+  html += `<div class="panel"><div class="panel-title">Interprétation</div>
+    <div style="font-size:12.5px;color:var(--text-secondary);line-height:1.7;padding:12px 0">`;
+  const top = factors[0];
+  if(top) {
+    html += `<strong>${top.name}</strong> est le facteur dominant avec ${fmt(top.pct,1)}% de la variance (corrélation: ${fmt(top.corr,2)}). `;
+    html += `C'est le levier principal pour stabiliser et augmenter vos revenus.<br><br>`;
+    html += `<em>Recommandation :</em> Concentrez vos efforts d'optimisation sur ce facteur pour un impact maximum.`;
+  }
+  html += `</div></div>`;
+  html += '</div>';
+  return html;
+}
+
+function renderPareto(pa) {
+  let html = '<div class="grid grid-2 reveal">';
+  html += `<div class="panel"><div class="panel-title">Distribution de Pareto</div>
+    <div class="panel-desc">Concentration des revenus sur les meilleurs jours</div>
+    <div style="padding:16px 0">`;
+  const segments = [
+    {label:'Top 10%',key:'top_10_pct_revenue_contrib',color:'var(--primary)'},
+    {label:'Top 20%',key:'top_20_pct_revenue_contrib',color:'var(--blue)'},
+    {label:'Top 50%',key:'top_50_pct_revenue_contrib',color:'var(--teal)'}
+  ];
+  segments.forEach(s => {
+    const val = pa[s.key] || 0;
+    html += `<div class="variance-bar"><span class="variance-label">${s.label}</span><div class="variance-track"><div class="variance-fill" style="width:${val}%;background:${s.color}"></div></div><span class="variance-pct">${fmt(val,1)}%</span></div>`;
+  });
+  html += `</div></div>`;
+  html += `<div class="panel"><div class="panel-title">Coefficient de Gini</div>
+    <div class="elasticity-gauge">
+      <div class="gauge-value">${fmt(pa.gini_coefficient||0,3)}</div>
+      <div class="gauge-label">${(pa.gini_coefficient||0) < 0.3 ? 'Distribution équilibrée' : (pa.gini_coefficient||0) < 0.5 ? 'Concentration modérée' : 'Forte concentration'}</div>
+      <div class="gauge-interp">${(pa.gini_coefficient||0) < 0.3
+        ? 'Vos revenus sont bien répartis — résilience élevée face aux fluctuations.'
+        : (pa.gini_coefficient||0) < 0.5
+        ? 'Concentration modérée — quelques jours génèrent une part disproportionnée des revenus.'
+        : 'Forte dépendance aux jours de pointe — risque si la demande faiblit.'}</div>
+    </div>
+  </div>`;
+  html += '</div>';
+  return html;
+}
+
+function renderMarginalRevenue(mr) {
+  // mr can be array (backend returns list) or {bands:[...]}
+  const bands = Array.isArray(mr) ? mr : (mr.bands || []);
+  let html = '<div class="panel reveal"><div class="panel-title">Revenu marginal par chambre additionnelle</div>';
+  html += '<div class="panel-desc">Combien rapporte chaque chambre supplémentaire vendue selon le taux d\'occupation</div>';
+  html += '<div style="padding:16px 0">';
+  const maxRev = Math.max(...bands.map(b=>b.marginal_revenue_per_room||b.marginal_revenue||0), 1);
+  bands.forEach(b => {
+    const val = b.marginal_revenue_per_room || b.marginal_revenue || 0;
+    const pctW = (val/maxRev*100).toFixed(0);
+    const label = b.occupancy_band || b.band || '';
+    const color = val > 300 ? 'var(--emerald)' : val > 200 ? 'var(--blue)' : 'var(--amber)';
+    html += `<div class="variance-bar"><span class="variance-label">${label}</span><div class="variance-track"><div class="variance-fill" style="width:${pctW}%;background:${color}"></div></div><span class="variance-pct">$${fmt(val,0)}</span></div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+// ═══════════════════════════════════════
+// AUTOMATION STATS
+// ═══════════════════════════════════════
+async function loadAutomationStats() {
+  try {
+    const r = await fetch('/api/manager/automation-stats');
+    const d = await r.json();
+    const el = document.getElementById('automation-data');
+    if(!el) return;
+    if(!d.has_data) { el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)">Aucune donnée d\'automatisation</div>'; return; }
+    el.innerHTML = renderAutomationDashboard(d);
+    feather.replace();
+  } catch(e) {
+    console.error('Automation stats error:', e);
+    const el = document.getElementById('automation-data');
+    if(el) el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--rose)">Erreur de chargement</div>';
+  }
+}
+
+function renderAutomationDashboard(d) {
+  const a = d.automation;
+  const circ = 2 * Math.PI * 65;
+  const offset = circ - (a.automation_pct / 100) * circ;
+  const gaugeColor = a.automation_pct >= 60 ? 'var(--emerald)' : a.automation_pct >= 40 ? 'var(--amber)' : 'var(--rose)';
+
+  let html = '<div class="grid grid-2" style="margin-bottom:14px">';
+
+  // Left: gauge + task list
+  html += '<div>';
+  html += `<div class="auto-gauge">
+    <svg viewBox="0 0 140 140" width="160" height="160">
+      <circle class="auto-gauge-bg" cx="70" cy="70" r="65"/>
+      <circle class="auto-gauge-fill" cx="70" cy="70" r="65"
+        style="stroke:${gaugeColor};stroke-dasharray:${circ};stroke-dashoffset:${offset}"/>
+    </svg>
+    <div class="auto-gauge-text">
+      <div class="auto-gauge-pct">${fmt(a.automation_pct,0)}%</div>
+      <div class="auto-gauge-label">${a.automated_count}/${a.total_tasks} tâches</div>
+    </div>
+  </div>`;
+
+  // Task checklist
+  const taskLabels = {
+    checklist_digital:'Checklist numérique', rj_navigation:'Navigation RJ', kpi_extraction:'Extraction KPIs',
+    quasimodo_reconciliation:'Réconciliation cartes', quasimodo_file_gen:'Génération Quasimodo',
+    ar_balance_check:'Vérification AR', autofill_controle:'Contrôle auto', autofill_cashout:'Cashout GEAC',
+    autofill_recap:'Recap auto', dueback_sync:'Sync DueBack→SetD', macro_envoie_jour:'Macro Jour',
+    macro_calcul_carte:'Macro Cartes', bi_dashboard:'Dashboard BI', insights_engine:'Moteur Insights',
+    narrative_story:'Storytelling', staffing_optimization:'Optimisation personnel', balance_checker:'Correcteur balance',
+    sd_import:'Import dépôts SD', pourboire_import:'Import pourboires', hp_import:'Import HP F&B',
+    gl_import:'Import écritures GL', recon_import:'Import réconciliations', labor_import:'Import main-d\'œuvre'
+  };
+  html += '<div class="auto-task-list" style="margin-top:12px">';
+  Object.entries(a.tasks).forEach(([k,v]) => {
+    const color = v ? 'var(--emerald)' : 'var(--border)';
+    const icon = v ? '✓' : '○';
+    html += `<div class="auto-task"><div class="auto-task-dot" style="background:${color}"></div><span class="auto-task-name">${taskLabels[k]||k}</span></div>`;
+  });
+  html += '</div></div>';
+
+  // Right: data sources grid
+  html += '<div>';
+  html += `<div style="margin-bottom:12px;font-size:13px;font-weight:600;color:var(--text-secondary)">
+    <i data-feather="database" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"></i>
+    ${fmt(d.total_records)} enregistrements au total</div>`;
+  html += '<div class="auto-source-grid">';
+  const sources = [
+    {key:'daily_metrics',label:'Métriques Jour',icon:'trending-up'},
+    {key:'reconciliations',label:'Réconciliations',icon:'check-circle'},
+    {key:'journal_entries',label:'Écritures GL',icon:'book'},
+    {key:'deposit_variances',label:'Dépôts SD',icon:'dollar-sign'},
+    {key:'tip_distributions',label:'Pourboires',icon:'coffee'},
+    {key:'hp_sales',label:'Ventes HP F&B',icon:'bar-chart-2'},
+    {key:'labor_records',label:'Main-d\'œuvre',icon:'users'},
+    {key:'expenses',label:'Dépenses',icon:'credit-card'},
+    {key:'due_backs',label:'DueBacks',icon:'repeat'}
+  ];
+  sources.forEach(s => {
+    const c = d.data_counts[s.key] || 0;
+    html += `<div class="auto-source">
+      <div class="auto-source-count">${c >= 1000 ? fmt(c/1000,1)+'K' : fmt(c)}</div>
+      <div class="auto-source-name">${s.label}</div>
+    </div>`;
+  });
+  html += '</div>';
+
+  // Reconciliation health bar
+  const rh = d.reconciliation_health;
+  if(rh && rh.last_30_days > 0) {
+    const hColor = rh.health_pct >= 90 ? 'var(--emerald)' : rh.health_pct >= 70 ? 'var(--amber)' : 'var(--rose)';
+    html += `<div class="auto-health-bar" style="margin-top:14px">
+      <span class="auto-health-label">Santé réconciliation</span>
+      <div class="auto-health-track"><div class="auto-health-fill" style="width:${rh.health_pct}%;background:${hColor}"></div></div>
+      <span class="auto-health-val" style="color:${hColor}">${fmt(rh.health_pct,1)}%</span>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);text-align:right">${rh.balanced_days}/${rh.last_30_days} jours balancés (30 derniers jours)</div>`;
+  }
+
+  // Deposit variance summary
+  const dv = d.deposit_variances;
+  if(dv && dv.total_with_variance > 0) {
+    html += `<div class="auto-health-bar" style="margin-top:10px">
+      <span class="auto-health-label">Variances dépôts</span>
+      <div style="flex:1;font-size:12px;color:var(--text-secondary)">${fmt(dv.total_with_variance)} avec écart · Moy: $${fmt(dv.avg_variance,2)}</div>
+      <span class="auto-health-val" style="color:var(--amber)">$${fmt(dv.total_variance_amount,0)}</span>
+    </div>`;
+  }
+  html += '</div>';
+  html += '</div>';
+
+  // Row 2: Top tip earners + HP trend + GL top accounts
+  if(d.top_tip_earners?.length || d.hp_monthly?.length || d.gl_top_accounts?.length) {
+    html += '<div class="grid grid-2" style="margin-top:14px">';
+
+    // Top tip earners
+    if(d.top_tip_earners?.length) {
+      html += '<div class="panel" style="padding:16px"><div class="panel-title" style="margin-bottom:10px">Top Ventes (Pourboires)</div>';
+      const maxTip = Math.max(...d.top_tip_earners.map(t=>t.total_sales), 1);
+      d.top_tip_earners.slice(0,8).forEach((t,i) => {
+        const pctW = (t.total_sales/maxTip*100).toFixed(0);
+        html += `<div class="auto-rank-row">
+          <span class="auto-rank-num">${i+1}</span>
+          <span class="auto-rank-name">${t.name}</span>
+          <div style="flex:1;max-width:120px"><div class="auto-health-track"><div class="auto-health-fill" style="width:${pctW}%;background:var(--blue)"></div></div></div>
+          <span class="auto-rank-val">$${fmt(t.total_sales,0)}</span>
+        </div>`;
+      });
+      html += '</div>';
+    }
+
+    // GL top accounts + HP mini trend
+    html += '<div>';
+    if(d.hp_monthly?.length) {
+      html += '<div class="panel" style="padding:16px;margin-bottom:10px"><div class="panel-title" style="margin-bottom:8px">Tendance F&B Mensuelle (HP)</div>';
+      const maxHP = Math.max(...d.hp_monthly.map(h=>h.total), 1);
+      html += '<div class="auto-hp-mini">';
+      d.hp_monthly.forEach(h => {
+        const ht = (h.total/maxHP*100).toFixed(0);
+        html += `<div class="auto-hp-bar" style="height:${ht}%" title="${h.year}-${String(h.month).padStart(2,'0')}: $${fmt(h.total,0)}"></div>`;
+      });
+      html += '</div>';
+      html += `<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:4px">
+        <span>${d.hp_monthly[0].year}-${String(d.hp_monthly[0].month).padStart(2,'0')}</span>
+        <span>${d.hp_monthly[d.hp_monthly.length-1].year}-${String(d.hp_monthly[d.hp_monthly.length-1].month).padStart(2,'0')}</span>
+      </div>`;
+      html += '</div>';
+    }
+
+    if(d.gl_top_accounts?.length) {
+      html += '<div class="panel" style="padding:16px"><div class="panel-title" style="margin-bottom:8px">Top Comptes GL</div>';
+      d.gl_top_accounts.slice(0,6).forEach((g,i) => {
+        html += `<div class="auto-rank-row">
+          <span class="auto-rank-num" style="font-size:10px;color:var(--violet)">${g.code}</span>
+          <span class="auto-rank-name">${g.desc||'—'}</span>
+          <span class="auto-rank-val">$${fmt(g.total,0)}</span>
+        </div>`;
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+
+    html += '</div>';
+  }
+
+  return html;
+}
+
+// INIT
+loadData();
+
+// Re-init feather icons after dynamic content
+const observer = new MutationObserver(() => { feather.replace(); });
+observer.observe(document.getElementById('dashboard'), { childList: true, subtree: true });
+</script>
+{% endblock %}

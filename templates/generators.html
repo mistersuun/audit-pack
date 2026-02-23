@@ -1,362 +1,732 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateurs de Documents - Night Audit</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
+{% block title %}Générateurs de Documents{% endblock %}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+{% block head %}
+<style>
+.gen-page {
+    padding: 1.5rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+/* ── Grid for simple date-only generators ── */
+.generators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1.5rem;
+}
 
-        h1 {
-            color: white;
-            text-align: center;
-            margin-bottom: 30px;
-            font-size: 2rem;
-        }
+.generator-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: box-shadow var(--transition), transform var(--transition);
+    display: flex;
+    flex-direction: column;
+}
+.generator-card .gen-form {
+    margin-top: auto;
+}
+.generator-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+.generator-card .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+}
+.generator-card .card-icon svg { width: 20px; height: 20px; }
+.generator-card h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+.generator-card p  { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.25rem; line-height: 1.5; }
 
-        .nav {
-            text-align: center;
-            margin-bottom: 30px;
-        }
+/* ── Full-width table generators ── */
+.gen-section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.25rem;
+}
+.gen-section-header {
+    display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+}
+.gen-section-header .card-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.gen-section-header .card-icon svg { width: 20px; height: 20px; }
+.gen-section-header h3 { font-size: 1rem; font-weight: 600; color: var(--text); margin: 0; }
+.gen-section-header p  { color: var(--text-secondary); font-size: 0.82rem; margin: 0.15rem 0 0; }
 
-        .nav a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 5px;
-            margin: 0 10px;
-            display: inline-block;
-            transition: all 0.3s;
-        }
+.gen-top-row {
+    display: flex; align-items: flex-end; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;
+}
+.gen-top-row .form-group { margin: 0; }
+.gen-top-row label {
+    display: block; margin-bottom: 0.3rem;
+    color: var(--text); font-weight: 500; font-size: 0.82rem;
+}
+.gen-top-row input[type="date"] {
+    padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.88rem; font-family: inherit; color: var(--text); background: var(--bg);
+}
+.gen-top-row input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(233,30,99,0.1); }
 
-        .nav a:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+/* ── Editable data table ── */
+.gen-table-wrap { overflow-x: auto; margin-bottom: 1rem; }
 
-        .generators-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
+.gen-table {
+    width: 100%; border-collapse: collapse; font-size: 0.85rem;
+}
+.gen-table th {
+    background: var(--bg); color: var(--text-secondary); font-weight: 600;
+    padding: 0.5rem 0.6rem; text-align: left; white-space: nowrap;
+    border-bottom: 2px solid var(--border); font-size: 0.78rem; text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.gen-table td { padding: 0.3rem 0.35rem; border-bottom: 1px solid var(--border-light); }
+.gen-table td input,
+.gen-table td select {
+    width: 100%; padding: 0.45rem 0.5rem; border: 1px solid var(--border-light);
+    border-radius: 6px; font-size: 0.85rem; font-family: inherit;
+    color: var(--text); background: var(--bg);
+}
+.gen-table td input:focus,
+.gen-table td select:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(233,30,99,0.08);
+}
+.gen-table td input::placeholder { color: var(--text-muted); }
+.gen-table .col-action { width: 40px; text-align: center; }
 
-        .generator-card {
-            background: white;
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
+.gen-table .btn-remove-row {
+    background: none; border: none; cursor: pointer; color: var(--text-muted);
+    padding: 0.3rem; border-radius: 4px; transition: color 0.15s, background 0.15s;
+}
+.gen-table .btn-remove-row:hover { color: #c62828; background: #fce4ec; }
+.gen-table .btn-remove-row svg { width: 15px; height: 15px; }
 
-        .generator-card h2 {
-            color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
+/* ── Buttons ── */
+.gen-form .form-group { margin-bottom: 1rem; }
+.gen-form .form-group label { display: block; margin-bottom: 0.35rem; color: var(--text); font-weight: 500; font-size: 0.85rem; }
+.gen-form .form-group input[type="date"],
+.gen-form .form-group input[type="text"] {
+    width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 0.9rem; font-family: inherit; color: var(--text); background: var(--bg);
+}
+.gen-form .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(233,30,99,0.1); }
 
-        .generator-card p {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-        }
+.gen-btn {
+    padding: 0.6rem 1.1rem; background: var(--primary); color: #fff; border: none;
+    border-radius: 8px; font-size: 0.88rem; font-weight: 600; font-family: inherit;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem;
+    transition: background var(--transition), box-shadow var(--transition);
+}
+.gen-btn:hover { background: var(--primary-dark); box-shadow: var(--shadow-pink); }
+.gen-btn:disabled { background: var(--disabled); cursor: not-allowed; box-shadow: none; }
+.gen-btn svg { width: 16px; height: 16px; }
 
-        .form-group {
-            margin-bottom: 15px;
-        }
+.gen-btn-full { width: 100%; justify-content: center; }
 
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            color: #333;
-            font-weight: 500;
-        }
+.gen-btn-add {
+    background: var(--success); padding: 0.45rem 0.9rem; font-size: 0.82rem;
+}
+.gen-btn-add:hover { background: #43a047; box-shadow: none; }
 
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 2px solid #e0e0e0;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
+.gen-actions { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
+.gen-message {
+    padding: 0.55rem 0.75rem; border-radius: 8px; margin-top: 0.75rem;
+    display: none; font-size: 0.82rem; font-weight: 500;
+}
+.gen-message.success { background: var(--success-bg); color: #2e7d32; border: 1px solid rgba(76,175,80,0.2); }
+.gen-message.error   { background: rgba(244,67,54,0.08); color: #c62828; border: 1px solid rgba(244,67,54,0.2); }
 
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
+.gen-btn-print {
+    background: #455a64; padding: 0.6rem 1.1rem;
+}
+.gen-btn-print:hover { background: #37474f; box-shadow: 0 2px 8px rgba(69,90,100,0.3); }
 
-        button:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
+/* ── Print styles ── */
+@media print {
+    body * { visibility: hidden; }
+    .gen-print-target, .gen-print-target * { visibility: visible; }
+    .gen-print-target {
+        position: absolute; left: 0; top: 0; width: 100%;
+    }
+    .gen-print-target .btn-remove-row,
+    .gen-print-target .col-action { display: none !important; }
+    .gen-print-target .gen-table { font-size: 11pt; }
+    .gen-print-target .gen-table th { background: #f0f0f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .gen-print-target .gen-table td input,
+    .gen-print-target .gen-table td select {
+        border: none !important; padding: 2px !important; font-size: 11pt;
+        background: transparent !important; box-shadow: none !important;
+    }
+    .gen-print-target .print-header {
+        text-align: center; margin-bottom: 1rem; padding-bottom: 0.5rem;
+        border-bottom: 2px solid #333;
+    }
+    .gen-print-target .print-header h2 { margin: 0 0 0.25rem; font-size: 16pt; }
+    .gen-print-target .print-header p  { margin: 0; font-size: 12pt; color: #555; }
+}
+</style>
+{% endblock %}
 
-        button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .event-list {
-            margin-bottom: 15px;
-        }
-
-        .event-item {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
-        }
-
-        .event-item button {
-            width: auto;
-            padding: 5px 10px;
-            background: #e74c3c;
-            margin-top: 5px;
-        }
-
-        .add-event-btn {
-            background: #27ae60;
-            margin-bottom: 15px;
-        }
-
-        .message {
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>📄 Générateurs de Documents</h1>
-
-        <div class="nav">
-            <a href="/">← Retour à la Checklist</a>
-        </div>
-
-        <div class="generators-grid">
-            <!-- Séparateur Date -->
-            <div class="generator-card">
-                <h2>📅 Séparateur Daté</h2>
-                <p>Génère le séparateur daté pour organiser les documents de la nuit.</p>
-                <form id="form-separateur">
-                    <div class="form-group">
-                        <label>Date:</label>
-                        <input type="date" name="date" required>
-                    </div>
-                    <button type="submit">Générer</button>
-                    <div class="message" id="msg-separateur"></div>
-                </form>
-            </div>
-
-            <!-- Checklist Tournée -->
-            <div class="generator-card">
-                <h2>🏢 Checklist Tournée Étages</h2>
-                <p>Génère la feuille de tournée de sécurité des étages.</p>
-                <form id="form-tournee">
-                    <div class="form-group">
-                        <label>Date:</label>
-                        <input type="date" name="date" required>
-                    </div>
-                    <button type="submit">Générer</button>
-                    <div class="message" id="msg-tournee"></div>
-                </form>
-            </div>
-
-            <!-- Entretien Hiver -->
-            <div class="generator-card">
-                <h2>❄️ Feuille Entretien Hiver</h2>
-                <p>Génère la feuille d'entretien avec la météo et le déneigement.</p>
-                <form id="form-entretien">
-                    <div class="form-group">
-                        <label>Date:</label>
-                        <input type="date" name="date" required>
-                    </div>
-                    <button type="submit">Générer</button>
-                    <div class="message" id="msg-entretien"></div>
-                </form>
-            </div>
-
-            <!-- Clés Banquets -->
-            <div class="generator-card">
-                <h2>🔑 Clés Banquets</h2>
-                <p>Génère la feuille de contrôle des clés pour les événements banquets.</p>
-                <form id="form-banquets">
-                    <div class="form-group">
-                        <label>Date:</label>
-                        <input type="date" name="date" required>
-                    </div>
-
-                    <div class="event-list" id="event-list"></div>
-
-                    <button type="button" class="add-event-btn" onclick="addEvent()">+ Ajouter un événement</button>
-                    <button type="submit">Générer</button>
-                    <div class="message" id="msg-banquets"></div>
-                </form>
-            </div>
+{% block content %}
+<div class="gen-page">
+    <div class="page-header">
+        <div class="page-title">
+            <h1>Générateurs de Documents</h1>
+            <p>Créez rapidement les documents nécessaires pour votre shift.</p>
         </div>
     </div>
 
-    <script>
-        // Set today's date as default
-        document.querySelectorAll('input[type="date"]').forEach(input => {
-            input.valueAsDate = new Date();
+    <!-- ============================================================ -->
+    <!-- SIMPLE DATE-ONLY GENERATORS (grid)                            -->
+    <!-- ============================================================ -->
+    <div class="generators-grid">
+        <!-- Séparateur Date -->
+        <div class="generator-card">
+            <div class="card-icon" style="background: rgba(102,126,234,0.1); color: #667eea;">
+                <i data-feather="calendar"></i>
+            </div>
+            <h3>Séparateur Daté</h3>
+            <p>Séparateur daté pour organiser les documents de la nuit.</p>
+            <form id="form-separateur" class="gen-form">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="gen-actions">
+                    <button type="submit" class="gen-btn"><i data-feather="download"></i> Générer</button>
+                    <button type="button" class="gen-btn gen-btn-print" onclick="generateAndPrint('form-separateur', '/api/generators/separateur-date')"><i data-feather="printer"></i> Imprimer</button>
+                </div>
+                <div class="gen-message" id="msg-separateur"></div>
+            </form>
+        </div>
+
+        <!-- Checklist Tournée -->
+        <div class="generator-card">
+            <div class="card-icon" style="background: rgba(233,30,99,0.1); color: var(--primary);">
+                <i data-feather="clipboard"></i>
+            </div>
+            <h3>Checklist Tournée Étages</h3>
+            <p>Feuille de tournée de sécurité des étages.</p>
+            <form id="form-tournee" class="gen-form">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="gen-actions">
+                    <button type="submit" class="gen-btn"><i data-feather="download"></i> Générer</button>
+                    <button type="button" class="gen-btn gen-btn-print" onclick="generateAndPrint('form-tournee', '/api/generators/checklist-tournee')"><i data-feather="printer"></i> Imprimer</button>
+                </div>
+                <div class="gen-message" id="msg-tournee"></div>
+            </form>
+        </div>
+
+        <!-- Entretien Hiver -->
+        <div class="generator-card">
+            <div class="card-icon" style="background: rgba(3,169,244,0.1); color: #0288d1;">
+                <i data-feather="cloud-snow"></i>
+            </div>
+            <h3>Feuille Entretien Hiver</h3>
+            <p>Feuille d'entretien avec capture météo pour la date choisie.</p>
+            <form id="form-entretien" class="gen-form">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <div class="gen-actions">
+                    <button type="submit" class="gen-btn"><i data-feather="download"></i> Générer</button>
+                    <button type="button" class="gen-btn gen-btn-print" onclick="generateAndPrint('form-entretien', '/api/generators/entretien-hiver')"><i data-feather="printer"></i> Imprimer</button>
+                </div>
+                <div class="gen-message" id="msg-entretien"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CLÉS BANQUETS — table with salon dropdown                     -->
+    <!-- ============================================================ -->
+    <div class="gen-section" id="section-banquets">
+        <div class="gen-section-header">
+            <div class="card-icon" style="background: rgba(255,152,0,0.1); color: #f57c00;">
+                <i data-feather="key"></i>
+            </div>
+            <div>
+                <h3>Clés Banquets</h3>
+                <p>Feuille de contrôle des clés pour les événements banquets.</p>
+            </div>
+        </div>
+
+        <form id="form-banquets">
+            <div class="gen-top-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <button type="button" class="gen-btn gen-btn-add" onclick="addBanquetRow()">
+                    <i data-feather="plus"></i> Ajouter
+                </button>
+            </div>
+
+            <div class="gen-table-wrap">
+                <table class="gen-table" id="tbl-banquets">
+                    <thead>
+                        <tr>
+                            <th>Salon</th>
+                            <th>Compagnie</th>
+                            <th>Heure</th>
+                            <th>Responsable</th>
+                            <th class="col-action"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="gen-actions">
+                <button type="submit" class="gen-btn"><i data-feather="download"></i> Générer</button>
+                <button type="button" class="gen-btn gen-btn-print" onclick="printSection('banquets', 'Clés Banquets')"><i data-feather="printer"></i> Imprimer</button>
+            </div>
+            <div class="gen-message" id="msg-banquets"></div>
+        </form>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CARGO JET — crew room record                                  -->
+    <!-- ============================================================ -->
+    <div class="gen-section" id="section-cargojet">
+        <div class="gen-section-header">
+            <div class="card-icon" style="background: rgba(76,175,80,0.1); color: #388e3c;">
+                <i data-feather="truck"></i>
+            </div>
+            <div>
+                <h3>Cargo Jet — Room Record</h3>
+                <p>Feuille d'enregistrement des chambres pour l'équipage Cargo Jet.</p>
+            </div>
+        </div>
+
+        <form id="form-cargojet">
+            <div class="gen-top-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <button type="button" class="gen-btn gen-btn-add" onclick="addCrewRow('cargojet')">
+                    <i data-feather="plus"></i> Ajouter pilote
+                </button>
+            </div>
+
+            <div class="gen-table-wrap">
+                <table class="gen-table" id="tbl-cargojet">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Chambre</th>
+                            <th class="col-action"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="gen-actions">
+                <button type="submit" class="gen-btn"><i data-feather="download"></i> Générer</button>
+                <button type="button" class="gen-btn gen-btn-print" onclick="printSection('cargojet', 'Cargo Jet — Room Record')"><i data-feather="printer"></i> Imprimer</button>
+            </div>
+            <div class="gen-message" id="msg-cargojet"></div>
+        </form>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- FEDEX — crew room record                                      -->
+    <!-- ============================================================ -->
+    <div class="gen-section" id="section-fedex">
+        <div class="gen-section-header">
+            <div class="card-icon" style="background: rgba(103,58,183,0.1); color: #5e35b1;">
+                <i data-feather="send"></i>
+            </div>
+            <div>
+                <h3>FedEx — Room Record</h3>
+                <p>Feuille d'enregistrement des chambres pour l'équipage FedEx.</p>
+            </div>
+        </div>
+
+        <form id="form-fedex">
+            <div class="gen-top-row">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" required>
+                </div>
+                <button type="button" class="gen-btn gen-btn-add" onclick="addCrewRow('fedex')">
+                    <i data-feather="plus"></i> Ajouter pilote
+                </button>
+            </div>
+
+            <div class="gen-table-wrap">
+                <table class="gen-table" id="tbl-fedex">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>No. Employé</th>
+                            <th>Vol</th>
+                            <th>Chambre</th>
+                            <th class="col-action"></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="gen-actions">
+                <button type="submit" class="gen-btn"><i data-feather="download"></i> Générer</button>
+                <button type="button" class="gen-btn gen-btn-print" onclick="printSection('fedex', 'FedEx — Room Record')"><i data-feather="printer"></i> Imprimer</button>
+            </div>
+            <div class="gen-message" id="msg-fedex"></div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Default date = today ──
+document.querySelectorAll('input[type="date"]').forEach(el => {
+    el.valueAsDate = new Date();
+});
+
+// ── Salon list (loaded from server, fallback hardcoded) ──
+let SALONS = ['Auteuil','Vimont','Duvernay','Chomedey','Ste-Dorothée','Lavaloise',
+              'Laval 1','Laval 2','Laval 3','Laval 4','Laval 5',
+              'Giotto 1','Giotto 2','Giotto 3','Giotto 4','Giotto 5',
+              'Centre des congrès','Foyer Laval'];
+
+fetch('/api/generators/salons')
+    .then(r => r.json())
+    .then(list => { if (Array.isArray(list)) SALONS = list; })
+    .catch(() => {});
+
+// ── BANQUETS table ──
+function salonOptions() {
+    return SALONS.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+function addBanquetRow() {
+    const tbody = document.querySelector('#tbl-banquets tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <select name="salon"><option value="">-- Salon --</option>${salonOptions()}</select>
+        </td>
+        <td><input type="text" name="compagnie" placeholder="Compagnie"></td>
+        <td><input type="text" name="heure" placeholder="08:00-13:00"></td>
+        <td><input type="text" name="responsable" placeholder="Responsable"></td>
+        <td class="col-action"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()"><i data-feather="x"></i></button></td>
+    `;
+    tbody.appendChild(tr);
+    feather.replace();
+}
+
+// Start with one empty row
+addBanquetRow();
+
+// ── CREW tables (Cargo Jet + FedEx) ──
+function addCrewRow(type) {
+    const tbody = document.querySelector(`#tbl-${type} tbody`);
+    const tr = document.createElement('tr');
+
+    if (type === 'cargojet') {
+        tr.innerHTML = `
+            <td><input type="text" name="name" placeholder="Spencer, C."></td>
+            <td><input type="text" name="room" placeholder="540" style="width:80px"></td>
+            <td class="col-action"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()"><i data-feather="x"></i></button></td>
+        `;
+    } else {
+        tr.innerHTML = `
+            <td><input type="text" name="name" placeholder="Pilot Name"></td>
+            <td><input type="text" name="employee_no" placeholder="" style="width:90px"></td>
+            <td><input type="text" name="flight" placeholder="" style="width:80px"></td>
+            <td><input type="text" name="room" placeholder="433" style="width:80px"></td>
+            <td class="col-action"><button type="button" class="btn-remove-row" onclick="this.closest('tr').remove()"><i data-feather="x"></i></button></td>
+        `;
+    }
+    tbody.appendChild(tr);
+    feather.replace();
+}
+
+// Start with 2 empty rows each
+addCrewRow('cargojet'); addCrewRow('cargojet');
+addCrewRow('fedex'); addCrewRow('fedex');
+
+// ── Collect table data ──
+function collectTableRows(tableId, fields) {
+    const rows = [];
+    document.querySelectorAll(`#${tableId} tbody tr`).forEach(tr => {
+        const obj = {};
+        let hasValue = false;
+        fields.forEach(f => {
+            const el = tr.querySelector(`[name="${f}"]`);
+            const v = el ? el.value.trim() : '';
+            obj[f] = v;
+            if (v) hasValue = true;
         });
+        if (hasValue) rows.push(obj);
+    });
+    return rows;
+}
 
-        let eventCounter = 0;
-        const events = [];
+// ── Generic form submission ──
+async function submitGenerator(formId, endpoint, msgId, buildPayload) {
+    const form = document.getElementById(formId);
+    const msg  = document.getElementById(msgId);
+    const btn  = form.querySelector('button[type="submit"]');
 
-        function addEvent() {
-            const eventId = eventCounter++;
-            const eventList = document.getElementById('event-list');
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        btn.disabled = true;
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = '<i data-feather="loader"></i> Génération...';
+        feather.replace();
 
-            const eventItem = document.createElement('div');
-            eventItem.className = 'event-item';
-            eventItem.id = `event-${eventId}`;
-            eventItem.innerHTML = `
-                <div class="form-group">
-                    <label>Salon:</label>
-                    <input type="text" name="salon-${eventId}" placeholder="ex: Aut-Vimont" required>
-                </div>
-                <div class="form-group">
-                    <label>Compagnie:</label>
-                    <input type="text" name="compagnie-${eventId}" placeholder="ex: SAPUTO" required>
-                </div>
-                <div class="form-group">
-                    <label>Heure:</label>
-                    <input type="text" name="heure-${eventId}" placeholder="ex: 08:00-13:00" required>
-                </div>
-                <div class="form-group">
-                    <label>Responsable:</label>
-                    <input type="text" name="responsable-${eventId}" placeholder="ex: JOANNA KOLANKAWSKA" required>
-                </div>
-                <button type="button" onclick="removeEvent(${eventId})">Supprimer</button>
-            `;
+        const payload = buildPayload(form);
 
-            eventList.appendChild(eventItem);
-            events.push(eventId);
-        }
-
-        function removeEvent(eventId) {
-            document.getElementById(`event-${eventId}`).remove();
-            const index = events.indexOf(eventId);
-            if (index > -1) events.splice(index, 1);
-        }
-
-        // Initialize with one event
-        addEvent();
-
-        // Form handlers
-        async function handleFormSubmit(formId, endpoint, msgId) {
-            const form = document.getElementById(formId);
-            const msg = document.getElementById(msgId);
-
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const button = form.querySelector('button[type="submit"]');
-                button.disabled = true;
-                button.textContent = 'Génération...';
-
-                let data = { date: form.querySelector('input[name="date"]').value };
-
-                // Special handling for banquets form
-                if (formId === 'form-banquets') {
-                    data.events = [];
-                    events.forEach(eventId => {
-                        const salonInput = form.querySelector(`input[name="salon-${eventId}"]`);
-                        if (salonInput) {
-                            data.events.push({
-                                salon: salonInput.value,
-                                compagnie: form.querySelector(`input[name="compagnie-${eventId}"]`).value,
-                                heure: form.querySelector(`input[name="heure-${eventId}"]`).value,
-                                responsable: form.querySelector(`input[name="responsable-${eventId}"]`).value
-                            });
-                        }
-                    });
-                }
-
-                try {
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-
-                    if (response.ok) {
-                        const blob = await response.blob();
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = response.headers.get('Content-Disposition').split('filename=')[1].replace(/"/g, '');
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-
-                        msg.className = 'message success';
-                        msg.textContent = '✓ Document généré avec succès!';
-                        msg.style.display = 'block';
-                    } else {
-                        const error = await response.json();
-                        throw new Error(error.error || 'Erreur lors de la génération');
-                    }
-                } catch (error) {
-                    msg.className = 'message error';
-                    msg.textContent = '✗ ' + error.message;
-                    msg.style.display = 'block';
-                } finally {
-                    button.disabled = false;
-                    button.textContent = 'Générer';
-                    setTimeout(() => { msg.style.display = 'none'; }, 5000);
-                }
+        try {
+            const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
             });
-        }
 
-        // Initialize all forms
-        handleFormSubmit('form-separateur', '/api/generators/separateur-date', 'msg-separateur');
-        handleFormSubmit('form-tournee', '/api/generators/checklist-tournee', 'msg-tournee');
-        handleFormSubmit('form-entretien', '/api/generators/entretien-hiver', 'msg-entretien');
-        handleFormSubmit('form-banquets', '/api/generators/cles-banquets', 'msg-banquets');
-    </script>
-</body>
-</html>
+            if (resp.ok) {
+                const blob = await resp.blob();
+                const cd = resp.headers.get('Content-Disposition') || '';
+                let fname = 'document';
+                const m = cd.match(/filename=([^\s;]+)/);
+                if (m) fname = m[1].replace(/"/g, '');
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = fname;
+                document.body.appendChild(a); a.click(); a.remove();
+                URL.revokeObjectURL(url);
+
+                msg.className = 'gen-message success';
+                msg.textContent = 'Document généré avec succès!';
+                msg.style.display = 'block';
+            } else {
+                const err = await resp.json();
+                throw new Error(err.error || 'Erreur lors de la génération');
+            }
+        } catch (error) {
+            msg.className = 'gen-message error';
+            msg.textContent = error.message;
+            msg.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHTML;
+            feather.replace();
+            setTimeout(() => { msg.style.display = 'none'; }, 5000);
+        }
+    });
+}
+
+// ── Wire up all forms ──
+// 1. Simple date-only generators
+submitGenerator('form-separateur', '/api/generators/separateur-date', 'msg-separateur',
+    f => ({ date: f.querySelector('[name="date"]').value }));
+
+submitGenerator('form-tournee', '/api/generators/checklist-tournee', 'msg-tournee',
+    f => ({ date: f.querySelector('[name="date"]').value }));
+
+submitGenerator('form-entretien', '/api/generators/entretien-hiver', 'msg-entretien',
+    f => ({ date: f.querySelector('[name="date"]').value }));
+
+// 2. Clés Banquets
+submitGenerator('form-banquets', '/api/generators/cles-banquets', 'msg-banquets',
+    f => ({
+        date: f.querySelector('[name="date"]').value,
+        events: collectTableRows('tbl-banquets', ['salon', 'compagnie', 'heure', 'responsable'])
+    }));
+
+// 3. Cargo Jet
+submitGenerator('form-cargojet', '/api/generators/cargo-jet', 'msg-cargojet',
+    f => ({
+        date: f.querySelector('[name="date"]').value,
+        crew: collectTableRows('tbl-cargojet', ['name', 'room'])
+    }));
+
+// 4. FedEx
+submitGenerator('form-fedex', '/api/generators/fedex', 'msg-fedex',
+    f => ({
+        date: f.querySelector('[name="date"]').value,
+        crew: collectTableRows('tbl-fedex', ['name', 'employee_no', 'flight', 'room'])
+    }));
+
+// ── Copy row support: Ctrl+C on a row copies it, Ctrl+V pastes ──
+let copiedRowData = null;
+
+document.addEventListener('keydown', (e) => {
+    if (!e.target.closest('.gen-table')) return;
+    const tr = e.target.closest('tr');
+    if (!tr || tr.closest('thead')) return;
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c' && !window.getSelection().toString()) {
+        // Copy row data
+        const inputs = tr.querySelectorAll('input, select');
+        copiedRowData = Array.from(inputs).map(el => ({ name: el.name, value: el.value }));
+        e.preventDefault();
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key === 'v' && copiedRowData) {
+        // Paste into current row
+        const inputs = tr.querySelectorAll('input, select');
+        copiedRowData.forEach((d, i) => {
+            if (inputs[i]) inputs[i].value = d.value;
+        });
+        e.preventDefault();
+    }
+});
+
+// ── Print simple generators (séparateur, checklist, entretien) ──
+// Opens a server-rendered printable HTML page in a new window.
+function generateAndPrint(formId, endpoint) {
+    const form = document.getElementById(formId);
+    const dateVal = form.querySelector('[name="date"]').value;
+    if (!dateVal) { alert('Veuillez sélectionner une date.'); return; }
+
+    // Map endpoint to print type
+    const typeMap = {
+        '/api/generators/separateur-date': 'separateur-date',
+        '/api/generators/checklist-tournee': 'checklist-tournee',
+        '/api/generators/entretien-hiver': 'entretien-hiver'
+    };
+    const printType = typeMap[endpoint];
+    if (!printType) return;
+
+    const url = `/api/generators/print/${printType}?date=${dateVal}`;
+    window.open(url, '_blank', 'width=900,height=700');
+}
+
+// ── Print a section's table ──
+function printSection(sectionKey, title) {
+    const sectionMap = {
+        banquets: 'section-banquets',
+        cargojet: 'section-cargojet',
+        fedex: 'section-fedex'
+    };
+    const section = document.getElementById(sectionMap[sectionKey]);
+    if (!section) return;
+
+    const table = section.querySelector('.gen-table');
+    const dateInput = section.querySelector('input[name="date"]');
+    const dateStr = dateInput ? dateInput.value : '';
+
+    // Format date for display
+    let dateDisplay = dateStr;
+    try {
+        const d = new Date(dateStr + 'T00:00:00');
+        const joursFr = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+        const moisFr = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+        dateDisplay = `${joursFr[d.getDay()]} le ${d.getDate()} ${moisFr[d.getMonth()]} ${d.getFullYear()}`;
+    } catch(e) {}
+
+    // Build a print-friendly HTML table with actual values (not inputs)
+    const rows = table.querySelectorAll('tbody tr');
+    const headers = table.querySelectorAll('thead th:not(.col-action)');
+
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+    <title>${title}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2cm; }
+        .print-header { text-align: center; margin-bottom: 1.5rem; padding-bottom: 0.75rem; border-bottom: 2px solid #333; }
+        .print-header h2 { margin: 0 0 0.3rem; font-size: 18pt; }
+        .print-header p { margin: 0; font-size: 12pt; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { background: #f0f0f0; font-weight: 600; text-align: left; padding: 8px 10px; border: 1px solid #ccc; font-size: 10pt; text-transform: uppercase; }
+        td { padding: 8px 10px; border: 1px solid #ccc; font-size: 11pt; min-height: 1.5em; }
+        tr:nth-child(even) td { background: #fafafa; }
+        @media print { body { margin: 1.5cm; } }
+    </style></head><body>
+    <div class="print-header">
+        <h2>${title}</h2>
+        <p>${dateDisplay}</p>
+    </div>
+    <table><thead><tr>`;
+
+    headers.forEach(th => { html += `<th>${th.textContent}</th>`; });
+
+    // Add Signature column for crew sheets
+    if (sectionKey === 'cargojet' || sectionKey === 'fedex') {
+        html += '<th>Signature</th>';
+    }
+    html += '</tr></thead><tbody>';
+
+    rows.forEach(tr => {
+        const cells = tr.querySelectorAll('td:not(.col-action)');
+        let hasData = false;
+        const cellValues = [];
+        cells.forEach(td => {
+            const input = td.querySelector('input, select');
+            const val = input ? input.value.trim() : td.textContent.trim();
+            cellValues.push(val);
+            if (val) hasData = true;
+        });
+        if (hasData) {
+            html += '<tr>';
+            cellValues.forEach(v => { html += `<td>${v || ''}</td>`; });
+            if (sectionKey === 'cargojet' || sectionKey === 'fedex') {
+                html += '<td style="min-width:120px"></td>';  // Empty signature column
+            }
+            html += '</tr>';
+        }
+    });
+
+    // Add a few extra empty rows for manual additions
+    const colCount = headers.length + (sectionKey === 'cargojet' || sectionKey === 'fedex' ? 1 : 0);
+    for (let i = 0; i < 4; i++) {
+        html += '<tr>';
+        for (let c = 0; c < colCount; c++) {
+            html += '<td style="height:1.8em">&nbsp;</td>';
+        }
+        html += '</tr>';
+    }
+
+    html += '</tbody></table></body></html>';
+
+    const printWin = window.open('', '_blank', 'width=850,height=700');
+    printWin.document.write(html);
+    printWin.document.close();
+    printWin.onload = () => {
+        printWin.print();
+    };
+}
+
+// ── Tab between rows: Enter key moves to next row same column ──
+document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const input = e.target;
+    if (!input.closest('.gen-table')) return;
+    e.preventDefault();
+
+    const td = input.closest('td');
+    const tr = td.closest('tr');
+    const colIdx = Array.from(tr.children).indexOf(td);
+    const nextTr = tr.nextElementSibling;
+
+    if (nextTr) {
+        const nextInput = nextTr.children[colIdx]?.querySelector('input, select');
+        if (nextInput) nextInput.focus();
+    }
+});
+
+
+</script>
+{% endblock %}

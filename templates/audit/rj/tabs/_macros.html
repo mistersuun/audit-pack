@@ -1,0 +1,19 @@
+{# Reusable macro for "No RJ file loaded" placeholder.
+   Usage: {% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+          {{ no_rj_placeholder() }}
+#}
+{% macro no_rj_placeholder() %}
+<div class="rj-no-file-placeholder" style="padding: 3rem 2rem; background: #f8f9fa; border-radius: 12px; border: 2px dashed #dee2e6;">
+  <div style="margin-bottom: 1.5rem;">
+    <i data-feather="upload-cloud" aria-hidden="true"></i>
+  </div>
+  <h3>Aucun fichier RJ chargé</h3>
+  <p style="margin: 0;">Veuillez uploader un fichier RJ (.xls/.xlsx) pour utiliser cet onglet.</p>
+  <div style="margin-top: 1.5rem;">
+    <button class="rj-btn-sm-primary" style="padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;" onclick="document.getElementById('rj-file-input').click()">
+      <i data-feather="upload" aria-hidden="true" style="width:18px;height:18px;"></i>
+      Charger un fichier RJ
+    </button>
+  </div>
+</div>
+{% endmacro %}

@@ -1,0 +1,329 @@
+<!-- RECAP TAB FRAGMENT -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+        <div class="rj-card">
+          <div class="forms">
+            <div class="form-tile">
+              <h4>Recap - Réconciliation Cash</h4>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+            Tableau interactif type Excel. Les signes sont gérés automatiquement. Le RECAP doit balancer à $0.00.
+          </p>
+
+          <!-- Balance Indicators -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+
+            <!-- Balance Finale Recap -->
+            <div id="recap-balance-indicator" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 3px solid #dee2e6; border-radius: 12px; padding: 1.5rem; text-align: center;">
+              <div style="font-size: 0.875rem; font-weight: 600; color: #6c757d; margin-bottom: 0.5rem; letter-spacing: 0.5px;">
+                BALANCE FINALE RECAP
+              </div>
+              <div id="recap-balance-value" style="font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; font-family: 'Courier New', monospace; color: #495057;">
+                $0.00
+              </div>
+              <div id="recap-balance-message" style="font-size: 0.875rem; color: #6c757d; margin-top: 0.5rem;">
+                En attente des données...
+              </div>
+            </div>
+
+            <!-- Balance SD (I10) - Lien externe -->
+            <div id="recap-sd-indicator" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border: 3px solid #dee2e6; border-radius: 12px; padding: 1.5rem; text-align: center;">
+              <div style="font-size: 0.875rem; font-weight: 600; color: #6c757d; margin-bottom: 0.5rem; letter-spacing: 0.5px;">
+                BALANCE SD (I10)
+                <br><span style="font-size: 0.7rem; font-weight: 400; color: #868e96;">Lien externe - SetD</span>
+              </div>
+              <div id="recap-sd-value" style="font-size: 2.5rem; font-weight: 700; margin: 0.5rem 0; font-family: 'Courier New', monospace; color: #495057;">
+                $0.00
+              </div>
+              <div id="recap-sd-message" style="font-size: 0.875rem; color: #6c757d; margin-top: 0.5rem;">
+                En attente des données...
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div class="form-group" style="margin-bottom:1rem;">
+              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                <input type="checkbox" id="recap-has-cheques" onchange="toggleCheques()" style="width:20px; height:20px; cursor:pointer;">
+                <span>Nous avons reçu des chèques</span>
+              </label>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+            <table id="recap-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 900px;">
+              <thead>
+                <tr>
+                  <th class="excel-header excel-row-header"></th>
+                  <th class="excel-header">Description</th>
+                  <th class="excel-header">Lecture<br>(B)</th>
+                  <th class="excel-header">Corr. +(-)<br>(C)</th>
+                  <th class="excel-header">Net<br>(D)</th>
+                  <th class="excel-header" style="width:100px;">Actions<br>(F)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="excel-row-header">6</td>
+                  <td class="excel-label">Comptant LightSpeed</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B6" data-field="comptant_lightspeed_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C6" data-field="comptant_lightspeed_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d6" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">7</td>
+                  <td class="excel-label">Comptant Positouch</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B7" data-field="comptant_positouch_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C7" data-field="comptant_positouch_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d7" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr id="recap-cheques-row-1" class="recap-cheques-row" style="display:none;">
+                  <td class="excel-row-header">8</td>
+                  <td class="excel-label">Chèque payment register AR</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B8" data-field="cheque_payment_register_lecture" placeholder="0.00" min="0"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C8" data-field="cheque_payment_register_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d8" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr id="recap-cheques-row-2" class="recap-cheques-row" style="display:none;">
+                  <td class="excel-row-header">9</td>
+                  <td class="excel-label">Chèque Daily Revenu</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B9" data-field="cheque_daily_revenu_lecture" placeholder="0.00" min="0"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C9" data-field="cheque_daily_revenu_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d9" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 10: TOTAL Cash & Checks -->
+                <tr class="total-row" style="background:#e7f3ff; font-weight:600; border-top:2px solid #dee2e6; border-bottom:2px solid #dee2e6;">
+                  <td class="excel-row-header" style="font-weight:700;">10</td>
+                  <td class="excel-label" style="font-weight:700;">TOTAL</td>
+                  <td class="excel-cell calculated-cell" style="background:#d4e9ff; text-align:right; padding-right:1rem;">
+                    <span id="recap-b10" class="calculated-value" style="font-weight:700; color:#0c5aa6; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#d4e9ff; text-align:right; padding-right:1rem;">
+                    <span id="recap-c10" class="calculated-value" style="font-weight:700; color:#0c5aa6; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#d4e9ff; text-align:right; padding-right:1rem;">
+                    <span id="recap-d10" class="calculated-value" style="font-weight:700; color:#0c5aa6; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">11</td>
+                  <td class="excel-label" style="color: #dc3545; font-weight: 600;">Moins Remboursement Gratuité</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B11" data-field="remb_gratuite_lecture" data-always-negative="true" placeholder="0.00" min="0" style="color: #dc3545;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C11" data-field="remb_gratuite_corr" placeholder="0.00" style="color: #dc3545;"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d11" class="calculated-value" style="font-weight:600; color:#dc3545; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">12</td>
+                  <td class="excel-label" style="color: #dc3545; font-weight: 600;">Moins Remboursement Client</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B12" data-field="remb_client_lecture" data-always-negative="true" placeholder="0.00" min="0" style="color: #dc3545;"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C12" data-field="remb_client_corr" placeholder="0.00" style="color: #dc3545;"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d12" class="calculated-value" style="font-weight:600; color:#dc3545; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 14: TOTAL après remboursements -->
+                <tr class="total-row" style="background:#fff3cd; font-weight:600; border-top:2px solid #dee2e6; border-bottom:2px solid #dee2e6;">
+                  <td class="excel-row-header" style="font-weight:700;">14</td>
+                  <td class="excel-label" style="font-weight:700;">TOTAL après remb.</td>
+                  <td class="excel-cell calculated-cell" style="background:#ffeaa7; text-align:right; padding-right:1rem;">
+                    <span id="recap-b14" class="calculated-value" style="font-weight:700; color:#d68910; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#ffeaa7; text-align:right; padding-right:1rem;">
+                    <span id="recap-c14" class="calculated-value" style="font-weight:700; color:#d68910; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#ffeaa7; text-align:right; padding-right:1rem;">
+                    <span id="recap-d14" class="calculated-value" style="font-weight:700; color:#d68910; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">16</td>
+                  <td class="excel-label">Due Back Réception</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B16" data-field="due_back_reception_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C16" data-field="due_back_reception_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d16" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell" style="text-align:center;">
+                    <button onclick="fillDueBackReception()" class="recap-macro-btn" title="Auto-remplir Due Back Réception depuis l'onglet DueBack" style="background:#007bff; color:white; border:none; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-size:0.7rem; font-weight:600; white-space:nowrap;">
+                      Auto Réc.
+                    </button>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">17</td>
+                  <td class="excel-label">Due Back N/B</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B17" data-field="due_back_nb_lecture" data-always-positive="true" placeholder="0.00" min="0"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C17" data-field="due_back_nb_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d17" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell" style="text-align:center;">
+                    <button onclick="fillDueBackNB()" class="recap-macro-btn" title="Auto-remplir Due Back N/B depuis l'onglet DueBack" style="background:#007bff; color:white; border:none; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-size:0.7rem; font-weight:600; white-space:nowrap;">
+                      Auto N/B
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 18: TOTAL à déposer -->
+                <tr class="total-row" style="background:#d4edda; font-weight:600; border-top:2px solid #dee2e6; border-bottom:2px solid #dee2e6;">
+                  <td class="excel-row-header" style="font-weight:700;">18</td>
+                  <td class="excel-label" style="font-weight:700;">Total à déposer</td>
+                  <td class="excel-cell calculated-cell" style="background:#b7e4c7; text-align:right; padding-right:1rem;">
+                    <span id="recap-b18" class="calculated-value" style="font-weight:700; color:#1e7145; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#b7e4c7; text-align:right; padding-right:1rem;">
+                    <span id="recap-c18" class="calculated-value" style="font-weight:700; color:#1e7145; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#b7e4c7; text-align:right; padding-right:1rem;">
+                    <span id="recap-d18" class="calculated-value" style="font-weight:700; color:#1e7145; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">19</td>
+                  <td class="excel-label">Surplus/déficit (+ ou -)</td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="B19" data-field="surplus_deficit_lecture" placeholder="0.00"></td>
+                  <td class="excel-cell"><input type="number" step="0.01" class="excel-input recap-calc-input" data-cell="C19" data-field="surplus_deficit_corr" placeholder="0.00"></td>
+                  <td class="excel-cell calculated-cell" style="background:#f8f9fa; text-align:right; padding-right:1rem;">
+                    <span id="recap-d19" class="calculated-value" style="font-weight:600; color:#495057; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell" style="text-align:center;">
+                    <button onclick="fillSurplusDeficit()" class="recap-macro-btn" title="Auto-calculer le surplus ou déficit" style="background:#28a745; color:white; border:none; padding:0.25rem 0.5rem; border-radius:4px; cursor:pointer; font-size:0.7rem; font-weight:600; white-space:nowrap;">
+                      Calc. S/D
+                    </button>
+                  </td>
+                </tr>
+                <!-- Row 20: TOTAL dépôt net -->
+                <tr class="total-row" style="background:#cfe2ff; font-weight:600; border-top:2px solid #dee2e6; border-bottom:2px solid #dee2e6;">
+                  <td class="excel-row-header" style="font-weight:700;">20</td>
+                  <td class="excel-label" style="font-weight:700;">Total dépôt net</td>
+                  <td class="excel-cell calculated-cell" style="background:#b6d7ff; text-align:right; padding-right:1rem;">
+                    <span id="recap-b20" class="calculated-value" style="font-weight:700; color:#084298; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#b6d7ff; text-align:right; padding-right:1rem;">
+                    <span id="recap-c20" class="calculated-value" style="font-weight:700; color:#084298; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#b6d7ff; text-align:right; padding-right:1rem;">
+                    <span id="recap-d20" class="calculated-value" style="font-weight:700; color:#084298; font-family:'Courier New',monospace;">$0.00</span>
+                  </td>
+                  <td class="excel-cell"></td>
+                </tr>
+                <!-- Row 22: Dépôt Canadien - HIDDEN (calculated by Excel, visible only in preview) -->
+                <!-- Row 23: ⭐ BALANCE FINALE ⭐ -->
+                <tr class="balance-final-row" style="background:linear-gradient(135deg, #198754 0%, #0f5132 100%); color:white; font-weight:700; font-size:1.1rem; border-top:3px solid #0a3622; border-bottom:3px solid #0a3622;">
+                  <td class="excel-row-header" style="font-weight:700; color:white;">23</td>
+                  <td class="excel-label" style="font-weight:700; color:white;">⭐ BALANCE FINALE</td>
+                  <td class="excel-cell calculated-cell" style="background:#146c43; text-align:right; padding-right:1rem; border-left:2px solid #0a3622;">
+                    <span id="recap-b23" class="calculated-value" style="font-weight:700; color:white; font-family:'Courier New',monospace; font-size:1.2rem;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#146c43; text-align:right; padding-right:1rem;">
+                    <span id="recap-c23" class="calculated-value" style="font-weight:700; color:white; font-family:'Courier New',monospace; font-size:1.2rem;">$0.00</span>
+                  </td>
+                  <td class="excel-cell calculated-cell" style="background:#146c43; text-align:right; padding-right:1rem; border-right:2px solid #0a3622;">
+                    <span id="recap-d23" class="calculated-value" style="font-weight:700; color:white; font-family:'Courier New',monospace; font-size:1.2rem;">$0.00</span>
+                  </td>
+                  <td class="excel-cell" style="background:#146c43;"></td>
+                </tr>
+                <tr>
+                  <td class="excel-row-header">26</td>
+                  <td class="excel-label">Préparé par</td>
+                  <td class="excel-cell" colspan="4"><input type="text" class="excel-input" data-cell="B26" data-field="prepare_par" placeholder="Nom"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-bottom: 1.5rem; padding:1rem; background:var(--bg); border-radius:8px; border:1px solid var(--border-light);">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.5rem;">
+              <strong style="color:var(--text);">Balance RECAP:</strong>
+              <span id="recap-balance" style="font-size:1.25rem; font-weight:700; color:var(--text);">$0.00</span>
+            </div>
+            <small style="color:var(--text-muted);">Le RECAP doit balancer à $0.00</small>
+            <div id="recap-balance-status" style="margin-top:0.5rem; font-size:0.875rem; font-weight:600;"></div>
+          </div>
+
+          <div class="form-actions">
+            <button class="rj-btn" onclick="saveRecap(event)" id="recap-save-btn">
+              <i data-feather="save"></i> Enregistrer Recap
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Preview Section -->
+        <div class="excel-preview-container" style="margin-top: 2rem;">
+          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-feather="eye"></i> Aperçu Excel - Recap
+          </h4>
+          <div id="recap-preview-wrapper" style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+            <table id="recap-preview-table" class="excel-preview" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <tr><td style="text-align: center; padding: 2rem; color: #999;">Chargement de l'aperçu...</td></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Send to RJ Button -->
+        <div style="margin-top: 2rem; padding: 1.5rem; background: linear-gradient(135deg, #e7f3ff 0%, #cfe2ff 100%); border: 2px solid #0d6efd; border-radius: 12px;">
+          <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 200px;">
+              <h5 style="margin: 0 0 0.5rem 0; color: #084298;">
+                <i data-feather="send"></i> Envoyer dans RJ
+              </h5>
+              <p style="margin: 0; font-size: 0.875rem; color: #084298;">
+                Copie les données du Recap (row 19) vers l'onglet "jour" pour le jour sélectionné
+              </p>
+            </div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <div>
+                <label for="recap-send-day" style="display: block; font-size: 0.875rem; font-weight: 600; color: #084298; margin-bottom: 0.25rem;">
+                  Jour:
+                </label>
+                <input
+                  type="number"
+                  id="recap-send-day"
+                  min="1"
+                  max="31"
+                  value="1"
+                  style="width: 80px; padding: 0.5rem; border: 2px solid #0d6efd; border-radius: 6px; font-size: 1rem; text-align: center;"
+                >
+              </div>
+              <button
+                type="button"
+                id="send-recap-to-rj-btn"
+                onclick="sendRecapToRJ()"
+                style="padding: 0.75rem 1.5rem; background: #0d6efd; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; margin-top: 1.5rem;"
+                onmouseover="this.style.background='#0b5ed7'"
+                onmouseout="this.style.background='#0d6efd'"
+              >
+                <i data-feather="send" style="width: 18px; height: 18px;"></i>
+                Envoyer
+              </button>
+            </div>
+          </div>
+
+          <!-- Result Message -->
+          <div id="send-recap-result" style="display: none; margin-top: 1rem;"></div>
+        </div>
+
+          </div>
+        </div>
+
+<script src="/static/js/recap-calculations.js"></script>
+{% endif %}

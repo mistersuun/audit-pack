@@ -1,0 +1,217 @@
+================================================================================
+RJ SHEET PARSER — QUICK REFERENCE
+================================================================================
+
+WHAT WAS CREATED:
+─────────────────────────────────────────────────────────────────────────────
+
+1. Parser Module
+   File: /sessions/laughing-sharp-johnson/mnt/audit-pack/utils/rj_sheet_parser.py
+   - parse_ej_sheet(archive) → JournalEntry records
+   - parse_salaires_sheet(archive) → DailyLaborMetrics records
+   - parse_budget_sheet(archive) → MonthlyBudget records
+   - parse_all_sheets_for_archive(archive) → Orchestrator function
+
+2. Population Script
+   File: /sessions/laughing-sharp-johnson/mnt/audit-pack/populate_from_archives.py
+   - Automatically finds all RJArchive records
+   - Parses all relevant sheets
+   - Commits to database with error handling
+   - Prints summary report
+
+3. Documentation
+   - RJ_PARSER_README.md — Technical details
+   - PARSER_USAGE_GUIDE.md — User guide with examples
+   - PARSER_IMPLEMENTATION_SUMMARY.md — Overview and results
+
+─────────────────────────────────────────────────────────────────────────────
+
+HOW TO RUN:
+─────────────────────────────────────────────────────────────────────────────
+
+cd /sessions/laughing-sharp-johnson/mnt/audit-pack
+python populate_from_archives.py
+
+(That's it! Script handles everything else)
+
+─────────────────────────────────────────────────────────────────────────────
+
+WHAT WAS INSERTED:
+─────────────────────────────────────────────────────────────────────────────
+
+JournalEntry Table (from EJ sheet)
+  • 573 records inserted
+  • 3 archive dates: 2026-02-03, 02-04, 02-08
+  • 191 GL codes per date
+  • Total amount: $1,536,567.08
+  • Unique constraint: (audit_date, gl_code)
+
+DailyLaborMetrics Table (from salaires sheet)
+  • 18 records inserted
+  • 3 archive dates
+  • 6 departments per date
+  • Total labor cost: $21,632.09
+  • Total hours: 572.80
+  • Unique constraint: (date, department)
+
+MonthlyBudget Table (from Budget sheet)
+  • 0 new records (already existed)
+  • Would insert if year/month didn't exist
+  • Unique constraint: (year, month)
+
+─────────────────────────────────────────────────────────────────────────────
+
+KEY FEATURES:
+─────────────────────────────────────────────────────────────────────────────
+
+✓ Idempotent — Safe to run multiple times (upsert logic)
+✓ Error-tolerant — Catches exceptions and logs them
+✓ Transaction-safe — Single DB transaction, automatic rollback on error
+✓ Extensible — Easy to add more sheet parsers
+✓ Well-documented — Includes technical docs and usage guide
+
+─────────────────────────────────────────────────────────────────────────────
+
+DATA QUALITY CHECKS (PASSED):
+─────────────────────────────────────────────────────────────────────────────
+
+✓ 573 JournalEntry records, 0 duplicates
+✓ 18 DailyLaborMetrics records, 0 duplicates
+✓ No null GL codes (required)
+✓ No null departments (required)
+✓ All amounts parsed as floats
+✓ All dates properly indexed
+✓ Source attribution maintained
+✓ Financial totals verified ($1.5M+)
+
+─────────────────────────────────────────────────────────────────────────────
+
+QUERY EXAMPLES:
+─────────────────────────────────────────────────────────────────────────────
+
+# Total JournalEntry records for a date
+from database.models import JournalEntry
+JournalEntry.query.filter_by(audit_date='2026-02-03').count()
+→ Returns: 191
+
+# Get all labor metrics for a date
+from database.models import DailyLaborMetrics
+DailyLaborMetrics.query.filter_by(
+    date='2026-02-03',
+    source='rj_sheet_parser'
+).all()
+→ Returns: 6 DailyLaborMetrics objects
+
+# Sum all amounts by GL code
+from database import db
+from database.models import JournalEntry
+from sqlalchemy import func
+
+result = db.session.query(
+    JournalEntry.gl_code,
+    JournalEntry.description_1,
+    func.sum(JournalEntry.amount)
+).filter(
+    JournalEntry.audit_date >= '2026-02-01'
+).group_by(JournalEntry.gl_code).all()
+
+─────────────────────────────────────────────────────────────────────────────
+
+TECHNICAL DETAILS:
+─────────────────────────────────────────────────────────────────────────────
+
+Parser Functions:
+
+1. parse_ej_sheet(archive)
+   Input:  RJSheetData with sheet_name='EJ'
+   Output: List of JournalEntry objects
+   Logic:  Row 0=headers, row 1+=data. Skips empty rows.
+           Upsert on (audit_date, gl_code)
+
+2. parse_salaires_sheet(archive)
+   Input:  RJSheetData with sheet_name='salaires'
+   Output: List of DailyLaborMetrics objects
+   Logic:  Headers at row 4, data at row 5+
+           Aggregates by department. Upsert on (date, department)
+
+3. parse_budget_sheet(archive)
+   Input:  RJSheetData with sheet_name='Budget'
+   Output: List of MonthlyBudget objects
+   Logic:  Categories in row 0+. Keywords map to budget fields.
+           Upsert on (year, month)
+
+─────────────────────────────────────────────────────────────────────────────
+
+TROUBLESHOOTING:
+─────────────────────────────────────────────────────────────────────────────
+
+Problem: "No RJArchive records found"
+Solution: Check that RJ Excel files have been uploaded to the database
+
+Problem: "ModuleNotFoundError: No module named 'main'"
+Solution: Run the script from /sessions/laughing-sharp-johnson/mnt/audit-pack/
+
+Problem: "JournalEntry duplicate key"
+Solution: Unique constraint is (audit_date, gl_code). Check raw data.
+
+Problem: Script runs but no records inserted
+Solution: Check RJSheetData for proper sheet_name spelling ('EJ', 'salaires', 'Budget')
+
+─────────────────────────────────────────────────────────────────────────────
+
+FILES & LOCATIONS:
+─────────────────────────────────────────────────────────────────────────────
+
+Parser Module:
+  /sessions/laughing-sharp-johnson/mnt/audit-pack/utils/rj_sheet_parser.py (12 KB)
+
+Population Script:
+  /sessions/laughing-sharp-johnson/mnt/audit-pack/populate_from_archives.py (2.8 KB)
+
+Technical Documentation:
+  /sessions/laughing-sharp-johnson/mnt/audit-pack/RJ_PARSER_README.md (8.2 KB)
+
+Usage Guide:
+  /sessions/laughing-sharp-johnson/mnt/audit-pack/PARSER_USAGE_GUIDE.md (9.3 KB)
+
+Implementation Summary:
+  /sessions/laughing-sharp-johnson/mnt/audit-pack/PARSER_IMPLEMENTATION_SUMMARY.md (7.7 KB)
+
+This Quick Reference:
+  /sessions/laughing-sharp-johnson/mnt/audit-pack/PARSER_QUICK_REFERENCE.txt
+
+─────────────────────────────────────────────────────────────────────────────
+
+EXECUTION RESULTS:
+─────────────────────────────────────────────────────────────────────────────
+
+Date: 2026-02-23
+Archives Processed: 3
+  • 2026-02-03: 191 JournalEntry + 6 DailyLaborMetrics
+  • 2026-02-04: 191 JournalEntry + 6 DailyLaborMetrics
+  • 2026-02-08: 191 JournalEntry + 6 DailyLaborMetrics
+
+Total Inserted: 573 JournalEntry + 18 DailyLaborMetrics
+Status: ✓ SUCCESS
+Errors: 0
+Commit: Successful
+
+─────────────────────────────────────────────────────────────────────────────
+
+NEXT STEPS:
+─────────────────────────────────────────────────────────────────────────────
+
+1. Verify the inserted data using the query examples above
+2. Check financial totals match expected values
+3. Consider adding more sheet parsers (Nettoyeur, Internet, Sonifi, etc.)
+4. Set up cron job to auto-run parser when new RJ archives are uploaded
+5. Add validation/reconciliation against NightAuditSession data
+
+─────────────────────────────────────────────────────────────────────────────
+
+For detailed information, see:
+  • RJ_PARSER_README.md — Technical architecture
+  • PARSER_USAGE_GUIDE.md — How to use and query the data
+  • PARSER_IMPLEMENTATION_SUMMARY.md — Overview and results
+
+================================================================================

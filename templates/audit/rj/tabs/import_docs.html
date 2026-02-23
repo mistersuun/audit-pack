@@ -1,0 +1,939 @@
+<!-- IMPORT DOCUMENTS TAB FRAGMENT -->
+<div class="rj-card">
+  <div class="forms">
+    <div class="form-tile">
+      <h4>Import Documents — Auto-Fill</h4>
+      <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+        Déposez vos fichiers ici. Le système extrait automatiquement les données et remplit les feuilles correspondantes du RJ.
+      </p>
+
+      <!-- GLOBAL DROP ZONE — auto-detects file types -->
+      <div id="global-dropzone"
+           style="border:3px dashed #93c5fd; border-radius:16px; padding:2rem; text-align:center; margin-bottom:1.5rem; background:#f0f9ff; cursor:pointer; transition: all 0.3s ease;"
+           ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'; this.style.transform='scale(1.01)'"
+           ondragleave="this.style.borderColor='#93c5fd'; this.style.background='#f0f9ff'; this.style.transform='scale(1)'"
+           ondrop="handleGlobalDrop(event)"
+           onclick="document.getElementById('global-file-input').click()">
+        <div style="font-size:2rem; margin-bottom:0.5rem;">📥</div>
+        <div style="font-weight:600; font-size:1rem; color:#1e40af; margin-bottom:0.25rem;">
+          Déposez tous vos fichiers ici
+        </div>
+        <div style="font-size:0.8rem; color:#64748b;">
+          Le système détecte automatiquement le type de chaque fichier
+        </div>
+        <div style="font-size:0.75rem; color:#94a3b8; margin-top:0.5rem;">
+          PDF (Daily Revenue, AR Summary) • RTF/TXT (Sales Journal) • XLS/XLSX (HP, FreedomPay, Quasimodo)
+        </div>
+        <input type="file" id="global-file-input" multiple
+               accept=".pdf,.rtf,.txt,.xls,.xlsx,.xlsm"
+               style="display:none"
+               onchange="handleGlobalFileSelect(this)">
+      </div>
+
+      <!-- Status Banner -->
+      <div id="import-status-banner" style="display:none; padding:1rem 1.5rem; border-radius:10px; margin-bottom:1.5rem; font-size:0.875rem;"></div>
+
+      <!-- Document Upload Cards Grid -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:2rem;">
+
+        <!-- 1. Sales Journal -->
+        <div class="import-card" id="card-sales_journal" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-sales_journal').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'sales_journal')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#3b82f6,#2563eb); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">📋</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">Sales Journal</div>
+              <div style="font-size:0.75rem; color:#64748b;">.rtf / .txt — Positouch/LightSpeed</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Jour (F&B par département), Taxes (AX/AY)</div>
+          <div id="status-sales_journal" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-sales_journal" accept=".rtf,.txt" style="display:none" onchange="handleFileSelect(this, 'sales_journal')">
+        </div>
+
+        <!-- 2. Daily Revenue -->
+        <div class="import-card" id="card-daily_revenue" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-daily_revenue').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'daily_revenue')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#10b981,#059669); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">📊</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">Daily Revenue</div>
+              <div style="font-size:0.75rem; color:#64748b;">.pdf — GEAC/UX (7 pages)</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Jour (AK-CF), Taxes, Balance, Settlements</div>
+          <div id="status-daily_revenue" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-daily_revenue" accept=".pdf" style="display:none" onchange="handleFileSelect(this, 'daily_revenue')">
+        </div>
+
+        <!-- 3. AR Summary -->
+        <div class="import-card" id="card-ar_summary" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-ar_summary').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'ar_summary')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">📄</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">AR Summary</div>
+              <div style="font-size:0.75rem; color:#64748b;">.pdf — Comptes recevables</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ GEAC/UX (A/R balances, transfers)</div>
+          <div id="status-ar_summary" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-ar_summary" accept=".pdf" style="display:none" onchange="handleFileSelect(this, 'ar_summary')">
+        </div>
+
+        <!-- 4. HP Excel -->
+        <div class="import-card" id="card-hp_excel" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-hp_excel').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'hp_excel')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#8b5cf6,#7c3aed); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">🏨</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">HP Admin</div>
+              <div style="font-size:0.75rem; color:#64748b;">.xlsx — Hotel Promotion</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Jour (déductions F&B), BQ/BR (pourboires)</div>
+          <div id="status-hp_excel" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-hp_excel" accept=".xls,.xlsx,.xlsm" style="display:none" onchange="handleFileSelect(this, 'hp_excel')">
+        </div>
+
+        <!-- 5. Quasimodo -->
+        <div class="import-card" id="card-quasimodo" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-quasimodo').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'quasimodo')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#ec4899,#db2777); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">💳</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">Quasimodo</div>
+              <div style="font-size:0.75rem; color:#64748b;">.xls — Réconciliation cartes</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Transelect (Débit, Visa, MC, Amex)</div>
+          <div id="status-quasimodo" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-quasimodo" accept=".xls,.xlsx" style="display:none" onchange="handleFileSelect(this, 'quasimodo')">
+        </div>
+
+        <!-- 6. FreedomPay -->
+        <div class="import-card" id="card-freedompay" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-freedompay').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'freedompay')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#64748b,#475569); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">🏦</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">FreedomPay</div>
+              <div style="font-size:0.75rem; color:#64748b;">.xls — Règlement bancaire</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ GEAC/UX (settlements bancaires)</div>
+          <div id="status-freedompay" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-freedompay" accept=".xls,.xlsx" style="display:none" onchange="handleFileSelect(this, 'freedompay')">
+        </div>
+
+      </div>
+
+      <!-- Manual Inputs Section -->
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+        <h5 style="margin:0 0 1rem 0; font-size:0.95rem; color:#334155;">Valeurs manuelles</h5>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Club Lounge ($)</label>
+            <input type="number" id="manual-club-lounge" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;">
+          </div>
+          <div>
+            <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Deposit on Hand ($)</label>
+            <input type="number" id="manual-deposit-on-hand" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;">
+          </div>
+        </div>
+
+        <!-- Multi-Department Adjustments -->
+        <div style="border-top:1px solid #e2e8f0; padding-top:1rem;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+            <h6 style="margin:0; font-size:0.85rem; color:#475569;">Ajustements par département</h6>
+            <button onclick="addAdjustmentRow()" style="padding:0.35rem 0.75rem; border:1px solid #10b981; border-radius:8px; background:#f0fdf4; color:#059669; cursor:pointer; font-size:0.8rem; font-weight:600;">
+              + Ajouter
+            </button>
+          </div>
+          <div id="adjustments-container">
+            <!-- Adjustment rows will be added dynamically here -->
+          </div>
+          <div id="adjustments-empty" style="font-size:0.8rem; color:#94a3b8; text-align:center; padding:0.5rem;">
+            Aucun ajustement. Cliquez "+ Ajouter" pour en ajouter un.
+          </div>
+        </div>
+      </div>
+
+      <!-- Results / Preview Area -->
+      <div id="import-results" style="display:none; background:#f0fdf4; border:2px solid #86efac; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
+        <h5 style="margin:0 0 0.75rem 0; color:#166534; font-size:0.95rem;">Données extraites</h5>
+        <div id="import-results-content" style="font-size:0.85rem; max-height:300px; overflow-y:auto;"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; gap:1rem; justify-content:flex-end; flex-wrap:wrap;">
+        <button onclick="clearAllImports()" style="padding:0.75rem 1.5rem; border:1px solid #d1d5db; border-radius:10px; background:white; color:#374151; cursor:pointer; font-size:0.9rem;">
+          Réinitialiser
+        </button>
+        <button onclick="parseAllDocuments()" id="btn-parse-all" style="padding:0.75rem 1.5rem; border:none; border-radius:10px; background:linear-gradient(135deg,#3b82f6,#2563eb); color:white; cursor:pointer; font-size:0.9rem; font-weight:600;">
+          1. Extraire les données
+        </button>
+        <button onclick="fillAllSheets()" id="btn-fill-all" disabled style="padding:0.75rem 1.5rem; border:none; border-radius:10px; background:linear-gradient(135deg,#10b981,#059669); color:white; cursor:pointer; font-size:0.9rem; font-weight:600; opacity:0.5;">
+          2. Remplir input sheets
+        </button>
+        <button onclick="fillJourSheet()" id="btn-fill-jour" disabled style="padding:0.75rem 1.5rem; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:white; cursor:pointer; font-size:0.9rem; font-weight:600; opacity:0.5;">
+          3. Remplir Jour
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// DOCUMENT IMPORT SYSTEM
+// ============================================================================
+
+const importState = {
+  files: {},      // { doc_type: File }
+  results: {},    // { doc_type: parsed_data }
+  filled: {},     // { doc_type: true/false }
+  jourFilled: false
+};
+
+// Department options for adjustments
+const DEPARTMENTS = [
+  { key: 'piazza_nourriture', label: 'Piazza Nourriture', col: 9 },
+  { key: 'piazza_alcool', label: 'Piazza Alcool', col: 10 },
+  { key: 'piazza_bieres', label: 'Piazza Bières', col: 11 },
+  { key: 'piazza_non_alcool', label: 'Piazza Non-Alcool (Minéraux)', col: 12 },
+  { key: 'piazza_vins', label: 'Piazza Vins', col: 13 },
+  { key: 'banquet_nourriture', label: 'Banquet Nourriture', col: 14 },
+  { key: 'banquet_boissons', label: 'Banquet Boissons', col: 15 },
+  { key: 'spesa_nourriture', label: 'Marché Spesa Nourriture', col: 16 },
+  { key: 'spesa_boissons', label: 'Marché Spesa Boissons', col: 17 },
+  { key: 'tabagie', label: 'Tabagie', col: 18 },
+];
+
+let adjustmentCounter = 0;
+
+// ============================================================================
+// ADJUSTMENT MANAGEMENT
+// ============================================================================
+
+function addAdjustmentRow() {
+  adjustmentCounter++;
+  const container = document.getElementById('adjustments-container');
+  const emptyMsg = document.getElementById('adjustments-empty');
+  if (emptyMsg) emptyMsg.style.display = 'none';
+
+  const row = document.createElement('div');
+  row.id = 'adj-row-' + adjustmentCounter;
+  row.style.cssText = 'display:flex; gap:0.5rem; align-items:center; margin-bottom:0.5rem;';
+
+  let options = '';
+  DEPARTMENTS.forEach(d => {
+    options += '<option value="' + d.key + '">' + d.label + '</option>';
+  });
+
+  row.innerHTML = `
+    <select style="flex:2; padding:0.4rem; border:1px solid #d1d5db; border-radius:6px; font-size:0.85rem;">
+      ${options}
+    </select>
+    <input type="number" value="0" step="0.01" placeholder="Montant $"
+           style="flex:1; padding:0.4rem; border:1px solid #d1d5db; border-radius:6px; font-size:0.85rem;">
+    <button onclick="removeAdjustmentRow('adj-row-${adjustmentCounter}')"
+            style="padding:0.3rem 0.6rem; border:1px solid #fca5a5; border-radius:6px; background:#fef2f2; color:#dc2626; cursor:pointer; font-size:0.8rem;">
+      ✕
+    </button>
+  `;
+
+  container.appendChild(row);
+}
+
+function removeAdjustmentRow(rowId) {
+  const row = document.getElementById(rowId);
+  if (row) row.remove();
+
+  const container = document.getElementById('adjustments-container');
+  if (container.children.length === 0) {
+    const emptyMsg = document.getElementById('adjustments-empty');
+    if (emptyMsg) emptyMsg.style.display = 'block';
+  }
+}
+
+function getAdjustments() {
+  const container = document.getElementById('adjustments-container');
+  const rows = container.children;
+  const adjustments = [];
+
+  for (const row of rows) {
+    const select = row.querySelector('select');
+    const input = row.querySelector('input[type="number"]');
+    if (select && input) {
+      const amount = parseFloat(input.value) || 0;
+      if (amount !== 0) {
+        adjustments.push({
+          department: select.value,
+          amount: amount
+        });
+      }
+    }
+  }
+  return adjustments;
+}
+
+// ============================================================================
+// GLOBAL DROP ZONE — Auto-detect file type from name/extension
+// ============================================================================
+
+/**
+ * Auto-detect document type from filename.
+ * Returns the doc_type string or null if unrecognized.
+ */
+function autoDetectDocType(filename) {
+  const name = filename.toLowerCase();
+  const ext = name.split('.').pop();
+
+  // Sales Journal: RTF or TXT files from Positouch/LightSpeed
+  if (ext === 'rtf' || (ext === 'txt' && (name.includes('journal') || name.includes('sales') || name.includes('positouch') || name.includes('lightspeed')))) {
+    return 'sales_journal';
+  }
+
+  // PDF files — need to distinguish between Daily Revenue and AR Summary
+  if (ext === 'pdf') {
+    if (name.includes('daily') || name.includes('revenue') || name.includes('revenu')) {
+      return 'daily_revenue';
+    }
+    if (name.includes('ar') || name.includes('summary') || name.includes('receivable') || name.includes('recevable')) {
+      return 'ar_summary';
+    }
+    if (name.includes('deposit') || name.includes('advance') || name.includes('dépôt')) {
+      return 'advance_deposit';
+    }
+    // Default PDF → daily_revenue (most common)
+    return 'daily_revenue';
+  }
+
+  // Excel files — distinguish between HP, FreedomPay, Quasimodo
+  if (['xls', 'xlsx', 'xlsm'].includes(ext)) {
+    if (name.includes('hp') || name.includes('hotel') || name.includes('promo')) {
+      return 'hp_excel';
+    }
+    if (name.includes('freedom') || name.includes('fusebox') || name.includes('bank') || name.includes('banque')) {
+      return 'freedompay';
+    }
+    if (name.includes('quasi') || name.includes('carte') || name.includes('card') || name.includes('cc') || name.includes('reconcil')) {
+      return 'quasimodo';
+    }
+    // Default Excel → hp_excel (most common Excel upload)
+    return 'hp_excel';
+  }
+
+  // TXT files without journal/sales indicators
+  if (ext === 'txt') {
+    return 'sales_journal';
+  }
+
+  return null;
+}
+
+/**
+ * Handle multiple files dropped on the global drop zone.
+ */
+function handleGlobalDrop(event) {
+  event.preventDefault();
+  const dropzone = document.getElementById('global-dropzone');
+  dropzone.style.borderColor = '#93c5fd';
+  dropzone.style.background = '#f0f9ff';
+  dropzone.style.transform = 'scale(1)';
+
+  const files = event.dataTransfer.files;
+  processMultipleFiles(files);
+}
+
+/**
+ * Handle files selected via the global file input.
+ */
+function handleGlobalFileSelect(input) {
+  processMultipleFiles(input.files);
+  input.value = ''; // Reset so same files can be re-selected
+}
+
+/**
+ * Process multiple files: auto-detect type and assign to the right parser card.
+ */
+function processMultipleFiles(files) {
+  const detected = [];
+  const unrecognized = [];
+
+  for (const file of files) {
+    const docType = autoDetectDocType(file.name);
+
+    if (docType) {
+      // Use the existing processFile function to update the card UI
+      processFile(file, docType);
+      detected.push({ name: file.name, type: docType });
+    } else {
+      unrecognized.push(file.name);
+    }
+  }
+
+  // Show summary notification
+  if (detected.length > 0) {
+    const typeLabels = {
+      'sales_journal': 'Sales Journal',
+      'daily_revenue': 'Daily Revenue',
+      'ar_summary': 'AR Summary',
+      'advance_deposit': 'Advance Deposit',
+      'hp_excel': 'HP Admin',
+      'freedompay': 'FreedomPay',
+      'quasimodo': 'Quasimodo'
+    };
+
+    const summary = detected.map(d => typeLabels[d.type] || d.type).join(', ');
+
+    if (typeof notify === 'function') {
+      notify(detected.length + ' fichier(s) détecté(s): ' + summary, 'success');
+    }
+  }
+
+  if (unrecognized.length > 0 && typeof notify === 'function') {
+    notify('Fichier(s) non reconnu(s): ' + unrecognized.join(', '), 'warning');
+  }
+
+  // If files were detected, auto-start parsing
+  if (detected.length > 0) {
+    // Give UI time to update, then auto-parse
+    setTimeout(() => {
+      const banner = document.getElementById('import-status-banner');
+      banner.style.display = 'block';
+      banner.style.background = '#eff6ff';
+      banner.style.border = '1px solid #93c5fd';
+      banner.style.color = '#1e40af';
+      banner.textContent = detected.length + ' fichier(s) prêt(s). Cliquez "Extraire les données" ou le parsing démarre automatiquement...';
+
+      // Auto-parse after 2 seconds
+      setTimeout(() => parseAllDocuments(), 2000);
+    }, 300);
+  }
+}
+
+// ============================================================================
+// FILE HANDLING
+// ============================================================================
+
+function handleDrop(event, docType) {
+  event.preventDefault();
+  const card = document.getElementById('card-' + docType);
+  card.style.borderColor = '#dee2e6';
+  card.style.background = 'white';
+
+  const file = event.dataTransfer.files[0];
+  if (file) {
+    processFile(file, docType);
+  }
+}
+
+function handleFileSelect(input, docType) {
+  const file = input.files[0];
+  if (file) {
+    processFile(file, docType);
+  }
+}
+
+function processFile(file, docType) {
+  importState.files[docType] = file;
+
+  const card = document.getElementById('card-' + docType);
+  card.style.borderColor = '#3b82f6';
+  card.style.background = '#eff6ff';
+
+  const status = document.getElementById('status-' + docType);
+  status.style.display = 'block';
+  status.style.color = '#2563eb';
+  status.innerHTML = '<strong>' + file.name + '</strong> (' + (file.size / 1024).toFixed(1) + ' KB)';
+
+  updateButtonStates();
+}
+
+function updateButtonStates() {
+  const hasFiles = Object.keys(importState.files).length > 0;
+  const hasResults = Object.keys(importState.results).length > 0;
+
+  const btnParse = document.getElementById('btn-parse-all');
+  btnParse.disabled = !hasFiles;
+  btnParse.style.opacity = hasFiles ? '1' : '0.5';
+
+  const btnFill = document.getElementById('btn-fill-all');
+  btnFill.disabled = !hasResults;
+  btnFill.style.opacity = hasResults ? '1' : '0.5';
+
+  const btnJour = document.getElementById('btn-fill-jour');
+  btnJour.disabled = !hasResults;
+  btnJour.style.opacity = hasResults ? '1' : '0.5';
+}
+
+// ============================================================================
+// STEP 1: PARSE ALL DOCUMENTS
+// ============================================================================
+
+async function parseAllDocuments() {
+  const banner = document.getElementById('import-status-banner');
+  banner.style.display = 'block';
+  banner.style.background = '#eff6ff';
+  banner.style.border = '1px solid #93c5fd';
+  banner.style.color = '#1e40af';
+  banner.textContent = 'Extraction en cours...';
+
+  importState.results = {};
+  const resultsDiv = document.getElementById('import-results');
+  const resultsContent = document.getElementById('import-results-content');
+  resultsContent.innerHTML = '';
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  // Get audit day from RJ status for HP parser
+  let auditDay = null;
+  try {
+    const statusRes = await fetch('/api/rj/status');
+    const statusData = await statusRes.json();
+    if (statusData.uploaded && statusData.current_day) {
+      auditDay = parseInt(statusData.current_day);
+    }
+  } catch (e) { /* ignore — HP will parse without day */ }
+
+  for (const [docType, file] of Object.entries(importState.files)) {
+    const status = document.getElementById('status-' + docType);
+    status.style.color = '#d97706';
+    status.textContent = 'Extraction...';
+
+    try {
+      const formData = new FormData();
+      formData.append('doc_type', docType);
+      formData.append('file', file);
+
+      // Pass day parameter for HP Excel parser (daily extraction)
+      if (docType === 'hp_excel' && auditDay) {
+        formData.append('day', auditDay.toString());
+      }
+
+      const response = await csrfFetch('/api/rj/parse', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        importState.results[docType] = result;
+        successCount++;
+
+        status.style.color = '#059669';
+        status.innerHTML = '&#10003; Extrait — ' + (result.confidence * 100).toFixed(0) + '% confiance';
+
+        const card = document.getElementById('card-' + docType);
+        card.style.borderColor = '#10b981';
+        card.style.background = '#f0fdf4';
+
+        resultsContent.innerHTML += buildResultPreview(docType, result);
+      } else {
+        errorCount++;
+        status.style.color = '#dc2626';
+        status.textContent = 'Erreur: ' + (result.error || 'inconnu');
+      }
+    } catch (err) {
+      errorCount++;
+      status.style.color = '#dc2626';
+      status.textContent = 'Erreur: ' + err.message;
+    }
+  }
+
+  if (successCount > 0) {
+    resultsDiv.style.display = 'block';
+    banner.style.background = '#f0fdf4';
+    banner.style.border = '1px solid #86efac';
+    banner.style.color = '#166534';
+    banner.textContent = successCount + ' document(s) extrait(s). Vérifiez les données, puis utilisez les boutons 2 et 3.';
+  } else {
+    banner.style.background = '#fef2f2';
+    banner.style.border = '1px solid #fca5a5';
+    banner.style.color = '#991b1b';
+    banner.textContent = 'Aucun document extrait. Vérifiez vos fichiers.';
+  }
+
+  updateButtonStates();
+}
+
+// ============================================================================
+// STEP 2: FILL INPUT SHEETS (Recap, Transelect, GEAC/UX)
+// ============================================================================
+
+async function fillAllSheets() {
+  const banner = document.getElementById('import-status-banner');
+  banner.style.display = 'block';
+  banner.style.background = '#fffbeb';
+  banner.style.border = '1px solid #fcd34d';
+  banner.style.color = '#92400e';
+  banner.textContent = 'Remplissage des feuilles d\'entrée...';
+
+  let fillCount = 0;
+  let errorCount = 0;
+
+  for (const [docType, file] of Object.entries(importState.files)) {
+    if (!importState.results[docType]) continue;
+
+    const status = document.getElementById('status-' + docType);
+    status.style.color = '#d97706';
+    status.textContent = 'Remplissage...';
+
+    try {
+      const formData = new FormData();
+      formData.append('doc_type', docType);
+      formData.append('file', file);
+
+      formData.append('club_lounge', document.getElementById('manual-club-lounge').value);
+      formData.append('deposit_on_hand', document.getElementById('manual-deposit-on-hand').value);
+
+      const response = await csrfFetch('/api/rj/parse-and-fill', {
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        fillCount++;
+        importState.filled[docType] = true;
+
+        status.style.color = '#059669';
+        status.innerHTML = '&#10003; Rempli — ' + (result.filled_count || 0) + ' cellules';
+
+        const card = document.getElementById('card-' + docType);
+        card.style.borderColor = '#059669';
+        card.style.background = '#ecfdf5';
+      } else {
+        errorCount++;
+        status.style.color = '#dc2626';
+        status.textContent = 'Erreur: ' + (result.error || 'inconnu');
+      }
+    } catch (err) {
+      errorCount++;
+      status.style.color = '#dc2626';
+      status.textContent = 'Erreur: ' + err.message;
+    }
+  }
+
+  if (fillCount > 0) {
+    banner.style.background = '#f0fdf4';
+    banner.style.border = '1px solid #86efac';
+    banner.style.color = '#166534';
+    banner.textContent = fillCount + ' feuille(s) remplie(s). Cliquez "3. Remplir Jour" pour calculer et écrire dans l\'onglet Jour.';
+
+    // Auto-fill FreedomPay from Daily Revenue (variance = $0)
+    // Settlements are negative in Daily Rev (deductions) — FreedomPay parser uses abs()
+    const drResult = importState.results['daily_revenue'];
+    if (drResult && drResult.data && drResult.data.settlements) {
+      const sett = drResult.data.settlements;
+      const cards = {};
+      if (sett.visa) cards.visa = sett.visa;
+      if (sett.mastercard) cards.mastercard = sett.mastercard;
+      if (sett.american_express) cards.amex = sett.american_express;
+      if (sett.diners) cards.diners = sett.diners;
+      if (sett.discover) cards.discover = sett.discover;
+
+      if (Object.keys(cards).length > 0) {
+        try {
+          const fpRes = await csrfFetch('/api/rj/autofill-cashout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cards })
+          });
+          const fpData = await fpRes.json();
+          if (fpData.success) {
+            fillCount++;
+            const fpStatus = document.getElementById('status-freedompay');
+            if (fpStatus) {
+              fpStatus.style.display = 'block';
+              fpStatus.style.color = '#059669';
+              fpStatus.innerHTML = '&#10003; Auto-rempli depuis Daily Revenue (Rows 6 & 12) — ' + fpData.cells_filled + ' cellules';
+            }
+            const fpCard = document.getElementById('card-freedompay');
+            if (fpCard) {
+              fpCard.style.borderColor = '#059669';
+              fpCard.style.background = '#ecfdf5';
+            }
+            if (typeof notify === 'function') notify('FreedomPay: Cash Out auto-rempli depuis Daily Revenue', 'success');
+          }
+        } catch (fpErr) {
+          console.warn('FreedomPay auto-fill failed:', fpErr);
+        }
+      }
+
+      // Auto-fill Recap from Daily Revenue
+      try {
+        const recapRes = await csrfFetch('/api/rj/autofill-recap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ daily_revenue_data: drResult.data })
+        });
+        const recapData = await recapRes.json();
+        if (recapData.success) {
+          const recapStatus = document.getElementById('status-recap');
+          // Note: there's no recap card in import_docs, but we track the status anyway
+          if (typeof notify === 'function') {
+            notify('Recap: Auto-rempli depuis Daily Revenue — ' + recapData.cells_filled + ' cellules', 'success');
+          }
+        }
+      } catch (recapErr) {
+        console.warn('Recap auto-fill failed:', recapErr);
+      }
+    }
+
+    // Auto-trigger Quasimodo if quasimodo file was uploaded
+    if (importState.results['quasimodo'] || importState.results['freedompay']) {
+      banner.textContent += ' Quasimodo en cours...';
+      try {
+        const qRes = await csrfFetch('/api/rj/quasimodo', { method: 'POST' });
+        const qData = await qRes.json();
+        if (qData.success) {
+          banner.textContent = fillCount + ' feuille(s) remplie(s) + Quasimodo réconcilié. Cliquez "3. Remplir Jour".';
+          if (typeof notify === 'function') notify('Quasimodo: réconciliation automatique terminée', 'success');
+        }
+      } catch (qErr) {
+        console.warn('Quasimodo auto-trigger failed:', qErr);
+      }
+    }
+
+    if (typeof notify === 'function') notify('Input sheets remplies: ' + fillCount, 'success');
+  } else {
+    banner.style.background = '#fef2f2';
+    banner.style.border = '1px solid #fca5a5';
+    banner.style.color = '#991b1b';
+    banner.textContent = 'Aucune donnée appliquée. Assurez-vous qu\'un RJ est chargé.';
+  }
+}
+
+// ============================================================================
+// STEP 3: FILL JOUR SHEET (via JourMapper)
+// ============================================================================
+
+async function fillJourSheet() {
+  const banner = document.getElementById('import-status-banner');
+  banner.style.display = 'block';
+  banner.style.background = '#fffbeb';
+  banner.style.border = '1px solid #fcd34d';
+  banner.style.color = '#92400e';
+  banner.textContent = 'Calcul et remplissage de l\'onglet Jour...';
+
+  try {
+    // Build parsed_data from all results
+    const parsedData = {};
+    for (const [docType, result] of Object.entries(importState.results)) {
+      if (result.success && result.data) {
+        parsedData[docType] = result.data;
+      }
+    }
+
+    // Manual values
+    const manualValues = {
+      club_lounge: parseFloat(document.getElementById('manual-club-lounge').value) || 0,
+      deposit_on_hand: parseFloat(document.getElementById('manual-deposit-on-hand').value) || 0,
+    };
+
+    // Per-department adjustments
+    const adjustments = getAdjustments();
+
+    const response = await csrfFetch('/api/rj/fill-jour', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        parsed_data: parsedData,
+        manual_values: manualValues,
+        adjustments: adjustments,
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      importState.jourFilled = true;
+
+      // Show results
+      const resultsDiv = document.getElementById('import-results');
+      const resultsContent = document.getElementById('import-results-content');
+
+      let jourHtml = '<div style="margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:2px solid #f59e0b;">';
+      jourHtml += '<strong style="color:#92400e;">Onglet Jour — Jour ' + result.day + ' (ligne ' + result.target_row + ')</strong>';
+      jourHtml += '<div style="margin-top:0.5rem; font-size:0.8rem; color:#059669;">';
+      jourHtml += result.filled_count + ' colonnes remplies';
+      jourHtml += '</div>';
+
+      // Show values
+      if (result.values && Object.keys(result.values).length > 0) {
+        jourHtml += '<div style="margin-top:0.5rem; display:grid; grid-template-columns:repeat(4, 1fr); gap:0.2rem 0.5rem; font-size:0.75rem;">';
+        for (const [col, val] of Object.entries(result.values)) {
+          const displayVal = typeof val === 'number' ? '$' + val.toFixed(2) : val;
+          jourHtml += '<div style="color:#475569;"><strong>' + col + '</strong>: ' + displayVal + '</div>';
+        }
+        jourHtml += '</div>';
+      }
+
+      // Show warnings
+      if (result.summary && result.summary.warnings && result.summary.warnings.length > 0) {
+        jourHtml += '<div style="margin-top:0.5rem; color:#92400e; font-size:0.8rem;">&#9888; ' + result.summary.warnings.join(', ') + '</div>';
+      }
+
+      jourHtml += '</div>';
+      resultsContent.innerHTML += jourHtml;
+      resultsDiv.style.display = 'block';
+
+      banner.style.background = '#f0fdf4';
+      banner.style.border = '1px solid #86efac';
+      banner.style.color = '#166534';
+      banner.textContent = 'Onglet Jour rempli! ' + result.filled_count + ' colonnes écrites pour jour ' + result.day + '. Vous pouvez télécharger le RJ.';
+
+      if (typeof notify === 'function') notify('Jour rempli: ' + result.filled_count + ' colonnes, jour ' + result.day, 'success');
+    } else {
+      banner.style.background = '#fef2f2';
+      banner.style.border = '1px solid #fca5a5';
+      banner.style.color = '#991b1b';
+      banner.textContent = 'Erreur: ' + (result.error || 'Impossible de remplir le jour');
+    }
+  } catch (err) {
+    banner.style.background = '#fef2f2';
+    banner.style.border = '1px solid #fca5a5';
+    banner.style.color = '#991b1b';
+    banner.textContent = 'Erreur: ' + err.message;
+  }
+}
+
+// ============================================================================
+// PREVIEW & UTILITIES
+// ============================================================================
+
+function buildResultPreview(docType, result) {
+  const labels = {
+    'sales_journal': 'Sales Journal',
+    'daily_revenue': 'Daily Revenue',
+    'ar_summary': 'AR Summary',
+    'hp_excel': 'HP Admin',
+    'quasimodo': 'Quasimodo',
+    'freedompay': 'FreedomPay'
+  };
+
+  let html = '<div style="margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:1px solid #d1fae5;">';
+  html += '<strong style="color:#065f46;">' + labels[docType] + '</strong>';
+  html += ' <span style="color:#6b7280;">(' + (result.confidence * 100).toFixed(0) + '% confiance)</span>';
+
+  if (result.warnings && result.warnings.length > 0) {
+    html += '<div style="color:#92400e; margin-top:0.25rem;">&#9888; ' + result.warnings.join(', ') + '</div>';
+  }
+
+  const data = result.data;
+  html += '<div style="margin-top:0.5rem; display:grid; grid-template-columns:1fr 1fr; gap:0.25rem 1rem; font-size:0.8rem;">';
+
+  if (docType === 'sales_journal') {
+    html += kvLine('Total balancé', '$' + (data.total_balanced || 0).toFixed(2));
+    html += kvLine('Comptant', '$' + (data.payments?.comptant || 0).toFixed(2));
+    html += kvLine('Visa', '$' + (data.payments?.visa || 0).toFixed(2));
+    html += kvLine('MC', '$' + (data.payments?.mastercard || 0).toFixed(2));
+    html += kvLine('TPS', '$' + (data.taxes?.tps || 0).toFixed(2));
+    html += kvLine('TVQ', '$' + (data.taxes?.tvq || 0).toFixed(2));
+  } else if (docType === 'daily_revenue') {
+    html += kvLine('Chambres', '$' + (data.revenue?.chambres?.total || 0).toFixed(2));
+    html += kvLine('Settlements', '$' + (data.settlements?.total || 0).toFixed(2));
+    html += kvLine('New Balance', '$' + (data.balance?.new_balance || 0).toFixed(2));
+    html += kvLine('Dep Received', '$' + (data.deposits_received?.total || 0).toFixed(2));
+  } else if (docType === 'ar_summary') {
+    html += kvLine('A/R Previous', '$' + (data.ar_balance_previous || 0).toFixed(2));
+    html += kvLine('A/R End of Day', '$' + (data.ar_balance_end_of_day || 0).toFixed(2));
+    html += kvLine('Transfers', '$' + (data.front_office_transfers?.total || 0).toFixed(2));
+    html += kvLine('Balancé', data.balanced ? '&#10003; Oui' : '&#10007; Non');
+  } else if (docType === 'hp_excel') {
+    html += kvLine('Période', data.period || 'N/A');
+    html += kvLine('Jours disponibles', (data.available_days || []).length + ' jour(s)');
+    // Show daily deduction details if available
+    const jourDed = data.jour_deductions;
+    if (jourDed && Object.keys(jourDed).length > 0) {
+      const colNames = {'9':'J-Piazza Nourr','10':'K-Piazza Alcool','11':'L-Piazza Bières','12':'M-Piazza Minéraux','13':'N-Piazza Vins','14':'O-Banquet Nourr','15':'P-Banquet Boissons','18':'S-Tabagie'};
+      for (const [colIdx, amount] of Object.entries(jourDed)) {
+        const name = colNames[colIdx] || 'Col ' + colIdx;
+        html += kvLine('HP ' + name, '-$' + parseFloat(amount).toFixed(2));
+      }
+    }
+    // Show departments summary
+    const deptKeys = Object.keys(data).filter(k => k.match(/^day_\d+_departments$/));
+    if (deptKeys.length > 0) {
+      const depts = data[deptKeys[0]];
+      for (const [dept, total] of Object.entries(depts || {})) {
+        html += kvLine(dept, '$' + parseFloat(total).toFixed(2));
+      }
+    }
+  }
+
+  html += '</div></div>';
+  return html;
+}
+
+function kvLine(label, value) {
+  return '<div style="color:#64748b;">' + label + ':</div><div style="font-weight:500;">' + value + '</div>';
+}
+
+async function clearAllImports() {
+  const confirmed = await showConfirmModal(
+    'Réinitialiser Import Auto',
+    'Ceci va effacer tous les fichiers importés et les résultats d\'analyse. Continuer?',
+    true
+  );
+  if (!confirmed) return;
+
+  importState.files = {};
+  importState.results = {};
+  importState.filled = {};
+  importState.jourFilled = false;
+
+  ['sales_journal', 'daily_revenue', 'ar_summary', 'hp_excel', 'quasimodo', 'freedompay'].forEach(type => {
+    const card = document.getElementById('card-' + type);
+    if (card) {
+      card.style.borderColor = '#dee2e6';
+      card.style.background = 'white';
+    }
+    const status = document.getElementById('status-' + type);
+    if (status) {
+      status.style.display = 'none';
+      status.textContent = '';
+    }
+    const fileInput = document.getElementById('file-' + type);
+    if (fileInput) fileInput.value = '';
+  });
+
+  document.getElementById('import-results').style.display = 'none';
+  document.getElementById('import-status-banner').style.display = 'none';
+  document.getElementById('manual-club-lounge').value = '0';
+  document.getElementById('manual-deposit-on-hand').value = '0';
+
+  // Clear adjustments
+  document.getElementById('adjustments-container').innerHTML = '';
+  const emptyMsg = document.getElementById('adjustments-empty');
+  if (emptyMsg) emptyMsg.style.display = 'block';
+  adjustmentCounter = 0;
+
+  updateButtonStates();
+}
+</script>

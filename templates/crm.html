@@ -1,0 +1,2635 @@
+{% extends "base.html" %}
+{% set tab_titles = {'overview': "Vue d'ensemble", 'revenue': 'Revenue Mgmt', 'fb': 'F&B Intelligence', 'labor': "Main-d'œuvre", 'cash': 'Cash & Récon', 'payments': 'Paiements', 'pnl': 'P&L & Budget'} %}
+{% block title %}CRM — {{ tab_titles.get(active_tab, "Intelligence d'affaires") }}{% endblock %}
+
+{% block content %}
+<div class="bi-page">
+  <!-- Header -->
+  <div class="bi-header">
+    <div class="bi-header-left">
+      <h1 class="bi-title">Intelligence d'affaires</h1>
+      <p class="bi-subtitle" id="bi-subtitle">Chargez un fichier RJ pour activer le dashboard analytique.</p>
+    </div>
+    <div class="bi-header-right">
+      <button onclick="showImportModal()" class="bi-btn bi-btn-ghost" id="btn-import" style="display:none;">
+        <i data-feather="upload-cloud"></i> Importer
+      </button>
+      <button onclick="loadDashboard()" class="bi-btn bi-btn-ghost">
+        <i data-feather="refresh-cw"></i> Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Period Selector Bar -->
+  <div class="bi-toolbar" id="period-bar" style="display:none;">
+    <div class="bi-chips">
+      <button class="bi-chip active" data-period="30d" onclick="setPeriod('30d', this)">30j</button>
+      <button class="bi-chip" data-period="3m" onclick="setPeriod('3m', this)">3 mois</button>
+      <button class="bi-chip" data-period="12m" onclick="setPeriod('12m', this)">12 mois</button>
+      <button class="bi-chip" data-period="5y" onclick="setPeriod('5y', this)">5 ans</button>
+      <button class="bi-chip" data-period="all" onclick="setPeriod('all', this)">Tout</button>
+      <button class="bi-chip" data-period="custom" onclick="setPeriod('custom', this)">Personnalisé</button>
+    </div>
+    <div class="bi-custom-dates" id="period-custom" style="display:none;">
+      <input type="date" id="date-start" class="bi-date-input" onchange="applyCustomDates()">
+      <span class="bi-date-sep">→</span>
+      <input type="date" id="date-end" class="bi-date-input" onchange="applyCustomDates()">
+    </div>
+    <div class="bi-toolbar-right">
+      <label class="bi-toggle">
+        <input type="checkbox" id="toggle-yoy" onchange="toggleYoY()">
+        <span>vs A-1</span>
+      </label>
+      <div class="bi-badge" id="data-badge" title="Données en base"></div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="empty-state" class="bi-empty">
+    <div class="bi-empty-icon"><i data-feather="bar-chart-2"></i></div>
+    <h2>Aucune donnée disponible</h2>
+    <p>Uploadez un fichier RJ dans <a href="{{ url_for('audit.rj_core.rj_page_v2') }}">Gestion RJ</a> ou importez des fichiers RJ historiques pour activer le tableau de bord.</p>
+    <button onclick="showImportModal()" class="bi-btn bi-btn-primary" style="margin-top:1.5rem;">
+      <i data-feather="upload-cloud"></i> Importer des fichiers RJ historiques
+    </button>
+  </div>
+
+  <!-- Import Modal -->
+  <div class="bi-modal-overlay" id="import-modal" style="display:none;" onclick="if(event.target===this)hideImportModal()">
+    <div class="bi-modal">
+      <div class="bi-modal-header">
+        <h2><i data-feather="database"></i> Import historique</h2>
+        <button onclick="hideImportModal()" class="bi-modal-close">×</button>
+      </div>
+      <div class="bi-modal-body">
+        <div class="bi-dropzone" id="drop-zone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+          <i data-feather="upload-cloud" class="bi-dropzone-icon"></i>
+          <p><strong>Glissez vos fichiers RJ ici</strong></p>
+          <p class="bi-dropzone-sub">ou <label for="file-input" class="bi-link">parcourez vos fichiers</label></p>
+          <p class="bi-dropzone-hint">.xls / .xlsx — Plusieurs fichiers acceptés (5 ans de RJ)</p>
+          <input type="file" id="file-input" multiple accept=".xls,.xlsx" style="display:none;" onchange="handleFiles(this.files)">
+        </div>
+        <div id="import-progress" style="display:none;">
+          <div class="bi-progress"><div class="bi-progress-fill" id="progress-fill"></div></div>
+          <p class="bi-progress-text" id="progress-text">Importation en cours...</p>
+        </div>
+        <div id="import-result" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       DASHBOARD CONTENT
+       ═══════════════════════════════════════════════════════════════ -->
+  <div id="bi-content" style="display:none;">
+
+    <!-- ══════════════ TAB: VUE D'ENSEMBLE ══════════════ -->
+    <div class="bi-tab-panel active" id="panel-overview">
+
+    <!-- ── KPI Cards ── -->
+    <div class="bi-kpis">
+      <div class="bi-kpi" data-accent="blue">
+        <div class="bi-kpi-top">
+          <span class="bi-kpi-label">RevPAR</span>
+          <div class="bi-kpi-icon"><i data-feather="home"></i></div>
+        </div>
+        <span class="bi-kpi-value" id="k-revpar">—</span>
+        <span class="bi-kpi-delta" id="d-revpar"></span>
+      </div>
+      <div class="bi-kpi" data-accent="green">
+        <div class="bi-kpi-top">
+          <span class="bi-kpi-label">ADR</span>
+          <div class="bi-kpi-icon"><i data-feather="trending-up"></i></div>
+        </div>
+        <span class="bi-kpi-value" id="k-adr">—</span>
+        <span class="bi-kpi-delta" id="d-adr"></span>
+      </div>
+      <div class="bi-kpi" data-accent="purple">
+        <div class="bi-kpi-top">
+          <span class="bi-kpi-label">Occupation</span>
+          <div class="bi-kpi-icon"><i data-feather="percent"></i></div>
+        </div>
+        <span class="bi-kpi-value" id="k-occ">—</span>
+        <span class="bi-kpi-delta" id="d-occ"></span>
+      </div>
+      <div class="bi-kpi" data-accent="orange">
+        <div class="bi-kpi-top">
+          <span class="bi-kpi-label">Rev. Chambres</span>
+          <div class="bi-kpi-icon"><i data-feather="dollar-sign"></i></div>
+        </div>
+        <span class="bi-kpi-value" id="k-room-rev">—</span>
+        <span class="bi-kpi-delta" id="d-room-rev"></span>
+      </div>
+      <div class="bi-kpi" data-accent="pink">
+        <div class="bi-kpi-top">
+          <span class="bi-kpi-label">Rev. F&B</span>
+          <div class="bi-kpi-icon"><i data-feather="coffee"></i></div>
+        </div>
+        <span class="bi-kpi-value" id="k-fb-rev">—</span>
+        <span class="bi-kpi-delta" id="d-fb-rev"></span>
+      </div>
+      <div class="bi-kpi" data-accent="teal">
+        <div class="bi-kpi-top">
+          <span class="bi-kpi-label">Clients/jour</span>
+          <div class="bi-kpi-icon"><i data-feather="users"></i></div>
+        </div>
+        <span class="bi-kpi-value" id="k-clients">—</span>
+        <span class="bi-kpi-delta" id="d-clients"></span>
+      </div>
+    </div>
+
+    <!-- ── Row 2: Revenue Trend + Mix ── -->
+    <div class="bi-grid bi-grid-2-1">
+      <div class="bi-card">
+        <div class="bi-card-header">
+          <h3>Tendance des revenus</h3>
+          <span class="bi-card-badge" id="agg-label"></span>
+        </div>
+        <div class="bi-chart-wrap"><canvas id="chart-revenue"></canvas></div>
+      </div>
+      <div class="bi-card">
+        <h3>Répartition des revenus</h3>
+        <div class="bi-chart-wrap bi-chart-sm"><canvas id="chart-rev-mix"></canvas></div>
+        <div class="bi-detail" id="rev-mix-detail"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 3: Multi-Year (hidden until enough data) ── -->
+    <div class="bi-grid bi-grid-1-1" id="multiyear-row" style="display:none;">
+      <div class="bi-card">
+        <h3><i data-feather="bar-chart"></i> Croissance annuelle</h3>
+        <div class="bi-chart-wrap"><canvas id="chart-annual"></canvas></div>
+      </div>
+      <div class="bi-card">
+        <h3><i data-feather="activity"></i> Saisonnalité (overlay par année)</h3>
+        <div class="bi-chart-wrap"><canvas id="chart-seasonal"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ── Row 4: F&B Outlets + Mix ── -->
+    <div class="bi-grid bi-grid-2-1">
+      <div class="bi-card">
+        <h3>Revenus F&B par point de vente</h3>
+        <div class="bi-chart-wrap"><canvas id="chart-fb-outlets"></canvas></div>
+      </div>
+      <div class="bi-card">
+        <h3>Mix F&B (Nourriture vs Boisson)</h3>
+        <div class="bi-chart-wrap bi-chart-sm"><canvas id="chart-fb-mix"></canvas></div>
+        <div class="bi-detail" id="fb-mix-detail"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 5: Occupancy + Room Mix ── -->
+    <div class="bi-grid bi-grid-2-1">
+      <div class="bi-card">
+        <h3>Occupation & ADR quotidien</h3>
+        <div class="bi-chart-wrap"><canvas id="chart-occupancy"></canvas></div>
+      </div>
+      <div class="bi-card">
+        <h3>Mix des chambres vendues</h3>
+        <div class="bi-chart-wrap bi-chart-sm"><canvas id="chart-room-mix"></canvas></div>
+        <div class="bi-detail" id="room-mix-detail"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 6: Payments + Taxes ── -->
+    <div class="bi-grid bi-grid-1-1">
+      <div class="bi-card">
+        <h3>Modes de paiement</h3>
+        <div class="bi-chart-wrap bi-chart-sm"><canvas id="chart-payments"></canvas></div>
+        <div class="bi-detail" id="payment-detail"></div>
+      </div>
+      <div class="bi-card">
+        <h3>Taxes collectées</h3>
+        <div class="bi-chart-wrap bi-chart-sm"><canvas id="chart-taxes"></canvas></div>
+        <div class="bi-detail" id="tax-detail"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 7: Advanced KPIs ── -->
+    <div class="bi-grid bi-grid-full" id="advanced-row">
+      <div class="bi-card">
+        <h3><i data-feather="zap"></i> KPIs avancés — Revenue Management</h3>
+        <div class="bi-adv-grid" id="adv-kpis"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 8: Day-of-Week + Processing ── -->
+    <div class="bi-grid bi-grid-1-1" id="dow-row">
+      <div class="bi-card">
+        <h3><i data-feather="calendar"></i> Performance par jour de semaine</h3>
+        <div class="bi-chart-wrap"><canvas id="chart-dow"></canvas></div>
+        <div class="bi-detail" id="dow-detail"></div>
+      </div>
+      <div class="bi-card">
+        <h3><i data-feather="credit-card"></i> Coûts de traitement par carte</h3>
+        <div class="bi-chart-wrap"><canvas id="chart-processing"></canvas></div>
+        <div class="bi-detail" id="processing-detail"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 9: Revenue Opportunities ── -->
+    <div class="bi-grid bi-grid-full" id="opp-row">
+      <div class="bi-card">
+        <div class="bi-card-header">
+          <h3><i data-feather="target"></i> Opportunités de revenus</h3>
+          <span class="bi-opp-badge" id="opp-total-badge"></span>
+        </div>
+        <div class="bi-opp-grid" id="opp-container"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 10: Alerts ── -->
+    <div class="bi-grid bi-grid-full">
+      <div class="bi-card">
+        <h3><i data-feather="alert-triangle"></i> Alertes & Recommandations</h3>
+        <div class="bi-alerts" id="alerts-container"></div>
+      </div>
+    </div>
+
+    <!-- ── Row 11: Staff ── -->
+    <div class="bi-grid bi-grid-full">
+      <div class="bi-card">
+        <div class="bi-card-header">
+          <h3><i data-feather="users"></i> Personnel — Suivi des variances</h3>
+          <input type="text" class="bi-search" id="staff-search" placeholder="Rechercher..." oninput="filterStaff()">
+        </div>
+        <div class="bi-staff" id="staff-container"></div>
+      </div>
+    </div>
+
+    </div><!-- /panel-overview -->
+
+    <!-- ══════════════ TAB: REVENUE MANAGEMENT ══════════════ -->
+    <div class="bi-tab-panel" id="panel-revenue" style="display:none;">
+      <div class="bi-tab-loading" id="revenue-loading"><div class="bi-spinner"></div> Chargement Revenue Management...</div>
+
+      <!-- Row 1: ADR by DOW + ADR by Month -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="calendar"></i> ADR par jour de semaine</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-rev-adr-dow"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="bar-chart"></i> ADR par mois (moy. multi-année)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-rev-adr-month"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: RevPAR Trend + Scatter -->
+      <div class="bi-grid bi-grid-2-1">
+        <div class="bi-card">
+          <h3><i data-feather="activity"></i> Tendance RevPAR mensuel</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-rev-revpar-trend"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="crosshair"></i> Occupation vs ADR</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-rev-scatter"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Budget vs Actual -->
+      <div class="bi-grid bi-grid-full">
+        <div class="bi-card">
+          <h3><i data-feather="target"></i> Budget vs Réel — Revenus chambres</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-rev-budget"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 4: Yearly Summary Table -->
+      <div class="bi-grid bi-grid-full">
+        <div class="bi-card">
+          <h3><i data-feather="layers"></i> Sommaire annuel</h3>
+          <div class="bi-table-wrap" id="rev-yearly-table"></div>
+        </div>
+      </div>
+    </div><!-- /panel-revenue -->
+
+    <!-- ══════════════ TAB: F&B INTELLIGENCE ══════════════ -->
+    <div class="bi-tab-panel" id="panel-fb" style="display:none;">
+      <div class="bi-tab-loading" id="fb-loading"><div class="bi-spinner"></div> Chargement F&B Intelligence...</div>
+
+      <!-- Row 1: Outlet Trend + F&B per Client -->
+      <div class="bi-grid bi-grid-2-1">
+        <div class="bi-card">
+          <h3><i data-feather="bar-chart-2"></i> Revenus F&B par point de vente (mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-fb-outlet-trend"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="user"></i> F&B par client</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-fb-per-client"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Food vs Bev + Tips -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="percent"></i> Nourriture vs Boisson (% mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-fb-food-bev"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="dollar-sign"></i> Pourboires par département</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-fb-tips"></canvas></div>
+        </div>
+      </div>
+    </div><!-- /panel-fb -->
+
+    <!-- ══════════════ TAB: MAIN-D'OEUVRE ══════════════ -->
+    <div class="bi-tab-panel" id="panel-labor" style="display:none;">
+      <div class="bi-tab-loading" id="labor-loading"><div class="bi-spinner"></div> Chargement Main-d'œuvre...</div>
+
+      <!-- Row 1: Labor % of Revenue + Revenue per Hour -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="percent"></i> Coût main-d'œuvre % du revenu</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-labor-pct"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="zap"></i> Revenu par heure travaillée</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-labor-rev-hour"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Labor by Dept + Overtime -->
+      <div class="bi-grid bi-grid-2-1">
+        <div class="bi-card">
+          <h3><i data-feather="bar-chart"></i> Coûts par département (mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-labor-dept"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="clock"></i> Heures supplémentaires</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-labor-overtime"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Department Summary Table -->
+      <div class="bi-grid bi-grid-full">
+        <div class="bi-card">
+          <h3><i data-feather="clipboard"></i> Sommaire par département</h3>
+          <div class="bi-table-wrap" id="labor-dept-table"></div>
+        </div>
+      </div>
+    </div><!-- /panel-labor -->
+
+    <!-- ══════════════ TAB: CASH & RECONCILIATION ══════════════ -->
+    <div class="bi-tab-panel" id="panel-cash" style="display:none;">
+      <div class="bi-tab-loading" id="cash-loading"><div class="bi-spinner"></div> Chargement Cash & Réconciliation...</div>
+
+      <!-- Row 1: Surplus/Deficit + Quasimodo -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="trending-up"></i> Surplus / Déficit quotidien</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-cash-surplus"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="activity"></i> Variance Quasimodo</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-cash-quasimodo"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Auditor Stats + Quality -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="user-check"></i> Performance par auditeur</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-cash-auditor"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="check-circle"></i> Qualité de réconciliation</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-cash-quality"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Deposit Trend -->
+      <div class="bi-grid bi-grid-full">
+        <div class="bi-card">
+          <h3><i data-feather="dollar-sign"></i> Tendance des dépôts (mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-cash-deposits"></canvas></div>
+        </div>
+      </div>
+    </div><!-- /panel-cash -->
+
+    <!-- ══════════════ TAB: PAIEMENTS & FRAIS ══════════════ -->
+    <div class="bi-tab-panel" id="panel-payments" style="display:none;">
+      <div class="bi-tab-loading" id="payments-loading"><div class="bi-spinner"></div> Chargement Paiements & Frais...</div>
+
+      <!-- Row 1: Card Mix + Volume -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="pie-chart"></i> Répartition des cartes (% mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pay-mix"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="bar-chart-2"></i> Volume par carte (mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pay-volume"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Discount Costs + Net vs Gross -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="scissors"></i> Frais d'escompte & taux mixte</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pay-discount"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="git-merge"></i> Brut vs Net (mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pay-net-gross"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Avg Ticket -->
+      <div class="bi-grid bi-grid-full">
+        <div class="bi-card">
+          <h3><i data-feather="tag"></i> Ticket moyen par carte (mensuel)</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pay-ticket"></canvas></div>
+        </div>
+      </div>
+    </div><!-- /panel-payments -->
+
+    <!-- ══════════════ TAB: P&L & BUDGET ══════════════ -->
+    <div class="bi-tab-panel" id="panel-pnl" style="display:none;">
+      <div class="bi-tab-loading" id="pnl-loading"><div class="bi-spinner"></div> Chargement P&L & Budget...</div>
+
+      <!-- Row 1: Budget Variance + Profit Margin -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="target"></i> Variance Budget vs Réel</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pnl-variance"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="trending-up"></i> Marge brute mensuelle</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pnl-margin"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 2: Expense Breakdown + Labor Ratio -->
+      <div class="bi-grid bi-grid-1-1">
+        <div class="bi-card">
+          <h3><i data-feather="layers"></i> Répartition des dépenses</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pnl-expenses"></canvas></div>
+        </div>
+        <div class="bi-card">
+          <h3><i data-feather="percent"></i> Ratio main-d'œuvre / revenu</h3>
+          <div class="bi-chart-wrap"><canvas id="chart-pnl-labor-ratio"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: Annual P&L Table -->
+      <div class="bi-grid bi-grid-full">
+        <div class="bi-card">
+          <h3><i data-feather="file-text"></i> P&L annuel</h3>
+          <div class="bi-table-wrap" id="pnl-annual-table"></div>
+        </div>
+      </div>
+    </div><!-- /panel-pnl -->
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════════════
+   CRM DASHBOARD — Premium Dark-Friendly Design 2026
+   Inspired by Awwwards/Dribbble: bento grid, glassmorphism,
+   no border-lefts, clean typography, subtle motion
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .45; }
+}
+
+/* ── Accent Colors ── */
+:root {
+  --bi-ease: cubic-bezier(.4,0,.2,1);
+  --bi-blue:   #3b82f6;
+  --bi-green:  #10b981;
+  --bi-purple: #8b5cf6;
+  --bi-orange: #f59e0b;
+  --bi-pink:   #ec4899;
+  --bi-teal:   #14b8a6;
+  --bi-red:    #ef4444;
+}
+
+/* ── Page ── */
+.bi-page {
+  padding: 1.25rem 1.75rem 2rem;
+  max-width: 1480px;
+  margin: 0 auto;
+}
+
+/* ── Header ── */
+.bi-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+  animation: fadeUp .45s var(--bi-ease) both;
+}
+.bi-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--text);
+}
+.bi-subtitle {
+  font-size: .82rem;
+  color: var(--text-muted);
+  margin-top: .15rem;
+}
+.bi-header-right { display: flex; gap: .5rem; }
+.bi-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .45rem 1rem;
+  border-radius: 10px;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 200ms var(--bi-ease);
+}
+.bi-btn svg { width: 15px; height: 15px; }
+.bi-btn-ghost {
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.bi-btn-ghost:hover {
+  background: var(--border-light);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+.bi-btn-primary {
+  background: var(--bi-blue);
+  color: #fff;
+}
+.bi-btn-primary:hover {
+  background: #2563eb;
+  box-shadow: 0 4px 14px rgba(59,130,246,.35);
+}
+
+/* ── Toolbar / Period Bar ── */
+.bi-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .55rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  animation: fadeUp .4s var(--bi-ease) both;
+}
+.bi-chips { display: flex; gap: .3rem; }
+.bi-chip {
+  padding: .3rem .75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 180ms var(--bi-ease);
+}
+.bi-chip:hover {
+  background: var(--border-light);
+  color: var(--text);
+}
+.bi-chip.active {
+  background: var(--bi-blue);
+  color: #fff;
+  border-color: var(--bi-blue);
+}
+.bi-custom-dates { display: flex; align-items: center; gap: .35rem; }
+.bi-date-input {
+  padding: .3rem .55rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .75rem;
+  color: var(--text);
+  background: var(--bg);
+}
+.bi-date-input:focus { outline: none; border-color: var(--bi-blue); box-shadow: 0 0 0 2px rgba(59,130,246,.12); }
+.bi-date-sep { color: var(--text-muted); font-size: .78rem; }
+.bi-toolbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+.bi-toggle {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+  font-size: .75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.bi-toggle input { accent-color: var(--bi-blue); }
+.bi-badge {
+  font-size: .65rem;
+  padding: .2rem .6rem;
+  border-radius: 6px;
+  background: rgba(59,130,246,.08);
+  color: var(--bi-blue);
+  font-weight: 700;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: .25rem;
+}
+.bi-badge::before {
+  content: '';
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--bi-blue);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ═══ KPI CARDS — Clean bento, NO border-left ═══ */
+.bi-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: .75rem;
+  margin-bottom: 1.1rem;
+  animation: fadeUp .5s var(--bi-ease) both;
+}
+.bi-kpi {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1.15rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  transition: all 250ms var(--bi-ease);
+  position: relative;
+  overflow: hidden;
+}
+.bi-kpi::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  opacity: 0;
+  transition: opacity 250ms var(--bi-ease);
+}
+.bi-kpi:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.bi-kpi:hover::after { opacity: 1; }
+
+/* Accent bottom-bar on hover */
+[data-accent="blue"]::after   { background: var(--bi-blue); }
+[data-accent="green"]::after  { background: var(--bi-green); }
+[data-accent="purple"]::after { background: var(--bi-purple); }
+[data-accent="orange"]::after { background: var(--bi-orange); }
+[data-accent="pink"]::after   { background: var(--bi-pink); }
+[data-accent="teal"]::after   { background: var(--bi-teal); }
+
+/* Hover glow per accent */
+[data-accent="blue"]:hover   { box-shadow: 0 4px 18px rgba(59,130,246,.12); }
+[data-accent="green"]:hover  { box-shadow: 0 4px 18px rgba(16,185,129,.12); }
+[data-accent="purple"]:hover { box-shadow: 0 4px 18px rgba(139,92,246,.12); }
+[data-accent="orange"]:hover { box-shadow: 0 4px 18px rgba(245,158,11,.12); }
+[data-accent="pink"]:hover   { box-shadow: 0 4px 18px rgba(236,72,153,.12); }
+[data-accent="teal"]:hover   { box-shadow: 0 4px 18px rgba(20,184,166,.12); }
+
+.bi-kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.bi-kpi-label {
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.bi-kpi-icon {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.bi-kpi-icon svg { width: 16px; height: 16px; }
+
+[data-accent="blue"] .bi-kpi-icon   { background: rgba(59,130,246,.1);  color: var(--bi-blue); }
+[data-accent="green"] .bi-kpi-icon  { background: rgba(16,185,129,.1);  color: var(--bi-green); }
+[data-accent="purple"] .bi-kpi-icon { background: rgba(139,92,246,.1);  color: var(--bi-purple); }
+[data-accent="orange"] .bi-kpi-icon { background: rgba(245,158,11,.1);  color: var(--bi-orange); }
+[data-accent="pink"] .bi-kpi-icon   { background: rgba(236,72,153,.1);  color: var(--bi-pink); }
+[data-accent="teal"] .bi-kpi-icon   { background: rgba(20,184,166,.1);  color: var(--bi-teal); }
+
+.bi-kpi-value {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.15;
+  letter-spacing: -.025em;
+}
+.bi-kpi-delta {
+  font-size: .65rem;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: .1rem .4rem;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+}
+.bi-kpi-delta.up   { color: var(--bi-green); background: rgba(16,185,129,.08); }
+.bi-kpi-delta.down { color: var(--bi-red);   background: rgba(239,68,68,.08); }
+.bi-kpi-delta.neutral { color: var(--text-muted); background: var(--border-light); }
+
+/* ═══ GRID LAYOUTS (Bento) ═══ */
+.bi-grid {
+  display: grid;
+  gap: .75rem;
+  margin-bottom: .75rem;
+  animation: fadeUp .45s var(--bi-ease) both;
+}
+.bi-grid-2-1 { grid-template-columns: 2fr 1fr; }
+.bi-grid-1-1 { grid-template-columns: 1fr 1fr; }
+.bi-grid-full { grid-template-columns: 1fr; }
+
+/* ═══ CARDS ═══ */
+.bi-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.15rem 1.25rem;
+  transition: all 250ms var(--bi-ease);
+}
+.bi-card:hover {
+  box-shadow: var(--shadow);
+}
+.bi-card h3 {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: .7rem;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.bi-card h3 svg { width: 15px; height: 15px; color: var(--text-muted); }
+.bi-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .6rem;
+}
+.bi-card-header h3 { margin-bottom: 0; }
+.bi-card-badge {
+  font-size: .65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: var(--border-light);
+  padding: .15rem .5rem;
+  border-radius: 6px;
+}
+
+/* Chart wrapper — FIXED HEIGHT prevents infinite growth */
+.bi-chart-wrap {
+  position: relative;
+  height: 260px;
+}
+.bi-chart-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+.bi-chart-wrap.bi-chart-sm { height: 210px; }
+
+.bi-detail {
+  margin-top: .7rem;
+  font-size: .75rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ═══ ALERTS ═══ */
+.bi-alerts {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: .6rem;
+}
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  padding: .75rem .9rem;
+  border-radius: 10px;
+  font-size: .8rem;
+  transition: all 200ms var(--bi-ease);
+}
+.alert-item:hover { transform: translateX(2px); }
+.alert-item.danger  { background: rgba(239,68,68,.05);  border: 1px solid rgba(239,68,68,.12); }
+.alert-item.warning { background: rgba(245,158,11,.05); border: 1px solid rgba(245,158,11,.12); }
+.alert-item.info    { background: rgba(59,130,246,.05);  border: 1px solid rgba(59,130,246,.12); }
+.alert-item.insight { background: rgba(16,185,129,.05);  border: 1px solid rgba(16,185,129,.12); }
+.alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: .1rem; }
+.alert-text { color: var(--text); line-height: 1.5; }
+
+/* ═══ STAFF ═══ */
+.bi-search {
+  padding: .35rem .7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: .78rem;
+  width: 200px;
+  background: var(--bg);
+  color: var(--text);
+  transition: border-color 200ms var(--bi-ease);
+}
+.bi-search:focus { outline: none; border-color: var(--bi-blue); box-shadow: 0 0 0 2px rgba(59,130,246,.1); }
+.bi-staff {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: .45rem;
+  max-height: 380px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.staff-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .5rem .75rem;
+  border-radius: 8px;
+  font-size: .8rem;
+  transition: all 200ms var(--bi-ease);
+}
+.staff-item:hover {
+  background: var(--border-light);
+}
+.staff-name { font-weight: 600; color: var(--text); }
+.staff-col {
+  font-size: .65rem;
+  color: var(--text-muted);
+  background: var(--border-light);
+  padding: .1rem .4rem;
+  border-radius: 5px;
+  font-weight: 600;
+  margin-left: .35rem;
+}
+.staff-variance {
+  font-weight: 700;
+  font-family: 'SF Mono', 'JetBrains Mono', monospace;
+  font-size: .8rem;
+}
+.staff-ok    { color: var(--bi-green); }
+.staff-alert { color: var(--bi-red); }
+
+/* ═══ EMPTY STATE ═══ */
+.bi-empty {
+  text-align: center;
+  padding: 5rem 2rem;
+  color: var(--text-muted);
+  animation: fadeUp .5s var(--bi-ease) both;
+}
+.bi-empty .bi-empty-icon svg { width: 64px; height: 64px; opacity: .12; }
+.bi-empty h2 { margin: 1rem 0 .4rem; color: var(--text-secondary); font-size: 1.25rem; font-weight: 700; }
+.bi-empty p  { font-size: .9rem; max-width: 440px; margin: 0 auto; line-height: 1.6; }
+.bi-empty a  { color: var(--bi-blue); text-decoration: none; font-weight: 600; }
+.bi-empty a:hover { text-decoration: underline; }
+
+/* ═══ MODAL ═══ */
+.bi-modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+}
+.bi-modal {
+  background: var(--card-bg);
+  border-radius: 18px;
+  width: 90%; max-width: 520px;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 48px rgba(0,0,0,.18);
+  overflow: hidden;
+}
+.bi-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.1rem 1.35rem;
+  border-bottom: 1px solid var(--border);
+}
+.bi-modal-header h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+.bi-modal-header h2 svg { width: 18px; height: 18px; color: var(--bi-blue); }
+.bi-modal-close {
+  width: 30px; height: 30px;
+  border: none;
+  background: var(--border-light);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 180ms var(--bi-ease);
+}
+.bi-modal-close:hover { background: var(--border); color: var(--text); }
+.bi-modal-body { padding: 1.35rem; }
+.bi-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 2.5rem 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 250ms var(--bi-ease);
+  background: var(--bg);
+}
+.bi-dropzone:hover, .bi-dropzone.drag-over {
+  border-color: var(--bi-blue);
+  background: rgba(59,130,246,.04);
+}
+.bi-dropzone-icon { width: 40px; height: 40px; color: var(--text-muted); margin: 0 auto .75rem; }
+.bi-dropzone p { margin: .25rem 0; color: var(--text-secondary); font-size: .85rem; }
+.bi-dropzone-sub { font-size: .82rem !important; }
+.bi-dropzone-hint { font-size: .72rem !important; color: var(--text-muted) !important; margin-top: .7rem !important; }
+.bi-link { color: var(--bi-blue); cursor: pointer; font-weight: 600; text-decoration: underline; }
+.bi-progress {
+  height: 5px;
+  background: var(--border-light);
+  border-radius: 3px;
+  margin: 1.1rem 0 .4rem;
+  overflow: hidden;
+}
+.bi-progress-fill {
+  height: 100%;
+  background: var(--bi-blue);
+  border-radius: 3px;
+  width: 0;
+  transition: width .3s var(--bi-ease);
+}
+.bi-progress-text { font-size: .78rem; color: var(--text-muted); text-align: center; }
+.import-result-success {
+  background: rgba(16,185,129,.05);
+  border: 1px solid rgba(16,185,129,.15);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: .85rem;
+}
+.import-result-error {
+  background: rgba(239,68,68,.05);
+  border: 1px solid rgba(239,68,68,.15);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-top: .85rem;
+}
+.import-result-success h4, .import-result-error h4 { font-size: .85rem; margin-bottom: .35rem; font-weight: 700; }
+.import-result-success p, .import-result-error p { font-size: .78rem; color: var(--text-secondary); margin: .1rem 0; }
+
+/* ═══ ADVANCED KPI GRID ═══ */
+.bi-adv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: .6rem;
+}
+.adv-kpi-item {
+  padding: .75rem .9rem;
+  border-radius: 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  transition: all 200ms var(--bi-ease);
+}
+.adv-kpi-item:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--text-muted);
+}
+.adv-kpi-item .adv-label {
+  font-size: .63rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.adv-kpi-item .adv-value {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+  letter-spacing: -.01em;
+}
+.adv-kpi-item .adv-sub {
+  font-size: .67rem;
+  color: var(--text-secondary);
+  margin-top: .1rem;
+}
+
+/* ═══ OPPORTUNITIES ═══ */
+.bi-opp-badge {
+  font-size: .82rem;
+  font-weight: 700;
+  color: var(--bi-green);
+  background: rgba(16,185,129,.08);
+  padding: .25rem .7rem;
+  border-radius: 8px;
+}
+.bi-opp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: .6rem;
+}
+.opp-item {
+  padding: .9rem 1rem;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  transition: all 250ms var(--bi-ease);
+}
+.opp-item:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
+.opp-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .35rem; }
+.opp-item-title { font-size: .84rem; font-weight: 700; color: var(--text); }
+.opp-item-annual {
+  font-size: .75rem; font-weight: 700;
+  color: var(--bi-green);
+  background: rgba(16,185,129,.08);
+  padding: .15rem .5rem;
+  border-radius: 6px;
+}
+.opp-item-desc { font-size: .75rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: .4rem; }
+.opp-item-footer { display: flex; gap: .4rem; font-size: .65rem; flex-wrap: wrap; }
+.opp-tag {
+  padding: .12rem .5rem;
+  border-radius: 6px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.opp-tag.pricing    { background: rgba(59,130,246,.08); color: var(--bi-blue); }
+.opp-tag.operations { background: rgba(245,158,11,.08); color: var(--bi-orange); }
+.opp-tag.revenue    { background: rgba(139,92,246,.08); color: var(--bi-purple); }
+.opp-tag.fb         { background: rgba(236,72,153,.08); color: var(--bi-pink); }
+.opp-tag.costs      { background: rgba(20,184,166,.08); color: var(--bi-teal); }
+.opp-tag.easy       { background: rgba(16,185,129,.08); color: var(--bi-green); }
+.opp-tag.medium     { background: rgba(245,158,11,.08); color: #d97706; }
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 1100px) {
+  .bi-kpis { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .bi-page { padding: 1rem; }
+  .bi-grid-2-1, .bi-grid-1-1 { grid-template-columns: 1fr; }
+  .bi-kpis { grid-template-columns: repeat(2, 1fr); }
+  .bi-toolbar { flex-direction: column; align-items: stretch; }
+  .bi-toolbar-right { margin-left: 0; margin-top: .5rem; }
+  .bi-adv-grid { grid-template-columns: repeat(2, 1fr); }
+  .bi-opp-grid { grid-template-columns: 1fr; }
+  .bi-alerts { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .bi-kpis { grid-template-columns: 1fr; }
+  .bi-adv-grid { grid-template-columns: 1fr; }
+  .bi-staff { grid-template-columns: 1fr; }
+}
+
+/* ═══ TAB PANELS ═══ */
+.bi-tab-panel { animation: fadeUp .35s var(--bi-ease) both; }
+
+/* ═══ TAB LOADING ═══ */
+.bi-tab-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.bi-spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border);
+  border-top-color: var(--bi-blue);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ DATA TABLES ═══ */
+.bi-table-wrap { overflow-x: auto; scrollbar-width: thin; }
+.bi-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: .78rem;
+}
+.bi-table th {
+  padding: .55rem .75rem;
+  text-align: left;
+  font-size: .65rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+}
+.bi-table td {
+  padding: .5rem .75rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+  white-space: nowrap;
+}
+.bi-table tr:last-child td { border-bottom: none; }
+.bi-table tr:hover td { background: var(--border-light); }
+.bi-table .num { text-align: right; font-family: 'SF Mono', 'JetBrains Mono', monospace; font-size: .77rem; }
+.bi-table .pos { color: var(--bi-green); }
+.bi-table .neg { color: var(--bi-red); }
+</style>
+
+<script>
+let dashData = null;
+let charts = {};
+let allStaff = [];
+let currentPeriod = '30d';
+let yoyEnabled = false;
+let dataStatus = null;
+let currentTab = 'overview';
+let tabDataCache = {};
+const DOW_FR = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+
+const COLORS = {
+  blue: '#3b82f6', green: '#10b981', purple: '#8b5cf6',
+  orange: '#f59e0b', pink: '#ec4899', teal: '#14b8a6',
+  red: '#ef4444', indigo: '#6366f1', amber: '#d97706',
+};
+const PALETTE = [COLORS.blue, COLORS.pink, COLORS.green, COLORS.purple, COLORS.orange, COLORS.teal, COLORS.indigo, COLORS.amber, COLORS.red];
+const YEAR_COLORS = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b', '#ec4899', '#14b8a6', '#ef4444'];
+const MONTH_NAMES = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+
+/* Chart.js global defaults — clean, minimal */
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#9ca3af';
+Chart.defaults.plugins.legend.labels.boxWidth = 10;
+Chart.defaults.plugins.legend.labels.padding = 14;
+Chart.defaults.elements.bar.borderRadius = 4;
+Chart.defaults.elements.line.tension = 0.35;
+
+function fmt(n) { return '$' + Number(n||0).toLocaleString('fr-CA', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function fmt2(n) { return '$' + Number(n||0).toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function pct(n) { return (n||0).toFixed(1) + '%'; }
+
+// ============ DATE HELPERS ============
+function getDateRange(period) {
+  const today = new Date();
+  let start, end;
+  end = today.toISOString().split('T')[0];
+
+  switch(period) {
+    case '30d':
+      start = new Date(today - 30*86400000).toISOString().split('T')[0];
+      break;
+    case '3m':
+      start = new Date(today.getFullYear(), today.getMonth()-3, today.getDate()).toISOString().split('T')[0];
+      break;
+    case '12m':
+      start = new Date(today.getFullYear()-1, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+      break;
+    case '5y':
+      start = new Date(today.getFullYear()-5, today.getMonth(), today.getDate()).toISOString().split('T')[0];
+      break;
+    case 'all':
+      if (dataStatus && dataStatus.date_range) {
+        start = dataStatus.date_range.from;
+      } else {
+        start = new Date(today.getFullYear()-10, 0, 1).toISOString().split('T')[0];
+      }
+      break;
+    case 'custom':
+      start = document.getElementById('date-start').value;
+      end = document.getElementById('date-end').value;
+      break;
+  }
+  return { start, end };
+}
+
+function getDaysBetween(d1, d2) {
+  return Math.round((new Date(d2) - new Date(d1)) / 86400000);
+}
+
+// ============ PERIOD CONTROLS ============
+function setPeriod(period, btn) {
+  currentPeriod = period;
+  document.querySelectorAll('.bi-chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const customPanel = document.getElementById('period-custom');
+  if (period === 'custom') {
+    customPanel.style.display = 'flex';
+    if (!document.getElementById('date-start').value) return;
+  } else {
+    customPanel.style.display = 'none';
+  }
+  loadDashboard();
+}
+
+function applyCustomDates() {
+  const s = document.getElementById('date-start').value;
+  const e = document.getElementById('date-end').value;
+  if (s && e) loadDashboard();
+}
+
+function toggleYoY() {
+  yoyEnabled = document.getElementById('toggle-yoy').checked;
+  loadDashboard();
+}
+
+// ============ IMPORT MODAL ============
+function showImportModal() {
+  document.getElementById('import-modal').style.display = 'flex';
+  document.getElementById('import-progress').style.display = 'none';
+  document.getElementById('import-result').style.display = 'none';
+  document.getElementById('drop-zone').style.display = 'block';
+  feather.replace();
+}
+function hideImportModal() {
+  document.getElementById('import-modal').style.display = 'none';
+}
+
+function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('drag-over'); }
+function handleDragLeave(e) { e.currentTarget.classList.remove('drag-over'); }
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+}
+
+async function handleFiles(files) {
+  if (!files.length) return;
+
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('import-progress').style.display = 'block';
+  document.getElementById('import-result').style.display = 'none';
+
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  fill.style.width = '10%';
+  text.textContent = `Envoi de ${files.length} fichier(s)...`;
+
+  const formData = new FormData();
+  for (let f of files) formData.append('files[]', f);
+
+  fill.style.width = '40%';
+  text.textContent = 'Extraction des données...';
+
+  try {
+    const res = await fetch('/api/crm/import-history', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    fill.style.width = '100%';
+    text.textContent = 'Terminé!';
+
+    const resultDiv = document.getElementById('import-result');
+    resultDiv.style.display = 'block';
+
+    if (data.success) {
+      let html = `<div class="import-result-success">
+        <h4>Import réussi</h4>
+        <p><strong>${data.imported}</strong> jours importés, <strong>${data.updated}</strong> mis à jour</p>`;
+      if (data.date_range) {
+        html += `<p>Période: ${data.date_range.from} → ${data.date_range.to}</p>`;
+      }
+      if (data.errors && data.errors.length) {
+        html += `<p style="color:var(--bi-red);margin-top:0.5rem;">${data.errors.length} erreur(s):</p>`;
+        data.errors.forEach(e => { html += `<p style="font-size:0.75rem;">· ${e.file}: ${e.reason}</p>`; });
+      }
+      html += `</div>`;
+      resultDiv.innerHTML = html;
+      setTimeout(() => { hideImportModal(); loadDashboard(); }, 2000);
+    } else {
+      resultDiv.innerHTML = `<div class="import-result-error">
+        <h4>Échec de l'import</h4>
+        <p>${data.error || 'Erreur inconnue'}</p>
+        ${(data.errors||[]).map(e => `<p style="font-size:0.75rem;">· ${e.file}: ${e.reason}</p>`).join('')}
+      </div>`;
+    }
+  } catch (e) {
+    fill.style.width = '100%';
+    text.textContent = 'Erreur!';
+    document.getElementById('import-result').style.display = 'block';
+    document.getElementById('import-result').innerHTML = `<div class="import-result-error"><h4>Erreur réseau</h4><p>${e.message}</p></div>`;
+  }
+}
+
+// ============ MAIN LOAD ============
+async function loadDashboard() {
+  try {
+    let url = '/api/crm/dashboard';
+    const params = new URLSearchParams();
+    const range = getDateRange(currentPeriod);
+    if (range.start) params.set('start_date', range.start);
+    if (range.end) params.set('end_date', range.end);
+    if (yoyEnabled) params.set('compare', 'yoy');
+    if (params.toString()) url += '?' + params.toString();
+
+    const res = await fetch(url);
+    dashData = await res.json();
+
+    if (!dashData.has_data) {
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('bi-content').style.display = 'none';
+      document.getElementById('period-bar').style.display = 'none';
+      document.getElementById('btn-import').style.display = 'inline-flex';
+      feather.replace();
+      return;
+    }
+
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('bi-content').style.display = 'block';
+    document.getElementById('period-bar').style.display = 'flex';
+    document.getElementById('btn-import').style.display = 'inline-flex';
+
+    dataStatus = dashData.data_status || null;
+    updateSubtitle();
+    updateDataBadge();
+
+    renderKPIs(dashData.kpis, dashData.yoy);
+    renderRevenueTrend(dashData.revenue_trend);
+    renderRevenueMix(dashData.kpis);
+    renderFBOutlets(dashData.fb);
+    renderFBMix(dashData.fb);
+    renderOccupancy(dashData.rooms);
+    renderRoomMix(dashData.rooms);
+    renderPayments(dashData.payments);
+    renderTaxes(dashData.taxes);
+    renderAnomalies(dashData.anomalies);
+
+    const ms = dashData.monthly_summary;
+    if (ms && ms.length > 6) {
+      document.getElementById('multiyear-row').style.display = 'grid';
+      renderAnnualGrowth(ms);
+      renderSeasonality(ms);
+    } else {
+      document.getElementById('multiyear-row').style.display = 'none';
+    }
+
+    if (dashData.advanced) renderAdvancedKPIs(dashData.advanced);
+    if (dashData.dow) renderDOW(dashData.dow);
+    if (dashData.opportunities) renderOpportunities(dashData.opportunities);
+    if (dashData.advanced && dashData.advanced.card_processing_detail) {
+      renderProcessingCosts(dashData.advanced.card_processing_detail);
+    }
+
+    loadStaff();
+    feather.replace();
+  } catch (e) { console.error('Dashboard load error:', e); }
+}
+
+function updateSubtitle() {
+  const el = document.getElementById('bi-subtitle');
+  if (!dashData || !dashData.kpis) return;
+  const days = dashData.kpis.days_count || 0;
+
+  if (dataStatus && dataStatus.date_range) {
+    const from = dataStatus.date_range.from;
+    const to = dataStatus.date_range.to;
+    el.textContent = `${days} jours affichés · ${dataStatus.total_days} jours en base (${from} → ${to}) · 252 chambres`;
+  } else {
+    el.textContent = `${days} jours de données · 252 chambres`;
+  }
+}
+
+function updateDataBadge() {
+  const badge = document.getElementById('data-badge');
+  if (dataStatus && dataStatus.total_days > 0) {
+    const years = dataStatus.years_covered || [];
+    badge.textContent = `${dataStatus.total_days} jours · ${years.length} an(s)`;
+    badge.style.display = 'inline-flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ============ KPIs ============
+function renderKPIs(k, yoy) {
+  document.getElementById('k-revpar').textContent = fmt2(k.revpar);
+  document.getElementById('k-adr').textContent = fmt2(k.adr);
+  document.getElementById('k-occ').textContent = pct(k.occupancy_rate);
+  document.getElementById('k-room-rev').textContent = fmt(k.room_revenue);
+  document.getElementById('k-fb-rev').textContent = fmt(k.fb_revenue);
+  document.getElementById('k-clients').textContent = k.avg_clients_per_day;
+
+  const deltas = (dashData.yoy_deltas) || (yoy && yoy.deltas) || null;
+  setDelta('d-revpar', deltas, 'revpar');
+  setDelta('d-adr', deltas, 'adr');
+  setDelta('d-occ', deltas, 'occupancy_rate');
+  setDelta('d-room-rev', deltas, 'room_revenue');
+  setDelta('d-fb-rev', deltas, 'fb_revenue');
+  setDelta('d-clients', deltas, 'avg_clients');
+}
+
+function setDelta(elId, deltas, key) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!deltas || deltas[key] === undefined || deltas[key] === null) {
+    el.textContent = '';
+    el.className = 'bi-kpi-delta';
+    return;
+  }
+  const v = deltas[key];
+  const sign = v > 0 ? '+' : '';
+  const arrow = v > 0 ? '↑' : v < 0 ? '↓' : '→';
+  const cls = v > 0 ? 'up' : v < 0 ? 'down' : 'neutral';
+  el.textContent = `${arrow} ${sign}${v.toFixed(1)}% vs A-1`;
+  el.className = `bi-kpi-delta ${cls}`;
+}
+
+// ============ REVENUE TREND ============
+function renderRevenueTrend(trend) {
+  destroyChart('chart-revenue');
+  if (!trend || !trend.length) return;
+
+  const dayCount = trend.length;
+  let aggLabel = '';
+  let aggregated;
+
+  if (dayCount <= 60) {
+    aggregated = trend;
+    aggLabel = 'Par jour';
+  } else if (dayCount <= 365) {
+    aggregated = aggregateByWeek(trend);
+    aggLabel = 'Par semaine';
+  } else {
+    aggregated = aggregateByMonth(trend);
+    aggLabel = 'Par mois';
+  }
+
+  document.getElementById('agg-label').textContent = aggLabel;
+
+  charts['chart-revenue'] = new Chart(document.getElementById('chart-revenue'), {
+    type: 'bar',
+    data: {
+      labels: aggregated.map(t => t.label || (t.date ? t.date.substring(5) : '')),
+      datasets: [
+        { label: 'Chambres', data: aggregated.map(t => t.room_revenue), backgroundColor: COLORS.blue + '88', borderRadius: 4, order: 2 },
+        { label: 'F&B', data: aggregated.map(t => t.fb_revenue), backgroundColor: COLORS.pink + '88', borderRadius: 4, order: 2 },
+        { label: 'Autres', data: aggregated.map(t => t.other_revenue), backgroundColor: COLORS.teal + '55', borderRadius: 4, order: 2 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+      scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 }, maxRotation: 45 } },
+        y: { stacked: true, ticks: { callback: v => fmt(v), font: { size: 10 } }, grid: { color: 'rgba(128,128,128,.08)' } }
+      }
+    }
+  });
+}
+
+function aggregateByWeek(trend) {
+  const weeks = [];
+  for (let i = 0; i < trend.length; i += 7) {
+    const chunk = trend.slice(i, i + 7);
+    weeks.push({
+      label: chunk[0].date ? chunk[0].date.substring(5) : `S${Math.floor(i/7)+1}`,
+      room_revenue: chunk.reduce((s, t) => s + (t.room_revenue || 0), 0),
+      fb_revenue: chunk.reduce((s, t) => s + (t.fb_revenue || 0), 0),
+      other_revenue: chunk.reduce((s, t) => s + (t.other_revenue || 0), 0),
+    });
+  }
+  return weeks;
+}
+
+function aggregateByMonth(trend) {
+  const months = {};
+  trend.forEach(t => {
+    const key = t.date ? t.date.substring(0, 7) : `J${t.day}`;
+    if (!months[key]) months[key] = { label: key, room_revenue: 0, fb_revenue: 0, other_revenue: 0 };
+    months[key].room_revenue += t.room_revenue || 0;
+    months[key].fb_revenue += t.fb_revenue || 0;
+    months[key].other_revenue += t.other_revenue || 0;
+  });
+  return Object.values(months);
+}
+
+// ============ REVENUE MIX ============
+function renderRevenueMix(k) {
+  destroyChart('chart-rev-mix');
+  charts['chart-rev-mix'] = new Chart(document.getElementById('chart-rev-mix'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Chambres', 'F&B', 'Autres'],
+      datasets: [{ data: [k.room_revenue, k.fb_revenue, k.other_revenue], backgroundColor: [COLORS.blue, COLORS.pink, COLORS.teal], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '68%' }
+  });
+  const total = k.room_revenue + k.fb_revenue + k.other_revenue;
+  document.getElementById('rev-mix-detail').innerHTML =
+    `<strong>Total: ${fmt(total)}</strong><br>Chambres ${pct(k.room_revenue/total*100)} · F&B ${pct(k.fb_revenue/total*100)} · Autres ${pct(k.other_revenue/total*100)}`;
+}
+
+// ============ ANNUAL GROWTH ============
+function renderAnnualGrowth(monthly) {
+  destroyChart('chart-annual');
+  const years = {};
+  monthly.forEach(m => {
+    if (!years[m.year]) years[m.year] = { adr: [], revpar: [], occ: [], revenue: 0 };
+    years[m.year].adr.push(m.avg_adr || 0);
+    years[m.year].revpar.push(m.avg_revpar || 0);
+    years[m.year].occ.push(m.avg_occupancy || 0);
+    years[m.year].revenue += m.total_revenue || 0;
+  });
+
+  const yearKeys = Object.keys(years).sort();
+  const avgOf = arr => arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+
+  charts['chart-annual'] = new Chart(document.getElementById('chart-annual'), {
+    type: 'bar',
+    data: {
+      labels: yearKeys,
+      datasets: [
+        { label: 'ADR moy ($)', data: yearKeys.map(y => avgOf(years[y].adr).toFixed(2)), backgroundColor: COLORS.green + 'bb', yAxisID: 'y' },
+        { label: 'RevPAR moy ($)', data: yearKeys.map(y => avgOf(years[y].revpar).toFixed(2)), backgroundColor: COLORS.blue + 'bb', yAxisID: 'y' },
+        { label: 'Occ moy (%)', data: yearKeys.map(y => avgOf(years[y].occ).toFixed(1)), backgroundColor: COLORS.purple + '88', yAxisID: 'y1' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { position: 'left', ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } },
+        y1: { position: 'right', min: 0, max: 110, ticks: { callback: v => v+'%' }, grid: { display: false } },
+      }
+    }
+  });
+}
+
+// ============ SEASONALITY ============
+function renderSeasonality(monthly) {
+  destroyChart('chart-seasonal');
+  const years = {};
+  monthly.forEach(m => {
+    if (!years[m.year]) years[m.year] = new Array(12).fill(null);
+    years[m.year][m.month - 1] = m.avg_occupancy;
+  });
+
+  const yearKeys = Object.keys(years).sort();
+  const datasets = yearKeys.map((yr, i) => ({
+    label: yr,
+    data: years[yr],
+    borderColor: YEAR_COLORS[i % YEAR_COLORS.length],
+    backgroundColor: YEAR_COLORS[i % YEAR_COLORS.length] + '15',
+    fill: true,
+    borderWidth: 2,
+    pointRadius: 3,
+    spanGaps: true,
+  }));
+
+  charts['chart-seasonal'] = new Chart(document.getElementById('chart-seasonal'), {
+    type: 'line',
+    data: { labels: MONTH_NAMES, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { min: 0, max: 110, ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } }
+      }
+    }
+  });
+}
+
+// ============ F&B OUTLETS ============
+function renderFBOutlets(fb) {
+  destroyChart('chart-fb-outlets');
+  if (!fb || !fb.outlets) return;
+  const outlets = Object.entries(fb.outlets).sort((a,b) => b[1].total - a[1].total);
+  charts['chart-fb-outlets'] = new Chart(document.getElementById('chart-fb-outlets'), {
+    type: 'bar',
+    data: {
+      labels: outlets.map(([name]) => name),
+      datasets: [
+        { label: 'Nourriture', data: outlets.map(([,d]) => d.categories ? d.categories['Nourriture']||0 : 0), backgroundColor: COLORS.orange + 'bb' },
+        { label: 'Boisson', data: outlets.map(([,d]) => d.categories ? d.categories['Boisson']||0 : 0), backgroundColor: COLORS.purple + 'bb' },
+        { label: 'Bières', data: outlets.map(([,d]) => d.categories ? d.categories['Bières']||0 : 0), backgroundColor: COLORS.amber + 'bb' },
+        { label: 'Vins', data: outlets.map(([,d]) => d.categories ? d.categories['Vins']||0 : 0), backgroundColor: COLORS.red + 'bb' },
+        { label: 'Minéraux', data: outlets.map(([,d]) => d.categories ? d.categories['Minéraux']||0 : 0), backgroundColor: COLORS.teal + 'bb' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } },
+        y: { stacked: true, grid: { display: false } }
+      }
+    }
+  });
+}
+
+// ============ F&B MIX ============
+function renderFBMix(fb) {
+  destroyChart('chart-fb-mix');
+  if (!fb || !fb.category_totals) return;
+  const cats = fb.category_totals;
+  charts['chart-fb-mix'] = new Chart(document.getElementById('chart-fb-mix'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(cats),
+      datasets: [{ data: Object.values(cats), backgroundColor: [COLORS.orange, COLORS.purple, COLORS.amber, COLORS.teal, COLORS.red], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+  });
+  const otherInfo = fb.other || {};
+  document.getElementById('fb-mix-detail').innerHTML =
+    `<strong>Total F&B: ${fmt(fb.total_fb)}</strong><br>Nourriture ${fb.food_pct||0}% · Boisson ${fb.beverage_pct||0}%<br>Pourboires: ${fmt(otherInfo.pourboires||0)} · Tabagie: ${fmt(otherInfo.tabagie||0)}`;
+}
+
+// ============ OCCUPANCY ============
+function renderOccupancy(rooms) {
+  destroyChart('chart-occupancy');
+  if (!rooms || !rooms.trend) return;
+  const trend = rooms.trend;
+  charts['chart-occupancy'] = new Chart(document.getElementById('chart-occupancy'), {
+    type: 'bar',
+    data: {
+      labels: trend.map(t => t.date ? t.date.substring(5) : 'J' + t.day),
+      datasets: [
+        { label: 'Occupation %', data: trend.map(t => t.occupancy), type: 'line', borderColor: COLORS.purple, backgroundColor: COLORS.purple + '15', fill: true, yAxisID: 'y1', pointRadius: trend.length > 60 ? 0 : 3, borderWidth: 2 },
+        { label: 'ADR ($)', data: trend.map(t => t.adr), type: 'line', borderColor: COLORS.green, borderDash: [4,4], yAxisID: 'y2', pointRadius: trend.length > 60 ? 0 : 2, borderWidth: 2 },
+        { label: 'Chambres vendues', data: trend.map(t => t.sold), backgroundColor: COLORS.blue + '50', yAxisID: 'y3' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxTicksLimit: 30 } },
+        y1: { position: 'left', min: 0, max: 110, ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } },
+        y2: { position: 'right', ticks: { callback: v => '$'+v }, grid: { display: false } },
+        y3: { display: false, min: 0, max: 300 }
+      }
+    }
+  });
+}
+
+// ============ ROOM MIX ============
+function renderRoomMix(rooms) {
+  destroyChart('chart-room-mix');
+  if (!rooms || !rooms.summary) return;
+  const mix = rooms.summary.room_mix || {};
+  const labels = []; const data = []; const colors = [];
+  if (mix.simple) { labels.push('Simple'); data.push(mix.simple); colors.push(COLORS.blue); }
+  if (mix.double) { labels.push('Double'); data.push(mix.double); colors.push(COLORS.green); }
+  if (mix.suite) { labels.push('Suite'); data.push(mix.suite); colors.push(COLORS.purple); }
+  if (mix.comp) { labels.push('Comp'); data.push(mix.comp); colors.push(COLORS.orange); }
+  if (!data.length) return;
+
+  charts['chart-room-mix'] = new Chart(document.getElementById('chart-room-mix'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '62%' }
+  });
+  const s = rooms.summary;
+  document.getElementById('room-mix-detail').innerHTML =
+    `<strong>Occupation moy: ${pct(s.avg_occupancy)}</strong><br>${s.total_rooms_sold} chambres vendues · ${s.avg_clients} clients/jour<br>Hors service moy: ${s.avg_hors_usage||0} ch.`;
+}
+
+// ============ PAYMENTS ============
+function renderPayments(pay) {
+  destroyChart('chart-payments');
+  if (!pay || !pay.breakdown) return;
+  const items = Object.entries(pay.breakdown).filter(([,d]) => d.amount !== 0).sort((a,b) => Math.abs(b[1].amount) - Math.abs(a[1].amount));
+  if (!items.length) return;
+
+  charts['chart-payments'] = new Chart(document.getElementById('chart-payments'), {
+    type: 'doughnut',
+    data: {
+      labels: items.map(([k]) => k),
+      datasets: [{ data: items.map(([,d]) => Math.abs(d.amount)), backgroundColor: PALETTE.slice(0, items.length), borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, cutout: '58%' }
+  });
+  document.getElementById('payment-detail').innerHTML =
+    `<strong>Total cartes: ${fmt(pay.total)}</strong><br>` +
+    items.map(([k,d]) => `${k}: ${fmt(Math.abs(d.amount))} (${d.pct}%)`).join(' · ');
+}
+
+// ============ TAXES ============
+function renderTaxes(tax) {
+  destroyChart('chart-taxes');
+  if (!tax || !tax.totals) return;
+  const t = tax.totals;
+  charts['chart-taxes'] = new Chart(document.getElementById('chart-taxes'), {
+    type: 'bar',
+    data: {
+      labels: ['TPS (fédérale)', 'TVQ (provinciale)', 'TVH (hébergement)'],
+      datasets: [{ data: [t.tps, t.tvq, t.tvh], backgroundColor: [COLORS.blue + 'bb', COLORS.pink + 'bb', COLORS.teal + 'bb'], borderRadius: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+  const avg = tax.avg_daily || {};
+  document.getElementById('tax-detail').innerHTML =
+    `<strong>Total taxes: ${fmt(t.total)}</strong><br>Moy/jour: TPS ${fmt2(avg.tps||0)} · TVQ ${fmt2(avg.tvq||0)} · TVH ${fmt2(avg.tvh||0)}`;
+}
+
+// ============ ANOMALIES ============
+function renderAnomalies(data) {
+  const container = document.getElementById('alerts-container');
+  if (!data) { container.innerHTML = '<p style="color:var(--text-muted);padding:.75rem;">Aucune anomalie détectée.</p>'; return; }
+  const items = [
+    ...(data.alerts||[]).slice(0, 8).map(a => `<div class="alert-item ${a.severity}"><span class="alert-icon">${a.severity==='danger'?'🔴':a.severity==='warning'?'🟡':'🔵'}</span><span class="alert-text">${a.message}</span></div>`),
+    ...(data.insights||[]).map(i => `<div class="alert-item insight"><span class="alert-icon">💡</span><span class="alert-text">${i.message}</span></div>`)
+  ];
+  container.innerHTML = items.length ? items.join('') : '<p style="color:var(--text-muted);padding:.75rem;">Aucune anomalie détectée.</p>';
+}
+
+// ============ ADVANCED KPIs ============
+function renderAdvancedKPIs(adv) {
+  const container = document.getElementById('adv-kpis');
+  if (!adv || !container) return;
+
+  const items = [
+    { label: 'ADR Effectif', value: fmt2(adv.effective_adr), sub: 'Inclut comps au dénominateur' },
+    { label: 'Pricing Power', value: adv.pricing_power_pct + '%', sub: 'Écart ADR haute vs basse occ.' },
+    { label: 'F&B / Client', value: fmt2(adv.fb_per_guest), sub: 'Dépense F&B par client' },
+    { label: 'F&B RevPAR', value: fmt2(adv.fb_revpar), sub: 'F&B par chambre dispo.' },
+    { label: 'Rev. / Client', value: fmt2(adv.rev_per_guest), sub: 'Revenu total par client' },
+    { label: 'Double Occ.', value: adv.double_occ_factor.toFixed(2) + 'x', sub: 'Clients moy. par chambre' },
+    { label: 'Taux Comp', value: adv.comp_rate_pct + '%', sub: fmt(adv.comp_revenue_loss) + ' en comps' },
+    { label: 'OOS Moy/Jour', value: adv.oos_rooms_avg.toFixed(1) + ' ch.', sub: 'Coût: ' + fmt(adv.oos_cost_impact) },
+    { label: 'Volatilité RevPAR', value: '$' + adv.revpar_volatility.toFixed(1), sub: 'Écart-type quotidien' },
+    { label: 'Tip Ratio', value: adv.tip_ratio_pct.toFixed(1) + '%', sub: 'Pourboires / F&B total' },
+    { label: 'Frais Cartes', value: fmt(adv.card_processing_cost), sub: '~' + fmt(adv.annual_processing_cost) + '/an' },
+    { label: 'Jours Opportunité', value: adv.opportunity_days_count, sub: 'Jours <70% occ. = ' + fmt(adv.opportunity_revenue) },
+  ];
+
+  container.innerHTML = items.map(i => `
+    <div class="adv-kpi-item">
+      <div class="adv-label">${i.label}</div>
+      <div class="adv-value">${i.value}</div>
+      <div class="adv-sub">${i.sub}</div>
+    </div>
+  `).join('');
+
+  const annuals = [
+    { label: 'Coût OOS annuel', val: adv.annual_oos_cost },
+    { label: 'Perte comps annuel', val: adv.annual_comp_loss },
+    { label: 'Frais cartes annuel', val: adv.annual_processing_cost },
+    { label: 'Revenue récupérable', val: adv.annual_opp_revenue },
+  ].filter(a => a.val > 0);
+
+  if (annuals.length > 0) {
+    const total = annuals.reduce((s, a) => s + a.val, 0);
+    container.innerHTML += `
+      <div style="grid-column:1/-1;margin-top:.4rem;padding:.65rem .9rem;background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.12);border-radius:8px;">
+        <div style="font-size:.72rem;font-weight:700;color:var(--bi-green);margin-bottom:.2rem;">POTENTIEL ANNUEL IDENTIFIÉ: ${fmt(total)}</div>
+        <div style="font-size:.68rem;color:var(--text-secondary);">${annuals.map(a => a.label + ': ' + fmt(a.val)).join(' · ')}</div>
+      </div>`;
+  }
+}
+
+// ============ DAY-OF-WEEK ============
+function renderDOW(dow) {
+  destroyChart('chart-dow');
+  if (!dow || !dow.by_dow) return;
+
+  const days = dow.by_dow.filter(d => d.count > 0);
+  if (!days.length) { document.getElementById('dow-row').style.display = 'none'; return; }
+  document.getElementById('dow-row').style.display = 'grid';
+
+  charts['chart-dow'] = new Chart(document.getElementById('chart-dow'), {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.name),
+      datasets: [
+        { label: 'Rev. moy ($)', data: days.map(d => d.avg_total_rev), backgroundColor: COLORS.blue + 'bb', yAxisID: 'y' },
+        { label: 'Occ. moy (%)', data: days.map(d => d.avg_occ), type: 'line', borderColor: COLORS.purple, borderWidth: 2, pointRadius: 4, yAxisID: 'y1' },
+        { label: 'ADR moy ($)', data: days.map(d => d.avg_adr), type: 'line', borderColor: COLORS.green, borderDash: [4,4], borderWidth: 2, pointRadius: 3, yAxisID: 'y2' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { position: 'left', ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } },
+        y1: { position: 'right', min: 0, max: 110, ticks: { callback: v => v+'%' }, grid: { display: false } },
+        y2: { display: false },
+      }
+    }
+  });
+
+  const wvw = dow.weekend_vs_weekday;
+  document.getElementById('dow-detail').innerHTML = `
+    <strong>Semaine vs Fin de semaine:</strong><br>
+    Occ: ${wvw.weekday_avg_occ}% (sem) vs ${wvw.weekend_avg_occ}% (fds) · gap ${wvw.occ_gap > 0 ? '+' : ''}${wvw.occ_gap}pts<br>
+    ADR: ${fmt2(wvw.weekday_avg_adr)} (sem) vs ${fmt2(wvw.weekend_avg_adr)} (fds) · gap ${wvw.adr_gap > 0 ? '+' : ''}${fmt2(wvw.adr_gap)}<br>
+    <strong>Meilleur jour:</strong> ${dow.best_day} · <strong>Jour faible:</strong> ${dow.worst_day}
+  `;
+}
+
+// ============ PROCESSING COSTS ============
+function renderProcessingCosts(proc) {
+  destroyChart('chart-processing');
+  if (!proc || !proc.by_card) return;
+
+  const cards = Object.entries(proc.by_card).filter(([,d]) => d.volume > 0);
+  if (!cards.length) return;
+
+  charts['chart-processing'] = new Chart(document.getElementById('chart-processing'), {
+    type: 'bar',
+    data: {
+      labels: cards.map(([k]) => k),
+      datasets: [
+        { label: 'Volume ($)', data: cards.map(([,d]) => d.volume), backgroundColor: COLORS.blue + '70', yAxisID: 'y' },
+        { label: 'Frais ($)', data: cards.map(([,d]) => d.cost), backgroundColor: COLORS.red + 'bb', yAxisID: 'y' },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } },
+      }
+    }
+  });
+
+  const totalCost = proc.total_cost;
+  const totalVol = cards.reduce((s,[,d]) => s + d.volume, 0);
+  const blendedRate = totalVol > 0 ? (totalCost / totalVol * 100).toFixed(2) : 0;
+  document.getElementById('processing-detail').innerHTML = `
+    <strong>Frais totaux: ${fmt(totalCost)}</strong> · Taux mixte: ${blendedRate}%<br>
+    ${cards.map(([k,d]) => `${k}: ${d.rate_pct}% sur ${fmt(d.volume)} = ${fmt(d.cost)}`).join('<br>')}
+  `;
+}
+
+// ============ OPPORTUNITIES ============
+function renderOpportunities(data) {
+  const container = document.getElementById('opp-container');
+  const badge = document.getElementById('opp-total-badge');
+  if (!data || !container) return;
+
+  const opps = data.opportunities || [];
+  if (!opps.length) { document.getElementById('opp-row').style.display = 'none'; return; }
+  document.getElementById('opp-row').style.display = 'block';
+
+  badge.textContent = 'Potentiel annuel: ' + fmt(data.total_annual_potential);
+
+  const catLabels = { pricing: 'Pricing', operations: 'Opérations', revenue: 'Revenue', fb: 'F&B', costs: 'Coûts' };
+  const diffLabels = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' };
+
+  container.innerHTML = opps.map(o => `
+    <div class="opp-item">
+      <div class="opp-item-header">
+        <span class="opp-item-title">${o.title}</span>
+        <span class="opp-item-annual">+${fmt(o.annual_impact)}/an</span>
+      </div>
+      <div class="opp-item-desc">${o.description}</div>
+      <div class="opp-item-footer">
+        <span class="opp-tag ${o.category}">${catLabels[o.category] || o.category}</span>
+        <span class="opp-tag ${o.difficulty === 'facile' ? 'easy' : 'medium'}">${diffLabels[o.difficulty] || o.difficulty}</span>
+        <span style="color:var(--text-muted);">+${fmt(o.daily_impact)}/jour</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============ STAFF ============
+async function loadStaff() {
+  try {
+    const res = await fetch('/api/crm/staff?sort=name');
+    const data = await res.json();
+    if (!data.success) return;
+    allStaff = data.staff;
+    renderStaff(allStaff);
+  } catch (e) {}
+}
+
+function filterStaff() {
+  const q = document.getElementById('staff-search').value.toLowerCase();
+  renderStaff(allStaff.filter(s => s.name.toLowerCase().includes(q)));
+}
+
+function renderStaff(list) {
+  const container = document.getElementById('staff-container');
+  container.innerHTML = list.map(s => {
+    const v = s.stats.total_variance;
+    const cls = s.stats.alert_count > 0 ? 'staff-alert' : 'staff-ok';
+    const badge = s.stats.alert_count > 0 ? `<span style="color:var(--bi-red);font-size:0.65rem;">⚠ ${s.stats.alert_count}</span>` : '';
+    return `<div class="staff-item"><div><span class="staff-name">${s.name}</span><span class="staff-col">${s.column}</span></div><div class="staff-variance ${cls}">${v !== 0 ? fmt2(v) : '—'} ${badge}</div></div>`;
+  }).join('');
+}
+
+// ============ TAB SWITCHING ============
+function switchTab(tab, btn) {
+  currentTab = tab;
+
+  // Update all tab panels
+  document.querySelectorAll('.bi-tab-panel').forEach(p => p.style.display = 'none');
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.style.display = 'block';
+
+  // Update URL without reload (for back/forward)
+  const url = new URL(window.location);
+  url.searchParams.set('tab', tab);
+  window.history.replaceState({}, '', url);
+
+  // Update sidebar active state
+  document.querySelectorAll('.menu-group .menu-child').forEach(el => {
+    el.classList.remove('active');
+    const href = el.getAttribute('href') || '';
+    if (href.includes('tab=' + tab)) el.classList.add('active');
+  });
+
+  // Load tab data if not overview (overview loads with main dashboard)
+  if (tab !== 'overview') loadTabData(tab);
+  feather.replace();
+}
+
+async function loadTabData(tab) {
+  const range = getDateRange(currentPeriod);
+  const params = new URLSearchParams();
+  if (range.start) params.set('start_date', range.start);
+  if (range.end) params.set('end_date', range.end);
+  const qs = params.toString() ? '?' + params.toString() : '';
+
+  // Cache key includes tab + date range
+  const cacheKey = tab + '_' + range.start + '_' + range.end;
+  if (tabDataCache[cacheKey]) {
+    renderTab(tab, tabDataCache[cacheKey]);
+    return;
+  }
+
+  const urlMap = {
+    revenue: '/api/crm/tabs/revenue-mgmt',
+    fb: '/api/crm/tabs/fb-intel',
+    labor: '/api/crm/tabs/labor',
+    cash: '/api/crm/tabs/cash-recon',
+    payments: '/api/crm/tabs/payments',
+    pnl: '/api/crm/tabs/pnl-budget',
+  };
+
+  const loadingEl = document.getElementById(tab + '-loading');
+  if (loadingEl) loadingEl.style.display = 'flex';
+
+  try {
+    const res = await fetch(urlMap[tab] + qs);
+    const data = await res.json();
+    tabDataCache[cacheKey] = data;
+    if (loadingEl) loadingEl.style.display = 'none';
+    renderTab(tab, data);
+  } catch(e) {
+    console.error('Tab load error:', tab, e);
+    if (loadingEl) loadingEl.innerHTML = '<span style="color:var(--bi-red);">Erreur de chargement</span>';
+  }
+}
+
+function renderTab(tab, data) {
+  if (!data || !data.has_data) return;
+  const renderers = {
+    revenue: renderRevenueTab,
+    fb: renderFBTab,
+    labor: renderLaborTab,
+    cash: renderCashTab,
+    payments: renderPaymentsTab,
+    pnl: renderPnlTab,
+  };
+  if (renderers[tab]) renderers[tab](data);
+  feather.replace();
+}
+
+// Invalidate cache on period change — wrap the original setPeriod
+const _origSetPeriod = setPeriod;
+setPeriod = function(period, btn) {
+  tabDataCache = {};
+  _origSetPeriod(period, btn);
+  if (currentTab !== 'overview') loadTabData(currentTab);
+};
+
+// ============ TAB: REVENUE MANAGEMENT ============
+function renderRevenueTab(data) {
+  // ADR by DOW
+  destroyChart('chart-rev-adr-dow');
+  if (data.adr_by_dow && data.adr_by_dow.length) {
+    charts['chart-rev-adr-dow'] = new Chart(document.getElementById('chart-rev-adr-dow'), {
+      type: 'bar',
+      data: {
+        labels: data.adr_by_dow.map(d => DOW_FR[data.adr_by_dow.indexOf(d)] || d.day),
+        datasets: [{ label: 'ADR moyen ($)', data: data.adr_by_dow.map(d => d.adr), backgroundColor: PALETTE.slice(0,7).map(c => c + 'bb'), borderRadius: 6 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // ADR by Month
+  destroyChart('chart-rev-adr-month');
+  if (data.adr_by_month && data.adr_by_month.length) {
+    charts['chart-rev-adr-month'] = new Chart(document.getElementById('chart-rev-adr-month'), {
+      type: 'line',
+      data: {
+        labels: data.adr_by_month.map(d => MONTH_NAMES[d.month - 1]),
+        datasets: [{ label: 'ADR moyen ($)', data: data.adr_by_month.map(d => d.adr), borderColor: COLORS.green, backgroundColor: COLORS.green + '15', fill: true, borderWidth: 2.5, pointRadius: 4, pointBackgroundColor: COLORS.green }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // RevPAR Trend
+  destroyChart('chart-rev-revpar-trend');
+  if (data.revpar_trend_monthly && data.revpar_trend_monthly.length) {
+    charts['chart-rev-revpar-trend'] = new Chart(document.getElementById('chart-rev-revpar-trend'), {
+      type: 'line',
+      data: {
+        labels: data.revpar_trend_monthly.map(d => d.period),
+        datasets: [{ label: 'RevPAR ($)', data: data.revpar_trend_monthly.map(d => d.revpar), borderColor: COLORS.blue, backgroundColor: COLORS.blue + '12', fill: true, borderWidth: 2, pointRadius: data.revpar_trend_monthly.length > 30 ? 0 : 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Scatter: Occ vs ADR
+  destroyChart('chart-rev-scatter');
+  if (data.occ_vs_adr_scatter && data.occ_vs_adr_scatter.length) {
+    charts['chart-rev-scatter'] = new Chart(document.getElementById('chart-rev-scatter'), {
+      type: 'scatter',
+      data: {
+        datasets: [{ label: 'Occ% vs ADR', data: data.occ_vs_adr_scatter.map(d => ({ x: d.occupancy, y: d.adr })), backgroundColor: COLORS.purple + '55', borderColor: COLORS.purple, pointRadius: 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { title: { display: true, text: 'Occupation %' }, grid: { color: 'rgba(128,128,128,.08)' } }, y: { title: { display: true, text: 'ADR ($)' }, ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Budget vs Actual
+  destroyChart('chart-rev-budget');
+  if (data.budget_vs_actual && data.budget_vs_actual.length) {
+    const bva = data.budget_vs_actual;
+    charts['chart-rev-budget'] = new Chart(document.getElementById('chart-rev-budget'), {
+      type: 'bar',
+      data: {
+        labels: bva.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`),
+        datasets: [
+          { label: 'Réel ($)', data: bva.map(d => d.room_rev_actual), backgroundColor: COLORS.blue + 'aa', borderRadius: 4 },
+          { label: 'Budget ($)', data: bva.map(d => d.room_rev_budget), backgroundColor: COLORS.orange + '55', borderRadius: 4 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Yearly Summary Table
+  if (data.yearly_summary && data.yearly_summary.length) {
+    const tbl = document.getElementById('rev-yearly-table');
+    let html = '<table class="bi-table"><thead><tr><th>Année</th><th class="num">Rev. Chambres</th><th class="num">ADR</th><th class="num">RevPAR</th><th class="num">Occ %</th></tr></thead><tbody>';
+    data.yearly_summary.forEach(y => {
+      html += `<tr><td><strong>${y.year}</strong></td><td class="num">${fmt(y.revenue)}</td><td class="num">${fmt2(y.adr)}</td><td class="num">${fmt2(y.revpar)}</td><td class="num">${y.occ_pct}%</td></tr>`;
+    });
+    html += '</tbody></table>';
+    tbl.innerHTML = html;
+  }
+}
+
+// ============ TAB: F&B INTELLIGENCE ============
+function renderFBTab(data) {
+  // Outlet Trend
+  destroyChart('chart-fb-outlet-trend');
+  if (data.outlet_trend_monthly && data.outlet_trend_monthly.length) {
+    const outlets = data.outlet_trend_monthly;
+    const outletNames = { cafe_link: 'Café Link', piazza: 'Piazza', spesa: 'Spesa', room_svc: 'Room Service', banquet: 'Banquet' };
+    const outletColors = { cafe_link: COLORS.blue, piazza: COLORS.pink, spesa: COLORS.green, room_svc: COLORS.orange, banquet: COLORS.purple };
+    const datasets = Object.keys(outletNames).map(key => ({
+      label: outletNames[key],
+      data: outlets.map(o => o[key] || 0),
+      backgroundColor: outletColors[key] + '55',
+      borderColor: outletColors[key],
+      borderWidth: 1.5,
+      fill: true,
+    }));
+    charts['chart-fb-outlet-trend'] = new Chart(document.getElementById('chart-fb-outlet-trend'), {
+      type: 'line',
+      data: { labels: outlets.map(o => o.period), datasets },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // F&B per Client
+  destroyChart('chart-fb-per-client');
+  if (data.fb_per_client_trend && data.fb_per_client_trend.length) {
+    charts['chart-fb-per-client'] = new Chart(document.getElementById('chart-fb-per-client'), {
+      type: 'line',
+      data: {
+        labels: data.fb_per_client_trend.map(d => d.period),
+        datasets: [{ label: '$/client', data: data.fb_per_client_trend.map(d => d.fb_per_client), borderColor: COLORS.teal, backgroundColor: COLORS.teal + '15', fill: true, borderWidth: 2.5, pointRadius: data.fb_per_client_trend.length > 30 ? 0 : 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Food vs Bev
+  destroyChart('chart-fb-food-bev');
+  if (data.food_vs_bev_monthly && data.food_vs_bev_monthly.length) {
+    const fvb = data.food_vs_bev_monthly;
+    charts['chart-fb-food-bev'] = new Chart(document.getElementById('chart-fb-food-bev'), {
+      type: 'bar',
+      data: {
+        labels: fvb.map(d => d.period),
+        datasets: [
+          { label: 'Nourriture', data: fvb.map(d => d.food_revenue), backgroundColor: COLORS.orange + 'aa', borderRadius: 4 },
+          { label: 'Boisson', data: fvb.map(d => d.bev_revenue), backgroundColor: COLORS.purple + 'aa', borderRadius: 4 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Tips by Department
+  destroyChart('chart-fb-tips');
+  if (data.tip_trend_monthly && data.tip_trend_monthly.length) {
+    const tips = data.tip_trend_monthly;
+    const allDepts = new Set();
+    tips.forEach(t => Object.keys(t.by_dept).forEach(d => allDepts.add(d)));
+    const deptArr = [...allDepts].sort();
+    const deptColors = [COLORS.blue, COLORS.pink, COLORS.green, COLORS.orange, COLORS.purple];
+    const datasets = deptArr.map((dept, i) => ({
+      label: dept,
+      data: tips.map(t => (t.by_dept[dept] && t.by_dept[dept].brut) || 0),
+      backgroundColor: (deptColors[i % deptColors.length]) + 'aa',
+      borderRadius: 3,
+    }));
+    charts['chart-fb-tips'] = new Chart(document.getElementById('chart-fb-tips'), {
+      type: 'bar',
+      data: { labels: tips.map(t => t.period), datasets },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { stacked: true, ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+}
+
+// ============ TAB: MAIN-D'OEUVRE (LABOR) ============
+function renderLaborTab(data) {
+  // Labor % of Revenue
+  destroyChart('chart-labor-pct');
+  if (data.labor_pct_of_revenue && data.labor_pct_of_revenue.length) {
+    const lpr = data.labor_pct_of_revenue;
+    charts['chart-labor-pct'] = new Chart(document.getElementById('chart-labor-pct'), {
+      type: 'line',
+      data: {
+        labels: lpr.map(d => d.period),
+        datasets: [
+          { label: 'Main-d\'œuvre %', data: lpr.map(d => d.labor_pct), borderColor: COLORS.red, backgroundColor: COLORS.red + '12', fill: true, borderWidth: 2, pointRadius: lpr.length > 30 ? 0 : 3 },
+          { label: 'Cible 30%', data: lpr.map(() => 30), borderColor: COLORS.green + '55', borderDash: [6,4], borderWidth: 1.5, pointRadius: 0, fill: false },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Revenue per Labor Hour
+  destroyChart('chart-labor-rev-hour');
+  if (data.revenue_per_labor_hour && data.revenue_per_labor_hour.length) {
+    const rph = data.revenue_per_labor_hour;
+    charts['chart-labor-rev-hour'] = new Chart(document.getElementById('chart-labor-rev-hour'), {
+      type: 'line',
+      data: {
+        labels: rph.map(d => d.period),
+        datasets: [{ label: '$/heure', data: rph.map(d => d.revenue_per_hour), borderColor: COLORS.blue, backgroundColor: COLORS.blue + '12', fill: true, borderWidth: 2.5, pointRadius: rph.length > 30 ? 0 : 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Labor by Department
+  destroyChart('chart-labor-dept');
+  if (data.labor_by_dept_monthly && data.labor_by_dept_monthly.length) {
+    const lbd = data.labor_by_dept_monthly;
+    const allDepts = new Set();
+    lbd.forEach(d => Object.keys(d.by_dept).forEach(k => allDepts.add(k)));
+    const deptArr = [...allDepts].sort();
+    // Top 6 departments by total cost
+    const deptTotals = {};
+    lbd.forEach(d => { for (const [k,v] of Object.entries(d.by_dept)) { deptTotals[k] = (deptTotals[k]||0) + v; }});
+    const topDepts = Object.entries(deptTotals).sort((a,b) => b[1]-a[1]).slice(0,6).map(([k]) => k);
+    const datasets = topDepts.map((dept, i) => ({
+      label: dept,
+      data: lbd.map(d => d.by_dept[dept] || 0),
+      backgroundColor: PALETTE[i % PALETTE.length] + 'aa',
+      borderRadius: 3,
+    }));
+    charts['chart-labor-dept'] = new Chart(document.getElementById('chart-labor-dept'), {
+      type: 'bar',
+      data: { labels: lbd.map(d => d.period), datasets },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Overtime Trend
+  destroyChart('chart-labor-overtime');
+  if (data.overtime_trend && data.overtime_trend.length) {
+    const ot = data.overtime_trend;
+    const totalOT = ot.map(d => Object.values(d.by_dept).reduce((s,v) => s + v, 0));
+    charts['chart-labor-overtime'] = new Chart(document.getElementById('chart-labor-overtime'), {
+      type: 'bar',
+      data: {
+        labels: ot.map(d => d.period),
+        datasets: [{ label: 'Heures supp.', data: totalOT, backgroundColor: COLORS.orange + 'aa', borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { ticks: { callback: v => v+'h' }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Department Summary Table
+  if (data.dept_summary && data.dept_summary.length) {
+    const tbl = document.getElementById('labor-dept-table');
+    let html = '<table class="bi-table"><thead><tr><th>Département</th><th class="num">Coût total</th><th class="num">Heures</th><th class="num">Taux/h</th><th class="num">Supp. %</th><th class="num">Effectifs</th></tr></thead><tbody>';
+    data.dept_summary.forEach(d => {
+      html += `<tr><td><strong>${d.department}</strong></td><td class="num">${fmt(d.total_cost)}</td><td class="num">${d.total_hours.toLocaleString('fr-CA')}h</td><td class="num">${fmt2(d.avg_hourly_rate)}</td><td class="num">${d.overtime_pct}%</td><td class="num">${d.headcount}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    tbl.innerHTML = html;
+  }
+}
+
+// ============ TAB: CASH & RECONCILIATION ============
+function renderCashTab(data) {
+  // Surplus/Deficit
+  destroyChart('chart-cash-surplus');
+  const surplusData = data.surplus_deficit_trend;
+  if (surplusData && surplusData.length) {
+    const labels = surplusData.map(d => d.date || d.week || '');
+    const vals = surplusData.map(d => d.surplus_deficit);
+    charts['chart-cash-surplus'] = new Chart(document.getElementById('chart-cash-surplus'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Surplus/Déficit ($)', data: vals,
+          backgroundColor: vals.map(v => v >= 0 ? COLORS.green + '88' : COLORS.red + '88'), borderRadius: 3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 30 } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Quasimodo Variance
+  destroyChart('chart-cash-quasimodo');
+  const quasiData = data.quasimodo_trend;
+  if (quasiData && quasiData.length) {
+    const labels = quasiData.map(d => d.date || d.week || '');
+    const vals = quasiData.map(d => d.quasimodo_variance);
+    charts['chart-cash-quasimodo'] = new Chart(document.getElementById('chart-cash-quasimodo'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Variance ($)', data: vals, borderColor: COLORS.purple, backgroundColor: COLORS.purple + '12', fill: true, borderWidth: 2, pointRadius: vals.length > 60 ? 0 : 2 },
+          { label: 'Cible ±$0.01', data: vals.map(() => 0), borderColor: COLORS.green + '55', borderDash: [6,4], borderWidth: 1, pointRadius: 0 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 30 } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Auditor Stats
+  destroyChart('chart-cash-auditor');
+  if (data.auditor_stats && data.auditor_stats.length) {
+    const auditors = data.auditor_stats;
+    charts['chart-cash-auditor'] = new Chart(document.getElementById('chart-cash-auditor'), {
+      type: 'bar',
+      data: {
+        labels: auditors.map(a => a.name),
+        datasets: [
+          { label: 'Var. abs. moy ($)', data: auditors.map(a => a.avg_absolute_variance), backgroundColor: COLORS.orange + 'aa', borderRadius: 4 },
+          { label: 'Surplus moy ($)', data: auditors.map(a => a.avg_surplus), backgroundColor: COLORS.blue + '88', borderRadius: 4 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Recon Quality
+  destroyChart('chart-cash-quality');
+  if (data.recon_quality_monthly && data.recon_quality_monthly.length) {
+    const rq = data.recon_quality_monthly;
+    charts['chart-cash-quality'] = new Chart(document.getElementById('chart-cash-quality'), {
+      type: 'line',
+      data: {
+        labels: rq.map(d => d.period),
+        datasets: [
+          { label: '% dans ±$5', data: rq.map(d => d.pct_within_threshold), borderColor: COLORS.green, backgroundColor: COLORS.green + '12', fill: true, borderWidth: 2.5, pointRadius: rq.length > 30 ? 0 : 3, yAxisID: 'y' },
+          { label: 'Var. Quasi moy ($)', data: rq.map(d => d.avg_quasimodo), borderColor: COLORS.red, borderDash: [4,4], borderWidth: 1.5, pointRadius: 2, yAxisID: 'y1' },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } },
+          y: { position: 'left', min: 0, max: 105, ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } },
+          y1: { position: 'right', ticks: { callback: v => '$'+v }, grid: { display: false } },
+        }
+      }
+    });
+  }
+
+  // Cash Deposits
+  destroyChart('chart-cash-deposits');
+  if (data.cash_deposit_trend && data.cash_deposit_trend.length) {
+    const dep = data.cash_deposit_trend;
+    charts['chart-cash-deposits'] = new Chart(document.getElementById('chart-cash-deposits'), {
+      type: 'bar',
+      data: {
+        labels: dep.map(d => d.period),
+        datasets: [
+          { label: 'CDN ($)', data: dep.map(d => d.deposit_cdn), backgroundColor: COLORS.blue + 'aa', borderRadius: 4 },
+          { label: 'USD ($)', data: dep.map(d => d.deposit_usd), backgroundColor: COLORS.green + '88', borderRadius: 4 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+}
+
+// ============ TAB: PAIEMENTS & FRAIS ============
+function renderPaymentsTab(data) {
+  const CARD_COLORS = { VISA: COLORS.blue, MC: COLORS.red, AMEX: COLORS.green, DEBIT: COLORS.orange, DISCOVER: COLORS.purple };
+
+  // Card Mix (stacked area %)
+  destroyChart('chart-pay-mix');
+  if (data.card_mix_monthly && data.card_mix_monthly.length) {
+    const cm = data.card_mix_monthly;
+    charts['chart-pay-mix'] = new Chart(document.getElementById('chart-pay-mix'), {
+      type: 'line',
+      data: {
+        labels: cm.map(d => d.period),
+        datasets: [
+          { label: 'Visa', data: cm.map(d => d.visa_pct), borderColor: CARD_COLORS.VISA, backgroundColor: CARD_COLORS.VISA + '33', fill: true, borderWidth: 1.5 },
+          { label: 'MC', data: cm.map(d => d.mc_pct), borderColor: CARD_COLORS.MC, backgroundColor: CARD_COLORS.MC + '33', fill: true, borderWidth: 1.5 },
+          { label: 'AMEX', data: cm.map(d => d.amex_pct), borderColor: CARD_COLORS.AMEX, backgroundColor: CARD_COLORS.AMEX + '33', fill: true, borderWidth: 1.5 },
+          { label: 'Débit', data: cm.map(d => d.debit_pct), borderColor: CARD_COLORS.DEBIT, backgroundColor: CARD_COLORS.DEBIT + '33', fill: true, borderWidth: 1.5 },
+          { label: 'Discover', data: cm.map(d => d.discover_pct), borderColor: CARD_COLORS.DISCOVER, backgroundColor: CARD_COLORS.DISCOVER + '33', fill: true, borderWidth: 1.5 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { stacked: true, max: 100, ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Card Volume
+  destroyChart('chart-pay-volume');
+  if (data.card_volume_monthly && data.card_volume_monthly.length) {
+    const cv = data.card_volume_monthly;
+    const cardTypes = ['VISA','MC','AMEX','DEBIT','DISCOVER'];
+    charts['chart-pay-volume'] = new Chart(document.getElementById('chart-pay-volume'), {
+      type: 'bar',
+      data: {
+        labels: cv.map(d => d.period),
+        datasets: cardTypes.map(ct => ({
+          label: ct, data: cv.map(d => d.by_card[ct] || 0), backgroundColor: CARD_COLORS[ct] + 'aa', borderRadius: 3,
+        }))
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Discount Cost & Blended Rate
+  destroyChart('chart-pay-discount');
+  if (data.discount_total_trend && data.discount_total_trend.length) {
+    const dt = data.discount_total_trend;
+    charts['chart-pay-discount'] = new Chart(document.getElementById('chart-pay-discount'), {
+      type: 'bar',
+      data: {
+        labels: dt.map(d => d.period),
+        datasets: [
+          { label: 'Frais ($)', data: dt.map(d => d.total_discount), backgroundColor: COLORS.red + '88', borderRadius: 4, yAxisID: 'y' },
+          { label: 'Taux mixte (%)', data: dt.map(d => d.blended_rate_pct), type: 'line', borderColor: COLORS.blue, borderWidth: 2, pointRadius: dt.length > 30 ? 0 : 3, yAxisID: 'y1' },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: {
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } },
+          y: { position: 'left', ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } },
+          y1: { position: 'right', ticks: { callback: v => v+'%' }, grid: { display: false } },
+        }
+      }
+    });
+  }
+
+  // Net vs Gross
+  destroyChart('chart-pay-net-gross');
+  if (data.net_vs_gross_monthly && data.net_vs_gross_monthly.length) {
+    const nvg = data.net_vs_gross_monthly;
+    charts['chart-pay-net-gross'] = new Chart(document.getElementById('chart-pay-net-gross'), {
+      type: 'line',
+      data: {
+        labels: nvg.map(d => d.period),
+        datasets: [
+          { label: 'Brut ($)', data: nvg.map(d => d.pos_total), borderColor: COLORS.blue, borderWidth: 2, pointRadius: nvg.length > 30 ? 0 : 3 },
+          { label: 'Net ($)', data: nvg.map(d => d.net_amount), borderColor: COLORS.green, borderWidth: 2, pointRadius: nvg.length > 30 ? 0 : 3 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Avg Ticket
+  destroyChart('chart-pay-ticket');
+  if (data.avg_ticket_monthly && data.avg_ticket_monthly.length) {
+    const at = data.avg_ticket_monthly;
+    const cardTypes = ['VISA','MC','AMEX','DEBIT','DISCOVER'];
+    charts['chart-pay-ticket'] = new Chart(document.getElementById('chart-pay-ticket'), {
+      type: 'line',
+      data: {
+        labels: at.map(d => d.period),
+        datasets: cardTypes.map(ct => ({
+          label: ct, data: at.map(d => d.by_card[ct] || 0),
+          borderColor: CARD_COLORS[ct], borderWidth: 2, pointRadius: at.length > 30 ? 0 : 3,
+        }))
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 20 } }, y: { ticks: { callback: v => '$'+v }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+}
+
+// ============ TAB: P&L & BUDGET ============
+function renderPnlTab(data) {
+  // Budget Variance
+  destroyChart('chart-pnl-variance');
+  if (data.budget_variance_monthly && data.budget_variance_monthly.length) {
+    const bv = data.budget_variance_monthly;
+    charts['chart-pnl-variance'] = new Chart(document.getElementById('chart-pnl-variance'), {
+      type: 'bar',
+      data: {
+        labels: bv.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`),
+        datasets: [{ label: 'Variance ($)', data: bv.map(d => d.variance),
+          backgroundColor: bv.map(d => d.variance >= 0 ? COLORS.green + '88' : COLORS.red + '88'), borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Profit Margin
+  destroyChart('chart-pnl-margin');
+  if (data.profit_margin_monthly && data.profit_margin_monthly.length) {
+    const pm = data.profit_margin_monthly;
+    charts['chart-pnl-margin'] = new Chart(document.getElementById('chart-pnl-margin'), {
+      type: 'line',
+      data: {
+        labels: pm.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`),
+        datasets: [
+          { label: 'Marge %', data: pm.map(d => d.margin_pct), borderColor: COLORS.green, backgroundColor: COLORS.green + '12', fill: true, borderWidth: 2.5, pointRadius: pm.length > 24 ? 0 : 3 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Expense Breakdown
+  destroyChart('chart-pnl-expenses');
+  if (data.expense_breakdown_monthly && data.expense_breakdown_monthly.length) {
+    const eb = data.expense_breakdown_monthly;
+    charts['chart-pnl-expenses'] = new Chart(document.getElementById('chart-pnl-expenses'), {
+      type: 'bar',
+      data: {
+        labels: eb.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`),
+        datasets: [
+          { label: 'MO Chambres', data: eb.map(d => d.labor_rooms), backgroundColor: COLORS.blue + 'aa', borderRadius: 3 },
+          { label: 'MO F&B', data: eb.map(d => d.labor_fb), backgroundColor: COLORS.pink + 'aa', borderRadius: 3 },
+          { label: 'MO Admin', data: eb.map(d => d.labor_admin), backgroundColor: COLORS.purple + 'aa', borderRadius: 3 },
+          { label: 'Utilités', data: eb.map(d => d.utilities), backgroundColor: COLORS.teal + 'aa', borderRadius: 3 },
+          { label: 'Franchise', data: eb.map(d => d.franchise_fees), backgroundColor: COLORS.orange + 'aa', borderRadius: 3 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+        scales: { x: { stacked: true, grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { stacked: true, ticks: { callback: v => fmt(v) }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Labor Ratio
+  destroyChart('chart-pnl-labor-ratio');
+  if (data.labor_ratio_monthly && data.labor_ratio_monthly.length) {
+    const lr = data.labor_ratio_monthly;
+    charts['chart-pnl-labor-ratio'] = new Chart(document.getElementById('chart-pnl-labor-ratio'), {
+      type: 'line',
+      data: {
+        labels: lr.map(d => `${d.year}-${String(d.month).padStart(2,'0')}`),
+        datasets: [
+          { label: 'MO/Revenu %', data: lr.map(d => d.labor_ratio_pct), borderColor: COLORS.orange, backgroundColor: COLORS.orange + '12', fill: true, borderWidth: 2, pointRadius: lr.length > 24 ? 0 : 3 },
+          { label: 'Cible 30%', data: lr.map(() => 30), borderColor: COLORS.green + '55', borderDash: [6,4], borderWidth: 1.5, pointRadius: 0 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top' } },
+        scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 24 } }, y: { ticks: { callback: v => v+'%' }, grid: { color: 'rgba(128,128,128,.08)' } } }
+      }
+    });
+  }
+
+  // Annual P&L Table
+  if (data.annual_pnl && data.annual_pnl.length) {
+    const tbl = document.getElementById('pnl-annual-table');
+    let html = '<table class="bi-table"><thead><tr><th>Année</th><th class="num">Revenus</th><th class="num">Dépenses</th><th class="num">Profit brut</th><th class="num">MO %</th></tr></thead><tbody>';
+    data.annual_pnl.forEach(a => {
+      const profitCls = a.gross_profit >= 0 ? 'pos' : 'neg';
+      html += `<tr><td><strong>${a.year}</strong></td><td class="num">${fmt(a.total_revenue)}</td><td class="num">${fmt(a.total_expenses)}</td><td class="num ${profitCls}">${fmt(a.gross_profit)}</td><td class="num">${a.labor_pct}%</td></tr>`;
+    });
+    html += '</tbody></table>';
+    tbl.innerHTML = html;
+  }
+}
+
+// ============ HELPERS ============
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+// ============ INIT ============
+const INITIAL_TAB = '{{ active_tab | default("overview") }}';
+document.addEventListener('DOMContentLoaded', () => {
+  loadDashboard().then(() => {
+    if (INITIAL_TAB !== 'overview') {
+      switchTab(INITIAL_TAB, null);
+    }
+  });
+  feather.replace();
+});
+</script>
+{% endblock %}

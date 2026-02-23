@@ -1,0 +1,3467 @@
+{% extends "base.html" %}
+{% block title %}RJ Natif{% endblock %}
+
+{% block head %}
+<style>
+/* ═══════════════════════════════════════
+   RJ NATIVE — Design Tokens
+   ═══════════════════════════════════════ */
+.rjn{
+  --primary:#6366f1;--primary-bg:rgba(99,102,241,0.1);
+  --emerald:#10b981;--emerald-bg:rgba(16,185,129,0.1);
+  --rose:#ef4444;--rose-bg:rgba(239,68,68,0.1);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.1);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.1);
+  --violet:#8b5cf6;
+  --card:#fff;--bg:#f8f9fb;--border:#e5e7eb;--border-focus:rgba(99,102,241,0.3);
+  --text:#1a1a2e;--text-sec:#6b7280;--text-muted:#9ca3af;
+  --radius:12px;--radius-sm:8px;--radius-xs:5px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+  --mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+  padding:1.5rem 2rem 3rem;max-width:1200px;margin:0 auto;
+}
+/* Toolbar */
+.rjn-toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 20px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);
+}
+.rjn-toolbar-left{display:flex;align-items:center;gap:12px}
+.rjn-toolbar-left h1{font-size:1.15rem;font-weight:700;color:var(--text);margin:0}
+.rjn-status{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;
+  font-family:var(--mono);
+}
+.rjn-status.draft{color:var(--amber);background:var(--amber-bg)}
+.rjn-status.in_progress{color:var(--blue);background:var(--blue-bg)}
+.rjn-status.submitted,.rjn-status.locked{color:var(--emerald);background:var(--emerald-bg)}
+.rjn-status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.rjn-actions{display:flex;gap:8px}
+.rjn-btn{
+  padding:7px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:12px;font-weight:600;cursor:pointer;background:var(--card);
+  color:var(--text-sec);transition:all .2s var(--ease);font-family:inherit;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.rjn-btn:hover{border-color:var(--border-focus);box-shadow:var(--shadow)}
+.rjn-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.rjn-btn.primary:hover{opacity:.9}
+.rjn-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Tabs */
+.rjn-tabs{
+  display:flex;gap:4px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:4px;margin-bottom:16px;box-shadow:var(--shadow);
+  overflow-x:auto;
+}
+.rjn-tab{
+  flex:1;padding:10px 14px;border:none;border-radius:var(--radius-sm);
+  font-size:12.5px;font-weight:600;cursor:pointer;background:transparent;
+  color:var(--text-sec);transition:all .2s var(--ease);
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  white-space:nowrap;font-family:inherit;
+}
+.rjn-tab:hover{background:var(--bg)}
+.rjn-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,0.3)}
+
+/* DueBack autocomplete */
+.dueback-suggestions{
+  position:absolute;top:100%;left:0;right:0;z-index:50;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-md);max-height:180px;overflow-y:auto;margin-top:2px;
+}
+.dueback-suggestion{
+  padding:8px 12px;font-size:13px;color:var(--text);cursor:pointer;transition:background .1s;
+}
+.dueback-suggestion:hover{background:var(--primary-bg);color:var(--primary)}
+.dueback-suggestion strong{font-weight:700;color:var(--primary)}
+.rjn-tab-badge{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+
+/* Section cards */
+.rjn-section{display:none}
+.rjn-section.active{display:block}
+.rjn-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:24px;margin-bottom:14px;box-shadow:var(--shadow);
+}
+.rjn-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.rjn-card-desc{font-size:12px;color:var(--text-muted);margin-bottom:18px}
+
+/* Excel-like table */
+.rjn-table{width:100%;border-collapse:collapse;font-size:13px}
+.rjn-table th{
+  padding:8px 12px;text-align:center;font-size:10.5px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
+  border-bottom:2px solid var(--border);background:var(--bg);
+}
+.rjn-table th:first-child{text-align:left}
+.rjn-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
+.rjn-table td:first-child{font-weight:600;color:var(--text-sec);font-size:12.5px}
+.rjn-table input[type="number"]{
+  width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  font-size:13px;font-family:var(--mono);text-align:right;background:var(--card);color:var(--text);
+  transition:border-color .2s;outline:none;
+}
+.rjn-table input[type="number"]:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-bg)}
+.rjn-table .net-cell{
+  font-family:var(--mono);font-weight:700;text-align:right;padding-right:12px;
+}
+
+/* Balance indicator */
+.rjn-balance{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:14px 20px;border-radius:var(--radius-sm);margin-top:16px;
+  font-family:var(--mono);font-size:16px;font-weight:800;
+  transition:all .3s var(--ease);
+}
+.rjn-balance.ok{background:var(--emerald-bg);color:var(--emerald);border:1px solid rgba(16,185,129,0.2)}
+.rjn-balance.err{background:var(--rose-bg);color:var(--rose);border:1px solid rgba(239,68,68,0.2)}
+.rjn-balance.warn{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,0.2)}
+
+/* DueBack dynamic rows */
+.rjn-dueback-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.rjn-dueback-row input[type="text"]{
+  flex:2;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  font-size:13px;outline:none;
+}
+.rjn-dueback-row input[type="number"]{
+  flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  font-size:13px;font-family:var(--mono);text-align:right;outline:none;
+}
+.rjn-dueback-row input:focus{border-color:var(--primary)}
+.rjn-dueback-remove{
+  width:28px;height:28px;border:none;border-radius:50%;background:var(--rose-bg);
+  color:var(--rose);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+}
+.rjn-add-row{
+  display:flex;align-items:center;gap:6px;padding:8px 16px;margin-top:8px;
+  border:1px dashed var(--border);border-radius:var(--radius-sm);background:transparent;
+  color:var(--text-sec);font-size:12px;cursor:pointer;font-family:inherit;
+}
+.rjn-add-row:hover{border-color:var(--primary);color:var(--primary)}
+
+.rjn-print-btn{
+  display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);
+  color:var(--text-sec);font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;
+}
+.rjn-print-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--card-bg)}
+
+/* Summary check cards */
+.rjn-check{
+  display:flex;align-items:center;gap:14px;padding:14px 18px;
+  border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;
+  transition:all .2s var(--ease);
+}
+.rjn-check.ok{border-color:rgba(16,185,129,0.3);background:var(--emerald-bg)}
+.rjn-check.err{border-color:rgba(239,68,68,0.3);background:var(--rose-bg)}
+.rjn-check-icon{font-size:20px;width:28px;text-align:center}
+.rjn-check-label{flex:1;font-size:13px;font-weight:600;color:var(--text)}
+.rjn-check-val{font-family:var(--mono);font-size:14px;font-weight:700}
+
+/* Date & session picker */
+.rjn-setup{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.rjn-field{display:flex;flex-direction:column;gap:4px}
+.rjn-field label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.rjn-field input,.rjn-field select{
+  padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  font-size:13px;outline:none;font-family:inherit;
+}
+.rjn-field input:focus,.rjn-field select:focus{border-color:var(--primary)}
+
+/* Autosave indicator */
+.rjn-autosave{
+  font-size:10.5px;color:var(--text-muted);font-family:var(--mono);
+  display:flex;align-items:center;gap:4px;
+}
+.rjn-autosave.saving{color:var(--amber)}
+.rjn-autosave.saved{color:var(--emerald)}
+
+/* Responsive */
+@media(max-width:900px){
+  .rjn{padding:1rem}
+  .rjn-toolbar{flex-direction:column;gap:10px}
+  .rjn-tabs{flex-wrap:wrap}
+  .rjn-setup{flex-direction:column}
+}
+
+/* ═══════════════════════════════════════
+   DARK MODE OVERRIDES
+   ═══════════════════════════════════════ */
+[data-theme="dark"] .rjn{
+  --card:#14171f;--bg:#0c0f14;--border:#1e2230;--border-focus:rgba(99,102,241,0.4);
+  --text:#e5e7eb;--text-sec:#9ca3af;--text-muted:#4b5563;
+  --shadow:0 1px 3px rgba(0,0,0,0.25),0 1px 2px rgba(0,0,0,0.15);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.3);
+  --emerald-bg:rgba(16,185,129,0.12);
+  --rose-bg:rgba(239,68,68,0.12);
+  --amber-bg:rgba(245,158,11,0.12);
+  --blue-bg:rgba(59,130,246,0.12);
+  --primary-bg:rgba(99,102,241,0.12);
+}
+
+[data-theme="dark"] .rjn-table input[type="number"],
+[data-theme="dark"] .rjn-table input[type="text"],
+[data-theme="dark"] .rjn-dueback-row input,
+[data-theme="dark"] .rjn select,
+[data-theme="dark"] .rjn textarea,
+[data-theme="dark"] .rjn input{
+  background:#0c0f14;color:#e5e7eb;border-color:#1e2230;
+}
+
+[data-theme="dark"] .rjn-table th{
+  background:#0c0f14;color:#6b7280;border-bottom-color:#1e2230;
+}
+
+[data-theme="dark"] .rjn-table td{border-bottom-color:#181c26}
+
+[data-theme="dark"] .rjn-btn{
+  background:#181c26;color:#9ca3af;border-color:#1e2230;
+}
+[data-theme="dark"] .rjn-btn:hover{border-color:var(--primary);color:#e5e7eb}
+
+[data-theme="dark"] .rjn-tab:hover{background:#181c26}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rjn">
+  <!-- TOOLBAR -->
+  <div class="rjn-toolbar">
+    <div class="rjn-toolbar-left">
+      <h1>RJ Natif</h1>
+      <span class="rjn-status draft" id="session-status">Aucune session</span>
+      <span class="rjn-autosave" id="autosave-ind"></span>
+    </div>
+    <div class="rjn-actions">
+      <button class="rjn-btn" onclick="exportExcel()" id="btn-export" disabled>
+        <i data-feather="download" style="width:14px;height:14px"></i> Exporter Excel
+      </button>
+      <button class="rjn-btn" onclick="syncDashboard()" id="btn-sync" disabled>
+        <i data-feather="refresh-cw" style="width:14px;height:14px"></i> Re-synchroniser
+      </button>
+      <button class="rjn-btn primary" onclick="submitSession()" id="btn-submit" disabled>
+        <i data-feather="check-circle" style="width:14px;height:14px"></i> Soumettre
+      </button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="rjn-tabs" id="tab-nav">
+    <button class="rjn-tab active" data-tab="controle" onclick="switchTab('controle')">
+      <span>&#9881;</span> Nouveau Jour
+    </button>
+    <button class="rjn-tab" data-tab="dueback" onclick="switchTab('dueback')">
+      1 &middot; DueBack <span class="rjn-tab-badge" id="badge-dueback"></span>
+    </button>
+    <button class="rjn-tab" data-tab="recap" onclick="switchTab('recap')">
+      2 &middot; Recap <span class="rjn-tab-badge" id="badge-recap"></span>
+    </button>
+    <button class="rjn-tab" data-tab="transelect" onclick="switchTab('transelect')">
+      3 &middot; Transelect <span class="rjn-tab-badge" id="badge-transelect"></span>
+    </button>
+    <button class="rjn-tab" data-tab="geac" onclick="switchTab('geac')">
+      4 &middot; GEAC <span class="rjn-tab-badge" id="badge-geac"></span>
+    </button>
+    <button class="rjn-tab" data-tab="sd" onclick="switchTab('sd')">
+      5 &middot; SD / Dépôt <span class="rjn-tab-badge" id="badge-sd"></span>
+    </button>
+    <button class="rjn-tab" data-tab="setd" onclick="switchTab('setd')">
+      6 &middot; SetD <span class="rjn-tab-badge" id="badge-setd"></span>
+    </button>
+    <button class="rjn-tab" data-tab="hpadmin" onclick="switchTab('hpadmin')">
+      7 &middot; HP/Admin <span class="rjn-tab-badge" id="badge-hpadmin"></span>
+    </button>
+    <button class="rjn-tab" data-tab="jour" onclick="switchTab('jour')">
+      8 &middot; Jour <span class="rjn-tab-badge" id="badge-jour"></span>
+    </button>
+    <button class="rjn-tab" data-tab="quasimodo" onclick="switchTab('quasimodo')">
+      9 &middot; Quasimodo <span class="rjn-tab-badge" id="badge-quasimodo"></span>
+    </button>
+    <button class="rjn-tab" data-tab="dbrs" onclick="switchTab('dbrs')">
+      10 &middot; DBRS <span class="rjn-tab-badge" id="badge-dbrs"></span>
+    </button>
+    <button class="rjn-tab" data-tab="analyse_gl" onclick="switchTab('analyse_gl')">
+      11 &middot; Analyse GL <span class="rjn-tab-badge" id="badge-analyse_gl"></span>
+    </button>
+    <button class="rjn-tab" data-tab="diff_caisse" onclick="switchTab('diff_caisse')">
+      12 &middot; Diff.Caisse <span class="rjn-tab-badge" id="badge-diff_caisse"></span>
+    </button>
+    <button class="rjn-tab" data-tab="socan" onclick="switchTab('socan')">
+      13 &middot; SOCAN <span class="rjn-tab-badge" id="badge-socan"></span>
+    </button>
+    <button class="rjn-tab" data-tab="resonne" onclick="switchTab('resonne')">
+      14 &middot; Résonne <span class="rjn-tab-badge" id="badge-resonne"></span>
+    </button>
+    <button class="rjn-tab" data-tab="vestiaire" onclick="switchTab('vestiaire')">
+      15 &middot; Vestiaire <span class="rjn-tab-badge" id="badge-vestiaire"></span>
+    </button>
+    <button class="rjn-tab" data-tab="admin_ad" onclick="switchTab('admin_ad')">
+      16 &middot; AD <span class="rjn-tab-badge" id="badge-admin_ad"></span>
+    </button>
+    <button class="rjn-tab" data-tab="massage" onclick="switchTab('massage')">
+      17 &middot; Massage <span class="rjn-tab-badge" id="badge-massage"></span>
+    </button>
+    <button class="rjn-tab" data-tab="ristourne" onclick="switchTab('ristourne')">
+      18 &middot; Ristourne <span class="rjn-tab-badge" id="badge-ristourne"></span>
+    </button>
+    <button class="rjn-tab" data-tab="resume" onclick="switchTab('resume')">
+      19 &middot; Sommaire <span class="rjn-tab-badge" id="badge-resume"></span>
+    </button>
+  </div>
+
+  <!-- ═══════════════ TAB: CONTROLE ═══════════════ -->
+  <div class="rjn-section active" id="sec-controle">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Nouveau Jour</div>
+      <div class="rjn-card-desc">Créer ou charger une session d'audit pour une date</div>
+      <div class="rjn-setup">
+        <div class="rjn-field">
+          <label>Date d'audit</label>
+          <input type="date" id="inp-date" value="{{ today }}">
+        </div>
+        <div class="rjn-field">
+          <label>Auditeur</label>
+          <input type="text" id="inp-auditor" value="{{ session.get('user_name','') }}" placeholder="Nom de l'auditeur">
+        </div>
+        <div class="rjn-field">
+          <label>Température</label>
+          <input type="text" id="inp-temp" placeholder="-5°C" style="width:80px">
+        </div>
+        <div class="rjn-field">
+          <label>Météo</label>
+          <input type="text" id="inp-weather" placeholder="Neige, Soleil..." style="width:120px">
+        </div>
+        <div class="rjn-field">
+          <label>Ch. à refaire</label>
+          <input type="number" id="inp-chambres" value="0" min="0" style="width:70px">
+        </div>
+        <button class="rjn-btn primary" onclick="startSession()" id="btn-start">
+          <i data-feather="play" style="width:14px;height:14px"></i> Démarrer / Charger
+        </button>
+      </div>
+      <div id="session-info" style="margin-top:14px;font-size:12px;color:var(--text-muted)"></div>
+
+      <!-- ═══ IMPORT RJ EXCEL — Upload yesterday's RJ ═══ -->
+      <div id="import-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
+          <i data-feather="upload" style="width:14px;height:14px;vertical-align:-2px"></i> Importer le RJ de la veille
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
+          Déposez le fichier Excel RJ de la veille. Les données seront lues et la session pour le jour suivant sera créée automatiquement.
+        </div>
+        <input type="file" id="file-import-rj" accept=".xls,.xlsx" style="display:none">
+        <button class="rjn-btn primary" onclick="document.getElementById('file-import-rj').click()" style="font-size:12px;padding:6px 14px">
+          <i data-feather="file-plus" style="width:12px;height:12px"></i> Choisir un fichier RJ (.xls)
+        </button>
+        <div id="import-status" style="margin-top:8px;font-size:11px;color:var(--text-muted)"></div>
+      </div>
+
+      <!-- ═══ MACROS — Emulates Excel VBA clear buttons ═══ -->
+      <div id="macro-panel" style="display:none;margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
+          <i data-feather="zap" style="width:14px;height:14px;vertical-align:-2px"></i> Macros — Effacement
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="rjn-btn" onclick="clearMacro('recap')" style="background:#dc3545;color:#fff;font-size:12px;padding:6px 12px">
+            <i data-feather="trash-2" style="width:12px;height:12px"></i> Effacer Recap
+          </button>
+          <button class="rjn-btn" onclick="clearMacro('transelect')" style="background:#dc3545;color:#fff;font-size:12px;padding:6px 12px">
+            <i data-feather="trash-2" style="width:12px;height:12px"></i> Effacer Transelect
+          </button>
+          <button class="rjn-btn" onclick="clearMacro('geac')" style="background:#dc3545;color:#fff;font-size:12px;padding:6px 12px">
+            <i data-feather="trash-2" style="width:12px;height:12px"></i> Effacer GEAC
+          </button>
+          <button class="rjn-btn" onclick="clearMacro('all-daily')" style="background:#b91c1c;color:#fff;font-size:12px;padding:6px 14px;font-weight:700">
+            <i data-feather="zap" style="width:12px;height:12px"></i> Tout effacer (Recap+Trans+GEAC)
+          </button>
+        </div>
+        <div id="macro-result" style="margin-top:8px;font-size:11px;color:var(--text-muted)"></div>
+      </div>
+
+      <!-- ═══ AUTO-FILL — Upload Lightspeed reports ═══ -->
+      <div id="autofill-panel" style="display:none;margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
+          <i data-feather="cpu" style="width:14px;height:14px;vertical-align:-2px"></i> Auto-remplissage — Rapports Lightspeed
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Déposez vos rapports imprimés pour remplir automatiquement les champs correspondants.
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+          <button class="rjn-btn" onclick="uploadReport('daily_revenue')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="file-text" style="width:12px;height:12px;color:var(--blue)"></i>
+            <strong>Daily Revenue</strong> <small style="color:var(--text-muted)">.pdf</small><br>
+            <small style="color:var(--text-muted)">→ Recap, GEAC, Jour</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('sales_journal')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="file-text" style="width:12px;height:12px;color:var(--emerald)"></i>
+            <strong>Sales Journal</strong> <small style="color:var(--text-muted)">.rtf</small><br>
+            <small style="color:var(--text-muted)">→ Jour F&B, Recap, Transelect</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('freedompay')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="credit-card" style="width:12px;height:12px;color:var(--amber)"></i>
+            <strong>FreedomPay</strong> <small style="color:var(--text-muted)">.xls</small><br>
+            <small style="color:var(--text-muted)">→ GEAC cashout, Transelect</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('ar_summary')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="file-text" style="width:12px;height:12px;color:var(--purple)"></i>
+            <strong>AR Summary</strong> <small style="color:var(--text-muted)">.pdf</small><br>
+            <small style="color:var(--text-muted)">→ GEAC Balance Sheet</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('advance_deposit')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="file-text" style="width:12px;height:12px;color:var(--teal)"></i>
+            <strong>Advance Deposit</strong> <small style="color:var(--text-muted)">.pdf</small><br>
+            <small style="color:var(--text-muted)">→ GEAC dépôts</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('hp_excel')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="grid" style="width:12px;height:12px;color:var(--red)"></i>
+            <strong>HP Admin</strong> <small style="color:var(--text-muted)">.xls</small><br>
+            <small style="color:var(--text-muted)">→ HP/Admin, Jour</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('sd_deposit')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="grid" style="width:12px;height:12px;color:var(--orange)"></i>
+            <strong>Suivi Dépôts (SD)</strong> <small style="color:var(--text-muted)">.xls</small><br>
+            <small style="color:var(--text-muted)">→ SD, SetD</small>
+          </button>
+        </div>
+        <input type="file" id="file-report-upload" style="display:none">
+        <div id="autofill-status" style="margin-top:10px;font-size:11px;color:var(--text-muted)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: DUEBACK ═══════════════ -->
+  <div class="rjn-section" id="sec-dueback">
+    <div class="rjn-card">
+      <div class="rjn-card-title">DueBack — Receptionnistes</div>
+      <div class="rjn-card-desc">Soldes par receptionniste. Tapez un nom pour voir les suggestions. Le total va dans le Recap.</div>
+      <div style="display:flex;gap:8px;margin-bottom:10px;font-size:11px;font-weight:600;color:var(--text-muted)">
+        <span style="flex:2">NOM</span><span style="flex:1;text-align:right">SOLDE PREC.</span><span style="flex:1;text-align:right">NOUVEAU</span><span style="width:28px"></span>
+      </div>
+      <div id="dueback-rows"></div>
+      <button class="rjn-add-row" onclick="addDuebackRow()">+ Ajouter un receptionniste</button>
+      <div class="rjn-balance ok" id="dueback-total">TOTAL: $0.00</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: RECAP ═══════════════ -->
+  <div class="rjn-section" id="sec-recap">
+    <div class="rjn-card">
+      <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Recap — Reconciliation Comptant</span>
+        <button class="rjn-print-btn" onclick="printReport('recap')" title="Imprimer Recap"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+      </div>
+      <div class="rjn-card-desc">Entrez les montants. Les depots sont calcules automatiquement depuis le SD.</div>
+      <table class="rjn-table">
+        <thead>
+          <tr><th style="width:50%"></th><th>Montant</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Comptant LightSpeed</td>
+            <td><input type="number" step="0.01" data-field="cash_ls_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr>
+            <td>Comptant POSitouch</td>
+            <td><input type="number" step="0.01" data-field="cash_pos_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr>
+            <td>Cheque A/R</td>
+            <td><input type="number" step="0.01" data-field="cheque_ar_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr>
+            <td>Cheque Daily Rev</td>
+            <td><input type="number" step="0.01" data-field="cheque_dr_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr style="border-top:2px solid var(--border)">
+            <td style="color:var(--rose)">Remb. gratuite</td>
+            <td><input type="number" step="0.01" data-field="remb_gratuite_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr>
+            <td style="color:var(--rose)">Remb. client</td>
+            <td><input type="number" step="0.01" data-field="remb_client_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr style="border-top:2px solid var(--border)">
+            <td>DueBack Reception</td>
+            <td><input type="number" step="0.01" data-field="dueback_reception_lecture" oninput="recalcRecap()" id="inp-db-rec-lect" readonly style="background:var(--bg);color:var(--text-sec)"></td>
+          </tr>
+          <tr>
+            <td>DueBack NB</td>
+            <td><input type="number" step="0.01" data-field="dueback_nb_lecture" oninput="recalcRecap()"></td>
+          </tr>
+          <tr style="border-top:2px solid var(--border);background:var(--bg)">
+            <td style="color:var(--text-muted)">Depot CDN <span style="font-size:10px;opacity:0.7">(auto depuis SD)</span></td>
+            <td><input type="number" step="0.01" data-field="deposit_cdn" oninput="recalcRecap()" id="inp-dep-cdn" readonly style="background:var(--bg);color:var(--text-sec)"></td>
+          </tr>
+          <tr style="background:var(--bg)">
+            <td style="color:var(--text-muted)">Depot US <span style="font-size:10px;opacity:0.7">(auto depuis SD)</span></td>
+            <td><input type="number" step="0.01" data-field="deposit_us" oninput="recalcRecap()" id="inp-dep-us" readonly style="background:var(--bg);color:var(--text-sec)"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="rjn-balance err" id="recap-balance">BALANCE: $0.00</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: TRANSELECT ═══════════════ -->
+  <div class="rjn-section" id="sec-transelect">
+    <!-- RESTAURANT — Layout Excel: cartes en Y, terminaux en X -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Transelect — Restaurant / Bar / Spesa</div>
+      <div class="rjn-card-desc">Identique au Excel RJ. 8 terminaux POS (BAR A/B/C, SPESA, ROOM, 3 EXTRA) → TOTAL 1 + 12 terminaux Banquet → TOTAL 2. Ajoutez/retirez des terminaux au besoin.</div>
+      <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="rjn-btn" onclick="addRestTerminal('pos')" style="font-size:11px;padding:4px 10px"><i data-feather="plus" style="width:12px;height:12px"></i> Terminal POS</button>
+        <button class="rjn-btn" onclick="addRestTerminal('banquet')" style="font-size:11px;padding:4px 10px"><i data-feather="plus" style="width:12px;height:12px"></i> Terminal Banquet</button>
+      </div>
+      <div style="overflow-x:auto">
+      <table class="rjn-table" id="tbl-restaurant" style="font-size:11px">
+        <thead id="rest-thead">
+          <!-- JS will build header row dynamically -->
+        </thead>
+        <tbody id="rest-tbody">
+          <!-- JS will build card rows dynamically -->
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <!-- RÉCEPTION — Layout Excel: cartes en Y, terminaux en X -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Transelect — Réception Chambres</div>
+      <div class="rjn-card-desc">FreedomPay (Bank Report) + terminaux physiques. Daily Revenue pour la variance. NET GEAC = après escompte.</div>
+      <div style="overflow-x:auto">
+      <table class="rjn-table" id="tbl-reception" style="font-size:11px">
+        <thead><tr>
+          <th style="min-width:80px"></th>
+          <th style="color:#6366f1;min-width:90px">FreedomPay</th>
+          <th style="color:#8b5cf6;min-width:80px">Réception 8</th>
+          <th style="color:#a855f7;min-width:80px">K053</th>
+          <th class="net-cell" style="color:var(--primary);min-width:90px">TOTAL</th>
+          <th style="color:#10b981;min-width:90px">Daily Rev</th>
+          <th class="net-cell" style="min-width:80px">Variance</th>
+          <th style="min-width:55px">Esc.%</th>
+          <th class="net-cell" style="min-width:70px">Esc.$</th>
+          <th class="net-cell" style="color:#f59e0b;min-width:90px">NET GEAC</th>
+        </tr></thead>
+        <tbody>
+          <tr data-cardrow="debit"><td style="font-weight:700;color:#6366f1">DÉBIT</td><td><input type="number" step="0.01" data-src="fusebox" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="term8" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="k053" oninput="recalcTranselect()"></td><td class="net-cell rec-total">$0</td><td><input type="number" step="0.01" class="rec-dailyrev" oninput="recalcTranselect()"></td><td class="net-cell rec-var">$0</td><td><input type="number" step="0.01" class="rec-esc-pct" value="0" style="width:50px" oninput="recalcTranselect()"></td><td class="net-cell rec-esc-amt">$0</td><td class="net-cell rec-net">$0</td></tr>
+          <tr data-cardrow="visa"><td style="font-weight:700;color:#3b82f6">VISA</td><td><input type="number" step="0.01" data-src="fusebox" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="term8" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="k053" oninput="recalcTranselect()"></td><td class="net-cell rec-total">$0</td><td><input type="number" step="0.01" class="rec-dailyrev" oninput="recalcTranselect()"></td><td class="net-cell rec-var">$0</td><td><input type="number" step="0.01" class="rec-esc-pct" value="1.75" style="width:50px" oninput="recalcTranselect()"></td><td class="net-cell rec-esc-amt">$0</td><td class="net-cell rec-net">$0</td></tr>
+          <tr data-cardrow="mc"><td style="font-weight:700;color:#f59e0b">MASTER</td><td><input type="number" step="0.01" data-src="fusebox" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="term8" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="k053" oninput="recalcTranselect()"></td><td class="net-cell rec-total">$0</td><td><input type="number" step="0.01" class="rec-dailyrev" oninput="recalcTranselect()"></td><td class="net-cell rec-var">$0</td><td><input type="number" step="0.01" class="rec-esc-pct" value="1.40" style="width:50px" oninput="recalcTranselect()"></td><td class="net-cell rec-esc-amt">$0</td><td class="net-cell rec-net">$0</td></tr>
+          <tr data-cardrow="discover"><td style="font-weight:700;color:#ef4444">DISCOVER</td><td><input type="number" step="0.01" data-src="fusebox" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="term8" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="k053" oninput="recalcTranselect()"></td><td class="net-cell rec-total">$0</td><td><input type="number" step="0.01" class="rec-dailyrev" oninput="recalcTranselect()"></td><td class="net-cell rec-var">$0</td><td><input type="number" step="0.01" class="rec-esc-pct" value="2.80" style="width:50px" oninput="recalcTranselect()"></td><td class="net-cell rec-esc-amt">$0</td><td class="net-cell rec-net">$0</td></tr>
+          <tr data-cardrow="amex"><td style="font-weight:700;color:#10b981">AMEX</td><td><input type="number" step="0.01" data-src="fusebox" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="term8" oninput="recalcTranselect()"></td><td><input type="number" step="0.01" data-src="k053" oninput="recalcTranselect()"></td><td class="net-cell rec-total">$0</td><td><input type="number" step="0.01" class="rec-dailyrev" oninput="recalcTranselect()"></td><td class="net-cell rec-var">$0</td><td><input type="number" step="0.01" class="rec-esc-pct" value="2.65" style="width:50px" oninput="recalcTranselect()"></td><td class="net-cell rec-esc-amt">$0</td><td class="net-cell rec-net">$0</td></tr>
+          <tr style="background:var(--bg);font-weight:700"><td>TOTAL</td><td class="net-cell" id="rec-g-fuse">$0</td><td class="net-cell" id="rec-g-t8">$0</td><td class="net-cell" id="rec-g-k053">$0</td><td class="net-cell" id="rec-g-total">$0</td><td class="net-cell" id="rec-g-dr">$0</td><td class="net-cell" id="rec-g-var">$0</td><td></td><td class="net-cell" id="rec-g-esc">$0</td><td class="net-cell" id="rec-g-net">$0</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="rjn-balance err" id="transelect-variance">VARIANCE RÉCEPTION: $0.00</div>
+    </div>
+
+    <!-- MACROS -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Macros automatiques</div>
+      <div class="rjn-card-desc">Ces opérations se font automatiquement à la soumission. Vous pouvez aussi les exécuter manuellement.</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="rjn-btn" onclick="runMacro('envoie_jour')"><i data-feather="send" style="width:14px;height:14px"></i> Envoie dans Jour (Recap→Jour)</button>
+        <button class="rjn-btn" onclick="runMacro('calcul_carte')"><i data-feather="credit-card" style="width:14px;height:14px"></i> Calcul Carte (Transelect→Jour)</button>
+        <button class="rjn-btn" onclick="runMacro('sync_setd')"><i data-feather="refresh-cw" style="width:14px;height:14px"></i> Sync DueBack→SetD</button>
+      </div>
+      <div id="macro-result" style="margin-top:10px;font-size:12px;color:var(--text-muted)"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: GEAC ═══════════════ -->
+  <div class="rjn-section" id="sec-geac">
+    <!-- HÔTEL SHERATON LAVAL property 858 -->
+
+    <!-- ══ Daily Cash Out vs Daily Revenue ══ -->
+    <div class="rjn-card">
+      <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>GEAC — Daily Cash Out vs Daily Revenue</span>
+        <button class="rjn-print-btn" onclick="printReport('geac')" title="Imprimer GEAC"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+      </div>
+      <div class="rjn-card-desc">2 lignes de Cash Out par carte (du rapport GEAC). Le TOTAL et la Variance se calculent automatiquement.</div>
+      <table class="rjn-table" style="font-size:12px">
+        <thead><tr><th style="min-width:130px"></th><th style="color:#10b981;min-width:100px">Amex</th><th style="color:#8b5cf6;min-width:100px">Diners</th><th style="color:#f59e0b;min-width:100px">Master</th><th style="color:#3b82f6;min-width:100px">Visa</th></tr></thead>
+        <tbody>
+          <!-- Cash Out Line 1 (fixed) -->
+          <tr>
+            <td style="font-weight:600;font-size:11px;color:var(--text-muted)">Cash Out Line 1</td>
+            <td><input type="number" step="0.01" id="geac-co1-amex" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-co1-diners" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-co1-mc" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-co1-visa" oninput="recalcGeac()"></td>
+          </tr>
+          <!-- Cash Out Line 2 (fixed) -->
+          <tr>
+            <td style="font-weight:600;font-size:11px;color:var(--text-muted)">Cash Out Line 2</td>
+            <td><input type="number" step="0.01" id="geac-co2-amex" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-co2-diners" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-co2-mc" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-co2-visa" oninput="recalcGeac()"></td>
+          </tr>
+          <!-- TOTAL = Line 1 + Line 2 (auto-calculated) -->
+          <tr style="background:var(--bg);font-weight:700">
+            <td>TOTAL</td>
+            <td class="net-cell" id="geac-co-total-amex">$0</td>
+            <td class="net-cell" id="geac-co-total-diners">$0</td>
+            <td class="net-cell" id="geac-co-total-mc">$0</td>
+            <td class="net-cell" id="geac-co-total-visa">$0</td>
+          </tr>
+          <!-- Daily Revenue (input from GEAC p.7) -->
+          <tr style="border-top:2px solid var(--border)">
+            <td style="font-weight:600">Daily Revenue <span style="font-size:10px;color:var(--text-muted)">(p.7)</span></td>
+            <td><input type="number" step="0.01" id="geac-dr-amex" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-dr-diners" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-dr-mc" oninput="recalcGeac()"></td>
+            <td><input type="number" step="0.01" id="geac-dr-visa" oninput="recalcGeac()"></td>
+          </tr>
+          <!-- Variance = TOTAL - Daily Revenue (auto-calculated, must be $0) -->
+          <tr style="background:var(--bg);font-weight:700">
+            <td>Variance <span style="font-size:10px;font-weight:400;color:var(--text-muted)">= TOTAL − Daily Rev</span></td>
+            <td class="net-cell" id="geac-var-amex">$0</td>
+            <td class="net-cell" id="geac-var-diners">$0</td>
+            <td class="net-cell" id="geac-var-mc">$0</td>
+            <td class="net-cell" id="geac-var-visa">$0</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="margin-top:6px;font-size:10px;color:var(--text-muted);line-height:1.5">Si les montants ne balancent pas, vérifier le Bank Interface Exceptions Report et le Bank Night Audit Status Report.</div>
+      <div style="margin-top:8px;display:flex;gap:12px">
+        <label style="font-size:11px;display:flex;align-items:center;gap:4px;color:var(--text-muted)"><input type="checkbox" id="geac-chk-nobalance" onchange="debounceSave('geac')"> Amounts don't balance</label>
+        <label style="font-size:11px;display:flex;align-items:center;gap:4px;color:var(--text-muted)"><input type="checkbox" id="geac-chk-nodeposit" onchange="debounceSave('geac')"> Deposit didn't balance</label>
+      </div>
+      <div class="rjn-balance ok" id="geac-card-balance" style="margin-top:8px">CARTES: $0.00 ✓</div>
+    </div>
+
+    <!-- ══ GEAC/UX System Balance Sheet — layout fidèle à l'Excel ══ -->
+    <!-- Excel: les labels sont DANS la colonne B (Daily Revenue), pas dans une colonne séparée -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">GEAC/UX — System Balance Sheet</div>
+      <div class="rjn-card-desc">HÔTEL SHERATON LAVAL property 858</div>
+      <div style="overflow-x:auto">
+      <table class="rjn-table" style="font-size:12px">
+        <thead><tr>
+          <th style="color:var(--primary);min-width:180px">Daily Revenue</th>
+          <th style="min-width:150px">Guest Ledger</th>
+          <th style="min-width:150px">A/R Summary</th>
+          <th style="color:var(--amber);min-width:150px">Advance Deposit</th>
+          <th style="min-width:100px;text-align:center">Variance</th>
+        </tr></thead>
+        <tbody>
+          <!-- ── Balance Previous Day: DR(B32) + GL(E32), Var=B32-E32 ── -->
+          <tr>
+            <td>
+              <div style="font-weight:600;margin-bottom:4px">Balance Previous Day <span style="font-size:10px;color:var(--text-muted)">(p.7)</span></div>
+              <input type="number" step="0.01" id="geac-bs-prev-dr" oninput="recalcGeacBS()">
+            </td>
+            <td>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Yesterday's ending</div>
+              <input type="number" step="0.01" id="geac-bs-prev-gl" oninput="recalcGeacBS()">
+            </td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td class="net-cell" id="geac-bs-var-prev" style="text-align:center;vertical-align:bottom">$0</td>
+          </tr>
+          <!-- ── Balance Today: DR(B37) + GL(E37), Var=B37-E37 ── -->
+          <tr>
+            <td>
+              <div style="font-weight:600;margin-bottom:4px">Balance Today <span style="font-size:10px;color:var(--text-muted)">(p.7)</span></div>
+              <input type="number" step="0.01" id="geac-bs-today-dr" oninput="recalcGeacBS()">
+            </td>
+            <td>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Debit − Credit Activities</div>
+              <input type="number" step="0.01" id="geac-bs-today-gl" oninput="recalcGeacBS()">
+            </td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td class="net-cell" id="geac-bs-var-today" style="text-align:center;vertical-align:bottom">$0</td>
+          </tr>
+          <!-- ── Facture Direct: DR(B41) + AR(G41), Var=B41-G41 ── -->
+          <tr style="border-top:2px solid var(--border)">
+            <td>
+              <div style="font-weight:600;margin-bottom:4px">Facture Direct <span style="font-size:10px;color:var(--text-muted)">(p.6)</span></div>
+              <input type="number" step="0.01" id="geac-bs-facture-dr" oninput="recalcGeacBS()">
+            </td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Front Office Transfers</div>
+              <input type="number" step="0.01" id="geac-bs-facture-ar" oninput="recalcGeacBS()">
+            </td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td class="net-cell" id="geac-bs-var-facture" style="text-align:center;vertical-align:bottom">$0</td>
+          </tr>
+          <!-- ── Adv Deposit Applied: DR(B44) + AD(J44), Var=B44-J44 ── -->
+          <tr>
+            <td>
+              <div style="font-weight:600;margin-bottom:4px">Adv. Deposit Applied <span style="font-size:10px;color:var(--text-muted)">(p.7)</span></div>
+              <input type="number" step="0.01" id="geac-bs-advdep-dr" oninput="recalcGeacBS()">
+            </td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px">Applied Today</div>
+              <input type="number" step="0.01" id="geac-bs-advdep-ad" oninput="recalcGeacBS()">
+            </td>
+            <td class="net-cell" id="geac-bs-var-advdep" style="text-align:center;vertical-align:bottom">$0</td>
+          </tr>
+          <!-- ── Today Moved In: always 0, never filled ── -->
+          <tr style="border-top:1px solid var(--border);opacity:0.4">
+            <td style="font-weight:600;color:var(--text-muted)">Today Moved In</td>
+            <td style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px">0</td>
+            <td style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px">0</td>
+            <td style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px">0</td>
+            <td></td>
+          </tr>
+          <!-- ── Today Moved Out: always 0, never filled ── -->
+          <tr style="opacity:0.4">
+            <td style="font-weight:600;color:var(--text-muted)">Today Moved Out</td>
+            <td style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px">0</td>
+            <td style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px">0</td>
+            <td style="text-align:center;color:var(--text-muted);font-family:var(--mono);font-size:11px">0</td>
+            <td></td>
+          </tr>
+          <!-- ── New Balance: entrée manuelle depuis rapport GEAC p.7, Var=DR-GL ── -->
+          <tr style="background:var(--bg);font-weight:700;border-top:2px solid var(--primary)">
+            <td>
+              <div style="margin-bottom:4px">New Balance <span style="font-size:10px;color:var(--text-muted)">(p.7)</span></div>
+              <input type="number" step="0.01" id="geac-bs-newbal-dr" oninput="recalcGeacBS()">
+            </td>
+            <td>
+              <div style="font-size:10px;color:var(--text-muted);margin-bottom:4px;font-weight:400">ending balance</div>
+              <input type="number" step="0.01" id="geac-bs-newbal-gl" oninput="recalcGeacBS()">
+            </td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td style="background:var(--bg-secondary);opacity:0.3"></td>
+            <td class="net-cell" id="geac-bs-var-newbal" style="text-align:center;font-weight:700">$0</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+      <div class="rjn-balance ok" id="geac-bs-balance" style="margin-top:8px">BALANCE SHEET: $0.00 ✓</div>
+      <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">Night Audit Date: <span id="geac-bs-date" style="font-weight:600">—</span> &nbsp;|&nbsp; Hotel Contact: Mandy Le &nbsp;|&nbsp; GEAC Support: 1-800-434-9990</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: SD / DEPOT ═══════════════ -->
+  <div class="rjn-section" id="sec-sd">
+    <!-- SD — Sommaire Journalier -->
+    <div class="rjn-card">
+      <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>SD — Sommaire Journalier des Dépôts</span>
+        <button class="rjn-print-btn" onclick="printReport('sd')" title="Imprimer SD"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+      </div>
+      <div class="rjn-card-desc">Entrez les montants par employé. Le Total Vérifié se reporte automatiquement dans le Depot.</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;font-size:10.5px;font-weight:600;color:var(--text-muted)">
+        <span style="flex:1.5">DÉPARTEMENT</span><span style="flex:2">NOM</span><span style="flex:0.7;text-align:center">CDN/US</span>
+        <span style="flex:1;text-align:right">MONTANT</span><span style="flex:1;text-align:right;color:var(--amber)">VÉRIFIÉ</span>
+        <span style="flex:1;text-align:right">REMB.</span><span style="flex:1;text-align:right">VARIANCE</span><span style="width:28px"></span>
+      </div>
+      <div id="sd-rows"></div>
+      <button class="rjn-add-row" onclick="addSDRow()">+ Ajouter une ligne SD</button>
+      <div style="display:flex;gap:16px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:var(--radius-sm)">
+        <div style="flex:1"><span style="font-size:11px;color:var(--text-muted)">Total Montant</span><div class="net-cell" id="sd-tot-montant" style="font-size:15px">$0.00</div></div>
+        <div style="flex:1"><span style="font-size:11px;color:var(--amber)">Total Vérifié</span><div class="net-cell" id="sd-tot-verifie" style="font-size:15px;color:var(--amber)">$0.00</div></div>
+        <div style="flex:1"><span style="font-size:11px;color:var(--text-muted)">Total Remb.</span><div class="net-cell" id="sd-tot-remb" style="font-size:15px">$0.00</div></div>
+        <div style="flex:1"><span style="font-size:11px;color:var(--text-muted)">Total Variance</span><div class="net-cell" id="sd-tot-variance" style="font-size:15px">$0.00</div></div>
+      </div>
+    </div>
+
+    <!-- DEPOT — Client 6 + Client 8 -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Dépôt — Comptes Canadiens</div>
+      <div class="rjn-card-desc">Client 6 et Client 8 sont deux espaces parallèles. Le total se reporte dans Recap → Dépôt CDN.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <!-- Client 6 -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--blue)">CLIENT 6 — #1844-22</div>
+          <div class="rjn-field" style="margin-bottom:8px"><label>Date</label><input type="text" id="depot-c6-date" placeholder="23 DECEMBRE" oninput="debounceSave('depot')"></div>
+          <div id="depot-c6-rows"></div>
+          <button class="rjn-add-row" onclick="addDepotRow('c6')" style="margin-bottom:8px">+ Montant</button>
+          <div style="text-align:right;font-family:var(--mono);font-weight:700;font-size:14px">TOTAL: <span id="depot-c6-total">$0.00</span></div>
+        </div>
+        <!-- Client 8 -->
+        <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+          <div style="font-weight:700;font-size:13px;margin-bottom:8px;color:var(--violet)">CLIENT 8 — #4743-66</div>
+          <div class="rjn-field" style="margin-bottom:8px"><label>Date</label><input type="text" id="depot-c8-date" placeholder="23 DECEMBRE" oninput="debounceSave('depot')"></div>
+          <div id="depot-c8-rows"></div>
+          <button class="rjn-add-row" onclick="addDepotRow('c8')" style="margin-bottom:8px">+ Montant</button>
+          <div style="text-align:right;font-family:var(--mono);font-weight:700;font-size:14px">TOTAL: <span id="depot-c8-total">$0.00</span></div>
+        </div>
+      </div>
+      <div class="rjn-balance ok" id="depot-grand-total">TOTAL DÉPÔTS: $0.00 → Recap CDN</div>
+      <div style="margin-top:8px">
+        <button class="rjn-btn" onclick="fillDepotFromSD()"><i data-feather="zap" style="width:14px;height:14px"></i> Auto-remplir depuis SD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: SETD ═══════════════ -->
+  <div class="rjn-section" id="sec-setd">
+    <div class="rjn-card">
+      <div class="rjn-card-title">SetD — Sommaire Mensuel</div>
+      <div class="rjn-card-desc">Le RJ Balance est auto-rempli depuis le Recap. Ajoutez des entrées personnel si nécessaire.</div>
+      <div style="display:flex;gap:20px;align-items:flex-end;margin-bottom:16px">
+        <div class="rjn-field" style="flex:1">
+          <label>Jour du mois (auto)</label>
+          <input type="number" id="setd-day" readonly style="background:var(--bg);font-weight:700;font-size:16px;text-align:center;width:80px">
+        </div>
+        <div class="rjn-field" style="flex:2">
+          <label>RJ Balance (Col B) — auto depuis Recap</label>
+          <input type="number" step="0.01" id="setd-rj-bal" readonly style="background:var(--emerald-bg);font-weight:700;font-size:16px;font-family:var(--mono)">
+        </div>
+        <div class="rjn-field" style="flex:1">
+          <label>Validation</label>
+          <div class="rjn-balance ok" id="setd-validation" style="margin:0;padding:8px 12px;font-size:13px">$0.00 ✓</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px">
+        <div style="font-weight:600;font-size:13px;color:var(--text-sec);margin-bottom:10px">Entrées personnel (optionnel)</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;font-size:10.5px;font-weight:600;color:var(--text-muted)">
+          <span style="flex:3">NOM (recherche)</span><span style="flex:1;text-align:right">MONTANT</span><span style="width:28px"></span>
+        </div>
+        <div id="setd-personnel-rows"></div>
+        <button class="rjn-add-row" onclick="addSetDRow()">+ Ajouter personnel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: HP/ADMIN ═══════════════ -->
+  <div class="rjn-section" id="sec-hpadmin">
+    <div class="rjn-card">
+      <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>HP/Admin — Factures Hotel Promotion & Administration</span>
+        <button class="rjn-print-btn" onclick="printReport('hp')" title="Imprimer HP"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+      </div>
+      <div class="rjn-card-desc">Chaque facture F&B interne (Admin ou Hotel Promo). Montants avant taxes.</div>
+      <div id="hp-rows"></div>
+      <button class="rjn-add-row" onclick="addHPRow()">+ Ajouter une facture</button>
+      <div style="display:flex;gap:16px;margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:var(--radius-sm)">
+        <div style="flex:1"><span style="font-size:11px;color:var(--text-muted)">Total HP</span><div class="net-cell" id="hp-tot-hp" style="font-size:14px;font-family:var(--mono)">$0.00</div></div>
+        <div style="flex:1"><span style="font-size:11px;color:var(--text-muted)">Total Admin</span><div class="net-cell" id="hp-tot-admin" style="font-size:14px;font-family:var(--mono)">$0.00</div></div>
+        <div style="flex:1"><span style="font-size:11px;color:var(--primary)">Grand Total</span><div class="net-cell" id="hp-tot-grand" style="font-size:15px;font-weight:700;color:var(--primary);font-family:var(--mono)">$0.00</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: JOUR ═══════════════ -->
+  <div class="rjn-section" id="sec-jour">
+    <!-- F&B Restauration -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Jour — Restauration (F&B)</div>
+      <div class="rjn-card-desc">Revenus par département et catégorie. Sous-totaux automatiques.</div>
+      <div style="overflow-x:auto">
+      <table class="rjn-table" id="tbl-jour-fb">
+        <thead><tr><th>Département</th><th>Nourriture</th><th>Boisson</th><th>Bières</th><th>Minéraux</th><th>Vins</th><th class="net-cell">Total</th><th style="min-width:80px" title="Ajustement manuel caissier (codes 50)">Ajust.</th></tr></thead>
+        <tbody>
+          <tr data-dept="cafe"><td>Café Link</td><td><input type="number" step="0.01" data-jour="jour_cafe_nourriture" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_cafe_boisson" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_cafe_bieres" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_cafe_mineraux" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_cafe_vins" oninput="recalcJour()"></td><td class="net-cell dept-total">$0</td><td><input type="number" step="0.01" data-jour="jour_adj_cafe" oninput="recalcJour()" style="background:var(--warning-bg);border-color:var(--warning)" placeholder="±"></td></tr>
+          <tr data-dept="piazza"><td>Piazza / Cupola</td><td><input type="number" step="0.01" data-jour="jour_piazza_nourriture" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_piazza_boisson" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_piazza_bieres" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_piazza_mineraux" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_piazza_vins" oninput="recalcJour()"></td><td class="net-cell dept-total">$0</td><td><input type="number" step="0.01" data-jour="jour_adj_piazza" oninput="recalcJour()" style="background:var(--warning-bg);border-color:var(--warning)" placeholder="±"></td></tr>
+          <tr data-dept="spesa"><td>Marché La Spesa</td><td><input type="number" step="0.01" data-jour="jour_spesa_nourriture" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_spesa_boisson" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_spesa_bieres" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_spesa_mineraux" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_spesa_vins" oninput="recalcJour()"></td><td class="net-cell dept-total">$0</td><td><input type="number" step="0.01" data-jour="jour_adj_spesa" oninput="recalcJour()" style="background:var(--warning-bg);border-color:var(--warning)" placeholder="±"></td></tr>
+          <tr data-dept="chambres_svc"><td>Service Chambres</td><td><input type="number" step="0.01" data-jour="jour_chambres_svc_nourriture" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_chambres_svc_boisson" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_chambres_svc_bieres" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_chambres_svc_mineraux" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_chambres_svc_vins" oninput="recalcJour()"></td><td class="net-cell dept-total">$0</td><td><input type="number" step="0.01" data-jour="jour_adj_chambres_svc" oninput="recalcJour()" style="background:var(--warning-bg);border-color:var(--warning)" placeholder="±"></td></tr>
+          <tr data-dept="banquet"><td>Banquet</td><td><input type="number" step="0.01" data-jour="jour_banquet_nourriture" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_banquet_boisson" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_banquet_bieres" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_banquet_mineraux" oninput="recalcJour()"></td><td><input type="number" step="0.01" data-jour="jour_banquet_vins" oninput="recalcJour()"></td><td class="net-cell dept-total">$0</td><td><input type="number" step="0.01" data-jour="jour_adj_banquet" oninput="recalcJour()" style="background:var(--warning-bg);border-color:var(--warning)" placeholder="±"></td></tr>
+          <tr style="background:var(--bg);font-weight:700"><td>TOTAL</td><td class="net-cell" id="jour-tot-nou">$0</td><td class="net-cell" id="jour-tot-boi">$0</td><td class="net-cell" id="jour-tot-bie">$0</td><td class="net-cell" id="jour-tot-min">$0</td><td class="net-cell" id="jour-tot-vin">$0</td><td class="net-cell" id="jour-tot-fb-table">$0</td><td class="net-cell" id="jour-tot-adj">$0</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px">
+        <div class="rjn-field" style="flex:1"><label>Pourboires</label><input type="number" step="0.01" data-jour="jour_pourboires" oninput="recalcJour()"></div>
+        <div class="rjn-field" style="flex:1"><label>Tabagie</label><input type="number" step="0.01" data-jour="jour_tabagie" oninput="recalcJour()"></div>
+        <div class="rjn-field" style="flex:0.7"><label title="Ajustement caissier Tabagie">Ajust. Tab.</label><input type="number" step="0.01" data-jour="jour_adj_tabagie" oninput="recalcJour()" style="background:var(--warning-bg);border-color:var(--warning)" placeholder="±"></div>
+        <div class="rjn-field" style="flex:1"><label>Location salle</label><input type="number" step="0.01" data-jour="jour_location_salle" oninput="recalcJour()"></div>
+        <div class="rjn-field" style="flex:1"><label style="color:var(--primary)">Total F&B</label><input type="number" id="jour-total-fb" readonly style="background:var(--primary-bg);font-weight:700;font-family:var(--mono)"></div>
+      </div>
+      <!-- Notes d'ajustements caissier -->
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button type="button" onclick="toggleAdjNotes()" class="rjn-btn" id="btn-toggle-adj-notes" style="font-size:11px;padding:5px 12px;margin-bottom:8px">
+          <span id="adj-notes-icon">▸</span> Notes d'ajustements <span id="adj-notes-count" style="font-size:10px;color:var(--text-muted)">(0)</span>
+        </button>
+        <div id="adj-notes-section" style="display:none">
+          <table class="rjn-table" id="tbl-adj-notes" style="font-size:12px">
+            <thead><tr><th style="width:160px">Département</th><th style="width:100px">Montant</th><th>Raison</th><th style="width:40px"></th></tr></thead>
+            <tbody id="adj-notes-body"></tbody>
+          </table>
+          <button type="button" onclick="addAdjNote()" class="rjn-btn" style="margin-top:6px;font-size:11px;padding:4px 10px">+ Ajouter une note</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hébergement + Autres -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Jour — Hébergement & Autres Revenus</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div class="rjn-field"><label>Chambres (Revenu)</label><input type="number" step="0.01" data-jour="jour_room_revenue" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Tél. Local</label><input type="number" step="0.01" data-jour="jour_tel_local" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Tél. Interurbain</label><input type="number" step="0.01" data-jour="jour_tel_interurbain" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Tél. Publics</label><input type="number" step="0.01" data-jour="jour_tel_publics" oninput="recalcJour()"></div>
+      </div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <button type="button" onclick="toggleAutres()" class="rjn-btn" id="btn-toggle-autres" style="font-size:11px;padding:5px 12px;margin-bottom:8px">
+          <span id="autres-icon">▸</span> Autres revenus <span id="autres-count" style="font-size:10px;color:var(--text-muted)">(0 remplis)</span>
+        </button>
+        <div id="autres-revenus-grid" style="display:none;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div class="rjn-field"><label>Nettoyeur</label><input type="number" step="0.01" data-jour="jour_nettoyeur" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Machine distrib.</label><input type="number" step="0.01" data-jour="jour_machine_distrib" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Autres GL</label><input type="number" step="0.01" data-jour="jour_autres_gl" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Sonifi</label><input type="number" step="0.01" data-jour="jour_sonifi" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Lit pliant</label><input type="number" step="0.01" data-jour="jour_lit_pliant" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Boutique</label><input type="number" step="0.01" data-jour="jour_boutique" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Internet</label><input type="number" step="0.01" data-jour="jour_internet" oninput="recalcJour()"></div>
+          <div class="rjn-field"><label>Massage</label><input type="number" step="0.01" data-jour="jour_massage" oninput="recalcJour()"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Taxes + Règlements -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Jour — Taxes & Règlements</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="rjn-field"><label>TVQ</label><input type="number" step="0.01" data-jour="jour_tvq" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>TPS</label><input type="number" step="0.01" data-jour="jour_tps" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Taxe hébergement</label><input type="number" step="0.01" data-jour="jour_taxe_hebergement" oninput="recalcJour()"></div>
+      </div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+        <div class="rjn-field"><label>Cartes cadeaux & Bons</label><input type="number" step="0.01" data-jour="jour_gift_cards" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Certificats cadeaux</label><input type="number" step="0.01" data-jour="jour_certificats" oninput="recalcJour()"></div>
+      </div>
+    </div>
+
+    <!-- Occupation -->
+    <div class="rjn-card">
+      <div class="rjn-card-title">Jour — Occupation & KPIs</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div class="rjn-field"><label>Chambres Simples</label><input type="number" data-jour="jour_rooms_simple" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Chambres Doubles</label><input type="number" data-jour="jour_rooms_double" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Suites</label><input type="number" data-jour="jour_rooms_suite" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Comp</label><input type="number" data-jour="jour_rooms_comp" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Nb. Clients</label><input type="number" data-jour="jour_nb_clients" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Hors usage</label><input type="number" data-jour="jour_rooms_hors_usage" oninput="recalcJour()"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+        <div class="rjn-field"><label>Club Lounge</label><input type="number" step="0.01" data-jour="jour_club_lounge" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>Deposit on Hand</label><input type="number" step="0.01" data-jour="jour_deposit_on_hand" oninput="recalcJour()"></div>
+        <div class="rjn-field"><label>A/R Misc</label><input type="number" step="0.01" data-jour="jour_ar_misc" oninput="recalcJour()"></div>
+      </div>
+      <!-- KPIs -->
+      <div style="display:flex;gap:16px;margin-top:16px;padding:14px 18px;background:var(--bg);border-radius:var(--radius-sm)">
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Total Revenu</div><div style="font-size:18px;font-weight:800;color:var(--primary);font-family:var(--mono)" id="jour-kpi-revenue">$0</div></div>
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Occupation</div><div style="font-size:18px;font-weight:800;color:var(--blue);font-family:var(--mono)" id="jour-kpi-occ">0%</div></div>
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">ADR</div><div style="font-size:18px;font-weight:800;color:var(--emerald);font-family:var(--mono)" id="jour-kpi-adr">$0</div></div>
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">RevPAR</div><div style="font-size:18px;font-weight:800;color:var(--violet);font-family:var(--mono)" id="jour-kpi-revpar">$0</div></div>
+      </div>
+    </div>
+
+    <!-- Internet & Sonifi: pas de vérification nécessaire — ce sont des onglets mensuels de suivi automatique -->
+    <!-- Les valeurs jour_internet et jour_sonifi se remplissent dans Jour et s'accumulent dans les onglets mensuels Excel -->
+
+    <!-- Read-only: valeurs macro -->
+    <div class="rjn-card" style="opacity:0.7">
+      <div class="rjn-card-title">Valeurs auto (macros)</div>
+      <div class="rjn-card-desc">Ces valeurs sont injectées automatiquement depuis Recap et Transelect à la soumission.</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;font-family:var(--mono);font-size:12px;text-align:center">
+        <div><div style="font-size:10px;color:var(--text-muted)">Débit</div><div id="jour-auto-debit">—</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted)">Visa</div><div id="jour-auto-visa">—</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted)">MC</div><div id="jour-auto-mc">—</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted)">Amex</div><div id="jour-auto-amex">—</div></div>
+        <div><div style="font-size:10px;color:var(--text-muted)">Discover</div><div id="jour-auto-discover">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: QUASIMODO ═══════════════ -->
+  <div class="rjn-section" id="sec-quasimodo">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Quasimodo — Réconciliation Globale</div>
+      <div class="rjn-card-desc">Compare Transelect (cartes) + Cash (Recap) avec le Total Jour. Variance cible: ±0.01$</div>
+      <div style="margin-bottom:12px">
+        <button class="rjn-btn" onclick="autoFillQuasimodo()"><i data-feather="zap" style="width:14px;height:14px"></i> Auto-remplir depuis Transelect + Recap</button>
+      </div>
+      <table class="rjn-table" id="tbl-quasi">
+        <thead><tr><th></th><th>Débit</th><th>Visa</th><th>MC</th><th>Amex</th><th>Discover</th><th class="net-cell">Sous-total</th></tr></thead>
+        <tbody>
+          <tr><td>F&B (Restaurant)</td>
+            <td><input type="number" step="0.01" id="quasi-fb-debit" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-fb-visa" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-fb-mc" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-fb-amex" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-fb-discover" oninput="recalcQuasimodo()"></td>
+            <td class="net-cell" id="quasi-fb-sub">$0</td>
+          </tr>
+          <tr><td>Réception</td>
+            <td><input type="number" step="0.01" id="quasi-rec-debit" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-rec-visa" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-rec-mc" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-rec-amex" oninput="recalcQuasimodo()"></td>
+            <td><input type="number" step="0.01" id="quasi-rec-discover" oninput="recalcQuasimodo()"></td>
+            <td class="net-cell" id="quasi-rec-sub">$0</td>
+          </tr>
+          <tr style="background:var(--bg);font-weight:700"><td>Total cartes</td>
+            <td class="net-cell" id="quasi-tot-debit">$0</td>
+            <td class="net-cell" id="quasi-tot-visa">$0</td>
+            <td class="net-cell" id="quasi-tot-mc">$0</td>
+            <td class="net-cell" id="quasi-tot-amex">$0</td>
+            <td class="net-cell" id="quasi-tot-discover">$0</td>
+            <td class="net-cell" id="quasi-tot-cards">$0</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px">
+        <div class="rjn-field"><label>AMEX Net (×<span id="quasi-factor-display">0.9735</span>)</label><input type="number" id="quasi-amex-net" readonly style="background:var(--amber-bg);font-weight:700;font-family:var(--mono)"></div>
+        <div class="rjn-field"><label>Cash CDN</label><input type="number" step="0.01" id="quasi-cash-cdn" oninput="recalcQuasimodo()"></div>
+        <div class="rjn-field"><label>Cash USD</label><input type="number" step="0.01" id="quasi-cash-usd" oninput="recalcQuasimodo()"></div>
+        <div class="rjn-field"><label>Facteur AMEX</label><input type="number" step="0.0001" id="quasi-factor" value="0.9735" oninput="recalcQuasimodo()"></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:14px;padding:14px 18px;background:var(--bg);border-radius:var(--radius-sm)">
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase">Total Quasimodo</div><div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--primary)" id="quasi-grand-total">$0</div></div>
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase">Total RJ (Jour)</div><div style="font-size:18px;font-weight:800;font-family:var(--mono);color:var(--blue)" id="quasi-rj-total">$0</div></div>
+        <div style="flex:1;text-align:center"><div style="font-size:10.5px;color:var(--text-muted);text-transform:uppercase">Variance</div><div style="font-size:18px;font-weight:800;font-family:var(--mono)" id="quasi-var-display">$0</div></div>
+      </div>
+      <div class="rjn-balance ok" id="quasimodo-balance">VARIANCE QUASIMODO: $0.00</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: DBRS ═══════════════ -->
+  <div class="rjn-section" id="sec-dbrs">
+    <div class="rjn-card">
+      <div class="rjn-card-title">DBRS — Daily Business Review Summary</div>
+      <div class="rjn-card-desc">Rapport performance Marriott. Certaines valeurs auto-remplies depuis le Jour.</div>
+      <div style="font-weight:600;font-size:13px;color:var(--text-sec);margin-bottom:10px">Market Segments (chambres vendues)</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div class="rjn-field"><label>Transient</label><input type="number" id="dbrs-seg-transient" oninput="recalcDBRS()"></div>
+        <div class="rjn-field"><label>Group</label><input type="number" id="dbrs-seg-group" oninput="recalcDBRS()"></div>
+        <div class="rjn-field"><label>Contract</label><input type="number" id="dbrs-seg-contract" oninput="recalcDBRS()"></div>
+        <div class="rjn-field"><label>Other</label><input type="number" id="dbrs-seg-other" oninput="recalcDBRS()"></div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">
+        <div style="font-weight:600;font-size:13px;color:var(--text-sec);margin-bottom:10px">Valeurs auto (depuis Jour)</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+          <div class="rjn-field"><label>Revenue Today</label><input type="number" id="dbrs-rev" readonly style="background:var(--emerald-bg);font-weight:700;font-family:var(--mono)"></div>
+          <div class="rjn-field"><label>ADR</label><input type="number" id="dbrs-adr" readonly style="background:var(--emerald-bg);font-weight:700;font-family:var(--mono)"></div>
+          <div class="rjn-field"><label>Occupation %</label><input type="number" id="dbrs-occ" readonly style="background:var(--emerald-bg);font-weight:700;font-family:var(--mono)"></div>
+          <div class="rjn-field"><label>House Count</label><input type="number" id="dbrs-house" readonly style="background:var(--emerald-bg);font-weight:700;font-family:var(--mono)"></div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px">
+        <div style="font-weight:600;font-size:13px;color:var(--text-sec);margin-bottom:10px">No-Shows</div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px">
+          <div class="rjn-field"><label>Nombre No-Shows</label><input type="number" id="dbrs-noshow-count" oninput="recalcDBRS()"></div>
+          <div class="rjn-field"><label>Revenu No-Shows</label><input type="number" step="0.01" id="dbrs-noshow-rev" oninput="recalcDBRS()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: ANALYSE GL ═══════════════ -->
+  <div class="rjn-section" id="sec-analyse_gl">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Analyse GL — Compte 101100 (Autres revenus)</div>
+      <div class="rjn-card-desc">Réconciliation du compte suspens 101100</div>
+      <div class="rjn-grid3">
+        <div class="rjn-field"><label>Solde précédent</label><input type="number" step="0.01" id="gl101-previous" oninput="debounceSave('analyse_gl_101100')"></div>
+        <div class="rjn-field"><label>Additions</label><input type="number" step="0.01" id="gl101-additions" oninput="debounceSave('analyse_gl_101100')"></div>
+        <div class="rjn-field"><label>Déductions</label><input type="number" step="0.01" id="gl101-deductions" oninput="debounceSave('analyse_gl_101100')"></div>
+        <div class="rjn-field"><label>Nouveau solde</label><input type="number" step="0.01" id="gl101-new-balance" oninput="debounceSave('analyse_gl_101100')"></div>
+        <div class="rjn-field"><label>Variance</label><input type="number" step="0.01" id="gl101-variance" readonly class="rjn-computed"></div>
+      </div>
+      <div class="rjn-field" style="margin-top:8px"><label>Notes</label><textarea id="gl101-notes" rows="2" oninput="debounceSave('analyse_gl_101100')" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:13px"></textarea></div>
+    </div>
+    <div class="rjn-card">
+      <div class="rjn-card-title">Analyse GL — Compte 100401 (Caisse/Banque)</div>
+      <div class="rjn-card-desc">Réconciliation du compte caisse/banque 100401</div>
+      <div class="rjn-grid3">
+        <div class="rjn-field"><label>Solde précédent</label><input type="number" step="0.01" id="gl401-previous" oninput="debounceSave('analyse_gl_100401')"></div>
+        <div class="rjn-field"><label>Additions</label><input type="number" step="0.01" id="gl401-additions" oninput="debounceSave('analyse_gl_100401')"></div>
+        <div class="rjn-field"><label>Déductions</label><input type="number" step="0.01" id="gl401-deductions" oninput="debounceSave('analyse_gl_100401')"></div>
+        <div class="rjn-field"><label>Nouveau solde</label><input type="number" step="0.01" id="gl401-new-balance" oninput="debounceSave('analyse_gl_100401')"></div>
+        <div class="rjn-field"><label>Variance</label><input type="number" step="0.01" id="gl401-variance" readonly class="rjn-computed"></div>
+      </div>
+      <div class="rjn-field" style="margin-top:8px"><label>Notes</label><textarea id="gl401-notes" rows="2" oninput="debounceSave('analyse_gl_100401')" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:13px"></textarea></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: DIFF.CAISSE ═══════════════ -->
+  <div class="rjn-section" id="sec-diff_caisse">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Différence de Caisse</div>
+      <div class="rjn-card-desc">Variance par caisse/département — système vs comptage physique</div>
+      <div style="margin-bottom:8px">
+        <button class="rjn-btn-sm" onclick="addDiffCaisseRow()">+ Ajouter une caisse</button>
+      </div>
+      <table class="rjn-table" id="diff-caisse-table">
+        <thead><tr><th>Caisse/Registre</th><th>Système ($)</th><th>Physique ($)</th><th>Différence ($)</th><th>Notes</th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="3" style="text-align:right;font-weight:600">Total variance:</td><td id="diff-caisse-total" class="rjn-computed" style="font-weight:700">$0.00</td><td colspan="2"><span id="diff-caisse-status"></span></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: SOCAN ═══════════════ -->
+  <div class="rjn-section" id="sec-socan">
+    <div class="rjn-card">
+      <div class="rjn-card-title">SOCAN — Redevances musicales</div>
+      <div class="rjn-card-desc">Suivi mensuel des redevances SOCAN par département</div>
+      <div class="rjn-grid3">
+        <div class="rjn-field"><label>Restaurant</label><input type="number" step="0.01" id="socan-resto" oninput="recalcSOCAN()"></div>
+        <div class="rjn-field"><label>Bar</label><input type="number" step="0.01" id="socan-bar" oninput="recalcSOCAN()"></div>
+        <div class="rjn-field"><label>Banquet</label><input type="number" step="0.01" id="socan-banquet" oninput="recalcSOCAN()"></div>
+        <div class="rjn-field"><label>Total SOCAN</label><input type="number" step="0.01" id="socan-total" readonly class="rjn-computed"></div>
+      </div>
+      <div class="rjn-field" style="margin-top:8px"><label>Notes</label><textarea id="socan-notes" rows="2" oninput="debounceSave('socan')" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:13px"></textarea></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: RÉSONNE ═══════════════ -->
+  <div class="rjn-section" id="sec-resonne">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Résonne — Système conférence/AV</div>
+      <div class="rjn-card-desc">Charges d'utilisation du système audio/vidéo de conférence</div>
+      <div style="margin-bottom:8px">
+        <button class="rjn-btn-sm" onclick="addResonneRow()">+ Ajouter une charge</button>
+      </div>
+      <table class="rjn-table" id="resonne-table">
+        <thead><tr><th>Département</th><th>Événement</th><th>Heures</th><th>Tarif ($)</th><th>Charge ($)</th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="4" style="text-align:right;font-weight:600">Total:</td><td id="resonne-total" class="rjn-computed" style="font-weight:700">$0.00</td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: VESTIAIRE ═══════════════ -->
+  <div class="rjn-section" id="sec-vestiaire">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Vestiaire — Revenus et variance</div>
+      <div class="rjn-card-desc">Suivi des revenus de vestiaire par station</div>
+      <div style="margin-bottom:8px">
+        <button class="rjn-btn-sm" onclick="addVestiaireRow()">+ Ajouter une station</button>
+      </div>
+      <table class="rjn-table" id="vestiaire-table">
+        <thead><tr><th>Station</th><th>Attendu ($)</th><th>Réel ($)</th><th>Variance ($)</th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td style="text-align:right;font-weight:600">Totaux:</td><td id="vest-total-expected" class="rjn-computed">$0.00</td><td id="vest-total-actual" class="rjn-computed" style="font-weight:700">$0.00</td><td id="vest-total-variance" class="rjn-computed">$0.00</td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: AD (ADMINISTRATION) ═══════════════ -->
+  <div class="rjn-section" id="sec-admin_ad">
+    <div class="rjn-card">
+      <div class="rjn-card-title">AD — Administration</div>
+      <div class="rjn-card-desc">Charges administratives et allocations de coûts</div>
+      <div style="margin-bottom:8px">
+        <button class="rjn-btn-sm" onclick="addAdminRow()">+ Ajouter une charge</button>
+      </div>
+      <table class="rjn-table" id="admin-table">
+        <thead><tr><th>Description</th><th>Département</th><th>Compte GL</th><th>Montant ($)</th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="3" style="text-align:right;font-weight:600">Total:</td><td id="admin-total" class="rjn-computed" style="font-weight:700">$0.00</td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: MASSAGE ═══════════════ -->
+  <div class="rjn-section" id="sec-massage">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Massage — Détail spa</div>
+      <div class="rjn-card-desc">Détail des revenus de massage/spa par thérapeute</div>
+      <div style="margin-bottom:8px">
+        <button class="rjn-btn-sm" onclick="addMassageRow()">+ Ajouter une entrée</button>
+      </div>
+      <table class="rjn-table" id="massage-table">
+        <thead><tr><th>Thérapeute</th><th>Service</th><th>Revenu ($)</th><th>Pourboire ($)</th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="2" style="text-align:right;font-weight:600">Totaux:</td><td id="massage-total-rev" class="rjn-computed" style="font-weight:700">$0.00</td><td id="massage-total-tips" class="rjn-computed">$0.00</td><td></td></tr></tfoot>
+      </table>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: RISTOURNE ═══════════════ -->
+  <div class="rjn-section" id="sec-ristourne">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Ristourne — Rabais et ajustements</div>
+      <div class="rjn-card-desc">Détail des ristournes accordées aux clients</div>
+      <div style="margin-bottom:8px">
+        <button class="rjn-btn-sm" onclick="addRistourneRow()">+ Ajouter une ristourne</button>
+      </div>
+      <table class="rjn-table" id="ristourne-table">
+        <thead><tr><th>Client/Folio</th><th>Département</th><th>Montant original ($)</th><th>Ristourne ($)</th><th>Raison</th><th>Autorisé par</th><th></th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr><td colspan="3" style="text-align:right;font-weight:600">Total ristournes:</td><td id="ristourne-total" class="rjn-computed" style="font-weight:700">$0.00</td><td colspan="3"></td></tr></tfoot>
+      </table>
+    </div>
+    <div class="rjn-card">
+      <div class="rjn-card-title">Analyse des ristournes</div>
+      <div id="ristourne-by-dept" style="margin-bottom:8px;font-size:13px;color:var(--muted)">Aucune donnée</div>
+      <div class="rjn-field"><label>Notes d'analyse</label><textarea id="ristourne-analysis-notes" rows="3" oninput="debounceSave('ristourne')" style="width:100%;padding:6px;border:1px solid var(--border);border-radius:4px;font-size:13px"></textarea></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ TAB: RESUME ═══════════════ -->
+  <div class="rjn-section" id="sec-resume">
+    <div class="rjn-card">
+      <div class="rjn-card-title">Sommaire de la session</div>
+      <div class="rjn-card-desc">Vue d'ensemble des balances avant soumission</div>
+      <div id="summary-checks">
+        <div class="rjn-check" id="sum-recap"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">Recap (Comptant)</div><div class="rjn-check-val" id="sum-recap-val">—</div></div>
+        <div class="rjn-check" id="sum-trans"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">Transelect (Cartes)</div><div class="rjn-check-val" id="sum-trans-val">—</div></div>
+        <div class="rjn-check" id="sum-geac"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">GEAC Cartes</div><div class="rjn-check-val" id="sum-geac-val">—</div></div>
+        <div class="rjn-check" id="sum-db"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">DueBack</div><div class="rjn-check-val" id="sum-db-val">—</div></div>
+        <div class="rjn-check" id="sum-sd"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">SD Variance</div><div class="rjn-check-val" id="sum-sd-val">—</div></div>
+        <div class="rjn-check" id="sum-depot"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">Dépôt Total</div><div class="rjn-check-val" id="sum-depot-val">—</div></div>
+        <div class="rjn-check" id="sum-jour"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">Jour Revenu Total</div><div class="rjn-check-val" id="sum-jour-val">—</div></div>
+        <div class="rjn-check" id="sum-hp"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">HP/Admin</div><div class="rjn-check-val" id="sum-hp-val">—</div></div>
+        <!-- Internet & Sonifi: onglets mensuels, pas de vérification -->
+        <div class="rjn-check" id="sum-quasi"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">Quasimodo Variance</div><div class="rjn-check-val" id="sum-quasi-val">—</div></div>
+        <div class="rjn-check" id="sum-dbrs"><div class="rjn-check-icon">⏳</div><div class="rjn-check-label">DBRS</div><div class="rjn-check-val" id="sum-dbrs-val">—</div></div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button class="rjn-btn" onclick="runFullCalc()" style="margin-right:8px">
+          <i data-feather="refresh-cw" style="width:14px;height:14px"></i> Recalculer tout
+        </button>
+        <button class="rjn-btn" onclick="exportRJExcel()" style="margin-right:8px;background:#0d6efd;color:#fff">
+          <i data-feather="download" style="width:14px;height:14px"></i> Exporter RJ Excel
+        </button>
+        <button class="rjn-btn primary" onclick="submitSession()" id="btn-submit2" disabled>
+          <i data-feather="lock" style="width:14px;height:14px"></i> Soumettre et Verrouiller
+        </button>
+      </div>
+      <div id="submit-result" style="margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let SESSION = null;
+let SAVE_TIMER = null;
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fv = el => parseFloat(el?.value || 0) || 0;
+const fmt = v => '$' + (v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+// ═══════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════
+function switchTab(tab) {
+  $$('.rjn-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  $$('.rjn-section').forEach(s => s.classList.toggle('active', s.id === 'sec-'+tab));
+  if(tab === 'resume') refreshSummary();
+  feather.replace();
+}
+
+// ═══════════════════════════════════════
+// SESSION MANAGEMENT
+// ═══════════════════════════════════════
+async function startSession() {
+  const date = $('#inp-date').value;
+  const auditor = $('#inp-auditor').value;
+  if(!date) return alert('Veuillez sélectionner une date.');
+
+  try {
+    const r = await fetch('/api/rj/native/new', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({date, auditor})
+    });
+    const d = await r.json();
+    if(d.error) { alert(d.error); return; }
+    SESSION = d.session;
+    loadSessionToForm(SESSION);
+    updateStatus();
+    // Show macro panel once session is active
+    document.getElementById('macro-panel').style.display = 'block';
+    document.getElementById('autofill-panel').style.display = 'block';
+    feather.replace();
+    if(d.is_new) {
+      const msg = d.carried_from
+        ? `<span style="color:var(--emerald)">Nouvelle session créée — données copiées du ${d.carried_from}</span>`
+        : '<span style="color:var(--emerald)">Nouvelle session créée</span>';
+      $('#session-info').innerHTML = msg;
+    } else {
+      $('#session-info').innerHTML = '<span style="color:var(--blue)">Session existante chargée</span>';
+    }
+  } catch(e) {
+    alert('Erreur: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════
+// CLEAR MACROS (emulates Excel VBA)
+// ═══════════════════════════════════════
+async function clearMacro(section) {
+  const date = $('#inp-date').value;
+  if(!date || !SESSION) return alert('Aucune session active.');
+
+  const labels = {
+    'recap': 'Recap',
+    'transelect': 'Transelect',
+    'geac': 'GEAC',
+    'all-daily': 'Recap + Transelect + GEAC'
+  };
+  if(!confirm(`Effacer ${labels[section] || section}? Cette action remet les champs à zéro.`)) return;
+
+  try {
+    const r = await fetch(`/api/rj/native/clear/${section}`, {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({date})
+    });
+    const d = await r.json();
+    if(d.error) { alert(d.error); return; }
+    SESSION = d.session;
+    loadSessionToForm(SESSION);
+    document.getElementById('macro-result').innerHTML =
+      `<span style="color:var(--emerald)">${d.message} ✓</span>`;
+    setTimeout(() => { document.getElementById('macro-result').innerHTML = ''; }, 3000);
+  } catch(e) {
+    alert('Erreur macro: ' + e.message);
+  }
+}
+
+// ═══════════════════════════════════════
+// IMPORT RJ EXCEL (upload yesterday's file)
+// ═══════════════════════════════════════
+document.getElementById('file-import-rj').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const statusEl = document.getElementById('import-status');
+  statusEl.innerHTML = `<span style="color:var(--blue)">Import en cours de "${file.name}"...</span>`;
+
+  try {
+    const formData = new FormData();
+    formData.append('rj_file', file);
+
+    const r = await fetch('/api/rj/native/import/excel', {
+      method: 'POST',
+      body: formData
+    });
+    const d = await r.json();
+
+    if (d.error) {
+      statusEl.innerHTML = `<span style="color:var(--red)">${d.error}</span>`;
+      return;
+    }
+
+    // Update the date input to the new date
+    if (d.new_date) {
+      document.getElementById('inp-date').value = d.new_date;
+    }
+
+    // Load the session into the form
+    SESSION = d.session;
+    loadSessionToForm(SESSION);
+    updateStatus();
+
+    // Show macro panel
+    document.getElementById('macro-panel').style.display = 'block';
+    document.getElementById('autofill-panel').style.display = 'block';
+    feather.replace();
+
+    // Show success message with import summary
+    const sections = d.summary?.sections || {};
+    const sectionList = Object.entries(sections)
+      .filter(([k, v]) => typeof v === 'number' && v > 0)
+      .map(([k, v]) => `${k}: ${v}`)
+      .join(', ');
+
+    statusEl.innerHTML = `<span style="color:var(--emerald)">✓ ${d.message}</span>` +
+      (sectionList ? `<br><small>Champs importés — ${sectionList}</small>` : '');
+
+    document.getElementById('session-info').innerHTML =
+      `<span style="color:var(--emerald)">Session importée depuis ${d.imported_from}</span>`;
+
+  } catch(err) {
+    statusEl.innerHTML = `<span style="color:var(--red)">Erreur: ${err.message}</span>`;
+  }
+
+  // Reset file input so the same file can be re-uploaded
+  e.target.value = '';
+});
+
+// ═══════════════════════════════════════
+// EXPORT RJ EXCEL (download updated file)
+// ═══════════════════════════════════════
+async function exportRJExcel() {
+  const date = $('#inp-date').value;
+  if (!date || !SESSION) return alert('Aucune session active à exporter.');
+
+  try {
+    // Save all sections first
+    await saveAllSections();
+
+    // Then trigger download
+    const url = `/api/rj/native/export/rj-filled/${date}`;
+    const r = await fetch(url);
+
+    if (!r.ok) {
+      const err = await r.json();
+      alert(err.error || 'Erreur lors de l\'export');
+      return;
+    }
+
+    // Download the file
+    const blob = await r.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Rj ${date.split('-').reverse().join('-')}.xls`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+
+  } catch(err) {
+    alert('Erreur export: ' + err.message);
+  }
+}
+
+// Save all 14 sections before export
+async function saveAllSections() {
+  const sections = [
+    'controle', 'dueback', 'recap', 'transelect', 'geac',
+    'sd', 'depot', 'setd', 'hp_admin', 'jour',
+    'quasimodo', 'dbrs'
+  ];
+  for (const sec of sections) {
+    try { await saveSection(sec); } catch(e) { /* skip errors */ }
+  }
+}
+
+// ═══════════════════════════════════════
+// REPORT UPLOAD — Auto-fill from Lightspeed
+// ═══════════════════════════════════════
+let _currentDocType = null;
+const _reportExtensions = {
+  'daily_revenue': '.pdf',
+  'advance_deposit': '.pdf',
+  'freedompay': '.xls,.xlsx',
+  'hp_excel': '.xls,.xlsx,.xlsm',
+  'ar_summary': '.pdf',
+  'sales_journal': '.rtf,.txt',
+  'sd_deposit': '.xls,.xlsx',
+};
+
+function uploadReport(docType) {
+  if (!SESSION) return alert('Aucune session active.');
+  _currentDocType = docType;
+  const fileInput = document.getElementById('file-report-upload');
+  fileInput.accept = _reportExtensions[docType] || '*';
+  fileInput.click();
+}
+
+document.getElementById('file-report-upload').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file || !_currentDocType) return;
+
+  const statusEl = document.getElementById('autofill-status');
+  const docLabels = {
+    'daily_revenue': 'Daily Revenue',
+    'freedompay': 'FreedomPay',
+    'advance_deposit': 'Advance Deposit',
+    'ar_summary': 'AR Summary',
+    'hp_excel': 'HP Admin',
+    'sales_journal': 'Sales Journal',
+    'sd_deposit': 'Suivi Dépôts'
+  };
+  const label = docLabels[_currentDocType] || _currentDocType;
+  statusEl.innerHTML = `<span style="color:var(--blue)">Parsing ${label}: "${file.name}"...</span>`;
+
+  try {
+    const formData = new FormData();
+    formData.append('doc_type', _currentDocType);
+    formData.append('file', file);
+    formData.append('date', $('#inp-date').value);
+
+    const r = await fetch('/api/rj/native/parse-and-fill', {
+      method: 'POST',
+      body: formData
+    });
+    const d = await r.json();
+
+    if (d.error) {
+      statusEl.innerHTML = `<span style="color:var(--red)">${d.error}</span>`;
+      if (d.warnings && d.warnings.length) {
+        statusEl.innerHTML += `<br><small>${d.warnings.join(', ')}</small>`;
+      }
+      return;
+    }
+
+    // Reload session with new data
+    SESSION = d.session;
+    loadSessionToForm(SESSION);
+
+    const conf = d.confidence ? ` (confiance: ${Math.round(d.confidence * 100)}%)` : '';
+    const sects = d.sections_updated?.join(', ') || '';
+    statusEl.innerHTML =
+      `<span style="color:var(--emerald)">✓ ${label}: ${d.fields_filled} champs remplis${conf}</span>` +
+      (sects ? `<br><small>Sections: ${sects}</small>` : '') +
+      (d.warnings?.length ? `<br><small style="color:var(--amber)">⚠ ${d.warnings.join(', ')}</small>` : '');
+
+    // Auto-clear status after 10s
+    setTimeout(() => {
+      if (statusEl.innerHTML.includes(label)) {
+        statusEl.innerHTML = '';
+      }
+    }, 10000);
+
+  } catch(err) {
+    statusEl.innerHTML = `<span style="color:var(--red)">Erreur: ${err.message}</span>`;
+  }
+
+  e.target.value = '';
+  _currentDocType = null;
+});
+
+function loadSessionToForm(s) {
+  // Controle
+  $('#inp-date').value = s.audit_date || '';
+  $('#inp-auditor').value = s.auditor_name || '';
+  $('#inp-temp').value = s.temperature || '';
+  $('#inp-weather').value = s.weather_condition || '';
+  $('#inp-chambres').value = s.chambres_refaire || 0;
+
+  // Recap fields (simplified: no correction columns)
+  const recapFields = [
+    'cash_ls_lecture','cash_pos_lecture',
+    'cheque_ar_lecture','cheque_dr_lecture',
+    'remb_gratuite_lecture','remb_client_lecture',
+    'dueback_reception_lecture','dueback_nb_lecture',
+    'deposit_cdn','deposit_us'
+  ];
+  recapFields.forEach(f => {
+    const inp = document.querySelector(`[data-field="${f}"]`);
+    if(inp) inp.value = s[f] || '';
+  });
+
+  // DueBack entries
+  const entries = s.dueback_entries || [];
+  const container = $('#dueback-rows');
+  container.innerHTML = '';
+  if(Array.isArray(entries)) {
+    entries.forEach(e => addDuebackRow(e.name, e.previous, e.nouveau));
+  }
+  if(!entries.length) addDuebackRow();
+
+  // Transelect restaurant — rebuild table with saved terminals then populate
+  const rest = s.transelect_restaurant || {};
+  if(rest._terminals && rest._terminals.length > 0) {
+    initRestaurantTable(rest._terminals);
+  } else {
+    initRestaurantTable(null); // use defaults
+  }
+  // Populate card grid values
+  CARDS.forEach(c => {
+    const cardData = rest[c] || {};
+    const row = document.querySelector(`#rest-tbody tr[data-cardrow="${c}"]`);
+    if(!row) return;
+    // Terminal inputs
+    row.querySelectorAll('input[data-term]').forEach(inp => {
+      inp.value = cardData[inp.dataset.term] || '';
+    });
+    // Summary columns (TOTAL 1 & TOTAL 2 are auto-calculated, no need to load)
+    const pos = row.querySelector('.rest-positouch');
+    const esc = row.querySelector('.rest-esc-pct');
+    if(pos) pos.value = cardData.positouch || '';
+    if(esc) esc.value = cardData.esc_pct ?? 0;
+  });
+
+  // Transelect reception (rows=card types, cols=terminals)
+  const recep = s.transelect_reception || {};
+  $$('#tbl-reception tbody tr[data-cardrow]').forEach(row => {
+    const cardType = row.dataset.cardrow;
+    const vals = recep[cardType] || {};
+    const fb = row.querySelector('[data-src="fusebox"]');
+    const t8 = row.querySelector('[data-src="term8"]');
+    const k0 = row.querySelector('[data-src="k053"]');
+    if(fb) fb.value = vals.fusebox || '';
+    if(t8) t8.value = vals.term8 || '';
+    if(k0) k0.value = vals.k053 || '';
+    const drInp = row.querySelector('.rec-dailyrev');
+    const escInp = row.querySelector('.rec-esc-pct');
+    if(drInp) drInp.value = vals.daily_rev || '';
+    if(escInp) escInp.value = vals.esc_pct ?? 0;
+  });
+
+  // GEAC — 2 fixed Cash Out lines + Daily Revenue
+  const geacCO = s.geac_cashout || {};
+  const geacDR = s.geac_daily_rev || {};
+  const geacCards = ['amex','diners','mc','visa'];
+  geacCards.forEach(c => {
+    const co1 = $(`#geac-co1-${c}`); if(co1) co1.value = geacCO[`co1_${c}`] || '';
+    const co2 = $(`#geac-co2-${c}`); if(co2) co2.value = geacCO[`co2_${c}`] || '';
+    const dr  = $(`#geac-dr-${c}`);  if(dr)  dr.value  = geacDR[c] || '';
+  });
+  // Balance Sheet — each row has specific columns
+  const bs = s.geac_balance_sheet || {};
+  // Prev: DR + GL
+  const bsPrevDR = $('#geac-bs-prev-dr'); if(bsPrevDR) bsPrevDR.value = bs.prev_dr || '';
+  const bsPrevGL = $('#geac-bs-prev-gl'); if(bsPrevGL) bsPrevGL.value = bs.prev_gl || '';
+  // Today: DR + GL
+  const bsTodayDR = $('#geac-bs-today-dr'); if(bsTodayDR) bsTodayDR.value = bs.today_dr || '';
+  const bsTodayGL = $('#geac-bs-today-gl'); if(bsTodayGL) bsTodayGL.value = bs.today_gl || '';
+  // Facture: DR + AR
+  const bsFactDR = $('#geac-bs-facture-dr'); if(bsFactDR) bsFactDR.value = bs.facture_dr || '';
+  const bsFactAR = $('#geac-bs-facture-ar'); if(bsFactAR) bsFactAR.value = bs.facture_ar || '';
+  // AdvDep: DR + AD
+  const bsAdvDR = $('#geac-bs-advdep-dr'); if(bsAdvDR) bsAdvDR.value = bs.advdep_dr || '';
+  const bsAdvAD = $('#geac-bs-advdep-ad'); if(bsAdvAD) bsAdvAD.value = bs.advdep_ad || '';
+  // New Balance: DR + GL (manually entered from GEAC p.7)
+  const bsNbDR = $('#geac-bs-newbal-dr'); if(bsNbDR) bsNbDR.value = bs.newbal_dr || '';
+  const bsNbGL = $('#geac-bs-newbal-gl'); if(bsNbGL) bsNbGL.value = bs.newbal_gl || '';
+  // Checkboxes
+  if(bs.chk_nobalance) $('#geac-chk-nobalance').checked = true;
+  if(bs.chk_nodeposit) $('#geac-chk-nodeposit').checked = true;
+  // Recalc variances
+  recalcGeacBS();
+
+  // SD entries
+  const sdEntries = s.sd_entries || [];
+  $('#sd-rows').innerHTML = '';
+  if(Array.isArray(sdEntries) && sdEntries.length > 0) {
+    sdEntries.forEach(e => addSDRow(e.department, e.name, e.currency, e.amount, e.verified, e.reimbursement));
+  }
+
+  // Depot
+  const depotData = s.depot_data || {};
+  $('#depot-c6-rows').innerHTML = '';
+  $('#depot-c8-rows').innerHTML = '';
+  if(depotData.client6) {
+    if(depotData.client6.date) $('#depot-c6-date').value = depotData.client6.date;
+    (depotData.client6.amounts || []).forEach(a => addDepotRow('c6', a));
+  }
+  if(depotData.client8) {
+    if(depotData.client8.date) $('#depot-c8-date').value = depotData.client8.date;
+    (depotData.client8.amounts || []).forEach(a => addDepotRow('c8', a));
+  }
+
+  // SetD personnel
+  $('#setd-personnel-rows').innerHTML = '';
+  const setdPers = s.setd_personnel || [];
+  if(Array.isArray(setdPers)) {
+    setdPers.forEach(p => addSetDRow(p.name, p.amount));
+  }
+
+  // Jour fields (all data-jour inputs)
+  $$('[data-jour]').forEach(inp => {
+    const field = inp.dataset.jour;
+    if(s[field] !== undefined && s[field] !== null) {
+      inp.value = s[field];
+    }
+  });
+
+  // Adjustment notes (codes 50)
+  loadAdjNotes(s.jour_adj_notes || []);
+
+  // HP/Admin entries
+  $('#hp-rows').innerHTML = '';
+  const hpEntries = s.hp_admin_entries || [];
+  if(Array.isArray(hpEntries) && hpEntries.length > 0) {
+    hpEntries.forEach(e => addHPRow(e.area||'HP', e.nourriture, e.boisson, e.biere, e.vin, e.mineraux, e.autre, e.pourboire, e.raison||'', e.autorise||''));
+  }
+
+  // Internet & Sonifi: onglets mensuels Excel, pas de champs dans le webapp
+
+  // Quasimodo
+  ['debit','visa','mc','amex','discover'].forEach(c => {
+    if(s['quasi_fb_'+c]) $('#quasi-fb-'+c).value = s['quasi_fb_'+c];
+    if(s['quasi_rec_'+c]) $('#quasi-rec-'+c).value = s['quasi_rec_'+c];
+  });
+  if(s.quasi_amex_factor) $('#quasi-factor').value = s.quasi_amex_factor;
+  if(s.quasi_cash_cdn) $('#quasi-cash-cdn').value = s.quasi_cash_cdn;
+  if(s.quasi_cash_usd) $('#quasi-cash-usd').value = s.quasi_cash_usd;
+
+  // DBRS
+  const segs = s.dbrs_market_segments || {};
+  if(segs.transient) $('#dbrs-seg-transient').value = segs.transient;
+  if(segs.group) $('#dbrs-seg-group').value = segs.group;
+  if(segs.contract) $('#dbrs-seg-contract').value = segs.contract;
+  if(segs.other) $('#dbrs-seg-other').value = segs.other;
+  if(s.dbrs_noshow_count) $('#dbrs-noshow-count').value = s.dbrs_noshow_count;
+  if(s.dbrs_noshow_revenue) $('#dbrs-noshow-rev').value = s.dbrs_noshow_revenue;
+
+  // ── Analyse GL 101100 ──
+  if(s.gl_101100_previous) $('#gl101-previous').value = s.gl_101100_previous;
+  if(s.gl_101100_additions) $('#gl101-additions').value = s.gl_101100_additions;
+  if(s.gl_101100_deductions) $('#gl101-deductions').value = s.gl_101100_deductions;
+  if(s.gl_101100_new_balance) $('#gl101-new-balance').value = s.gl_101100_new_balance;
+  if(s.gl_101100_variance) $('#gl101-variance').value = s.gl_101100_variance;
+  if(s.gl_101100_notes) $('#gl101-notes').value = s.gl_101100_notes;
+  // ── Analyse GL 100401 ──
+  if(s.gl_100401_previous) $('#gl401-previous').value = s.gl_100401_previous;
+  if(s.gl_100401_additions) $('#gl401-additions').value = s.gl_100401_additions;
+  if(s.gl_100401_deductions) $('#gl401-deductions').value = s.gl_100401_deductions;
+  if(s.gl_100401_new_balance) $('#gl401-new-balance').value = s.gl_100401_new_balance;
+  if(s.gl_100401_variance) $('#gl401-variance').value = s.gl_100401_variance;
+  if(s.gl_100401_notes) $('#gl401-notes').value = s.gl_100401_notes;
+  // ── Diff.Caisse ──
+  document.querySelector('#diff-caisse-table tbody').innerHTML = '';
+  const dcEntries = s.diff_caisse_entries || [];
+  if(Array.isArray(dcEntries)) dcEntries.forEach(e => addDiffCaisseRow(e.register, e.system, e.physical, e.difference, e.notes));
+  if(dcEntries.length) recalcDiffCaisse();
+  // ── SOCAN ──
+  if(s.socan_allocation_resto) $('#socan-resto').value = s.socan_allocation_resto;
+  if(s.socan_allocation_bar) $('#socan-bar').value = s.socan_allocation_bar;
+  if(s.socan_allocation_banquet) $('#socan-banquet').value = s.socan_allocation_banquet;
+  if(s.socan_charge) $('#socan-total').value = s.socan_charge;
+  if(s.socan_notes) $('#socan-notes').value = s.socan_notes;
+  // ── Résonne ──
+  document.querySelector('#resonne-table tbody').innerHTML = '';
+  const resEntries = s.resonne_entries || [];
+  if(Array.isArray(resEntries)) resEntries.forEach(e => addResonneRow(e.department, e.event, e.usage_hours, e.rate, e.charge));
+  if(resEntries.length) recalcResonne();
+  // ── Vestiaire ──
+  document.querySelector('#vestiaire-table tbody').innerHTML = '';
+  const vestEntries = s.vestiaire_entries || [];
+  if(Array.isArray(vestEntries)) vestEntries.forEach(e => addVestiaireRow(e.station, e.expected, e.actual, e.variance));
+  if(vestEntries.length) recalcVestiaire();
+  // ── Admin (AD) ──
+  document.querySelector('#admin-table tbody').innerHTML = '';
+  const admEntries = s.admin_entries || [];
+  if(Array.isArray(admEntries)) admEntries.forEach(e => addAdminRow(e.description, e.department, e.gl_account, e.amount));
+  if(admEntries.length) recalcAdmin();
+  // ── Massage ──
+  document.querySelector('#massage-table tbody').innerHTML = '';
+  const massEntries = s.massage_entries || [];
+  if(Array.isArray(massEntries)) massEntries.forEach(e => addMassageRow(e.therapist, e.service_type, e.revenue, e.tips));
+  if(massEntries.length) recalcMassage();
+  // ── Ristourne ──
+  document.querySelector('#ristourne-table tbody').innerHTML = '';
+  const ristEntries = s.ristourne_entries || [];
+  if(Array.isArray(ristEntries)) ristEntries.forEach(e => addRistourneRow(e.guest, e.department, e.original_amount, e.rebate_amount, e.reason, e.authorized_by));
+  if(s.ristourne_analysis_notes) $('#ristourne-analysis-notes').value = s.ristourne_analysis_notes;
+  if(ristEntries.length) recalcRistourne();
+
+  // Enable buttons
+  $('#btn-export').disabled = false;
+  $('#btn-sync').disabled = s.status === 'locked';
+  $('#btn-submit').disabled = s.status === 'locked';
+  $('#btn-submit2').disabled = s.status === 'locked';
+
+  // Recalc all
+  recalcRecap();
+  recalcTranselect();
+  recalcGeac();
+  recalcDueback();
+  recalcSD();
+  recalcDepot();
+  recalcSetD();
+  recalcHP();
+  recalcJour();
+  recalcQuasimodo();
+  recalcDBRS();
+}
+
+function updateStatus() {
+  if(!SESSION) return;
+  const el = $('#session-status');
+  el.className = 'rjn-status ' + SESSION.status;
+  const labels = {draft:'Brouillon', in_progress:'En cours', submitted:'Soumise', locked:'Verrouillée'};
+  el.textContent = labels[SESSION.status] || SESSION.status;
+}
+
+// ═══════════════════════════════════════
+// DUEBACK
+// ═══════════════════════════════════════
+const RECEPTIONNISTES = [
+  'Debby Araujo','Josee Latulippe','Isabelle Caron','Laeticia Nader',
+  'Rose-Delande Mompremier','Zaneta Oppong','Zayen Seddik','Kimberly Tavarez',
+  'Aya Bachiri','Leo Scarpa','Thaneekan Thankarajah','Cindy Pierre',
+  'Manolo Cabrera','Khalil Mouatarif','Valerie Kray','Nithya Say',
+  'Kelly Damal','Maude Levesque','Olga Arhantou','Sylvie Pierre',
+  'Emery Uwimana','Ramzi Ben Mansour','Annie-Lis Kasperian'
+];
+
+function addDuebackRow(name='', prev=0, nouveau=0) {
+  const container = $('#dueback-rows');
+  const row = document.createElement('div');
+  row.className = 'rjn-dueback-row';
+  row.style.position = 'relative';
+  row.innerHTML = `
+    <input type="text" placeholder="Tapez un nom..." value="${name}" oninput="filterDuebackSuggestions(this)" onfocus="showDuebackSuggestions(this)" autocomplete="off">
+    <input type="number" step="0.01" placeholder="0.00" value="${prev||''}" oninput="recalcDueback()">
+    <input type="number" step="0.01" placeholder="0.00" value="${nouveau||''}" oninput="recalcDueback()">
+    <button class="rjn-dueback-remove" onclick="this.parentElement.remove();recalcDueback();hideDuebackDropdown()">&times;</button>
+    <div class="dueback-suggestions" style="display:none"></div>
+  `;
+  container.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function showDuebackSuggestions(input) {
+  filterDuebackSuggestions(input);
+}
+
+function filterDuebackSuggestions(input) {
+  const row = input.closest('.rjn-dueback-row');
+  const dropdown = row.querySelector('.dueback-suggestions');
+  const val = input.value.toLowerCase().trim();
+
+  // Get already-used names
+  const used = new Set();
+  $$('.rjn-dueback-row input[type="text"]').forEach(inp => {
+    if (inp !== input && inp.value.trim()) used.add(inp.value.trim().toLowerCase());
+  });
+
+  const matches = RECEPTIONNISTES.filter(n =>
+    n.toLowerCase().includes(val) && !used.has(n.toLowerCase())
+  ).slice(0, 6);
+
+  if (matches.length === 0 || (matches.length === 1 && matches[0].toLowerCase() === val)) {
+    dropdown.style.display = 'none';
+    debounceSave('dueback');
+    return;
+  }
+
+  dropdown.innerHTML = matches.map(n =>
+    `<div class="dueback-suggestion" onmousedown="selectDuebackName(this,'${n.replace(/'/g,"\\'")}')">` +
+    n.replace(new RegExp('('+val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<strong>$1</strong>') +
+    '</div>'
+  ).join('');
+  dropdown.style.display = 'block';
+}
+
+function selectDuebackName(el, name) {
+  const row = el.closest('.rjn-dueback-row');
+  row.querySelector('input[type="text"]').value = name;
+  row.querySelector('.dueback-suggestions').style.display = 'none';
+  row.querySelectorAll('input[type="number"]')[1].focus();
+  debounceSave('dueback');
+}
+
+function hideDuebackDropdown() {
+  $$('.dueback-suggestions').forEach(d => d.style.display = 'none');
+}
+
+// Hide dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.rjn-dueback-row')) hideDuebackDropdown();
+});
+
+function recalcDueback() {
+  let total = 0;
+  $$('.rjn-dueback-row').forEach(row => {
+    const inputs = row.querySelectorAll('input[type="number"]');
+    total += fv(inputs[1]); // nouveau
+  });
+  const el = $('#dueback-total');
+  el.textContent = 'TOTAL: ' + fmt(total);
+  el.className = 'rjn-balance ok';
+
+  // Auto-update recap DueBack reception
+  const dbRecInp = $('#inp-db-rec-lect');
+  if(dbRecInp) { dbRecInp.value = total; recalcRecap(); }
+
+  updateBadge('dueback', true);
+  debounceSave('dueback');
+}
+
+function getDuebackEntries() {
+  const entries = [];
+  $$('.rjn-dueback-row').forEach(row => {
+    const inps = row.querySelectorAll('input');
+    const name = inps[0].value.trim();
+    if(name) entries.push({name, previous: fv(inps[1]), nouveau: fv(inps[2])});
+  });
+  return entries;
+}
+
+// ═══════════════════════════════════════
+// RECAP
+// ═══════════════════════════════════════
+function recalcRecap() {
+  // Simplified: no correction columns, just lecture values
+  const rows = [
+    {field:'cash_ls_lecture', sign:1},
+    {field:'cash_pos_lecture', sign:1},
+    {field:'cheque_ar_lecture', sign:1},
+    {field:'cheque_dr_lecture', sign:1},
+    {field:'remb_gratuite_lecture', sign:-1},
+    {field:'remb_client_lecture', sign:-1},
+    {field:'dueback_reception_lecture', sign:-1},
+    {field:'dueback_nb_lecture', sign:-1},
+  ];
+
+  let balance = 0;
+  rows.forEach(r => {
+    const v = fv(document.querySelector(`[data-field="${r.field}"]`));
+    balance += v * r.sign;
+  });
+
+  const depCdn = fv(document.querySelector('[data-field="deposit_cdn"]'));
+  const depUs = fv(document.querySelector('[data-field="deposit_us"]'));
+  balance -= (depCdn + depUs);
+
+  const el = $('#recap-balance');
+  el.textContent = 'BALANCE: ' + fmt(balance);
+  const isOk = Math.abs(balance) < 0.02;
+  el.className = 'rjn-balance ' + (isOk ? 'ok' : 'err');
+
+  updateBadge('recap', isOk);
+  debounceSave('recap');
+}
+
+// ═══════════════════════════════════════
+// TRANSELECT
+// ═══════════════════════════════════════
+// ═══════════════════════════════════════
+// TRANSELECT — Dynamic restaurant table
+// ═══════════════════════════════════════
+const CARDS = ['debit','visa','mc','amex','discover'];
+const CARD_COLORS = {debit:'#6366f1',visa:'#3b82f6',mc:'#f59e0b',amex:'#10b981',discover:'#ef4444'};
+const CARD_LABELS = {debit:'DÉBIT',visa:'VISA',mc:'MASTER',amex:'AMEX',discover:'DISCOVER'};
+
+// Terminaux exactement comme dans l'Excel RJ (Row 7)
+// group='pos' → contribue à TOTAL 1, group='banquet' → contribue à TOTAL 2
+const DEFAULT_POS_TERMINALS = [
+  {id:'bar_a', label:'BAR A', group:'pos'},
+  {id:'bar_b', label:'BAR B', group:'pos'},
+  {id:'bar_c', label:'BAR C', group:'pos'},
+  {id:'spesa_d', label:'SPESA (D)', group:'pos'},
+  {id:'room_e', label:'ROOM (E)', group:'pos'},
+  {id:'A0774167', label:'A0774167', group:'pos'},
+  {id:'B0774167', label:'B0774167', group:'pos'},
+  {id:'DK531139', label:'DK531139', group:'pos'},
+];
+const DEFAULT_BANQUET_TERMINALS = [
+  {id:'BO531139', label:'BO531139', group:'banquet'},
+  {id:'BP531139', label:'BP531139', group:'banquet'},
+  {id:'CK531139', label:'CK531139', group:'banquet'},
+  {id:'BS531139', label:'BS531139', group:'banquet'},
+  {id:'BR531139', label:'BR531139', group:'banquet'},
+  {id:'BU531139', label:'BU531139', group:'banquet'},
+  {id:'DN531139', label:'DN531139', group:'banquet'},
+  {id:'DI531139', label:'DI531139', group:'banquet'},
+  {id:'DL531139', label:'DL531139', group:'banquet'},
+  {id:'DM531139', label:'DM531139', group:'banquet'},
+  {id:'DJ531139', label:'DJ531139', group:'banquet'},
+  {id:'DK531139_bq', label:'DK531139', group:'banquet'},
+];
+
+let restTerminals = []; // current terminal list
+
+function initRestaurantTable(terminals) {
+  restTerminals = terminals && terminals.length > 0 ? terminals : [...DEFAULT_POS_TERMINALS, ...DEFAULT_BANQUET_TERMINALS];
+  buildRestaurantTable();
+}
+
+function buildRestaurantTable() {
+  const thead = $('#rest-thead');
+  const tbody = $('#rest-tbody');
+
+  // Header: TYPE | all terminals... | TOTAL 1 | TOTAL 2 | POSITOUCH | VARIANCE | Esc% | Esc$ | NET
+  let hdr = '<tr><th style="min-width:70px;position:sticky;left:0;background:var(--card);z-index:2">TYPE</th>';
+  restTerminals.forEach((t,i) => {
+    const clr = t.group === 'banquet' ? '#7c3aed' : '#6366f1';
+    hdr += `<th style="color:${clr};min-width:65px;font-size:10px;white-space:nowrap">${t.label} <button onclick="removeRestTerminal(${i})" style="border:none;background:none;color:var(--rose);cursor:pointer;font-size:9px;padding:0 2px" title="Retirer">✕</button></th>`;
+  });
+  hdr += '<th class="net-cell" style="color:var(--primary);min-width:75px;background:#fdf2f8">TOTAL 1</th>';
+  hdr += '<th class="net-cell" style="color:#7c3aed;min-width:75px;background:#f5f3ff">TOTAL 2</th>';
+  hdr += '<th style="min-width:80px;color:#f59e0b">POSITOUCH</th>';
+  hdr += '<th class="net-cell" style="min-width:70px">Variance</th>';
+  hdr += '<th style="min-width:45px">Esc.%</th>';
+  hdr += '<th class="net-cell" style="min-width:60px">Esc.$</th>';
+  hdr += '<th class="net-cell" style="min-width:70px">NET</th></tr>';
+  thead.innerHTML = hdr;
+
+  // Card rows
+  let rows = '';
+  CARDS.forEach(c => {
+    rows += `<tr data-cardrow="${c}"><td style="font-weight:700;color:${CARD_COLORS[c]};position:sticky;left:0;background:var(--card);z-index:1">${CARD_LABELS[c]}</td>`;
+    // All terminal inputs in order
+    restTerminals.forEach(t => {
+      const grp = t.group === 'banquet' ? 'banquet' : 'pos';
+      rows += `<td><input type="number" step="0.01" data-term="${t.id}" data-group="${grp}" data-card="${c}" oninput="recalcTranselect()" style="width:65px"></td>`;
+    });
+    // TOTAL 1 (auto = sum POS) + TOTAL 2 (auto = sum Banquet) côte à côte
+    rows += `<td class="net-cell rest-total1" style="background:#fdf2f8">$0</td>`;
+    rows += `<td class="net-cell rest-total2" style="background:#f5f3ff">$0</td>`;
+    rows += `<td><input type="number" step="0.01" class="rest-positouch" data-card="${c}" oninput="recalcTranselect()" style="width:75px"></td>`;
+    rows += `<td class="net-cell rest-var">$0</td>`;
+    rows += `<td><input type="number" step="0.01" class="rest-esc-pct" data-card="${c}" value="0" style="width:45px" oninput="recalcTranselect()"></td>`;
+    rows += `<td class="net-cell rest-esc-amt">$0</td>`;
+    rows += `<td class="net-cell rest-net">$0</td></tr>`;
+  });
+  // TOTAL row
+  rows += '<tr style="background:var(--bg);font-weight:700"><td style="position:sticky;left:0;background:var(--bg);z-index:1">TOTAL</td>';
+  restTerminals.forEach(t => {
+    rows += `<td class="net-cell rest-term-total" data-term="${t.id}">$0</td>`;
+  });
+  rows += '<td class="net-cell" id="rest-grand-total1" style="background:#fdf2f8">$0</td>';
+  rows += '<td class="net-cell" id="rest-grand-total2" style="background:#f5f3ff">$0</td>';
+  rows += '<td class="net-cell" id="rest-grand-pos">$0</td>';
+  rows += '<td class="net-cell" id="rest-grand-var">$0</td>';
+  rows += '<td></td>';
+  rows += '<td class="net-cell" id="rest-grand-esc">$0</td>';
+  rows += '<td class="net-cell" id="rest-grand-net">$0</td></tr>';
+  tbody.innerHTML = rows;
+}
+
+function addRestTerminal(group) {
+  const name = prompt(group === 'banquet' ? 'ID du terminal Banquet (ex: BO531139):' : 'Nom du terminal POS (ex: BAR D):');
+  if(!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  restTerminals.push({id, label: name.toUpperCase(), group});
+  buildRestaurantTable();
+  recalcTranselect();
+}
+
+function removeRestTerminal(idx) {
+  if(!confirm('Retirer ' + restTerminals[idx].label + ' ?')) return;
+  restTerminals.splice(idx, 1);
+  buildRestaurantTable();
+  recalcTranselect();
+}
+
+function recalcTranselect() {
+  // ── Restaurant (dynamic grid: rows=cards, cols=terminals) ──
+  // TOTAL 1 = sum POS terminals, TOTAL 2 = sum Banquet terminals (comme dans l'Excel)
+  const termTotals = {};
+  restTerminals.forEach(t => { termTotals[t.id] = 0; });
+  let grandTotal1=0, grandTotal2=0, grandPos=0, grandVar=0, grandEsc=0, grandNet=0;
+
+  $$('#rest-tbody tr[data-cardrow]').forEach(row => {
+    let posSum = 0, bqSum = 0;
+    // Sum by group: POS → TOTAL 1, Banquet → TOTAL 2
+    row.querySelectorAll('input[data-term]').forEach(inp => {
+      const v = fv(inp);
+      const grp = inp.dataset.group;
+      if(grp === 'banquet') bqSum += v;
+      else posSum += v;
+      termTotals[inp.dataset.term] = (termTotals[inp.dataset.term] || 0) + v;
+    });
+    row.querySelector('.rest-total1').textContent = fmt(posSum);
+    row.querySelector('.rest-total2').textContent = fmt(bqSum);
+    grandTotal1 += posSum;
+    grandTotal2 += bqSum;
+
+    const pos = fv(row.querySelector('.rest-positouch'));
+    grandPos += pos;
+
+    // Variance = (TOTAL 1 + TOTAL 2) - POSITOUCH
+    const rowVar = round2((posSum + bqSum) - pos);
+    row.querySelector('.rest-var').textContent = fmt(rowVar);
+    grandVar += rowVar;
+
+    const escPct = fv(row.querySelector('.rest-esc-pct'));
+    const escAmt = round2(pos * escPct / 100);
+    row.querySelector('.rest-esc-amt').textContent = fmt(escAmt);
+    grandEsc += escAmt;
+
+    const net = round2(pos - escAmt);
+    row.querySelector('.rest-net').textContent = fmt(net);
+    grandNet += net;
+  });
+
+  // Terminal column totals
+  restTerminals.forEach(t => {
+    const el = document.querySelector(`.rest-term-total[data-term="${t.id}"]`);
+    if(el) el.textContent = fmt(termTotals[t.id] || 0);
+  });
+  if($('#rest-grand-total1')) $('#rest-grand-total1').textContent = fmt(grandTotal1);
+  if($('#rest-grand-total2')) $('#rest-grand-total2').textContent = fmt(grandTotal2);
+  if($('#rest-grand-pos')) $('#rest-grand-pos').textContent = fmt(grandPos);
+  if($('#rest-grand-var')) $('#rest-grand-var').textContent = fmt(grandVar);
+  if($('#rest-grand-esc')) $('#rest-grand-esc').textContent = fmt(grandEsc);
+  if($('#rest-grand-net')) $('#rest-grand-net').textContent = fmt(grandNet);
+
+  // ── Reception (rows = card types, cols = terminals) ──
+  let recGFuse=0, recGT8=0, recGK053=0, recGTotal=0, recGDR=0, recGVar=0, recGEsc=0, recGNet=0;
+
+  $$('#tbl-reception tbody tr[data-cardrow]').forEach(row => {
+    const fuse = fv(row.querySelector('[data-src="fusebox"]'));
+    const t8 = fv(row.querySelector('[data-src="term8"]'));
+    const k053 = fv(row.querySelector('[data-src="k053"]'));
+    const total = round2(fuse + t8 + k053);
+    row.querySelector('.rec-total').textContent = fmt(total);
+
+    const dr = fv(row.querySelector('.rec-dailyrev'));
+    const variance = round2(total - dr);
+    row.querySelector('.rec-var').textContent = fmt(variance);
+
+    const escPct = fv(row.querySelector('.rec-esc-pct'));
+    const escAmt = round2(total * escPct / 100);
+    row.querySelector('.rec-esc-amt').textContent = fmt(escAmt);
+
+    const net = round2(total - escAmt);
+    row.querySelector('.rec-net').textContent = fmt(net);
+
+    recGFuse += fuse; recGT8 += t8; recGK053 += k053;
+    recGTotal += total; recGDR += dr; recGVar += variance;
+    recGEsc += escAmt; recGNet += net;
+  });
+
+  $('#rec-g-fuse').textContent = fmt(recGFuse);
+  $('#rec-g-t8').textContent = fmt(recGT8);
+  $('#rec-g-k053').textContent = fmt(recGK053);
+  $('#rec-g-total').textContent = fmt(recGTotal);
+  $('#rec-g-dr').textContent = fmt(recGDR);
+  $('#rec-g-var').textContent = fmt(recGVar);
+  $('#rec-g-esc').textContent = fmt(recGEsc);
+  $('#rec-g-net').textContent = fmt(recGNet);
+
+  const recVar = round2(recGVar);
+  const el = $('#transelect-variance');
+  el.textContent = 'VARIANCE RÉCEPTION: ' + fmt(recVar);
+  const isOk = Math.abs(recVar) < 0.02;
+  el.className = 'rjn-balance ' + (isOk ? 'ok' : 'err');
+
+  updateBadge('transelect', isOk);
+  debounceSave('transelect');
+}
+
+function round2(v) { return Math.round((v||0) * 100) / 100; }
+
+// ═══════════════════════════════════════
+// GEAC
+// ═══════════════════════════════════════
+// GEAC — 2 fixed Cash Out lines per card, TOTAL = Line1 + Line2, Variance = TOTAL - Daily Revenue
+function recalcGeac() {
+  const geacCards = ['amex','diners','mc','visa'];
+  let totalCardVar = 0;
+
+  geacCards.forEach(c => {
+    // Line 1 + Line 2 = TOTAL
+    const co1 = fv($(`#geac-co1-${c}`));
+    const co2 = fv($(`#geac-co2-${c}`));
+    const coTotal = round2(co1 + co2);
+    const totalEl = $(`#geac-co-total-${c}`);
+    if(totalEl) totalEl.textContent = fmt(coTotal);
+
+    // Variance = TOTAL - Daily Revenue (must be $0)
+    const dr = fv($(`#geac-dr-${c}`));
+    const v = round2(coTotal - dr);
+    const varEl = $(`#geac-var-${c}`);
+    if(varEl) {
+      varEl.textContent = fmt(v);
+      varEl.style.color = Math.abs(v) < 0.02 ? 'var(--emerald)' : 'var(--rose)';
+    }
+    totalCardVar += Math.abs(v);
+  });
+
+  const cardEl = $('#geac-card-balance');
+  const cardOk = totalCardVar < 0.10;
+  cardEl.textContent = 'CARTES: ' + fmt(totalCardVar) + (cardOk ? ' ✓' : ' ✗');
+  cardEl.className = 'rjn-balance ' + (cardOk ? 'ok' : 'err');
+
+  // Update date display
+  if(SESSION) {
+    const dtEl = $('#geac-bs-date');
+    if(dtEl) dtEl.textContent = SESSION.audit_date;
+  }
+
+  updateBadge('geac', cardOk);
+  debounceSave('geac');
+}
+
+// Balance Sheet — each row has specific columns as per Excel
+// ALL values are manually entered from GEAC printed report pages
+// Prev: DR + GL, variance = DR - GL
+// Today: DR + GL, variance = DR - GL
+// Facture: DR + AR, variance = DR - AR
+// AdvDep: DR + AD, variance = DR - AD
+// New Balance: DR + GL (manually entered from p.7), variance = DR - GL (must be 0)
+function recalcGeacBS() {
+  // Row variances (each row: DR vs its paired column)
+  const varPrev = round2(fv($('#geac-bs-prev-dr')) - fv($('#geac-bs-prev-gl')));
+  const varToday = round2(fv($('#geac-bs-today-dr')) - fv($('#geac-bs-today-gl')));
+  const varFacture = round2(fv($('#geac-bs-facture-dr')) - fv($('#geac-bs-facture-ar')));
+  const varAdvdep = round2(fv($('#geac-bs-advdep-dr')) - fv($('#geac-bs-advdep-ad')));
+
+  // New Balance: manually entered, variance = DR - GL
+  const newBalDR = fv($('#geac-bs-newbal-dr'));
+  const newBalGL = fv($('#geac-bs-newbal-gl'));
+  const varNewBal = round2(newBalDR - newBalGL);
+
+  function setVar(id, val) {
+    const el = $(id);
+    if(el) {
+      el.textContent = fmt(val);
+      el.style.color = Math.abs(val) < 0.02 ? 'var(--emerald)' : 'var(--rose)';
+    }
+  }
+  setVar('#geac-bs-var-prev', varPrev);
+  setVar('#geac-bs-var-today', varToday);
+  setVar('#geac-bs-var-facture', varFacture);
+  setVar('#geac-bs-var-advdep', varAdvdep);
+  setVar('#geac-bs-var-newbal', varNewBal);
+
+  // Overall BS balance indicator
+  const bsEl = $('#geac-bs-balance');
+  const bsOk = Math.abs(varNewBal) < 0.02;
+  bsEl.textContent = 'BALANCE SHEET: ' + fmt(varNewBal) + (bsOk ? ' ✓' : ' ✗');
+  bsEl.className = 'rjn-balance ' + (bsOk ? 'ok' : 'err');
+
+  debounceSave('geac');
+}
+
+// ═══════════════════════════════════════
+// SD — Sommaire Journalier
+// ═══════════════════════════════════════
+function addSDRow(dept='', name='', currency='CDN', montant=0, verifie=0, remb=0) {
+  const container = $('#sd-rows');
+  const row = document.createElement('div');
+  row.className = 'rjn-dueback-row';
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  row.innerHTML = `
+    <input type="text" class="sd-dept" placeholder="Dept" value="${dept}" style="flex:1.5;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px" oninput="debounceSave('sd')">
+    <input type="text" class="sd-name" placeholder="Nom" value="${name}" style="flex:2;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px" oninput="debounceSave('sd')">
+    <select class="sd-currency" style="flex:0.7;padding:6px 4px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:center" onchange="debounceSave('sd')">
+      <option value="CDN" ${currency==='CDN'?'selected':''}>CDN</option>
+      <option value="US" ${currency==='US'?'selected':''}>US</option>
+    </select>
+    <input type="number" step="0.01" class="sd-montant" value="${montant||''}" placeholder="0.00" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;text-align:right;font-family:var(--mono)" oninput="recalcSD()">
+    <input type="number" step="0.01" class="sd-verifie" value="${verifie||''}" placeholder="0.00" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;text-align:right;font-family:var(--mono);background:var(--amber-bg)" oninput="recalcSD()">
+    <input type="number" step="0.01" class="sd-remb" value="${remb||''}" placeholder="0.00" style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;text-align:right;font-family:var(--mono)" oninput="recalcSD()">
+    <span class="sd-var" style="flex:1;text-align:right;font-family:var(--mono);font-size:12px;font-weight:600">$0.00</span>
+    <button onclick="this.parentElement.remove();recalcSD()" style="width:28px;height:28px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:14px;line-height:1">×</button>
+  `;
+  container.appendChild(row);
+  recalcSD();
+}
+
+function recalcSD() {
+  let totM=0, totV=0, totR=0, totVar=0;
+  $$('#sd-rows > div').forEach(row => {
+    const m = parseFloat(row.querySelector('.sd-montant')?.value) || 0;
+    const v = parseFloat(row.querySelector('.sd-verifie')?.value) || 0;
+    const r = parseFloat(row.querySelector('.sd-remb')?.value) || 0;
+    const variance = round2(m - v - r);
+    const varEl = row.querySelector('.sd-var');
+    if(varEl) {
+      varEl.textContent = fmt(variance);
+      varEl.style.color = Math.abs(variance) < 0.01 ? 'var(--emerald)' : 'var(--rose)';
+    }
+    totM += m; totV += v; totR += r; totVar += variance;
+  });
+  $('#sd-tot-montant').textContent = fmt(totM);
+  $('#sd-tot-verifie').textContent = fmt(totV);
+  $('#sd-tot-remb').textContent = fmt(totR);
+  $('#sd-tot-variance').textContent = fmt(totVar);
+  const varEl = $('#sd-tot-variance');
+  varEl.style.color = Math.abs(totVar) < 0.01 ? 'var(--emerald)' : 'var(--rose)';
+
+  updateBadge('sd', Math.abs(totVar) < 0.01 && totV > 0);
+  debounceSave('sd');
+}
+
+function getSDEntries() {
+  const entries = [];
+  $$('#sd-rows > div').forEach(row => {
+    entries.push({
+      department: row.querySelector('.sd-dept')?.value || '',
+      name: row.querySelector('.sd-name')?.value || '',
+      currency: row.querySelector('.sd-currency')?.value || 'CDN',
+      amount: parseFloat(row.querySelector('.sd-montant')?.value) || 0,
+      verified: parseFloat(row.querySelector('.sd-verifie')?.value) || 0,
+      reimbursement: parseFloat(row.querySelector('.sd-remb')?.value) || 0
+    });
+  });
+  return entries;
+}
+
+// ═══════════════════════════════════════
+// DEPOT — Client 6 + Client 8
+// ═══════════════════════════════════════
+function addDepotRow(client, amount=0) {
+  const container = $(`#depot-${client}-rows`);
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  row.innerHTML = `
+    <input type="number" step="0.01" class="depot-amount" value="${amount||''}" placeholder="0.00"
+      style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;text-align:right;font-family:var(--mono)"
+      oninput="recalcDepot()">
+    <button onclick="this.parentElement.remove();recalcDepot()" style="width:28px;height:28px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:14px;line-height:1">×</button>
+  `;
+  container.appendChild(row);
+  recalcDepot();
+}
+
+function recalcDepot() {
+  let c6Total = 0, c8Total = 0;
+  $$('#depot-c6-rows input.depot-amount').forEach(inp => { c6Total += parseFloat(inp.value) || 0; });
+  $$('#depot-c8-rows input.depot-amount').forEach(inp => { c8Total += parseFloat(inp.value) || 0; });
+  c6Total = round2(c6Total);
+  c8Total = round2(c8Total);
+  const grand = round2(c6Total + c8Total);
+
+  $('#depot-c6-total').textContent = fmt(c6Total);
+  $('#depot-c8-total').textContent = fmt(c8Total);
+  $('#depot-grand-total').textContent = 'TOTAL DÉPÔTS: ' + fmt(grand) + ' → Recap CDN';
+
+  // Auto-push to Recap deposit_cdn field if it exists
+  const depCdn = document.querySelector('[data-field="deposit_cdn"]');
+  if(depCdn) { depCdn.value = grand; recalcRecap(); }
+
+  debounceSave('depot');
+}
+
+function fillDepotFromSD() {
+  const sdTotStr = $('#sd-tot-verifie').textContent.replace(/[^-\d.]/g, '');
+  const sdTot = parseFloat(sdTotStr) || 0;
+  if(sdTot <= 0) { alert('Aucun total vérifié SD à importer.'); return; }
+
+  // Put the SD total in the first Client 6 row
+  const c6Rows = $$('#depot-c6-rows input.depot-amount');
+  if(c6Rows.length === 0) addDepotRow('c6', sdTot);
+  else c6Rows[0].value = sdTot;
+
+  recalcDepot();
+}
+
+function getDepotData() {
+  const c6Amounts = [], c8Amounts = [];
+  $$('#depot-c6-rows input.depot-amount').forEach(inp => { c6Amounts.push(parseFloat(inp.value) || 0); });
+  $$('#depot-c8-rows input.depot-amount').forEach(inp => { c8Amounts.push(parseFloat(inp.value) || 0); });
+  return {
+    client6: { date: $('#depot-c6-date')?.value || '', amounts: c6Amounts },
+    client8: { date: $('#depot-c8-date')?.value || '', amounts: c8Amounts }
+  };
+}
+
+// ═══════════════════════════════════════
+// SETD
+// ═══════════════════════════════════════
+function addSetDRow(name='', amount=0) {
+  const container = $('#setd-personnel-rows');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  row.innerHTML = `
+    <input type="text" class="setd-name" placeholder="Nom de l'employé" value="${name}"
+      style="flex:3;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px"
+      oninput="debounceSave('setd')">
+    <input type="number" step="0.01" class="setd-amount" value="${amount||''}" placeholder="0.00"
+      style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;text-align:right;font-family:var(--mono)"
+      oninput="recalcSetD()">
+    <button onclick="this.parentElement.remove();recalcSetD()" style="width:28px;height:28px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:14px;line-height:1">×</button>
+  `;
+  container.appendChild(row);
+}
+
+function recalcSetD() {
+  // RJ Balance comes from Recap
+  const recapBalStr = $('#recap-balance')?.textContent?.replace(/[^-\d.]/g, '') || '0';
+  const recapBal = parseFloat(recapBalStr) || 0;
+  const setdBal = $('#setd-rj-bal');
+  if(setdBal) setdBal.value = recapBal.toFixed(2);
+
+  // Day from audit date
+  const dateStr = SESSION?.audit_date || $('#inp-date')?.value || '';
+  if(dateStr) {
+    const dayNum = parseInt(dateStr.split('-')[2]) || 0;
+    const dayEl = $('#setd-day');
+    if(dayEl) dayEl.value = dayNum;
+  }
+
+  // Personnel total
+  let persTotal = 0;
+  $$('#setd-personnel-rows > div').forEach(row => {
+    persTotal += parseFloat(row.querySelector('.setd-amount')?.value) || 0;
+  });
+
+  // Validation: recap balance should ideally be accounted for
+  const diff = round2(recapBal - persTotal);
+  const valEl = $('#setd-validation');
+  if(valEl) {
+    const isOk = Math.abs(diff) < 0.02 || persTotal === 0;
+    valEl.textContent = persTotal > 0 ? fmt(diff) + (isOk ? ' ✓' : ' ≠') : fmt(recapBal) + ' (auto)';
+    valEl.className = 'rjn-balance ' + (isOk ? 'ok' : 'warn');
+  }
+
+  debounceSave('setd');
+}
+
+function getSetDPersonnel() {
+  const entries = [];
+  $$('#setd-personnel-rows > div').forEach(row => {
+    entries.push({
+      name: row.querySelector('.setd-name')?.value || '',
+      amount: parseFloat(row.querySelector('.setd-amount')?.value) || 0
+    });
+  });
+  return entries;
+}
+
+// ═══════════════════════════════════════
+// JOUR — Calculs
+// ═══════════════════════════════════════
+const TOTAL_ROOMS = 340;
+
+function toggleAutres() {
+  const grid = $('#autres-revenus-grid');
+  const icon = $('#autres-icon');
+  const isHidden = grid.style.display === 'none';
+  grid.style.display = isHidden ? 'grid' : 'none';
+  icon.textContent = isHidden ? '▾' : '▸';
+}
+
+function updateAutresCount() {
+  const fields = ['jour_nettoyeur','jour_machine_distrib','jour_autres_gl','jour_sonifi',
+    'jour_lit_pliant','jour_boutique','jour_internet','jour_massage'];
+  let count = 0;
+  fields.forEach(f => { if(fv(document.querySelector(`[data-jour="${f}"]`)) !== 0) count++; });
+  const el = $('#autres-count');
+  if(el) el.textContent = count > 0 ? `(${count} remplis)` : '(0 remplis)';
+  // Auto-open if any have values
+  if(count > 0) {
+    const grid = $('#autres-revenus-grid');
+    if(grid && grid.style.display === 'none') { grid.style.display = 'grid'; $('#autres-icon').textContent = '▾'; }
+  }
+}
+
+function recalcJour() {
+  // F&B by department
+  let totNou=0, totBoi=0, totBie=0, totMin=0, totVin=0, totAdj=0;
+  const cats = ['nourriture','boisson','bieres','mineraux','vins'];
+  const depts = ['cafe','piazza','spesa','chambres_svc','banquet'];
+
+  depts.forEach(dept => {
+    const row = document.querySelector(`tr[data-dept="${dept}"]`);
+    if(!row) return;
+    let deptTotal = 0;
+    cats.forEach((cat, i) => {
+      const inp = row.querySelector(`[data-jour="jour_${dept}_${cat}"]`);
+      const v = fv(inp);
+      deptTotal += v;
+      if(i===0) totNou += v;
+      else if(i===1) totBoi += v;
+      else if(i===2) totBie += v;
+      else if(i===3) totMin += v;
+      else if(i===4) totVin += v;
+    });
+    // Manual cashier adjustment per department
+    const adjInp = row.querySelector(`[data-jour="jour_adj_${dept}"]`);
+    const adj = fv(adjInp);
+    totAdj += adj;
+    const tdTotal = row.querySelector('.dept-total');
+    if(tdTotal) tdTotal.textContent = fmt(deptTotal + adj);
+  });
+
+  const fbTable = round2(totNou + totBoi + totBie + totMin + totVin);
+  $('#jour-tot-nou').textContent = fmt(totNou);
+  $('#jour-tot-boi').textContent = fmt(totBoi);
+  $('#jour-tot-bie').textContent = fmt(totBie);
+  $('#jour-tot-min').textContent = fmt(totMin);
+  $('#jour-tot-vin').textContent = fmt(totVin);
+  $('#jour-tot-fb-table').textContent = fmt(fbTable + totAdj);
+  const totAdjEl = $('#jour-tot-adj');
+  if(totAdjEl) totAdjEl.textContent = totAdj !== 0 ? fmt(totAdj) : '$0';
+
+  // F&B extras
+  const pourb = fv(document.querySelector('[data-jour="jour_pourboires"]'));
+  const tabag = fv(document.querySelector('[data-jour="jour_tabagie"]'));
+  const adjTabag = fv(document.querySelector('[data-jour="jour_adj_tabagie"]'));
+  const locSalle = fv(document.querySelector('[data-jour="jour_location_salle"]'));
+  const totalFB = round2(fbTable + totAdj + pourb + tabag + adjTabag + locSalle);
+  const fbInp = $('#jour-total-fb');
+  if(fbInp) fbInp.value = totalFB.toFixed(2);
+
+  // Hébergement
+  const roomRev = fv(document.querySelector('[data-jour="jour_room_revenue"]'));
+  const telL = fv(document.querySelector('[data-jour="jour_tel_local"]'));
+  const telI = fv(document.querySelector('[data-jour="jour_tel_interurbain"]'));
+  const telP = fv(document.querySelector('[data-jour="jour_tel_publics"]'));
+
+  // Autres
+  const otherFields = ['jour_nettoyeur','jour_machine_distrib','jour_autres_gl','jour_sonifi',
+    'jour_lit_pliant','jour_boutique','jour_internet','jour_massage'];
+  let otherTotal = 0;
+  otherFields.forEach(f => { otherTotal += fv(document.querySelector(`[data-jour="${f}"]`)); });
+
+  // Taxes
+  const tvq = fv(document.querySelector('[data-jour="jour_tvq"]'));
+  const tps = fv(document.querySelector('[data-jour="jour_tps"]'));
+  const taxHeb = fv(document.querySelector('[data-jour="jour_taxe_hebergement"]'));
+
+  // Règlements
+  const gifts = fv(document.querySelector('[data-jour="jour_gift_cards"]'));
+  const certs = fv(document.querySelector('[data-jour="jour_certificats"]'));
+
+  // Total Revenue (excluding taxes/settlements)
+  const totalRevenue = round2(totalFB + roomRev + telL + telI + telP + otherTotal);
+
+  // Occupation
+  const simple = parseInt(document.querySelector('[data-jour="jour_rooms_simple"]')?.value) || 0;
+  const double = parseInt(document.querySelector('[data-jour="jour_rooms_double"]')?.value) || 0;
+  const suite = parseInt(document.querySelector('[data-jour="jour_rooms_suite"]')?.value) || 0;
+  const comp = parseInt(document.querySelector('[data-jour="jour_rooms_comp"]')?.value) || 0;
+  const horsUsage = parseInt(document.querySelector('[data-jour="jour_rooms_hors_usage"]')?.value) || 0;
+  const totalSold = simple + double + suite + comp;
+  const availRooms = TOTAL_ROOMS - horsUsage;
+  const occRate = availRooms > 0 ? (totalSold / availRooms * 100) : 0;
+  const adr = totalSold > 0 ? roomRev / totalSold : 0;
+  const revpar = availRooms > 0 ? roomRev / availRooms : 0;
+
+  // KPIs
+  $('#jour-kpi-revenue').textContent = fmt(totalRevenue);
+  $('#jour-kpi-occ').textContent = occRate.toFixed(1) + '%';
+  $('#jour-kpi-adr').textContent = fmt(adr);
+  $('#jour-kpi-revpar').textContent = fmt(revpar);
+
+  updateAutresCount();
+  updateAdjNotesCount();
+
+  debounceSave('jour');
+}
+
+// ── Adjustment notes (codes 50) ──
+function toggleAdjNotes() {
+  const sec = $('#adj-notes-section');
+  const icon = $('#adj-notes-icon');
+  if(sec.style.display === 'none') { sec.style.display = 'block'; icon.textContent = '▾'; }
+  else { sec.style.display = 'none'; icon.textContent = '▸'; }
+}
+
+function addAdjNote(dept='', montant='', raison='') {
+  const tbody = $('#adj-notes-body');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><select onchange="debounceSave('jour')" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+    <option value="">—</option>
+    <option value="cafe" ${dept==='cafe'?'selected':''}>Café Link</option>
+    <option value="piazza" ${dept==='piazza'?'selected':''}>Piazza</option>
+    <option value="spesa" ${dept==='spesa'?'selected':''}>Spesa</option>
+    <option value="chambres_svc" ${dept==='chambres_svc'?'selected':''}>Serv. Chambres</option>
+    <option value="banquet" ${dept==='banquet'?'selected':''}>Banquet</option>
+    <option value="tabagie" ${dept==='tabagie'?'selected':''}>Tabagie</option>
+    <option value="room_revenue" ${dept==='room_revenue'?'selected':''}>Chambres</option>
+  </select></td>
+  <td><input type="number" step="0.01" value="${montant}" onchange="debounceSave('jour')" style="width:100%;padding:4px 6px;font-size:12px"></td>
+  <td><input type="text" value="${raison}" onchange="debounceSave('jour')" placeholder="Code 50, etc." style="width:100%;padding:4px 6px;font-size:12px"></td>
+  <td><button type="button" onclick="this.closest('tr').remove();updateAdjNotesCount();debounceSave('jour')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button></td>`;
+  tbody.appendChild(tr);
+  updateAdjNotesCount();
+  // Auto-open notes section
+  const sec = $('#adj-notes-section');
+  if(sec.style.display === 'none') toggleAdjNotes();
+}
+
+function getAdjNotes() {
+  const rows = document.querySelectorAll('#adj-notes-body tr');
+  const notes = [];
+  rows.forEach(row => {
+    const dept = row.querySelector('select')?.value || '';
+    const montant = parseFloat(row.querySelector('input[type="number"]')?.value) || 0;
+    const raison = row.querySelector('input[type="text"]')?.value || '';
+    if(dept || montant || raison) notes.push({dept, montant, raison});
+  });
+  return notes;
+}
+
+function loadAdjNotes(notes) {
+  const tbody = $('#adj-notes-body');
+  tbody.innerHTML = '';
+  if(!Array.isArray(notes)) return;
+  notes.forEach(n => addAdjNote(n.dept || '', n.montant || '', n.raison || ''));
+  updateAdjNotesCount();
+  // Auto-open if notes exist
+  if(notes.length > 0) {
+    const sec = $('#adj-notes-section');
+    if(sec.style.display === 'none') toggleAdjNotes();
+  }
+}
+
+function updateAdjNotesCount() {
+  const count = document.querySelectorAll('#adj-notes-body tr').length;
+  const el = $('#adj-notes-count');
+  if(el) el.textContent = `(${count})`;
+}
+
+// ═══════════════════════════════════════
+// HP/ADMIN
+// ═══════════════════════════════════════
+function addHPRow(area='HP', nourriture=0, boisson=0, biere=0, vin=0, mineraux=0, autre=0, pourboire=0, raison='', autorise='') {
+  const container = $('#hp-rows');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:4px;align-items:center;margin-bottom:4px;flex-wrap:wrap';
+  row.innerHTML = `
+    <select class="hp-area" style="width:80px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" onchange="recalcHP()">
+      <option value="HP" ${area==='HP'?'selected':''}>HP</option>
+      <option value="ADMIN" ${area==='ADMIN'?'selected':''}>Admin</option>
+    </select>
+    <input type="number" step="0.01" class="hp-nour" value="${nourriture||''}" placeholder="Nour" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="number" step="0.01" class="hp-bois" value="${boisson||''}" placeholder="Bois" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="number" step="0.01" class="hp-biere" value="${biere||''}" placeholder="Bière" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="number" step="0.01" class="hp-vin" value="${vin||''}" placeholder="Vin" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="number" step="0.01" class="hp-min" value="${mineraux||''}" placeholder="Min" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="number" step="0.01" class="hp-autre" value="${autre||''}" placeholder="Autre" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="number" step="0.01" class="hp-pourb" value="${pourboire||''}" placeholder="Pourb" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
+    <input type="text" class="hp-raison" value="${raison}" placeholder="Raison" style="width:120px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" oninput="debounceSave('hp_admin')">
+    <input type="text" class="hp-autorise" value="${autorise}" placeholder="Autorisé" style="width:90px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" oninput="debounceSave('hp_admin')">
+    <span class="hp-row-total" style="width:70px;text-align:right;font-family:var(--mono);font-size:11px;font-weight:600">$0</span>
+    <button onclick="this.parentElement.remove();recalcHP()" style="width:24px;height:24px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;line-height:1">×</button>
+  `;
+  container.appendChild(row);
+  recalcHP();
+}
+
+function recalcHP() {
+  let totHP=0, totAdmin=0;
+  $$('#hp-rows > div').forEach(row => {
+    const cats = ['hp-nour','hp-bois','hp-biere','hp-vin','hp-min','hp-autre','hp-pourb'];
+    let rowTotal = 0;
+    cats.forEach(c => { rowTotal += parseFloat(row.querySelector('.'+c)?.value) || 0; });
+    rowTotal = round2(rowTotal);
+    row.querySelector('.hp-row-total').textContent = fmt(rowTotal);
+    const area = row.querySelector('.hp-area')?.value;
+    if(area === 'HP') totHP += rowTotal; else totAdmin += rowTotal;
+  });
+  $('#hp-tot-hp').textContent = fmt(totHP);
+  $('#hp-tot-admin').textContent = fmt(totAdmin);
+  $('#hp-tot-grand').textContent = fmt(round2(totHP + totAdmin));
+  debounceSave('hp_admin');
+}
+
+function getHPEntries() {
+  const entries = [];
+  $$('#hp-rows > div').forEach(row => {
+    entries.push({
+      area: row.querySelector('.hp-area')?.value || 'HP',
+      nourriture: parseFloat(row.querySelector('.hp-nour')?.value) || 0,
+      boisson: parseFloat(row.querySelector('.hp-bois')?.value) || 0,
+      biere: parseFloat(row.querySelector('.hp-biere')?.value) || 0,
+      vin: parseFloat(row.querySelector('.hp-vin')?.value) || 0,
+      mineraux: parseFloat(row.querySelector('.hp-min')?.value) || 0,
+      autre: parseFloat(row.querySelector('.hp-autre')?.value) || 0,
+      pourboire: parseFloat(row.querySelector('.hp-pourb')?.value) || 0,
+      raison: row.querySelector('.hp-raison')?.value || '',
+      autorise_par: row.querySelector('.hp-autorise')?.value || ''
+    });
+  });
+  return entries;
+}
+
+// Internet & Sonifi: onglets mensuels de suivi automatique dans l'Excel
+// Pas de vérification nécessaire pendant l'audit de nuit
+// Les valeurs jour_internet et jour_sonifi sont simplement des entrées dans Jour
+
+// ═══════════════════════════════════════
+// QUASIMODO
+// ═══════════════════════════════════════
+function recalcQuasimodo() {
+  const cards = ['debit','visa','mc','amex','discover'];
+  let fbSub=0, recSub=0;
+  const totByCard = {};
+
+  cards.forEach(c => {
+    const fb = fv($(`#quasi-fb-${c}`));
+    const rec = fv($(`#quasi-rec-${c}`));
+    fbSub += fb; recSub += rec;
+    totByCard[c] = round2(fb + rec);
+    $(`#quasi-tot-${c}`).textContent = fmt(totByCard[c]);
+  });
+
+  $('#quasi-fb-sub').textContent = fmt(fbSub);
+  $('#quasi-rec-sub').textContent = fmt(recSub);
+  $('#quasi-tot-cards').textContent = fmt(round2(fbSub + recSub));
+
+  // AMEX net
+  const factor = parseFloat($('#quasi-factor')?.value) || 0.9735;
+  $('#quasi-factor-display').textContent = factor;
+  const amexGross = totByCard.amex || 0;
+  const amexNet = round2(amexGross * factor);
+  $('#quasi-amex-net').value = amexNet.toFixed(2);
+
+  // Total = non-amex cards + amex net + cash
+  const nonAmex = round2(fbSub + recSub - (fv($('#quasi-fb-amex')) + fv($('#quasi-rec-amex'))));
+  const cashCdn = fv($('#quasi-cash-cdn'));
+  const cashUsd = fv($('#quasi-cash-usd'));
+  const grandTotal = round2(nonAmex + amexNet + cashCdn + cashUsd);
+
+  $('#quasi-grand-total').textContent = fmt(grandTotal);
+
+  // RJ total from Jour
+  const rjTotal = parseFloat($('#jour-kpi-revenue')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  $('#quasi-rj-total').textContent = fmt(rjTotal);
+
+  const variance = round2(grandTotal - rjTotal);
+  const varEl = $('#quasi-var-display');
+  varEl.textContent = fmt(variance);
+  varEl.style.color = Math.abs(variance) <= 0.01 ? 'var(--emerald)' : 'var(--rose)';
+
+  const balEl = $('#quasimodo-balance');
+  const isOk = Math.abs(variance) <= 0.01;
+  balEl.textContent = 'VARIANCE QUASIMODO: ' + fmt(variance);
+  balEl.className = 'rjn-balance ' + (isOk ? 'ok' : Math.abs(variance) < 5 ? 'warn' : 'err');
+  updateBadge('quasimodo', isOk);
+  debounceSave('quasimodo');
+}
+
+function autoFillQuasimodo() {
+  // Pull from Transelect restaurant totals (new layout: rows=cards)
+  const cards = ['debit','visa','mc','amex','discover'];
+  cards.forEach(c => {
+    // Restaurant: sum all terminal inputs (POS + Banquet) for this card row
+    const restRow = document.querySelector(`#rest-tbody tr[data-cardrow="${c}"]`);
+    let fbTotal = 0;
+    if(restRow) {
+      restRow.querySelectorAll('input[data-term]').forEach(inp => { fbTotal += fv(inp); });
+    }
+    $(`#quasi-fb-${c}`).value = fbTotal.toFixed(2);
+
+    // Reception: sum fusebox+term8+k053 for this card
+    const recRow = document.querySelector(`#tbl-reception tbody tr[data-cardrow="${c}"]`);
+    if(recRow) {
+      const fuse = fv(recRow.querySelector('[data-src="fusebox"]'));
+      const t8 = fv(recRow.querySelector('[data-src="term8"]'));
+      const k053 = fv(recRow.querySelector('[data-src="k053"]'));
+      $(`#quasi-rec-${c}`).value = round2(fuse + t8 + k053).toFixed(2);
+    }
+  });
+
+  // Cash from Recap deposits
+  const depCdn = fv(document.querySelector('[data-field="deposit_cdn"]'));
+  $('#quasi-cash-cdn').value = depCdn.toFixed(2);
+  const depUs = fv(document.querySelector('[data-field="deposit_us"]'));
+  $('#quasi-cash-usd').value = depUs.toFixed(2);
+
+  recalcQuasimodo();
+}
+
+// ═══════════════════════════════════════
+// DBRS
+// ═══════════════════════════════════════
+function recalcDBRS() {
+  // Auto-fill from Jour
+  const roomRev = parseFloat($('#jour-kpi-revenue')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  const adr = parseFloat($('#jour-kpi-adr')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  const occ = parseFloat($('#jour-kpi-occ')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+
+  // House count = rooms sold
+  const simple = parseInt(document.querySelector('[data-jour="jour_rooms_simple"]')?.value) || 0;
+  const double2 = parseInt(document.querySelector('[data-jour="jour_rooms_double"]')?.value) || 0;
+  const suite = parseInt(document.querySelector('[data-jour="jour_rooms_suite"]')?.value) || 0;
+  const comp = parseInt(document.querySelector('[data-jour="jour_rooms_comp"]')?.value) || 0;
+  const houseCount = simple + double2 + suite + comp;
+
+  $('#dbrs-rev').value = (fv(document.querySelector('[data-jour="jour_room_revenue"]'))).toFixed(2);
+  $('#dbrs-adr').value = adr.toFixed(2);
+  $('#dbrs-occ').value = occ.toFixed(1);
+  $('#dbrs-house').value = houseCount;
+
+  debounceSave('dbrs');
+}
+
+// ═══════════════════════════════════════
+// NEW TABS — HELPER FUNCTIONS
+// ═══════════════════════════════════════
+
+// ── Analyse GL recalc ──
+function recalcGL101() {
+  const v = fv($('#gl101-previous')) + fv($('#gl101-additions')) - fv($('#gl101-deductions')) - fv($('#gl101-new-balance'));
+  $('#gl101-variance').value = v.toFixed(2);
+  debounceSave('analyse_gl_101100');
+}
+function recalcGL401() {
+  const v = fv($('#gl401-previous')) + fv($('#gl401-additions')) - fv($('#gl401-deductions')) - fv($('#gl401-new-balance'));
+  $('#gl401-variance').value = v.toFixed(2);
+  debounceSave('analyse_gl_100401');
+}
+
+// ── Diff.Caisse ──
+function addDiffCaisseRow(register='', system=0, physical=0, difference=0, notes='') {
+  const tb = document.querySelector('#diff-caisse-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" value="${register}" oninput="recalcDiffCaisse()" style="width:100%"></td>
+    <td><input type="number" step="0.01" value="${system}" oninput="recalcDiffCaisse()" style="width:90px"></td>
+    <td><input type="number" step="0.01" value="${physical}" oninput="recalcDiffCaisse()" style="width:90px"></td>
+    <td class="rjn-computed" style="font-weight:600">${fmt(difference)}</td>
+    <td><input type="text" value="${notes}" oninput="debounceSave('diff_caisse')" style="width:100%"></td>
+    <td><button class="rjn-btn-danger-sm" onclick="this.closest('tr').remove();recalcDiffCaisse()">✕</button></td>`;
+  tb.appendChild(tr);
+}
+function recalcDiffCaisse() {
+  const rows = document.querySelectorAll('#diff-caisse-table tbody tr');
+  let total = 0;
+  rows.forEach(r => {
+    const inputs = r.querySelectorAll('input[type=number]');
+    const diff = (parseFloat(inputs[0]?.value)||0) - (parseFloat(inputs[1]?.value)||0);
+    r.querySelector('td.rjn-computed').textContent = fmt(diff);
+    total += diff;
+  });
+  $('#diff-caisse-total').textContent = fmt(total);
+  const st = $('#diff-caisse-status');
+  if(st) st.textContent = Math.abs(total) < 0.02 ? '✓ Balancé' : '⚠ Variance';
+  debounceSave('diff_caisse');
+}
+function collectDiffCaisseEntries() {
+  const rows = document.querySelectorAll('#diff-caisse-table tbody tr');
+  return Array.from(rows).map(r => {
+    const inputs = r.querySelectorAll('input');
+    return {register: inputs[0]?.value||'', system: parseFloat(inputs[1]?.value)||0,
+      physical: parseFloat(inputs[2]?.value)||0,
+      difference: (parseFloat(inputs[1]?.value)||0) - (parseFloat(inputs[2]?.value)||0),
+      notes: inputs[3]?.value||''};
+  });
+}
+
+// ── SOCAN ──
+function recalcSOCAN() {
+  const total = fv($('#socan-resto')) + fv($('#socan-bar')) + fv($('#socan-banquet'));
+  $('#socan-total').value = total.toFixed(2);
+  debounceSave('socan');
+}
+
+// ── Résonne ──
+function addResonneRow(dept='', event='', hours=0, rate=0, charge=0) {
+  const tb = document.querySelector('#resonne-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" value="${dept}" oninput="debounceSave('resonne')" style="width:100%"></td>
+    <td><input type="text" value="${event}" oninput="debounceSave('resonne')" style="width:100%"></td>
+    <td><input type="number" step="0.5" value="${hours}" oninput="recalcResonne()" style="width:70px"></td>
+    <td><input type="number" step="0.01" value="${rate}" oninput="recalcResonne()" style="width:80px"></td>
+    <td class="rjn-computed" style="font-weight:600">${fmt(charge)}</td>
+    <td><button class="rjn-btn-danger-sm" onclick="this.closest('tr').remove();recalcResonne()">✕</button></td>`;
+  tb.appendChild(tr);
+}
+function recalcResonne() {
+  const rows = document.querySelectorAll('#resonne-table tbody tr');
+  let total = 0;
+  rows.forEach(r => {
+    const inputs = r.querySelectorAll('input[type=number]');
+    const charge = (parseFloat(inputs[0]?.value)||0) * (parseFloat(inputs[1]?.value)||0);
+    r.querySelector('td.rjn-computed').textContent = fmt(charge);
+    total += charge;
+  });
+  $('#resonne-total').textContent = fmt(total);
+  debounceSave('resonne');
+}
+function collectResonneEntries() {
+  return Array.from(document.querySelectorAll('#resonne-table tbody tr')).map(r => {
+    const inputs = r.querySelectorAll('input');
+    const hours = parseFloat(inputs[2]?.value)||0, rate = parseFloat(inputs[3]?.value)||0;
+    return {department: inputs[0]?.value||'', event: inputs[1]?.value||'',
+      usage_hours: hours, rate: rate, charge: round2(hours*rate)};
+  });
+}
+
+// ── Vestiaire ──
+function addVestiaireRow(station='', expected=0, actual=0, variance=0) {
+  const tb = document.querySelector('#vestiaire-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" value="${station}" oninput="debounceSave('vestiaire')" style="width:100%"></td>
+    <td><input type="number" step="0.01" value="${expected}" oninput="recalcVestiaire()" style="width:90px"></td>
+    <td><input type="number" step="0.01" value="${actual}" oninput="recalcVestiaire()" style="width:90px"></td>
+    <td class="rjn-computed">${fmt(variance)}</td>
+    <td><button class="rjn-btn-danger-sm" onclick="this.closest('tr').remove();recalcVestiaire()">✕</button></td>`;
+  tb.appendChild(tr);
+}
+function recalcVestiaire() {
+  const rows = document.querySelectorAll('#vestiaire-table tbody tr');
+  let tE=0,tA=0,tV=0;
+  rows.forEach(r => {
+    const inputs = r.querySelectorAll('input[type=number]');
+    const exp = parseFloat(inputs[0]?.value)||0, act = parseFloat(inputs[1]?.value)||0;
+    const v = act - exp;
+    r.querySelector('td.rjn-computed').textContent = fmt(v);
+    tE+=exp; tA+=act; tV+=v;
+  });
+  $('#vest-total-expected').textContent = fmt(tE);
+  $('#vest-total-actual').textContent = fmt(tA);
+  $('#vest-total-variance').textContent = fmt(tV);
+  debounceSave('vestiaire');
+}
+function collectVestiaireEntries() {
+  return Array.from(document.querySelectorAll('#vestiaire-table tbody tr')).map(r => {
+    const inputs = r.querySelectorAll('input');
+    const exp = parseFloat(inputs[1]?.value)||0, act = parseFloat(inputs[2]?.value)||0;
+    return {station: inputs[0]?.value||'', expected: exp, actual: act, variance: round2(act-exp)};
+  });
+}
+
+// ── Admin (AD) ──
+function addAdminRow(desc='', dept='', gl='', amount=0) {
+  const tb = document.querySelector('#admin-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" value="${desc}" oninput="debounceSave('admin')" style="width:100%"></td>
+    <td><input type="text" value="${dept}" oninput="debounceSave('admin')" style="width:100%"></td>
+    <td><input type="text" value="${gl}" oninput="debounceSave('admin')" style="width:90px"></td>
+    <td><input type="number" step="0.01" value="${amount}" oninput="recalcAdmin()" style="width:90px"></td>
+    <td><button class="rjn-btn-danger-sm" onclick="this.closest('tr').remove();recalcAdmin()">✕</button></td>`;
+  tb.appendChild(tr);
+}
+function recalcAdmin() {
+  let total = 0;
+  document.querySelectorAll('#admin-table tbody tr').forEach(r => {
+    total += parseFloat(r.querySelector('input[type=number]')?.value)||0;
+  });
+  $('#admin-total').textContent = fmt(total);
+  debounceSave('admin');
+}
+function collectAdminEntries() {
+  return Array.from(document.querySelectorAll('#admin-table tbody tr')).map(r => {
+    const inputs = r.querySelectorAll('input');
+    return {description: inputs[0]?.value||'', department: inputs[1]?.value||'',
+      gl_account: inputs[2]?.value||'', amount: parseFloat(inputs[3]?.value)||0};
+  });
+}
+
+// ── Massage (détail) ──
+function addMassageRow(therapist='', service='', revenue=0, tips=0) {
+  const tb = document.querySelector('#massage-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" value="${therapist}" oninput="debounceSave('massage_detail')" style="width:100%"></td>
+    <td><input type="text" value="${service}" oninput="debounceSave('massage_detail')" style="width:100%"></td>
+    <td><input type="number" step="0.01" value="${revenue}" oninput="recalcMassage()" style="width:90px"></td>
+    <td><input type="number" step="0.01" value="${tips}" oninput="recalcMassage()" style="width:80px"></td>
+    <td><button class="rjn-btn-danger-sm" onclick="this.closest('tr').remove();recalcMassage()">✕</button></td>`;
+  tb.appendChild(tr);
+}
+function recalcMassage() {
+  let tR=0,tT=0;
+  document.querySelectorAll('#massage-table tbody tr').forEach(r => {
+    const nums = r.querySelectorAll('input[type=number]');
+    tR += parseFloat(nums[0]?.value)||0;
+    tT += parseFloat(nums[1]?.value)||0;
+  });
+  $('#massage-total-rev').textContent = fmt(tR);
+  $('#massage-total-tips').textContent = fmt(tT);
+  debounceSave('massage_detail');
+}
+function collectMassageEntries() {
+  return Array.from(document.querySelectorAll('#massage-table tbody tr')).map(r => {
+    const inputs = r.querySelectorAll('input');
+    return {therapist: inputs[0]?.value||'', service_type: inputs[1]?.value||'',
+      revenue: parseFloat(inputs[2]?.value)||0, tips: parseFloat(inputs[3]?.value)||0};
+  });
+}
+
+// ── Ristourne ──
+function addRistourneRow(guest='', dept='', original=0, rebate=0, reason='', auth='') {
+  const tb = document.querySelector('#ristourne-table tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><input type="text" value="${guest}" oninput="debounceSave('ristourne')" style="width:100%"></td>
+    <td><select onchange="debounceSave('ristourne')" style="padding:4px;border:1px solid var(--border);border-radius:4px;font-size:13px">
+      <option ${dept==='ROOM'?'selected':''}>ROOM</option><option ${dept==='RESTAURANT'?'selected':''}>RESTAURANT</option>
+      <option ${dept==='BAR'?'selected':''}>BAR</option><option ${dept==='BANQUET'?'selected':''}>BANQUET</option>
+      <option ${dept==='SPA'?'selected':''}>SPA</option><option ${dept==='AUTRE'||!dept?'selected':''}>AUTRE</option></select></td>
+    <td><input type="number" step="0.01" value="${original}" oninput="debounceSave('ristourne')" style="width:85px"></td>
+    <td><input type="number" step="0.01" value="${rebate}" oninput="recalcRistourne()" style="width:85px"></td>
+    <td><input type="text" value="${reason}" oninput="debounceSave('ristourne')" style="width:100%"></td>
+    <td><input type="text" value="${auth}" oninput="debounceSave('ristourne')" style="width:90px"></td>
+    <td><button class="rjn-btn-danger-sm" onclick="this.closest('tr').remove();recalcRistourne()">✕</button></td>`;
+  tb.appendChild(tr);
+}
+function recalcRistourne() {
+  let total = 0;
+  const byDept = {};
+  document.querySelectorAll('#ristourne-table tbody tr').forEach(r => {
+    const rebate = parseFloat(r.querySelectorAll('input[type=number]')[1]?.value)||0;
+    const dept = r.querySelector('select')?.value || 'AUTRE';
+    total += rebate;
+    byDept[dept] = (byDept[dept]||0) + rebate;
+  });
+  $('#ristourne-total').textContent = fmt(total);
+  const deptDiv = $('#ristourne-by-dept');
+  if(deptDiv) {
+    if(Object.keys(byDept).length === 0) { deptDiv.textContent = 'Aucune donnée'; }
+    else { deptDiv.innerHTML = Object.entries(byDept).map(([d,v])=>`<span style="margin-right:12px"><b>${d}:</b> ${fmt(v)}</span>`).join(''); }
+  }
+  debounceSave('ristourne');
+}
+function collectRistourneEntries() {
+  return Array.from(document.querySelectorAll('#ristourne-table tbody tr')).map(r => {
+    const inputs = r.querySelectorAll('input');
+    return {guest: inputs[0]?.value||'', department: r.querySelector('select')?.value||'AUTRE',
+      original_amount: parseFloat(inputs[1]?.value)||0, rebate_amount: parseFloat(inputs[2]?.value)||0,
+      reason: inputs[3]?.value||'', authorized_by: inputs[4]?.value||''};
+  });
+}
+
+// ═══════════════════════════════════════
+// BADGES
+// ═══════════════════════════════════════
+function updateBadge(section, isOk) {
+  const badge = $(`#badge-${section}`);
+  if(badge) {
+    badge.style.background = isOk ? 'var(--emerald)' : 'var(--rose)';
+  }
+}
+
+// ═══════════════════════════════════════
+// AUTO-SAVE (debounced)
+// ═══════════════════════════════════════
+function debounceSave(section) {
+  if(!SESSION) return;
+  clearTimeout(SAVE_TIMER);
+  SAVE_TIMER = setTimeout(() => saveSection(section), 500);
+}
+
+async function saveSection(section) {
+  if(!SESSION || SESSION.status === 'locked') return;
+  const date = SESSION.audit_date;
+  const ind = $('#autosave-ind');
+  ind.textContent = 'Sauvegarde...';
+  ind.className = 'rjn-autosave saving';
+
+  let url, body;
+  switch(section) {
+    case 'controle':
+      url = '/api/rj/native/save/controle';
+      body = {date, auditor_name:$('#inp-auditor').value, temperature:$('#inp-temp').value,
+              weather_condition:$('#inp-weather').value, chambres_refaire:$('#inp-chambres').value,
+              notes:''};
+      break;
+    case 'dueback':
+      url = '/api/rj/native/save/dueback';
+      body = {date, entries: getDuebackEntries()};
+      break;
+    case 'recap':
+      url = '/api/rj/native/save/recap';
+      body = {date};
+      $$('.rjn-table [data-field]').forEach(inp => { body[inp.dataset.field] = fv(inp); });
+      break;
+    case 'transelect':
+      url = '/api/rj/native/save/transelect';
+      const restaurant = {_terminals: restTerminals};
+      // Save per card type: {debit: {bar_a: 100, bar_b: 200, positouch: 300, esc_pct: 0}, ...}
+      CARDS.forEach(c => {
+        const row = document.querySelector(`#rest-tbody tr[data-cardrow="${c}"]`);
+        if(!row) return;
+        const cardData = {};
+        row.querySelectorAll('input[data-term]').forEach(i => { cardData[i.dataset.term] = fv(i); });
+        cardData.positouch = fv(row.querySelector('.rest-positouch'));
+        cardData.esc_pct = fv(row.querySelector('.rest-esc-pct'));
+        restaurant[c] = cardData;
+      });
+      const reception = {};
+      $$('#tbl-reception tbody tr[data-cardrow]').forEach(row => {
+        const cardType = row.dataset.cardrow;
+        reception[cardType] = {
+          fusebox: fv(row.querySelector('[data-src="fusebox"]')),
+          term8: fv(row.querySelector('[data-src="term8"]')),
+          k053: fv(row.querySelector('[data-src="k053"]')),
+          daily_rev: fv(row.querySelector('.rec-dailyrev')),
+          esc_pct: fv(row.querySelector('.rec-esc-pct'))
+        };
+      });
+      body = {date, restaurant, reception};
+      break;
+    case 'geac':
+      url = '/api/rj/native/save/geac';
+      // Cash Out: 2 fixed lines per card (line1 + line2 = total)
+      const geacCards = ['amex','diners','mc','visa'];
+      const cashout = {};
+      geacCards.forEach(c => {
+        cashout[`co1_${c}`] = fv($(`#geac-co1-${c}`));
+        cashout[`co2_${c}`] = fv($(`#geac-co2-${c}`));
+      });
+      // Daily Revenue
+      const daily_rev = {};
+      geacCards.forEach(c => { daily_rev[c] = fv($(`#geac-dr-${c}`)); });
+      // Balance sheet — each row has specific columns (matching Excel exactly)
+      const balance_sheet = {
+        prev_dr: fv($('#geac-bs-prev-dr')),
+        prev_gl: fv($('#geac-bs-prev-gl')),
+        today_dr: fv($('#geac-bs-today-dr')),
+        today_gl: fv($('#geac-bs-today-gl')),
+        facture_dr: fv($('#geac-bs-facture-dr')),
+        facture_ar: fv($('#geac-bs-facture-ar')),
+        advdep_dr: fv($('#geac-bs-advdep-dr')),
+        advdep_ad: fv($('#geac-bs-advdep-ad')),
+        newbal_dr: fv($('#geac-bs-newbal-dr')),
+        newbal_gl: fv($('#geac-bs-newbal-gl')),
+        chk_nobalance: $('#geac-chk-nobalance')?.checked || false,
+        chk_nodeposit: $('#geac-chk-nodeposit')?.checked || false
+      };
+      body = {date, cashout, daily_rev, balance_sheet};
+      break;
+    case 'sd':
+      url = '/api/rj/native/save/sd';
+      body = {date, entries: getSDEntries()};
+      break;
+    case 'depot':
+      url = '/api/rj/native/save/depot';
+      body = {date, depot_data: getDepotData()};
+      break;
+    case 'setd':
+      url = '/api/rj/native/save/setd';
+      body = {date, personnel: getSetDPersonnel()};
+      break;
+    case 'jour':
+      url = '/api/rj/native/save/jour';
+      body = {date};
+      $$('[data-jour]').forEach(inp => { body[inp.dataset.jour] = fv(inp); });
+      body.jour_adj_notes = getAdjNotes();
+      break;
+    case 'hp_admin':
+      url = '/api/rj/native/save/hp_admin';
+      body = {date, entries: getHPEntries()};
+      break;
+    // Internet & Sonifi: onglets mensuels Excel, pas de save nécessaire
+    case 'quasimodo':
+      url = '/api/rj/native/save/quasimodo';
+      body = {date};
+      ['debit','visa','mc','amex','discover'].forEach(c => {
+        body['quasi_fb_'+c] = fv($('#quasi-fb-'+c));
+        body['quasi_rec_'+c] = fv($('#quasi-rec-'+c));
+      });
+      body.quasi_amex_factor = fv($('#quasi-factor'));
+      body.quasi_cash_cdn = fv($('#quasi-cash-cdn'));
+      body.quasi_cash_usd = fv($('#quasi-cash-usd'));
+      break;
+    case 'dbrs':
+      url = '/api/rj/native/save/dbrs';
+      body = {date,
+        market_segments: {
+          transient: fv($('#dbrs-seg-transient')),
+          group: fv($('#dbrs-seg-group')),
+          contract: fv($('#dbrs-seg-contract')),
+          other: fv($('#dbrs-seg-other'))
+        },
+        noshow_count: fv($('#dbrs-noshow-count')),
+        noshow_revenue: fv($('#dbrs-noshow-rev'))
+      };
+      break;
+    case 'analyse_gl_101100':
+      url = '/api/rj/native/save/analyse_gl_101100';
+      body = {date, previous: fv($('#gl101-previous')), additions: fv($('#gl101-additions')),
+        deductions: fv($('#gl101-deductions')), new_balance: fv($('#gl101-new-balance')),
+        notes: ($('#gl101-notes')||{}).value||''};
+      break;
+    case 'analyse_gl_100401':
+      url = '/api/rj/native/save/analyse_gl_100401';
+      body = {date, previous: fv($('#gl401-previous')), additions: fv($('#gl401-additions')),
+        deductions: fv($('#gl401-deductions')), new_balance: fv($('#gl401-new-balance')),
+        notes: ($('#gl401-notes')||{}).value||''};
+      break;
+    case 'diff_caisse':
+      url = '/api/rj/native/save/diff_caisse';
+      body = {date, entries: collectDiffCaisseEntries()};
+      break;
+    case 'socan':
+      url = '/api/rj/native/save/socan';
+      body = {date, allocation_resto: fv($('#socan-resto')), allocation_bar: fv($('#socan-bar')),
+        allocation_banquet: fv($('#socan-banquet')), notes: ($('#socan-notes')||{}).value||''};
+      break;
+    case 'resonne':
+      url = '/api/rj/native/save/resonne';
+      body = {date, entries: collectResonneEntries()};
+      break;
+    case 'vestiaire':
+      url = '/api/rj/native/save/vestiaire';
+      body = {date, entries: collectVestiaireEntries()};
+      break;
+    case 'admin':
+      url = '/api/rj/native/save/admin';
+      body = {date, entries: collectAdminEntries()};
+      break;
+    case 'massage_detail':
+      url = '/api/rj/native/save/massage';
+      body = {date, entries: collectMassageEntries()};
+      break;
+    case 'ristourne':
+      url = '/api/rj/native/save/ristourne';
+      body = {date, entries: collectRistourneEntries(),
+        analysis_notes: ($('#ristourne-analysis-notes')||{}).value||''};
+      break;
+    default: return;
+  }
+
+  try {
+    const resp = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const result = await resp.json();
+    ind.textContent = 'Sauvegardé';
+    ind.className = 'rjn-autosave saved';
+    SESSION.status = SESSION.status === 'draft' ? 'in_progress' : SESSION.status;
+    updateStatus();
+
+    // ★ If save returned a full session + sections_updated, reload dependent sections
+    if(result.session && result.sections_updated && result.sections_updated.length > 1) {
+      SESSION = result.session;
+      const updated = result.sections_updated;
+      if(updated.includes('setd')) {
+        // Reload SetD personnel rows from session
+        $('#setd-personnel-rows').innerHTML = '';
+        const setdPers = SESSION.setd_personnel || [];
+        if(Array.isArray(setdPers)) {
+          setdPers.forEach(p => addSetDRow(p.name, p.amount));
+        }
+        recalcSetD();
+      }
+      if(updated.includes('depot')) {
+        // Reload Depot rows from session
+        const depotData = SESSION.depot_data || {};
+        $('#depot-c6-rows').innerHTML = '';
+        $('#depot-c8-rows').innerHTML = '';
+        if(depotData.client6) {
+          if(depotData.client6.date) $('#depot-c6-date').value = depotData.client6.date;
+          (depotData.client6.amounts || []).forEach(a => addDepotRow('c6', a));
+        }
+        if(depotData.client8) {
+          if(depotData.client8.date) $('#depot-c8-date').value = depotData.client8.date;
+          (depotData.client8.amounts || []).forEach(a => addDepotRow('c8', a));
+        }
+        recalcDepot();  // This also pushes to Recap deposit_cdn
+      }
+      if(updated.includes('recap') && !updated.includes('depot')) {
+        // Only manually update Recap if Depot didn't already handle it via recalcDepot()
+        const depCdn = document.querySelector('[data-field="deposit_cdn"]');
+        if(depCdn) depCdn.value = SESSION.deposit_cdn || '';
+        recalcRecap();
+      }
+    }
+  } catch(e) {
+    ind.textContent = 'Erreur!';
+    ind.className = 'rjn-autosave';
+  }
+}
+
+// ═══════════════════════════════════════
+// SUMMARY
+// ═══════════════════════════════════════
+function printReport(type) {
+  if (!SESSION || !SESSION.audit_date) {
+    alert('Aucune session chargée');
+    return;
+  }
+  const url = `/api/rj/native/print/${type}?date=${SESSION.audit_date}`;
+  window.open(url, '_blank', 'width=850,height=1100');
+}
+
+function refreshSummary() {
+  // Read from DOM state
+  const recapBal = parseFloat($('#recap-balance')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  const transVar = parseFloat($('#transelect-variance')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  const geacCardVar = parseFloat($('#geac-card-balance')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  const dbTotal = parseFloat($('#dueback-total')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+
+  updateCheck('sum-recap', 'sum-recap-val', recapBal, 0.02);
+  updateCheck('sum-trans', 'sum-trans-val', transVar, 1.00);
+  updateCheck('sum-geac', 'sum-geac-val', geacCardVar, 0.10);
+
+  // DueBack is always "ok"
+  const dbEl = $('#sum-db');
+  if(dbEl) {
+    dbEl.className = 'rjn-check ok';
+    dbEl.querySelector('.rjn-check-icon').textContent = '✓';
+    $('#sum-db-val').textContent = fmt(dbTotal);
+  }
+
+  // SD Variance
+  const sdVarEl = $('#sum-sd-val');
+  if(sdVarEl) {
+    const sdVar = parseFloat($('#sd-tot-variance')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+    updateCheck('sum-sd', 'sum-sd-val', sdVar, 0.02);
+  }
+
+  // Depot total
+  const depotEl = $('#sum-depot-val');
+  if(depotEl) {
+    const depTot = parseFloat($('#depot-grand-total')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+    const depCheckEl = $('#sum-depot');
+    if(depCheckEl) {
+      depCheckEl.className = 'rjn-check ok';
+      depCheckEl.querySelector('.rjn-check-icon').textContent = '✓';
+      depotEl.textContent = fmt(depTot);
+    }
+  }
+
+  // Jour total revenue
+  const jourEl = $('#sum-jour-val');
+  if(jourEl) {
+    const jourRev = parseFloat($('#jour-kpi-revenue')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+    const jourCheckEl = $('#sum-jour');
+    if(jourCheckEl) {
+      jourCheckEl.className = 'rjn-check ok';
+      jourCheckEl.querySelector('.rjn-check-icon').textContent = '✓';
+      jourEl.textContent = fmt(jourRev);
+    }
+  }
+
+  // HP/Admin total (info only, always ok if present)
+  const hpGrand = parseFloat($('#hp-tot-grand')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  const hpCheckEl = $('#sum-hp');
+  if(hpCheckEl) {
+    hpCheckEl.className = 'rjn-check ok';
+    hpCheckEl.querySelector('.rjn-check-icon').textContent = '✓';
+    $('#sum-hp-val').textContent = fmt(hpGrand);
+  }
+
+  // Internet & Sonifi: onglets mensuels, pas de check
+
+  // Quasimodo variance
+  const quasiVar = parseFloat($('#quasi-var-display')?.textContent?.replace(/[^-\d.]/g,'')) || 0;
+  updateCheck('sum-quasi', 'sum-quasi-val', quasiVar, 0.02);
+
+  // DBRS (info only — show total segments)
+  const dbrsSegs = fv($('#dbrs-seg-transient')) + fv($('#dbrs-seg-group')) + fv($('#dbrs-seg-contract')) + fv($('#dbrs-seg-other'));
+  const dbrsCheckEl = $('#sum-dbrs');
+  if(dbrsCheckEl) {
+    dbrsCheckEl.className = 'rjn-check ok';
+    dbrsCheckEl.querySelector('.rjn-check-icon').textContent = '✓';
+    $('#sum-dbrs-val').textContent = dbrsSegs + ' ch.';
+  }
+
+  $('#btn-sync').disabled = !SESSION || SESSION.status === 'locked';
+  $('#btn-submit').disabled = !SESSION || SESSION.status === 'locked';
+  $('#btn-submit2').disabled = !SESSION || SESSION.status === 'locked';
+}
+
+function updateCheck(rowId, valId, value, tolerance) {
+  const isOk = Math.abs(value) < tolerance;
+  const el = $(`#${rowId}`);
+  el.className = 'rjn-check ' + (isOk ? 'ok' : 'err');
+  el.querySelector('.rjn-check-icon').textContent = isOk ? '✓' : '✗';
+  $(`#${valId}`).textContent = fmt(value);
+}
+
+// ═══════════════════════════════════════
+// FULL CALC (server-side)
+// ═══════════════════════════════════════
+async function runFullCalc() {
+  if(!SESSION) return;
+  const r = await fetch('/api/rj/native/calculate', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({date: SESSION.audit_date})
+  });
+  const d = await r.json();
+  if(d.messages) {
+    d.messages.forEach(m => console.log(`[${m.type}] ${m.section}: ${m.message}`));
+  }
+  refreshSummary();
+}
+
+// ═══════════════════════════════════════
+// SUBMIT
+// ═══════════════════════════════════════
+async function submitSession() {
+  if(!SESSION) return;
+  if(!confirm('Soumettre et verrouiller cette session? Cette action est irréversible.')) return;
+
+  // Save all sections first
+  await saveSection('controle');
+  await saveSection('dueback');
+  await saveSection('recap');
+  await saveSection('transelect');
+  await saveSection('geac');
+  await saveSection('sd');
+  await saveSection('depot');
+  await saveSection('setd');
+  await saveSection('hp_admin');
+  await saveSection('jour');
+  await saveSection('quasimodo');
+  await saveSection('dbrs');
+  await saveSection('analyse_gl_101100');
+  await saveSection('analyse_gl_100401');
+  await saveSection('diff_caisse');
+  await saveSection('socan');
+  await saveSection('resonne');
+  await saveSection('vestiaire');
+  await saveSection('admin');
+  await saveSection('massage_detail');
+  await saveSection('ristourne');
+
+  const r = await fetch(`/api/rj/native/submit/${SESSION.audit_date}`, {
+    method:'POST', headers:{'Content-Type':'application/json'}
+  });
+  const d = await r.json();
+
+  if(d.success) {
+    SESSION.status = 'locked';
+    updateStatus();
+    $('#btn-submit').disabled = true;
+    $('#btn-submit2').disabled = true;
+    $('#submit-result').innerHTML = `
+      <div class="rjn-balance ${d.is_fully_balanced ? 'ok' : 'warn'}">
+        ${d.is_fully_balanced ? '✓ Session soumise — Tout est balancé!' : '⚠ Session soumise avec des variances'}
+      </div>`;
+    // Disable all inputs
+    $$('.rjn input').forEach(i => i.disabled = true);
+  } else {
+    $('#submit-result').innerHTML = `<div class="rjn-balance err">${d.error || 'Erreur de soumission'}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════
+// RE-SYNC DASHBOARD
+// ═══════════════════════════════════════
+async function syncDashboard() {
+  if(!SESSION) { alert('Aucune session active.'); return; }
+  if(!confirm('Re-synchroniser les données avec le dashboard? Les données seront recalculées.')) return;
+
+  try {
+    const r = await fetch(`/api/rj/native/sync/${SESSION.audit_date}`, {
+      method:'POST', headers:{'Content-Type':'application/json'}
+    });
+    const d = await r.json();
+
+    if(d.success) {
+      alert('Dashboard synchronisé avec succès!');
+      refreshSummary();
+    } else {
+      alert(`Erreur: ${d.error || 'Synchronisation échouée'}`);
+    }
+  } catch(err) {
+    alert(`Erreur de connexion: ${err.message}`);
+  }
+}
+
+
+// ═══════════════════════════════════════
+// MACROS
+// ═══════════════════════════════════════
+async function runMacro(macroName) {
+  if(!SESSION) { alert('Aucune session active.'); return; }
+
+  // Save transelect + recap first
+  await saveSection('recap');
+  await saveSection('transelect');
+
+  const resultEl = $('#macro-result');
+  resultEl.innerHTML = `<span style="color:var(--amber)">Exécution de ${macroName}...</span>`;
+
+  try {
+    const r = await fetch(`/api/rj/native/macro/${macroName}`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({date: SESSION.audit_date})
+    });
+    const d = await r.json();
+    if(d.success) {
+      resultEl.innerHTML = `<span style="color:var(--emerald)">✓ ${d.message}</span>`;
+    } else {
+      resultEl.innerHTML = `<span style="color:var(--rose)">✗ ${d.error || 'Erreur'}</span>`;
+    }
+  } catch(e) {
+    resultEl.innerHTML = `<span style="color:var(--rose)">Erreur: ${e.message}</span>`;
+  }
+}
+
+// ═══════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════
+function exportExcel() {
+  if(!SESSION) return;
+  window.open(`/api/rj/native/export/excel/${SESSION.audit_date}`, '_blank');
+}
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+  // Init restaurant table with defaults (will be rebuilt if session has saved terminals)
+  initRestaurantTable(null);
+  // Auto-load if date provided
+  const dateInp = $('#inp-date');
+  if(dateInp.value) {
+    fetch(`/api/rj/native/load/${dateInp.value}`)
+      .then(r => r.json())
+      .then(d => {
+        if(d.exists) {
+          SESSION = d.session;
+          loadSessionToForm(SESSION);
+          updateStatus();
+          document.getElementById('macro-panel').style.display = 'block';
+    document.getElementById('autofill-panel').style.display = 'block';
+          feather.replace();
+          $('#session-info').innerHTML = '<span style="color:var(--blue)">Session chargée automatiquement</span>';
+        }
+      })
+      .catch(() => {});
+  }
+});
+</script>
+{% endblock %}

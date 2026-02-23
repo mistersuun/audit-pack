@@ -1,0 +1,451 @@
+<!-- Transelect Tab Content -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+<div class="rj-card">
+  <div class="forms">
+    <div class="form-tile">
+  <h4>Transelect - Réconciliation CC/Interac</h4>
+  <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+    Tableau interactif type Excel. VARIANCE doit être proche de 0 (🟢 vert = OK, 🔴 rouge = erreur).
+  </p>
+
+  <!-- MASTER BALANCE STATUS - PROMINENT DISPLAY -->
+  <div id="master-balance-display" style="
+    background: #f8f9fa;
+    border: 3px solid #dee2e6;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  ">
+    <div style="font-size: 0.875rem; font-weight: 600; color: #6c757d; margin-bottom: 0.5rem; letter-spacing: 0.5px;">
+      BALANCE GÉNÉRALE TRANSELECT
+    </div>
+    <div id="master-balance-value" style="
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0.5rem 0;
+      font-family: 'Courier New', monospace;
+    ">
+      $0.00
+    </div>
+    <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.875rem;">
+      <div>
+        <span style="color: #6c757d; font-weight: 500;">Restaurant (Y14):</span>
+        <span id="restaurant-variance-display" style="font-weight: 600; margin-left: 0.5rem;">$0.00</span>
+      </div>
+      <div>
+        <span style="color: #6c757d; font-weight: 500;">Réception (Q25):</span>
+        <span id="reception-variance-display" style="font-weight: 600; margin-left: 0.5rem;">$0.00</span>
+      </div>
+    </div>
+    <div id="master-balance-message" style="
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    ">
+      En attente de données...
+    </div>
+  </div>
+
+  <!-- SECTION 1: RESTAURANT/BAR/BANQUET -->
+  <h5 style="margin-top:2rem; margin-bottom:1rem; font-weight:600; color:var(--text);">Section 1: Restaurant/Bar/Banquet</h5>
+
+  <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+    <table id="transelect-restaurant-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 2400px;">
+      <thead>
+        <tr>
+          <th class="excel-header excel-row-header"></th>
+          <th class="excel-header">TYPE</th>
+          <!-- Terminaux (20 colonnes) -->
+          <th class="excel-header">BAR<br>B</th>
+          <th class="excel-header">BAR<br>C</th>
+          <th class="excel-header">BAR<br>D</th>
+          <th class="excel-header">SPESA<br>E</th>
+          <th class="excel-header">ROOM<br>F</th>
+          <th class="excel-header">EXTRA<br>G</th>
+          <th class="excel-header">EXTRA<br>H</th>
+          <th class="excel-header">EXTRA<br>I</th>
+          <th class="excel-header">Banquet<br>J</th>
+          <th class="excel-header">Banquet<br>K</th>
+          <th class="excel-header">Banquet<br>L</th>
+          <th class="excel-header">Banquet<br>M</th>
+          <th class="excel-header">Banquet<br>N</th>
+          <th class="excel-header">Banquet<br>O</th>
+          <th class="excel-header">Banquet<br>P</th>
+          <th class="excel-header">Banquet<br>Q</th>
+          <th class="excel-header">Banquet<br>R</th>
+          <th class="excel-header">Banquet<br>S</th>
+          <th class="excel-header">Banquet<br>T</th>
+          <th class="excel-header">Banquet<br>U</th>
+          <!-- Colonnes de calcul -->
+          <th class="excel-header">TOTAL 1<br>V</th>
+          <th class="excel-header">TOTAL 2<br>W</th>
+          <th class="excel-header">POSITOUCH<br>X</th>
+          <th class="excel-header" style="background:#fff3cd;">VARIANCE<br>Y</th>
+          <th class="excel-header">ESCOMPTE%<br>Z</th>
+          <th class="excel-header">$<br>AA</th>
+          <th class="excel-header">NET<br>AB</th>
+        </tr>
+      </thead>
+      <tbody id="transelect-restaurant-body">
+        <!-- Row 8: Numéros de Terminaux -->
+        <tr>
+          <td class="excel-row-header">8</td>
+          <td class="excel-label"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="B8" value="701" readonly style="background:#f5f5f5;"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="C8" value="702" readonly style="background:#f5f5f5;"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="D8" value="703" readonly style="background:#f5f5f5;"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="E8" value="704" readonly style="background:#f5f5f5;"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="F8" value="705" readonly style="background:#f5f5f5;"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="G8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="H8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="I8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="J8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="K8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="L8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="M8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="N8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="O8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="P8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="Q8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="R8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="S8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="T8" placeholder="Terminal"></td>
+          <td class="excel-cell"><input type="text" class="excel-input" data-cell="U8" placeholder="Terminal"></td>
+          <td class="excel-cell" colspan="7"></td>
+        </tr>
+
+        <!-- Row 9: DÉBIT -->
+        <tr data-card-type="debit" data-row="9">
+          <td class="excel-row-header">9</td>
+          <td class="excel-label">DÉBIT</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="B9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="C9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="D9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="E9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="G9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="H9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="I9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="J9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="K9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="L9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="M9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="N9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="O9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="P9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="Q9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="R9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="S9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="T9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="U9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total1" data-cell="V9" data-row="9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total2" data-cell="W9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-positouch" data-cell="X9" data-row="9" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-variance" data-cell="Y9" data-row="9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-pct" data-cell="Z9" data-row="9" value="0" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-amt" data-cell="AA9" data-row="9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-net" data-cell="AB9" data-row="9" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+        </tr>
+
+        <!-- Row 10: VISA -->
+        <tr data-card-type="visa" data-row="10">
+          <td class="excel-row-header">10</td>
+          <td class="excel-label">VISA</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="B10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="C10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="D10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="E10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="F10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="G10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="H10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="I10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="J10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="K10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="L10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="M10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="N10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="O10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="P10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="Q10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="R10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="S10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="T10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="U10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total1" data-cell="V10" data-row="10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total2" data-cell="W10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-positouch" data-cell="X10" data-row="10" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-variance" data-cell="Y10" data-row="10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-pct" data-cell="Z10" data-row="10" value="0.02" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-amt" data-cell="AA10" data-row="10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-net" data-cell="AB10" data-row="10" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+        </tr>
+
+        <!-- Row 11: MASTER -->
+        <tr data-card-type="master" data-row="11">
+          <td class="excel-row-header">11</td>
+          <td class="excel-label">MASTER</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="B11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="C11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="D11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="E11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="G11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="H11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="I11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="J11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="K11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="L11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="M11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="N11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="O11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="P11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="Q11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="R11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="S11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="T11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="U11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total1" data-cell="V11" data-row="11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total2" data-cell="W11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-positouch" data-cell="X11" data-row="11" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-variance" data-cell="Y11" data-row="11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-pct" data-cell="Z11" data-row="11" value="0.01" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-amt" data-cell="AA11" data-row="11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-net" data-cell="AB11" data-row="11" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+        </tr>
+
+        <!-- Row 12: DISCOVER -->
+        <tr data-card-type="discover" data-row="12">
+          <td class="excel-row-header">12</td>
+          <td class="excel-label">DISCOVER</td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="G12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="H12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="I12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="J12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="K12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="L12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="M12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="N12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="O12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="P12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="Q12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="R12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="S12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="T12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="U12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total1" data-cell="V12" data-row="12" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total2" data-cell="W12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-positouch" data-cell="X12" data-row="12" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-variance" data-cell="Y12" data-row="12" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-pct" data-cell="Z12" data-row="12" value="0.03" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-amt" data-cell="AA12" data-row="12" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-net" data-cell="AB12" data-row="12" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+        </tr>
+
+        <!-- Row 13: AMEX -->
+        <tr data-card-type="amex" data-row="13">
+          <td class="excel-row-header">13</td>
+          <td class="excel-label">AMEX</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="B13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="C13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="D13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="E13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="G13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="H13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="I13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="J13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="K13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="L13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="M13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="N13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="O13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="P13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="Q13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="R13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="S13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="T13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-terminal" data-cell="U13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total1" data-cell="V13" data-row="13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-total2" data-cell="W13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-positouch" data-cell="X13" data-row="13" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-variance" data-cell="Y13" data-row="13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-pct" data-cell="Z13" data-row="13" value="0.03" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-escompte-amt" data-cell="AA13" data-row="13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input transelect-net" data-cell="AB13" data-row="13" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+        </tr>
+
+        <!-- Row 14: TOTAL -->
+        <tr style="font-weight:600; background:#f8f9fa;">
+          <td class="excel-row-header">14</td>
+          <td class="excel-label">TOTAL</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="E14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="F14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="G14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="H14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="J14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="K14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="L14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="M14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="N14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="O14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="R14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="U14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="V14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="W14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Y14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AA14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="AB14" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- SECTION 2: RÉCEPTION/CHAMBRES -->
+  <h5 style="margin-top:2rem; margin-bottom:1rem; font-weight:600; color:var(--text);">Section 2: Réception/Chambres</h5>
+
+  <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+    <table id="transelect-reception-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 1200px;">
+      <thead>
+        <tr>
+          <th class="excel-header excel-row-header"></th>
+          <th class="excel-header">TYPE</th>
+          <th class="excel-header">FreedomPay<br>B</th>
+          <th class="excel-header">Terminal 8<br>C</th>
+          <th class="excel-header">Terminal K053<br>D</th>
+          <th class="excel-header">TOTAL<br>I</th>
+          <th class="excel-header">Daily Rev<br>P</th>
+          <th class="excel-header" style="background:#fff3cd;">VARIANCE<br>Q</th>
+          <th class="excel-header">ESCOMPTE%<br>R</th>
+          <th class="excel-header">$<br>S</th>
+          <th class="excel-header">NET GEAC<br>T</th>
+          <th class="excel-header" style="background:#fff3cd;">MASTER BAL<br>X</th>
+        </tr>
+      </thead>
+      <tbody id="transelect-reception-body">
+        <!-- Row 20: DÉBIT -->
+        <tr data-card-type="debit" data-row="20">
+          <td class="excel-row-header">20</td>
+          <td class="excel-label">DÉBIT</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="B20" data-row="20" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="C20" data-row="20" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="D20" data-row="20" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-total" data-cell="I20" data-row="20" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-daily-rev" data-cell="P20" data-row="20" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-variance" data-cell="Q20" data-row="20" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-pct" data-cell="R20" data-row="20" value="0" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-amt" data-cell="S20" data-row="20" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-net" data-cell="T20" data-row="20" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-master-balance" data-cell="X20" data-row="20" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+
+        <!-- Row 21: VISA -->
+        <tr data-card-type="visa" data-row="21">
+          <td class="excel-row-header">21</td>
+          <td class="excel-label">VISA</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="B21" data-row="21" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="C21" data-row="21" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="D21" data-row="21" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-total" data-cell="I21" data-row="21" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-daily-rev" data-cell="P21" data-row="21" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-variance" data-cell="Q21" data-row="21" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-pct" data-cell="R21" data-row="21" value="0.02" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-amt" data-cell="S21" data-row="21" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-net" data-cell="T21" data-row="21" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-col-x" data-cell="X21" data-row="21" placeholder="0.00"></td>
+        </tr>
+
+        <!-- Row 22: MASTER -->
+        <tr data-card-type="master" data-row="22">
+          <td class="excel-row-header">22</td>
+          <td class="excel-label">MASTER</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="B22" data-row="22" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="C22" data-row="22" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="D22" data-row="22" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-total" data-cell="I22" data-row="22" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-daily-rev" data-cell="P22" data-row="22" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-variance" data-cell="Q22" data-row="22" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-pct" data-cell="R22" data-row="22" value="0.01" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-amt" data-cell="S22" data-row="22" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-net" data-cell="T22" data-row="22" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-col-x" data-cell="X22" data-row="22" placeholder="0.00"></td>
+        </tr>
+
+        <!-- Row 23: DISCOVER (Note: fichier RJ n'a pas de row 23, skip to 24 AMEX) -->
+
+        <!-- Row 24: AMEX -->
+        <tr data-card-type="amex" data-row="24">
+          <td class="excel-row-header">24</td>
+          <td class="excel-label">AMEX</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="B24" data-row="24" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="C24" data-row="24" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-terminal" data-cell="D24" data-row="24" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-total" data-cell="I24" data-row="24" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-daily-rev" data-cell="P24" data-row="24" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-variance" data-cell="Q24" data-row="24" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-pct" data-cell="R24" data-row="24" value="0.03" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-escompte-amt" data-cell="S24" data-row="24" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-net" data-cell="T24" data-row="24" placeholder="0.00" readonly style="background:#f0f0f0;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input reception-col-x" data-cell="X24" data-row="24" placeholder="0.00"></td>
+        </tr>
+
+        <!-- Row 25: TOTAL -->
+        <tr style="font-weight:600; background:#f8f9fa;">
+          <td class="excel-row-header">25</td>
+          <td class="excel-label">TOTAL</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="B25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="C25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="D25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="I25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="P25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="Q25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="S25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="T25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input" data-cell="X25" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <button class="rj-btn" onclick="saveTranselect(event)">
+      <i data-feather="save"></i> Enregistrer Transelect
+    </button>
+  </div>
+</div>
+
+<!-- Live Preview Section -->
+<div class="excel-preview-container" style="margin-top: 2rem;">
+  <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+    <i data-feather="eye"></i> Aperçu Excel - Transelect
+  </h4>
+  <div id="transelect-preview-wrapper" style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+    <table id="transelect-preview-table" class="excel-preview" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+      <tr><td style="text-align: center; padding: 2rem; color: #999;">Chargement de l'aperçu...</td></tr>
+    </table>
+  </div>
+</div>
+  </div>
+</div>
+
+<script src="/static/js/audit/transelect_calc.js"></script>
+{% endif %}

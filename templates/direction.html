@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% block title %}Direction — Rapports quotidiens{% endblock %}
+{% block content %}
+<style>
+:root {
+  --dir-bg: #0f1117; --dir-card: #1a1d27; --dir-border: #2a2d3a;
+  --dir-accent: #6366f1; --dir-accent2: #818cf8;
+  --dir-green: #34d399; --dir-yellow: #fbbf24; --dir-red: #f87171;
+  --dir-text: #e2e8f0; --dir-muted: #94a3b8; --dir-orange: #fb923c;
+}
+.dir-page { max-width: 1200px; margin: 0 auto; padding: 20px; color: var(--dir-text); }
+.dir-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.dir-header h1 { font-size: 1.5rem; margin: 0; }
+.dir-header .date-picker { display: flex; gap: 8px; align-items: center; }
+.dir-header input[type="date"] {
+  background: var(--dir-card); border: 1px solid var(--dir-border); border-radius: 8px;
+  color: var(--dir-text); padding: 8px 14px; font-size: 0.9rem; cursor: pointer;
+}
+.dir-header input[type="date"]:focus { outline: none; border-color: var(--dir-accent); }
+.dir-tabs { display: flex; gap: 2px; margin-bottom: 0; background: var(--dir-card); padding: 6px 6px 0; border-radius: 10px 10px 0 0; border: 1px solid var(--dir-border); border-bottom: none; overflow-x: auto; }
+.dir-tab { padding: 10px 18px; background: transparent; border: none; color: var(--dir-muted); cursor: pointer; border-radius: 8px 8px 0 0; font-size: 0.85rem; white-space: nowrap; transition: all 0.2s; }
+.dir-tab:hover { color: var(--dir-text); background: rgba(99,102,241,0.1); }
+.dir-tab.active { color: var(--dir-accent2); background: var(--dir-bg); font-weight: 600; border-bottom: 2px solid var(--dir-accent); }
+.dir-content { display: none; background: var(--dir-card); border: 1px solid var(--dir-border); border-top: none; border-radius: 0 0  10px 10px; padding: 20px; margin-bottom: 24px; }
+.dir-content.active { display: block; }
+.dir-loading { text-align: center; padding: 60px; color: var(--dir-muted); }
+.dir-loading .spinner { display: inline-block; width: 32px; height: 32px; border: 3px solid var(--dir-border); border-top: 3px solid var(--dir-accent); border-radius: 50%; animation: dirspin 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes dirspin { to { transform: rotate(360deg); } }
+
+/* Report tables */
+.rpt-title { font-size: 1.1rem; font-weight: 700; text-align: center; margin-bottom: 4px; color: var(--dir-accent2); }
+.rpt-subtitle { text-align: center; color: var(--dir-muted); font-size: 0.82rem; margin-bottom: 16px; }
+.rpt-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 16px; }
+.rpt-table th { background: rgba(99,102,241,0.12); color: var(--dir-accent2); text-align: right; padding: 6px 10px; border-bottom: 2px solid var(--dir-border); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.3px; }
+.rpt-table th:first-child { text-align: left; }
+.rpt-table td { padding: 5px 10px; border-bottom: 1px solid rgba(42,45,58,0.5); text-align: right; font-variant-numeric: tabular-nums; }
+.rpt-table td:first-child { text-align: left; font-weight: 500; }
+.rpt-table tr:hover td { background: rgba(99,102,241,0.04); }
+.rpt-table tr.section-header td { font-weight: 700; color: var(--dir-accent2); background: rgba(99,102,241,0.06); border-top: 2px solid var(--dir-border); padding-top: 10px; }
+.rpt-table tr.total-row td { font-weight: 700; border-top: 2px solid var(--dir-accent); border-bottom: 2px solid var(--dir-accent); color: var(--dir-text); }
+.rpt-table tr.subtotal-row td { font-weight: 600; border-top: 1px solid var(--dir-border); color: var(--dir-accent2); }
+.rpt-table tr.grand-total td { font-weight: 700; border-top: 3px double var(--dir-accent); font-size: 0.9rem; color: var(--dir-green); padding: 8px 10px; }
+.rpt-table .indent { padding-left: 24px; }
+.rpt-table .indent2 { padding-left: 40px; }
+.neg { color: var(--dir-red); }
+.pos { color: var(--dir-green); }
+.pct { color: var(--dir-muted); font-size: 0.78rem; }
+
+/* P&L sidebar stats */
+.pl-layout { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+.pl-stats { background: rgba(99,102,241,0.06); border-radius: 10px; padding: 16px; }
+.pl-stats h3 { font-size: 0.85rem; color: var(--dir-accent2); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.pl-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(42,45,58,0.4); font-size: 0.82rem; }
+.pl-stat .label { color: var(--dir-muted); }
+.pl-stat .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* No data state */
+.no-data { text-align: center; padding: 80px 20px; }
+.no-data h2 { font-size: 1.3rem; margin-bottom: 8px; }
+.no-data p { color: var(--dir-muted); }
+
+/* Print styles */
+@media print {
+  .dir-tabs, .dir-header .date-picker, nav, .sidebar { display: none !important; }
+  .dir-content { display: block !important; border: none; padding: 0; }
+  .rpt-table { font-size: 9pt; }
+  .dir-page { max-width: 100%; padding: 0; }
+  body { background: white; color: black; }
+  .rpt-table th { background: #eee; color: #333; }
+  .rpt-table td { border-color: #ccc; }
+}
+@media (max-width: 768px) {
+  .pl-layout { grid-template-columns: 1fr; }
+  .rpt-table { font-size: 0.75rem; }
+  .rpt-table th, .rpt-table td { padding: 4px 6px; }
+}
+</style>
+
+<div class="dir-page">
+  <div class="dir-header">
+    <h1>📊 Rapports Direction</h1>
+    <div class="date-picker">
+      <select id="dir-date" onchange="loadReport(this.value)" style="background:var(--dir-card);border:1px solid var(--dir-border);border-radius:8px;color:var(--dir-text);padding:8px 14px;font-size:0.9rem;cursor:pointer;min-width:200px;">
+        <option value="">Chargement des dates...</option>
+      </select>
+      <button onclick="window.print()" style="background:var(--dir-card);border:1px solid var(--dir-border);color:var(--dir-muted);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:0.85rem;">Imprimer</button>
+    </div>
+  </div>
+
+  <div class="dir-tabs">
+    <button class="dir-tab active" onclick="switchDirTab('p1',this)">Sommaire Revenus</button>
+    <button class="dir-tab" onclick="switchDirTab('p2',this)">Heures & Employés</button>
+    <button class="dir-tab" onclick="switchDirTab('p3',this)">Analyse Détaillée</button>
+    <button class="dir-tab" onclick="switchDirTab('pl',this)">État Revenus & Dépenses</button>
+  </div>
+
+  <!-- Tab P1: Sommaire des Revenus -->
+  <div id="tab-p1" class="dir-content active">
+    <div class="dir-loading" id="loading-p1"><div class="spinner"></div><br>Chargement...</div>
+    <div id="content-p1" style="display:none;"></div>
+  </div>
+
+  <!-- Tab P2: Heures & Employés -->
+  <div id="tab-p2" class="dir-content">
+    <div class="dir-loading" id="loading-p2"><div class="spinner"></div><br>Chargement...</div>
+    <div id="content-p2" style="display:none;"></div>
+  </div>
+
+  <!-- Tab P3: Analyse Détaillée -->
+  <div id="tab-p3" class="dir-content">
+    <div class="dir-loading" id="loading-p3"><div class="spinner"></div><br>Chargement...</div>
+    <div id="content-p3" style="display:none;"></div>
+  </div>
+
+  <!-- Tab PL: État Revenus & Dépenses -->
+  <div id="tab-pl" class="dir-content">
+    <div class="dir-loading" id="loading-pl"><div class="spinner"></div><br>Chargement...</div>
+    <div id="content-pl" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmt = n => n == null ? '—' : n.toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtInt = n => n == null ? '—' : Math.round(n).toLocaleString('fr-CA');
+const fmtPct = n => n == null ? '—' : (n * 100).toFixed(1) + '%';
+const cls = n => n < 0 ? 'neg' : (n > 0 ? 'pos' : '');
+
+let DATA = null;
+
+function switchDirTab(id, btn) {
+  $$('.dir-content').forEach(c => c.classList.remove('active'));
+  $$('.dir-tab').forEach(t => t.classList.remove('active'));
+  $(`#tab-${id}`).classList.add('active');
+  btn.classList.add('active');
+}
+
+async function loadReport(dateStr) {
+  if (!dateStr) return;
+
+  // Show loaders
+  ['p1','p2','p3','pl'].forEach(id => {
+    $(`#loading-${id}`).style.display = '';
+    $(`#content-${id}`).style.display = 'none';
+  });
+
+  try {
+    const r = await fetch(`/api/direction/daily-report/${dateStr}`);
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      ['p1','p2','p3','pl'].forEach(id => {
+        $(`#loading-${id}`).innerHTML = `<div class="no-data"><h2>Aucune donnée</h2><p>${err.error || 'Pas de données pour cette date.'}</p></div>`;
+      });
+      return;
+    }
+    DATA = await r.json();
+    renderP1(DATA);
+    renderP2(DATA);
+    renderP3(DATA);
+    renderPL(DATA);
+  } catch(e) {
+    console.error(e);
+    ['p1','p2','p3','pl'].forEach(id => {
+      $(`#loading-${id}`).innerHTML = '<div class="no-data"><h2>Erreur</h2><p>Impossible de charger les données.</p></div>';
+    });
+  }
+}
+
+// ===================== P1: SOMMAIRE REVENUS =====================
+function renderP1(d) {
+  const p = d.rapp_p1;
+  const rv = p.revenus;
+  const mo = p.main_oeuvre;
+
+  let html = `<div class="rpt-title">SHERATON LAVAL</div>
+    <div class="rpt-subtitle">SOMMAIRE DES REVENUS — ${d.date} (Jour ${d.day})</div>`;
+
+  // Revenue table
+  html += `<table class="rpt-table">
+    <thead><tr><th></th><th>CE JOUR $</th><th>CE MOIS $</th><th>BUDGET JOUR</th><th>BUDGET MOIS</th></tr></thead><tbody>`;
+
+  const rvRows = [
+    ['Chambres Louées', rv.chambres_louees, true],
+    ['Taux Moyen', rv.taux_moyen],
+    ['Total Chambres', rv.total_chambres],
+    ['Location de salle', rv.location_salle],
+    ['Giotto', rv.giotto],
+    ['Piazza', rv.piazza],
+    ['Cupola', rv.cupola],
+    ['Banquets Hôtel', rv.banquets],
+    ['Banquets II (Audio Visuel)', rv.banquets_ii],
+  ];
+
+  rvRows.forEach(([label, vals, isInt]) => {
+    const f = isInt ? fmtInt : fmt;
+    html += `<tr><td>${label}</td><td>${f(vals.jour)}</td><td>${f(vals.mois)}</td>
+      <td>${f(vals.budget_jour)}</td><td>${f(vals.budget_mois)}</td></tr>`;
+  });
+
+  html += `<tr class="subtotal-row"><td>Total Restauration</td><td>${fmt(rv.total_restauration.jour)}</td>
+    <td>${fmt(rv.total_restauration.mois)}</td><td></td><td></td></tr>`;
+
+  [['Mini-Bar', rv.minibar], ['Téléphone', rv.telephone], ['Autres Revenus', rv.autres_revenus]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.jour)}</td><td>${fmt(v.mois)}</td><td></td><td></td></tr>`;
+  });
+
+  html += `<tr class="grand-total"><td>RECETTES TOTAL</td><td>${fmt(rv.recettes_total.jour)}</td>
+    <td>${fmt(rv.recettes_total.mois)}</td><td></td><td></td></tr>`;
+  html += `<tr><td>Recettes Nourriture</td><td>${fmt(rv.recettes_nourriture.jour)}</td><td>${fmt(rv.recettes_nourriture.mois)}</td><td></td><td></td></tr>`;
+  html += `<tr><td>Recettes Boisson</td><td>${fmt(rv.recettes_boisson.jour)}</td><td>${fmt(rv.recettes_boisson.mois)}</td><td></td><td></td></tr>`;
+  html += '</tbody></table>';
+
+  // Labor summary
+  html += `<div class="rpt-title" style="margin-top:24px;">SOMMAIRE COÛT DE LA MAIN D'ŒUVRE</div>`;
+  html += `<table class="rpt-table"><thead><tr><th>DÉPARTEMENT</th><th>CE MOIS $</th><th>% MOIS</th><th>BUDGET MOIS</th></tr></thead><tbody>`;
+
+  const heb = mo.hebergement;
+  [['Réception', heb.reception], ['Femme de chambre', heb.femme_chambre],
+   ['Équipier', heb.equipier], ['Gouvernante', heb.gouvernante], ['Buanderie', heb.buanderie]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.mois)}</td><td class="pct">${fmtPct(v.pct_mois)}</td><td>${fmt(v.budget_mois)}</td></tr>`;
+  });
+  html += `<tr class="subtotal-row"><td>TOTAL HÉBERGEMENT</td><td>${fmt(mo.total_hebergement.mois)}</td><td></td><td></td></tr>`;
+
+  const rest = mo.restauration;
+  [['Giotto', rest.giotto], ['Piazza', rest.piazza], ['Cupola', rest.cupola],
+   ['Banquets', rest.banquets], ['Banquets II', rest.banquets_ii], ['Cuisine', rest.cuisine]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.mois)}</td><td class="pct">${fmtPct(v.pct_mois)}</td><td>${fmt(v.budget_mois)}</td></tr>`;
+  });
+  html += `<tr class="subtotal-row"><td>TOTAL RESTAURATION</td><td>${fmt(mo.total_restauration.mois)}</td><td></td><td></td></tr>`;
+
+  const aut = mo.autres;
+  [['Adm. Générale', aut.adm_generale], ['Marketing & Vente', aut.marketing], ['Entretien', aut.entretien]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.mois)}</td><td class="pct">${fmtPct(v.pct_mois)}</td><td>${fmt(v.budget_mois)}</td></tr>`;
+  });
+  html += `<tr class="grand-total"><td>TOTAL SALAIRES</td><td>${fmt(mo.total_salaires.mois)}</td><td></td><td></td></tr>`;
+  html += '</tbody></table>';
+
+  $('#content-p1').innerHTML = html;
+  $('#loading-p1').style.display = 'none';
+  $('#content-p1').style.display = '';
+}
+
+// ===================== P2: HEURES & EMPLOYÉS =====================
+function renderP2(d) {
+  const p = d.rapp_p2;
+  let html = `<div class="rpt-title">SHERATON LAVAL</div>
+    <div class="rpt-subtitle">SOMMAIRE HEURES & EMPLOYÉS — ${d.date} (${d.days_in_period} jours)</div>`;
+
+  html += `<table class="rpt-table"><thead><tr><th>DÉPARTEMENT</th><th>HEURES CE MOIS</th><th>EMPLOYÉS/JOUR</th></tr></thead><tbody>`;
+
+  const heb = p.hebergement;
+  [['Réception', heb.reception], ['Femme de chambre', heb.femme_chambre],
+   ['Équipier', heb.equipier], ['Gouvernante', heb.gouvernante], ['Buanderie', heb.buanderie]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.heures_mois)}</td><td>${fmt(v.employes_mois)}</td></tr>`;
+  });
+  const totH = Object.values(heb).reduce((s, v) => s + v.heures_mois, 0);
+  const totE = Object.values(heb).reduce((s, v) => s + v.employes_mois, 0);
+  html += `<tr class="subtotal-row"><td>TOTAL HÉBERGEMENT</td><td>${fmt(totH)}</td><td>${fmt(totE)}</td></tr>`;
+
+  const rest = p.restauration;
+  [['Piazza', rest.piazza], ['Cupola', rest.cupola], ['Banquets', rest.banquets],
+   ['Banquets II', rest.banquets_ii], ['Cuisine', rest.cuisine]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.heures_mois)}</td><td>${fmt(v.employes_mois)}</td></tr>`;
+  });
+  const totHR = Object.values(rest).reduce((s, v) => s + v.heures_mois, 0);
+  const totER = Object.values(rest).reduce((s, v) => s + v.employes_mois, 0);
+  html += `<tr class="subtotal-row"><td>TOTAL RESTAURATION</td><td>${fmt(totHR)}</td><td>${fmt(totER)}</td></tr>`;
+
+  const aut = p.autres;
+  [['Adm. Générale', aut.adm_generale], ['Marketing & Vente', aut.marketing],
+   ['Entretien & Réparation', aut.entretien]].forEach(([l, v]) => {
+    html += `<tr><td>${l}</td><td>${fmt(v.heures_mois)}</td><td>${fmt(v.employes_mois)}</td></tr>`;
+  });
+  const grandH = totH + totHR + Object.values(aut).reduce((s, v) => s + v.heures_mois, 0);
+  const grandE = totE + totER + Object.values(aut).reduce((s, v) => s + v.employes_mois, 0);
+  html += `<tr class="grand-total"><td>TOTAL</td><td>${fmt(grandH)}</td><td>${fmt(grandE)}</td></tr>`;
+  html += '</tbody></table>';
+
+  // Femme de chambre stats
+  const fcs = p.femme_chambre_stats;
+  html += `<table class="rpt-table" style="max-width:500px;margin-top:20px;">
+    <thead><tr><th>FONCTION</th><th>EMPLOYÉS/JOUR</th><th>MOY. CHAMBRE/EMP.</th></tr></thead>
+    <tbody><tr><td>FEMME DE CHAMBRE</td><td>${fmt(fcs.employes_mois)}</td><td>${fmt(fcs.moy_chambre_emp)}</td></tr></tbody></table>`;
+
+  $('#content-p2').innerHTML = html;
+  $('#loading-p2').style.display = 'none';
+  $('#content-p2').style.display = '';
+}
+
+// ===================== P3: ANALYSE DÉTAILLÉE =====================
+function renderP3(d) {
+  const p = d.rapp_p3;
+  let html = `<div class="rpt-title">SHERATON LAVAL</div>
+    <div class="rpt-subtitle">ANALYSE DÉTAILLÉE — ${d.date}</div>`;
+
+  html += `<table class="rpt-table"><thead><tr>
+    <th></th><th colspan="2">JOURNALIER</th><th colspan="4">MENSUEL À CE JOUR</th><th colspan="2">BUDGET</th><th colspan="2">ÉCART</th>
+    </tr><tr><th></th><th>Revenus</th><th>%</th><th>Revenus</th><th>Heures</th><th>Salaires</th><th>%</th><th>Revenus</th><th>Salaires</th><th>Salaires</th><th>%</th>
+    </tr></thead><tbody>`;
+
+  const sections = [
+    ['CHAMBRES', p.chambres], ['NOURRITURE', p.nourriture],
+    ['PIAZZA', p.piazza], ['BANQUET NOURRITURE', p.banquet],
+    ['BOISSON', p.boisson], ['LOCATION SALLE', p.location],
+    ['BUANDERIE', p.buanderie], ['ENTRETIEN', p.entretien],
+  ];
+
+  sections.forEach(([label, s]) => {
+    const rv = s.revenus;
+    const ecartSal = s.ecart_salaires;
+    html += `<tr class="section-header"><td>${label}</td>
+      <td>${fmt(rv.jour)}</td><td></td>
+      <td>${fmt(rv.mois)}</td><td>${fmt(s.heures_mois)}</td>
+      <td>${fmt(s.salaires_mois)}</td><td class="pct">${fmtPct(s.pct_mois)}</td>
+      <td>${fmt(rv.budget)}</td><td>${fmt(s.budget_salaires)}</td>
+      <td class="${cls(ecartSal)}">${fmt(ecartSal)}</td>
+      <td class="pct ${cls(ecartSal)}">${s.budget_salaires ? fmtPct(ecartSal / s.budget_salaires) : '—'}</td>
+    </tr>`;
+  });
+
+  const totRev = p.total.revenus;
+  html += `<tr class="grand-total"><td>TOTAL HÔTEL</td>
+    <td>${fmt(totRev.jour)}</td><td></td>
+    <td>${fmt(totRev.mois)}</td><td></td><td></td><td></td>
+    <td>${fmt(totRev.budget)}</td><td></td><td></td><td></td></tr>`;
+  html += '</tbody></table>';
+
+  $('#content-p3').innerHTML = html;
+  $('#loading-p3').style.display = 'none';
+  $('#content-p3').style.display = '';
+}
+
+// ===================== PL: ÉTAT REVENUS & DÉPENSES =====================
+function renderPL(d) {
+  const e = d.etat_rev;
+  let html = `<div class="rpt-title">SHERATON LAVAL</div>
+    <div class="rpt-subtitle">ÉTAT DES REVENUS ET DÉPENSES — ${d.date}</div>`;
+
+  html += '<div class="pl-layout"><div>';
+
+  // Main P&L table
+  html += `<table class="rpt-table"><thead><tr><th></th><th>% BUDGET</th><th>JOUR $</th><th>MOIS $</th><th>% MOIS</th></tr></thead><tbody>`;
+
+  // CHAMBRES
+  const ch = e.chambres;
+  html += `<tr class="section-header"><td>CHAMBRES</td><td></td><td></td><td></td><td></td></tr>`;
+  html += `<tr><td class="indent">Chambres Louées</td><td class="pct">${fmtPct(ch.occ_jour)}</td><td>${fmtInt(ch.louees_jour)}</td><td></td><td></td></tr>`;
+  html += `<tr><td class="indent">Ventes Chambres</td><td></td><td>${fmt(ch.ventes_jour)}</td><td>${fmt(ch.ventes_mois)}</td><td></td></tr>`;
+  html += `<tr><td class="indent">Salaires Chambres</td><td></td><td></td><td>${fmt(ch.salaires_mois)}</td><td class="pct">${fmtPct(ch.pct_sal)}</td></tr>`;
+  html += `<tr><td class="indent">Bénéfices Marginaux</td><td class="pct">${fmtPct(ch.pct_ben)}</td><td></td><td>${fmt(ch.ben_marg_mois)}</td><td></td></tr>`;
+  html += `<tr><td class="indent">Coût Variable Chambres</td><td class="pct">${fmtPct(ch.pct_var)}</td><td>${fmt(ch.cost_var_jour)}</td><td>${fmt(ch.cost_var_mois)}</td><td></td></tr>`;
+  html += `<tr class="subtotal-row"><td class="indent">Marge</td><td></td><td>${fmt(ch.marge_jour)}</td><td>${fmt(ch.marge_mois)}</td><td></td></tr>`;
+
+  // RESTAURATION
+  const re = e.restauration;
+  html += `<tr class="section-header"><td>RESTAURATION</td><td></td><td></td><td></td><td></td></tr>`;
+  html += `<tr><td class="indent">Ventes Rest. & Minibar</td><td class="pct">${fmtPct(re.pct_ventes)}</td><td>${fmt(re.ventes_jour)}</td><td>${fmt(re.ventes_mois)}</td><td></td></tr>`;
+  html += `<tr><td class="indent">Salaires Restauration</td><td></td><td></td><td>${fmt(re.salaires_mois)}</td><td class="pct">${fmtPct(re.pct_sal)}</td></tr>`;
+  html += `<tr><td class="indent">Bénéfices Marginaux</td><td></td><td></td><td>${fmt(re.ben_marg_mois)}</td><td></td></tr>`;
+  html += `<tr><td class="indent">Coût Variable Rest.</td><td class="pct">${fmtPct(re.pct_var)}</td><td>${fmt(re.cost_var_jour)}</td><td>${fmt(re.cost_var_mois)}</td><td></td></tr>`;
+  html += `<tr><td class="indent">Autres Coûts Rest.</td><td class="pct">${fmtPct(re.pct_autres)}</td><td>${fmt(re.cost_autres_jour)}</td><td>${fmt(re.cost_autres_mois)}</td><td></td></tr>`;
+  html += `<tr class="subtotal-row"><td class="indent">Marge Restauration</td><td></td><td>${fmt(re.marge_jour)}</td><td>${fmt(re.marge_mois)}</td><td></td></tr>`;
+
+  // AUTRES
+  const au = e.autres;
+  html += `<tr class="section-header"><td>AUTRES</td><td></td><td></td><td></td><td></td></tr>`;
+  html += `<tr><td class="indent">Autres Revenus</td><td></td><td>${fmt(au.revenus_jour)}</td><td>${fmt(au.revenus_mois)}</td><td></td></tr>`;
+
+  // SALAIRES GLOBAUX
+  const sal = e.salaires;
+  html += `<tr class="section-header"><td>SALAIRES</td><td></td><td></td><td></td><td></td></tr>`;
+  html += `<tr><td class="indent">Autres Salaires</td><td></td><td></td><td>${fmt(sal.autres_sal_mois)}</td><td></td></tr>`;
+  html += `<tr><td class="indent">Bénéfices Marginaux</td><td></td><td></td><td>${fmt(sal.ben_marg_mois)}</td><td></td></tr>`;
+  html += `<tr class="subtotal-row"><td>TOTAL SALAIRES & CHARGES</td><td></td><td></td><td>${fmt(sal.total_sal_charges_mois)}</td><td></td></tr>`;
+
+  // PROFIT AVANT COÛTS FIXES
+  const pr = e.profit;
+  html += `<tr class="total-row"><td>PROFIT AVANT COÛTS FIXES</td><td></td>
+    <td>${fmt(pr.avant_fixes_jour)}</td><td>${fmt(pr.avant_fixes_mois)}</td>
+    <td class="pct">${fmtPct(pr.pct_fixes_mois)}</td></tr>`;
+
+  // COÛTS FIXES
+  const fc = e.couts_fixes;
+  html += `<tr class="section-header"><td>COÛTS FIXES</td><td></td><td></td><td></td><td></td></tr>`;
+  [['Marketing', fc.marketing], ['Administration', fc.admin], ['Entretien', fc.entretien],
+   ['Gaz & Électricité', fc.energie], ['Taxes & Assurances', fc.taxes],
+   ['Amortissement', fc.amortissement], ['Intérêts', fc.interet]].forEach(([l, v]) => {
+    html += `<tr><td class="indent">${l}</td><td></td><td></td><td>${fmt(v)}</td><td></td></tr>`;
+  });
+  html += `<tr class="subtotal-row"><td>Total Coûts Fixes</td><td></td><td></td><td>${fmt(fc.total)}</td><td></td></tr>`;
+
+  // RÉSULTAT
+  const res = e.resultat;
+  html += `<tr class="total-row"><td>PROFIT AVANT LOYER</td><td></td><td></td>
+    <td class="${cls(res.profit_avant_loyer)}">${fmt(res.profit_avant_loyer)}</td>
+    <td class="pct">${fmtPct(res.pct_avant_loyer)}</td></tr>`;
+  html += `<tr><td class="indent">Loyer</td><td></td><td></td><td>${fmt(fc.loyer)}</td><td></td></tr>`;
+  html += `<tr class="grand-total"><td>BÉNÉFICE (PERTE)</td><td></td><td></td>
+    <td class="${cls(res.benefice_net)}">${fmt(res.benefice_net)}</td>
+    <td class="pct">${fmtPct(res.pct_net)}</td></tr>`;
+
+  html += '</tbody></table></div>';
+
+  // Sidebar stats
+  const st = e.stats;
+  html += `<div class="pl-stats">
+    <h3>Statistiques</h3>
+    <div class="pl-stat"><span class="label">Ventes Jour</span><span class="val">${fmt(st.ventes_jour)}</span></div>
+    <div class="pl-stat"><span class="label">Ventes Mois</span><span class="val">${fmt(st.ventes_mois)}</span></div>
+    <div class="pl-stat"><span class="label">Salaires/Jour</span><span class="val">${fmt(st.sal_jour)}</span></div>
+    <div class="pl-stat"><span class="label">% Sal./Rev.</span><span class="val">${fmtPct(st.sal_pct)}</span></div>
+    <hr style="border-color:var(--dir-border);margin:8px 0;">
+    <div class="pl-stat"><span class="label">Tarif Moyen (Jour)</span><span class="val">${fmt(st.tarif_moyen_jour)}</span></div>
+    <div class="pl-stat"><span class="label">Tarif Moyen (Mois)</span><span class="val">${fmt(st.tarif_moyen_mois)}</span></div>
+    <div class="pl-stat"><span class="label">Nbre Clients</span><span class="val">${fmtInt(st.nb_clients)}</span></div>
+    <div class="pl-stat"><span class="label">Moy/Client</span><span class="val">${fmt(st.moy_client)}</span></div>
+    <hr style="border-color:var(--dir-border);margin:8px 0;">
+    <div class="pl-stat"><span class="label">REVCD</span><span class="val">${fmt(st.revcd)}</span></div>
+    <div class="pl-stat"><span class="label">REVPAR</span><span class="val">${fmt(st.revpar)}</span></div>
+    <hr style="border-color:var(--dir-border);margin:8px 0;">
+    <h3>Occupation</h3>
+    <div class="pl-stat"><span class="label">Disponible</span><span class="val">${fmtInt(st.occ_disponible)}</span></div>
+    <div class="pl-stat"><span class="label">Simple</span><span class="val">${fmtInt(st.occ_simple)} (${fmtPct(st.pct_simple)})</span></div>
+    <div class="pl-stat"><span class="label">Double</span><span class="val">${fmtInt(st.occ_double)}</span></div>
+    <div class="pl-stat"><span class="label">Suite</span><span class="val">${fmtInt(st.occ_suite)} (${fmtPct(st.pct_suite)})</span></div>
+  </div>`;
+
+  html += '</div>';
+
+  $('#content-pl').innerHTML = html;
+  $('#loading-pl').style.display = 'none';
+  $('#content-pl').style.display = '';
+}
+
+// Init: load available dates and populate the select
+async function initDirection() {
+  const sel = $('#dir-date');
+  try {
+    const r = await fetch('/api/direction/dates');
+    const d = await r.json();
+    if (d.dates && d.dates.length > 0) {
+      sel.innerHTML = '';
+      const months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+      const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+      d.dates.forEach((ds, i) => {
+        const dt = new Date(ds + 'T12:00:00');
+        const label = `${jours[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+        const opt = document.createElement('option');
+        opt.value = ds;
+        opt.textContent = label;
+        sel.appendChild(opt);
+      });
+      loadReport(d.dates[0]);
+    } else {
+      sel.innerHTML = '<option value="">Aucune donnée disponible</option>';
+      ['p1','p2','p3','pl'].forEach(id => {
+        $(`#loading-${id}`).innerHTML = '<div class="no-data"><h2>Aucune donnée</h2><p>Aucune session RJ trouvée. Complétez d\'abord des audits nocturnes.</p></div>';
+      });
+    }
+  } catch(e) {
+    console.error('Init error:', e);
+    sel.innerHTML = '<option value="">Erreur de chargement</option>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', initDirection);
+</script>
+{% endblock %}

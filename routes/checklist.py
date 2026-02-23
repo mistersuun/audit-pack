@@ -12,7 +12,7 @@ from flask import (
     send_file
 )
 from functools import wraps
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from markupsafe import escape
 from database import db, Task, Shift, TaskCompletion
 
@@ -22,22 +22,29 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('authenticated'):
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth_v2.login'))
         return f(*args, **kwargs)
     return decorated_function
 
 @checklist_bp.route('/')
 @login_required
 def index():
-    # Always show role selection menu (Dashboard)
-    return render_template('select_role.html')
+    # Everyone lands on the smart dashboard
+    return redirect(url_for('dashboard.dashboard_page'))
 
 @checklist_bp.route('/checklist')
 @login_required
 def checklist_view():
-    if not session.get('user_role'):
-        return redirect(url_for('checklist.index'))
-    return render_template('checklist.html')
+    # Accept role from URL param and set in session
+    role_param = request.args.get('role')
+    if role_param in ('front', 'back'):
+        session['user_role'] = role_param
+        session.modified = True
+    elif not session.get('user_role'):
+        # No role set — default to front
+        session['user_role'] = 'front'
+        session.modified = True
+    return render_template('checklist.html', active_role=session.get('user_role', 'front'))
 
 @checklist_bp.route('/documentation')
 @login_required
@@ -138,184 +145,352 @@ def documentation_view(filename):
         download_url=url_for('checklist.documentation_file', filename=filename)
     )
 
+
 @checklist_bp.route('/faq')
 @login_required
 def faq():
-    faqs = [
-        {
-            "q": "Front – Mise en place (23h-00h) : que préparer ?",
-            "a": """
-<ol>
-  <li><strong>Séparateur daté :</strong> ouvrir le Word, changer la date du jour, imprimer, plier en deux, le garder à gauche (toutes les pièces comptables y vont).</li>
-  <li><strong>Entretien + météo :</strong> Word J+1..J+4, MétéoMédia (prévisions 7j) via Snipping Tool, remplacer l’image dans Word, imprimer en recto-verso.</li>
-  <li><strong>Feuille de tournée :</strong> Excel (date du jour), imprimer, signer, déposer à droite du comptoir (côté tabagie SPESA) pour l’équipe du matin.</li>
-  <li><strong>Pilotes UPS/FedEx/Cargojet :</strong> UPS plugin (sign-in sheet, date demain), Excel FedEx/Cargojet (chambres du cahier, noms Lightspeed pour Cargojet), imprimer, plier en 3, bac réceptionnistes.</li>
-  <li><strong>Clés banquets :</strong> cartable sous l’ordi de droite, Word “Clés Banquets” (affichage, salle, horaire, contact), imprimer, placer avec les feuilles pilotes.</li>
-</ol>
-""",
-            "tags": ["Front", "Setup", "Papier"]
-        },
-        {
-            "q": "Front – Pré-audit (00h-02h) : actions clés ?",
-            "a": """
-<ol>
-  <li><strong>Lancer Pre-Audit :</strong> Night Audit &gt; Run Pre-Audit uniquement quand Arrivals = 0. Récupérer les rapports imprimés.</li>
-  <li><strong>Solde “±1$” (Actual Departure) :</strong>
-    <ol>
-      <li>Ouvrir le folio, Modify &gt; Cashiering &gt; Post.</li>
-      <li>Si solde positif (noir) : Dept 40 / Sub 60.</li>
-      <li>Si solde négatif (rouge) : Dept 40 / Sub 10.</li>
-      <li>Ref = CLOSE, Note = 1, Add to List &gt; Post (solde = 0.00).</li>
-      <li>Agrafer le rapport Actual Departure et mettre au séparateur daté.</li>
-    </ol>
-  </li>
-  <li><strong>Groupes / Wholesalers :</strong>
-    <ol>
-      <li>In-House List &gt; Group Delegate Guests : Page break ON, Room rates YES, Sort Group Code/Room.</li>
-      <li>Wholesaler Delegates : Tour Code ALL, Sort Room Number.</li>
-      <li>Classer dans une chemise bleue datée.</li>
-    </ol>
-  </li>
-  <li><strong>Internet (membres) :</strong>
-    <ol>
-      <li>Rapport 36/36.1 pour identifier les chambres facturées.</li>
-      <li>Standard : corriger à 4.95 (4.95 / 0.52 / 0.25).</li>
-      <li>Élite/Pilote : gratuit (0$) + Transfer vers “Marriott Internet”.</li>
-      <li>Imprimer 36.1 final, Settle Marriott Internet (0$) + imprimer folio, imprimer 36.5.</li>
-      <li>Agrafer 36.1 + folio Marriott Internet + 36.5, remettre au Back.</li>
-    </ol>
-  </li>
-</ol>
-""",
-            "tags": ["Front", "Pré-audit", "Internet"]
-        },
-        {
-            "q": "Front – Post-audit : impressions essentielles ?",
-            "a": """
-<ol>
-  <li><strong>No Posting Allowed :</strong> All guests, in-house, by room → pile Restaurant.</li>
-  <li><strong>Guest List – Charge All :</strong> Registered, special service CA → pile Restaurant.</li>
-  <li><strong>Allotment Overview :</strong> Today à Today+49 → pile DBRS.</li>
-  <li><strong>In-House List G4 :</strong> 3x (DBRS, Auditeur, Restaurant).</li>
-  <li><strong>In-House List G4+CL :</strong> 2x (Superviseur, Restaurant).</li>
-</ol>
-""",
-            "tags": ["Front", "Post-audit", "Impressions"]
-        },
-        {
-            "q": "No-show : normal vs groupe/RL ?",
-            "a": """
-<ol>
-  <li><strong>Normal :</strong> Cashiering > Post Dept 1 / Sub 28, montant HT, Ref NO SHOW, Note = nom client; imprimer folio + feuille d’ajustement.</li>
-  <li><strong>Groupe/RL :</strong> charger tout le séjour, imprimer, transférer vers compte maître; dupliquer résa pour nuits restantes (rate 0$) pour éviter double facturation.</li>
-</ol>
-""",
-            "tags": ["Front", "No-show"]
-        },
-        {
-            "q": "Tips (POD) : comment valider ?",
-            "a": """
-<ul>
-  <li><strong>Saisie :</strong> ventes/tips par serveur dans POD.</li>
-  <li><strong>Validation :</strong> Total ventes Back – (réception + Spesa) = total ventes POD.</li>
-  <li><strong>Classement :</strong> Agrafer feuilles (Back + POD) au séparateur daté.</li>
-</ul>
-""",
-            "tags": ["Front", "Tips"]
-        },
-        {
-            "q": "VNC / POSitouch : ordre d’impression ?",
-            "a": """
-<ol>
-  <li><strong>Daily Sales Report :</strong> 9p + page 1 (M. Pazzi).</li>
-  <li><strong>Sales Journal Reports / Memo Listings :</strong> trier par mode.</li>
-  <li><strong>Acheteur.bat :</strong> 2 copies (Christophe + Restaurant).</li>
-  <li><strong>Audit.bat :</strong> retirer page “Server Sales and Tips” pour la paie.</li>
-</ol>
-""",
-            "tags": ["Front", "VNC", "POSitouch"]
-        },
-        {
-            "q": "Moneris / PART : timing ?",
-            "a": """
-<ol>
-  <li><strong>Moneris :</strong> fermer terminaux avant PART (~03h) Réception/Bar/Room Service/Banquet; récupérer et encercler les batchs.</li>
-  <li><strong>Pendant PART (LS indispo) :</strong> faire HP/Admin, impressions VNC, classement.</li>
-</ol>
-""",
-            "tags": ["Front", "Moneris", "PART"]
-        },
-        {
-            "q": "Back – Transelect / GEAC : tolérance et saisie ?",
-            "a": """
-<ul>
-  <li><strong>Tolérance :</strong> 0.00$ (max ±0.01).</li>
-  <li><strong>Transelect :</strong> POSitouch Établissement (col. N), batchs Moneris, FreedomPay Payment Breakdown (Fusebox).</li>
-  <li><strong>GEAC/UX :</strong> Daily Cash Out + Daily Revenue p.6, doit finir à 0 (sinon mail à Roula/Mandy).</li>
-</ul>
-""",
-            "tags": ["Back", "Cartes"]
-        },
-        {
-            "q": "Back – DueBack / SD / RECAP / Dépôt : flux ?",
-            "a": """
-<ul>
-  <li><strong>DueBack :</strong> ligne - (veille) + ligne + (jour) par employé depuis Cashier Details.</li>
-  <li><strong>SD :</strong> comptage coffre + montants POSitouch employés; variances à noter.</li>
-  <li><strong>RECAP :</strong> Daily Revenue p.5-6 + DueBack + variances SD; imprimer puis transfert (Contrôle).</li>
-  <li><strong>Dépôt / SetD :</strong> copier Montant vérifié SD -> Dépôt; variances -> SetD.</li>
-</ul>
-""",
-            "tags": ["Back", "Comptant"]
-        },
-        {
-            "q": "Enveloppe blanche / dossier bleu : contenu ?",
-            "a": """
-<ul>
-  <li><strong>Enveloppe compta :</strong> DSR 9p + Paiement par département, Cashier Details brochés, piles cartes, RECAP/SD signés, HP/Admin pack, Daily Cash Out, Guest Ledger, Detail Ticket, Room Post Audit, Availability Rebuild Exception, Sales Journal Payment Totals/Memo Listings par mode.</li>
-  <li><strong>Dossier bleu daté :</strong> RJ vérif, Daily Revenue, Advance Deposit, Sales Journal Entire House, pile cartes, HP/Admin pack, Complimentary report, Room Type Production, Quasimodo, DBRS, caisses/dépôts.</li>
-</ul>
-""",
-            "tags": ["Back", "Classement"]
-        },
-        {
-            "q": "Pas de PDF qui s’affiche ?",
-            "a": "Utilise le bouton Télécharger/Ouvrir brut. Les PDF scannés s’affichent inline; les DOCX sont convertis en PDF lorsque disponibles.",
-            "tags": ["Support"]
-        }
-    ]
-    tags = sorted({t for f in faqs for t in f.get("tags", [])})
-    front_count = len([f for f in faqs if "Front" in f.get("tags", [])])
-    back_count = len([f for f in faqs if "Back" in f.get("tags", [])])
-    return render_template('faq.html', faqs=faqs, tags=tags, front_count=front_count, back_count=back_count)
+    glossary = {
+        "Glossaire des termes": [
+            {
+                "term": "PART",
+                "english": "Night Audit Run",
+                "definition": "Processus automatique LightSpeed qui ferme la journee et lance tous les calculs comptables. Se lance generalement vers 03h00.",
+                "context": "Exemple: PART doit etre lance apres que les terminaux Moneris soient fermes et apres l'export des rapports VNC."
+            },
+            {
+                "term": "ADR",
+                "english": "Average Daily Rate",
+                "definition": "Tarif moyen par chambre vendue. Calcule comme: Revenus Hebergement / Nombre de chambres vendues.",
+                "context": "L'ADR est affiche dans le rapport Jour et dans DBRS pour analyser la strategie tarifaire."
+            },
+            {
+                "term": "RevPAR",
+                "english": "Revenue Per Available Room",
+                "definition": "Revenu par chambre disponible. Combinaison de l'ADR et du taux d'occupation (Revenus Hebergement / Total chambres disponibles).",
+                "context": "Metrique cle pour evaluer la performance hoteliere dans DBRS."
+            },
+            {
+                "term": "OCC%",
+                "english": "Occupancy Rate",
+                "definition": "Taux d'occupation: (chambres vendues) / (chambres disponibles) x 100%. Exemple: 280/340 = 82.35%.",
+                "context": "Calcule dans l'onglet Jour et reporte dans DBRS pour l'analyse Marriott."
+            },
+            {
+                "term": "ARR / DEP",
+                "english": "Arrivals / Departures",
+                "definition": "Nombre d'arrivees et de departs clients pour la journee dans LightSpeed.",
+                "context": "ARR doit etre = 0 avant de lancer Pre-Audit. DEP affecte les chemises bleues."
+            },
+            {
+                "term": "Folio",
+                "english": "Guest Folio",
+                "definition": "Compte client dans LightSpeed contenant toutes les charges et paiements du sejour.",
+                "context": "Exemple: modifier le folio pour corriger une charge ou poster un credit; imprimer le folio pour les dossiers."
+            },
+            {
+                "term": "DueBack",
+                "english": "Cash Due Back",
+                "definition": "Remboursement a la reception: montant du jour moins montant de veille pour chaque employe.",
+                "context": "DueBack = solde + (nouveau) - solde - (veille). Saisi depuis Cashier Details dans RJ Natif."
+            },
+            {
+                "term": "No-show",
+                "english": "No-show",
+                "definition": "Reservation non honoree. Client ne se presente pas a l'hotel.",
+                "context": "Procedure: poster Dept 1 / Sub 28 dans le folio, note 'NO SHOW' + nom client."
+            },
+            {
+                "term": "Walk-in",
+                "english": "Walk-in",
+                "definition": "Client sans reservation prealable qui arrive a la reception.",
+                "context": "S'oppose a une arrivee prevue (reservation). Traite comme un client regulier dans LightSpeed."
+            },
+            {
+                "term": "PM / Mode de paiement",
+                "english": "Payment Method",
+                "definition": "Methode de paiement (Credit, Debit, Comptant, Cheque, etc.).",
+                "context": "Saisi dans Transelect par terminal et par type de carte. Reconciliation Moneris vs POSitouch."
+            },
+            {
+                "term": "Cashiering",
+                "english": "Cashiering Module",
+                "definition": "Module de caisse dans LightSpeed pour poster les charges et paiements.",
+                "context": "Utilise pour corriger les soldes clients, poster les no-shows, crediter les cheques sans provision."
+            },
+            {
+                "term": "GEAC / UX",
+                "english": "GEAC / UX",
+                "definition": "Systeme de comptabilite cartes hotel. Affiche le Daily Cash Out et Daily Revenue par type de carte.",
+                "context": "GEAC balance DOIT etre = 0 a la fin du cycle. Si variance, contacter Roula ou Mandy."
+            },
+            {
+                "term": "Transelect",
+                "english": "Transelect Card Reconciliation",
+                "definition": "Rapprochement des terminaux de paiement (Moneris vs POSitouch vs FreedomPay).",
+                "context": "Tolerance max +/-0.01. Reconcilie Etablissement POSitouch + batchs Moneris + FreedomPay Fusebox."
+            },
+            {
+                "term": "Quasimodo",
+                "english": "Quasimodo Global Reconciliation",
+                "definition": "Reconciliation globale: montants totals des cartes + comptant vs revenus Jour total.",
+                "context": "AMEX multiplie par facteur 0.9735 (frais commerciaux). Variance doit etre +/-0.01$."
+            },
+            {
+                "term": "DBRS",
+                "english": "Daily Business Review Summary",
+                "definition": "Rapport pour siege Marriott. Contient resume revenus, ADR, occupancy, market segments, no-shows.",
+                "context": "Genere dans RJ Natif a partir des donnees Jour. Inclus dans dossier bleu."
+            },
+            {
+                "term": "SetD",
+                "english": "Personnel Set-Dejeuner",
+                "definition": "Allocations repas accordees aux employes (petit-dejeuner gratuit).",
+                "context": "Saisi dans SetD si variance SD. Transfere a Depot pour ajustement comptable."
+            },
+            {
+                "term": "SD",
+                "english": "Safe Deposit / Surplus-Deficit",
+                "definition": "Comptage physique de la caisse coffre-fort vs montants POSitouch des employes.",
+                "context": "Variance SD = comptage - POSitouch. Reportee dans RECAP et SetD."
+            },
+            {
+                "term": "HP / Admin",
+                "english": "Hotel Promotion & Administration",
+                "definition": "Factures F&B gratuites pour hotes, evenements, marketing, etc.",
+                "context": "Saisi manuellement ou par scanning; poste dans LightSpeed Dept 50."
+            },
+            {
+                "term": "RJ",
+                "english": "Rapport Journalier",
+                "definition": "Rapport complet quotidien (Excel traditionnel ou RJ Natif web app).",
+                "context": "Contient 14 onglets: Controle, DueBack, Recap, Transelect, GEAC, SD, SetD, HP, Internet, Sonifi, Jour, Quasimodo, DBRS, Sommaire."
+            },
+            {
+                "term": "POD",
+                "english": "Payment on Departure / Tip Register",
+                "definition": "Registre des pourboires: saisie rapide des ventes et tips par serveur.",
+                "context": "Validation: Total ventes Back - (reception + Spesa) = total ventes POD."
+            },
+            {
+                "term": "OTB",
+                "english": "On The Books",
+                "definition": "Reservations futures. Donnees de pick-up et revenus projetes.",
+                "context": "Affiche dans DBRS pour l'analyse Marriott. Donnees du module Reservations LightSpeed."
+            },
+            {
+                "term": "Pre-Audit",
+                "english": "Pre-Audit",
+                "definition": "Verifications avant PART: soldes clients a +/-1$, printings, travail Internet.",
+                "context": "Lance depuis LightSpeed > Night Audit > Run Pre-Audit (ARR doit etre = 0)."
+            },
+            {
+                "term": "Post-Audit",
+                "english": "Post-Audit",
+                "definition": "Verifications apres PART: impressions completes, rapports finaux, classement.",
+                "context": "Effectue quand PART est termine et LightSpeed est a nouveau disponible."
+            },
+            {
+                "term": "Galaxy Lightspeed",
+                "english": "Galaxy Lightspeed PMS",
+                "definition": "Property Management System (PMS) de l'hotel. Gere reservations, folios, rapports.",
+                "context": "Systeme source pour: revenus, occupancy, guest data, cashiering, night audit."
+            },
+            {
+                "term": "VNC / POSitouch",
+                "english": "VNC / POSitouch",
+                "definition": "Systeme de point de vente pour restaurants et services (Bar, Room Service, Banquet).",
+                "context": "Fournit rapports: Daily Sales Report, Sales Journal, Memo Listings, Acheteur/Audit batch."
+            },
+            {
+                "term": "Moneris",
+                "english": "Moneris Payment Terminals",
+                "definition": "Fournisseur des terminaux de paiement par carte (Reception, Bar, Room Service, Banquet).",
+                "context": "Batchs fermes avant PART (~03h). Totaux reconcilies dans Transelect."
+            },
+            {
+                "term": "FreedomPay",
+                "english": "FreedomPay Payment Gateway",
+                "definition": "Passerelle de paiement integree au PMS. Collecte transactions cartes de tous les modules.",
+                "context": "Donnees disponibles dans Fusebox. Utilisee pour Transelect + Quasimodo."
+            },
+            {
+                "term": "Fusebox",
+                "english": "FreedomPay Fusebox Portal",
+                "definition": "Portail de rapports FreedomPay. Affiche Payment Breakdown par type de carte et terminal.",
+                "context": "Accede via navigateur pour recuperer les totaux Transelect par card type."
+            },
+            {
+                "term": "Separateur date",
+                "english": "Dated Separator Sheet",
+                "definition": "Feuille pliee en deux qui separe les documents comptables par date.",
+                "context": "Prepare en mise en place (23h) avec date du jour. Toutes pieces comptables y vont."
+            },
+            {
+                "term": "Feuille de tournee",
+                "english": "Morning Inspection Checklist",
+                "definition": "Checklist d'inspection hotel pour l'equipe du matin (proprete, maintenance, etc.).",
+                "context": "Imprimee depuis Excel avec date du jour. Signee et deposee a droite du comptoir."
+            },
+            {
+                "term": "Chemise bleue",
+                "english": "Blue Binder",
+                "definition": "Dossier de classement journalier pour la direction. Contient rapports cles et analyses.",
+                "context": "Contenu: RJ, Daily Revenue, Sales Journal, cartes, HP/Admin, Quasimodo, DBRS, caisses."
+            },
+            {
+                "term": "Enveloppe comptabilite",
+                "english": "Accounting Envelope",
+                "definition": "Enveloppe blanche contenant tous les documents comptables pour transmission a la direction.",
+                "context": "Contenu: DSR 9p, Cashier Details, piles cartes, RECAP/SD signes, HP, Daily Cash Out, rapports."
+            }
+        ],
+        "Procedures Front Desk": [
+            {
+                "title": "Timeline complete 23h-07h",
+                "content": "23h00-00h00: Mise en place. 00h00-02h00: Pre-audit. 02h00-03h00: Finalisations. 03h00: PART lance. 03h00-04h00: Post-PART. 04h00-07h00: Impressions finales."
+            },
+            {
+                "title": "Quand lancer Pre-Audit",
+                "content": "Pre-Audit ne doit etre lance que lorsque Arrivals = 0 dans LightSpeed. Chemin: Night Audit > Run Pre-Audit."
+            },
+            {
+                "title": "Procedure No-show normal",
+                "content": "1. Ouvrir le folio client. 2. Cashiering > Post. 3. Dept 1 / Sub 28. 4. Montant HT. 5. Ref = 'NO SHOW'. 6. Imprimer folio + ajustement."
+            },
+            {
+                "title": "Procedure No-show groupe/RL",
+                "content": "1. Charger tout le sejour au compte maitre. 2. Imprimer folio. 3. Transferer vers compte maitre. 4. Dupliquer resa pour nuits restantes (rate 0$)."
+            },
+            {
+                "title": "Ajustement Internet Standard",
+                "content": "Standard (acces Internet facture): 1. Identifier chambres depuis rapport 36. 2. Corriger montant a 4.95. 3. Imprimer 36.1 final. 4. Imprimer folio. 5. Agrafer au separateur."
+            },
+            {
+                "title": "Internet Elite/Pilote (gratuit)",
+                "content": "Elite/Pilote (Internet gratuit): 1. Identifier depuis rapport 36. 2. Transfer vers Marriott Internet (0$). 3. Settle. 4. Imprimer folio. 5. Imprimer 36.5. 6. Agrafer 36.1 + folio + 36.5."
+            },
+            {
+                "title": "Impressions essentielles Post-Audit",
+                "content": "1. No Posting Allowed (All guests). 2. Guest List - Charge All. 3. Allotment Overview (Today a Today+49). 4. In-House List G4 (3 copies). 5. In-House List G4+CL (2 copies)."
+            },
+            {
+                "title": "VNC / POSitouch - ordre d'impression",
+                "content": "1. Daily Sales Report (9 pages + page 1). 2. Sales Journal Reports par mode. 3. Memo Listings. 4. Acheteur.bat (2 copies). 5. Audit.bat (sans page Server Sales and Tips)."
+            },
+            {
+                "title": "Timing Moneris / PART",
+                "content": "~02h30: Fermer tous les terminaux Moneris. Recuperer batchs. ~03h00: Lancer PART. 03h00-04h00: Faire HP/Admin, impressions VNC, classement."
+            }
+        ],
+        "Procedures Back Office": [
+            {
+                "title": "Transelect - sources donnees et tolerance",
+                "content": "Sources: POSitouch col. N, batchs Moneris, FreedomPay Fusebox. Tolerance: 0.00$ (max +/-0.01$). Reconcilie: Restaurant + Reception = total net par card type."
+            },
+            {
+                "title": "GEAC balance",
+                "content": "GEAC/UX doit afficher balance = 0.00$. Sources: Daily Cash Out vs Daily Revenue. Si variance: contacter Roula ou Mandy. Rapport d'exception au siege."
+            },
+            {
+                "title": "DueBack - saisi depuis Cashier Details",
+                "content": "DueBack = (solde nouveau - solde veille) par employe. Ligne negative (-): remboursement veille. Ligne positive (+): montant jour. Source: Cashier Details LightSpeed."
+            },
+            {
+                "title": "SD - Comptage vs POSitouch",
+                "content": "1. Compter physiquement le coffre-fort. 2. Obtenir totaux POSitouch (Acheteur.bat). 3. Calculer variance. 4. Saisir dans RJ Natif > SD. 5. Si variance: creer entree SetD."
+            },
+            {
+                "title": "RECAP - entrees et calculs",
+                "content": "Entrees: Daily Revenue lectures + DueBack + variances SD. Calcul: (Lecture Cash + Lecture Cheque) + (Correction) = NET. Imprimer RECAP + signer."
+            },
+            {
+                "title": "Depot - enveloppes physiques",
+                "content": "1. Copier Montant verifie SD vers Depot (client 6: Caisse, client 8: Cheques). 2. Preparer enveloppes physiques. 3. Agrafer depot bancaire. 4. Classer."
+            },
+            {
+                "title": "Quasimodo - facteur AMEX et variance",
+                "content": "Quasimodo reconcilie: Transelect (cartes) + Recap (comptant) vs Jour total. AMEX x 0.9735 (frais). Variance doit etre +/-0.01$. Si > 0.01$: deboguer sources."
+            },
+            {
+                "title": "DBRS - source donnees et mapping",
+                "content": "Sources: Jour total, occupation, ADR, OTB, market segments, no-shows. Genere dans RJ Natif > DBRS. Inclus dans chemise bleue + rapport siege Marriott."
+            }
+        ],
+        "Classement & Documents": [
+            {
+                "title": "Enveloppe comptabilite - contenu exact",
+                "content": "1. Daily Sales Report (9p + p1). 2. Paiement par departement. 3. Cashier Details broch. 4. Pile cartes. 5. RECAP signe. 6. SD signe. 7. HP/Admin. 8. Daily Cash Out. 9. Guest Ledger. 10. Detail Ticket. 11. Room Post Audit. 12. Availability Rebuild Exception. 13. Sales Journal Payment Totals. 14. Memo Listings."
+            },
+            {
+                "title": "Chemise bleue datee - contenu exact",
+                "content": "1. RJ verifie. 2. Daily Revenue. 3. Advance Deposit. 4. Sales Journal Entire House. 5. Pile cartes. 6. HP/Admin. 7. Complimentary report. 8. Room Type Production. 9. Quasimodo. 10. DBRS. 11. Rapports caisses/depots."
+            },
+            {
+                "title": "Piles restaurant - rapport et documents",
+                "content": "Pile 1: Daily Sales Report (DSR) 9 pages. Pile 2: No Posting Allowed. Pile 3: Guest List - Charge All. Pile 4: Sales Journal Reports par mode. Pile 5: Memo Listings. Pile 6: In-House List G4."
+            },
+            {
+                "title": "Piles DBRS - rapport et documents",
+                "content": "Pile 1: Allotment Overview (Today a Today+49). Pile 2: In-House List G4. Pile 3: Daily Revenue. Pile 4: DBRS web. Pile 5: OTB. Pile 6: Room Type Production si needed."
+            }
+        ],
+        "Raccourcis App Web": [
+            {
+                "title": "Navigation rapide RJ Natif",
+                "content": "Accueil > RJ Natif > Selectionner date > 14 onglets. Barre de status affiche: statut session, heure derniere sauvegarde, bouton Calculer, bouton Soumettre."
+            },
+            {
+                "title": "Auto-save dans RJ Natif",
+                "content": "Chaque champ auto-save apres 500ms d'inactivite (debounce). Indicateur de sauvegarde affiche. Pas besoin de cliquer Enregistrer. Lors du submit, tous les 14 onglets sont sauvegardes."
+            },
+            {
+                "title": "Generateurs de documents",
+                "content": "Menu principal > options: Generer POD, Generer Depot, Generer Rapport Jour (PDF), Generer Quasimodo (PDF). Chaque generateur pre-remplit depuis RJ Natif."
+            },
+            {
+                "title": "POD - entree rapide batch",
+                "content": "Bouton Nouveau POD > selectionner serveur > saisir ventes + tips. Sauvegarde instantanee. Validation automatique vs Back total. Historique POD affiche tous les entrees."
+            },
+            {
+                "title": "Tab order dans RJ Natif",
+                "content": "Important: Internet/Sonifi AVANT Jour (necessaire pour revenus). Quasimodo/DBRS APRES Jour (utilisent totaux Jour). Controle en premier. Sommaire en dernier."
+            }
+        ],
+        "Numeros & Contacts": [
+            {
+                "title": "Contacts cles",
+                "content": "Roula (Comptabilite): variance GEAC > 0.01$. Mandy (Finance): rapports siege, DBRS. M. Pazzi (Directeur): DSR daily, signature RECAP. Superviseur nuit: questions, escalade clients."
+            }
+        ]
+    }
 
-@checklist_bp.route('/api/clear-role', methods=['POST'])
+    glossary_count = len(glossary.get("Glossaire des termes", []))
+    categories = list(glossary.keys())
+
+    return render_template('faq.html', glossary=glossary, glossary_count=glossary_count, categories=categories)
+
+
+# ── API: Liste des tâches ──────────────────────────────────────
+@checklist_bp.route('/api/tasks')
 @login_required
-def clear_role():
-    session.pop('user_role', None)
-    return jsonify({'success': True})
+def get_tasks():
+    """Retourne les tâches actives pour le rôle courant (front/back)."""
+    role = session.get('user_role', 'front')
+    tasks = Task.query.filter_by(role=role, is_active=True).order_by(Task.order).all()
+    return jsonify([t.to_dict() for t in tasks])
+
 
 @checklist_bp.route('/api/set-role', methods=['POST'])
 @login_required
 def set_role():
-    data = request.get_json()
-    role = data.get('role')
-    print(f"DEBUG: Setting role to {role}")
-    if role in ['front', 'back']:
+    """Change le rôle actif (front/back) en session."""
+    data = request.get_json() or {}
+    role = data.get('role', 'front')
+    if role in ('front', 'back'):
         session['user_role'] = role
         session.modified = True
-        print(f"DEBUG: Session role is now {session.get('user_role')}")
-        return jsonify({'success': True})
-    return jsonify({'success': False, 'error': 'Invalid role'}), 400
+    return jsonify({'role': session.get('user_role', 'front')})
 
-@checklist_bp.route('/api/tasks')
-@login_required
-def get_tasks():
-    role = session.get('user_role', 'front') # Default to front if missing
-    print(f"DEBUG: get_tasks called. Role in session: {role}")
-    tasks = Task.query.filter_by(is_active=True, role=role).order_by(Task.order).all()
-    print(f"DEBUG: Found {len(tasks)} tasks for role {role}")
-    return jsonify([t.to_dict() for t in tasks])
 
 @checklist_bp.route('/api/shifts/current')
 @login_required
@@ -335,9 +510,10 @@ def get_current_shift():
 @login_required
 def start_shift():
     today = date.today()
+    user_name = session.get('user_name', 'Inconnu')
     shift = Shift.query.filter_by(date=today).first()
     if not shift:
-        shift = Shift(date=today)
+        shift = Shift(date=today, user_name=user_name)
         db.session.add(shift)
         db.session.commit()
     return jsonify(shift.to_dict())
@@ -346,9 +522,10 @@ def start_shift():
 @login_required
 def complete_task(task_id):
     today = date.today()
+    user_name = session.get('user_name', 'Inconnu')
     shift = Shift.query.filter_by(date=today).first()
     if not shift:
-        shift = Shift(date=today)
+        shift = Shift(date=today, user_name=user_name)
         db.session.add(shift)
         db.session.commit()
 
@@ -360,6 +537,7 @@ def complete_task(task_id):
     completion = TaskCompletion(
         shift_id=shift.id,
         task_id=task_id,
+        completed_by=user_name,
         notes=data.get('notes')
     )
     db.session.add(completion)
@@ -390,3 +568,119 @@ def complete_shift():
         db.session.commit()
         return jsonify(shift.to_dict())
     return jsonify({'error': 'No shift found'}), 404
+
+
+# ── ETL / Historique ──────────────────────────────────────────────
+@checklist_bp.route('/api/history')
+@login_required
+def get_history():
+    """ETL endpoint: retourne l'historique complet des shifts et complétions.
+    Params: ?days=30 (défaut), ?role=front|back, ?format=json|csv
+    """
+    from sqlalchemy import desc
+    days = request.args.get('days', 30, type=int)
+    role_filter = request.args.get('role', None)
+    output_format = request.args.get('format', 'json')
+
+    cutoff = date.today() - timedelta(days=days)
+    shifts = Shift.query.filter(Shift.date >= cutoff).order_by(desc(Shift.date)).all()
+
+    history = []
+    for s in shifts:
+        completions = TaskCompletion.query.filter_by(shift_id=s.id).all()
+        for c in completions:
+            task = Task.query.get(c.task_id)
+            if not task:
+                continue
+            if role_filter and task.role != role_filter:
+                continue
+            history.append({
+                'date': s.date.isoformat(),
+                'shift_id': s.id,
+                'shift_user': s.user_name or '',
+                'task_id': c.task_id,
+                'task_order': task.order,
+                'task_title': task.title_fr,
+                'task_category': task.category,
+                'task_role': task.role,
+                'completed_at': c.completed_at.isoformat() if c.completed_at else '',
+                'completed_by': c.completed_by or '',
+                'notes': c.notes or '',
+            })
+
+    if output_format == 'csv':
+        import io, csv
+        output = io.StringIO()
+        if history:
+            writer = csv.DictWriter(output, fieldnames=history[0].keys())
+            writer.writeheader()
+            writer.writerows(history)
+        return output.getvalue(), 200, {
+            'Content-Type': 'text/csv',
+            'Content-Disposition': f'attachment; filename=checklist_history_{days}j.csv'
+        }
+
+    # Résumé par date
+    summary_by_date = {}
+    for s in shifts:
+        completions = TaskCompletion.query.filter_by(shift_id=s.id).all()
+        total_front = Task.query.filter_by(role='front', is_active=True).count()
+        total_back = Task.query.filter_by(role='back', is_active=True).count()
+
+        done_front = sum(1 for c in completions if Task.query.get(c.task_id) and Task.query.get(c.task_id).role == 'front')
+        done_back = sum(1 for c in completions if Task.query.get(c.task_id) and Task.query.get(c.task_id).role == 'back')
+
+        summary_by_date[s.date.isoformat()] = {
+            'shift': s.to_dict(),
+            'front': {'done': done_front, 'total': total_front, 'pct': round(done_front / max(total_front, 1) * 100)},
+            'back': {'done': done_back, 'total': total_back, 'pct': round(done_back / max(total_back, 1) * 100)},
+        }
+
+    return jsonify({
+        'period_days': days,
+        'total_records': len(history),
+        'summary': summary_by_date,
+        'records': history
+    })
+
+
+@checklist_bp.route('/api/history/export')
+@login_required
+def export_history_csv():
+    """Export CSV direct pour ETL externe."""
+    from sqlalchemy import desc
+    import io, csv
+
+    days = request.args.get('days', 90, type=int)
+    cutoff = date.today() - timedelta(days=days)
+    shifts = Shift.query.filter(Shift.date >= cutoff).order_by(desc(Shift.date)).all()
+
+    output = io.StringIO()
+    fields = ['date', 'shift_user', 'task_order', 'task_title', 'task_category',
+              'task_role', 'completed_at', 'completed_by', 'duration_min', 'notes']
+    writer = csv.DictWriter(output, fieldnames=fields)
+    writer.writeheader()
+
+    for s in shifts:
+        completions = TaskCompletion.query.filter_by(shift_id=s.id).all()
+        for c in completions:
+            task = Task.query.get(c.task_id)
+            if not task:
+                continue
+            writer.writerow({
+                'date': s.date.isoformat(),
+                'shift_user': s.user_name or '',
+                'task_order': task.order,
+                'task_title': task.title_fr,
+                'task_category': task.category,
+                'task_role': task.role,
+                'completed_at': c.completed_at.isoformat() if c.completed_at else '',
+                'completed_by': c.completed_by or '',
+                'duration_min': task.estimated_minutes or '',
+                'notes': c.notes or '',
+            })
+
+    return output.getvalue(), 200, {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': f'attachment; filename=audit_checklist_etl_{date.today().isoformat()}.csv'
+    }

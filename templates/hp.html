@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+{% block title %}HP/Admin — Hotel Promotion{% endblock %}
+
+{% block content %}
+<style>
+/* ── HP Scoped Styles ── */
+.hp-page { max-width:1400px; margin:0 auto; padding:1.5rem 1rem; }
+.hp-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; }
+.hp-header h1 { font-size:1.5rem; font-weight:800; color:var(--text); margin:0; }
+.hp-header-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+.hp-btn {
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.55rem 1rem; border-radius:10px; border:1px solid var(--border);
+  background:var(--card-bg, #fff); color:var(--text); font-size:.82rem; font-weight:600;
+  cursor:pointer; transition:all .2s;
+}
+.hp-btn:hover { border-color:var(--primary); color:var(--primary); }
+.hp-btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+.hp-btn.primary:hover { opacity:.85; }
+.hp-btn.danger { background:#ef4444; color:#fff; border-color:#ef4444; }
+.hp-btn.danger:hover { opacity:.85; }
+.hp-btn svg { width:16px; height:16px; }
+
+/* Stats bar */
+.hp-stats { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.hp-stat {
+  flex:1; min-width:140px; padding:.9rem 1.1rem; border-radius:14px;
+  background:var(--card-bg, #fff); border:1px solid var(--border);
+}
+.hp-stat-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted); margin-bottom:.25rem; }
+.hp-stat-value { font-size:1.25rem; font-weight:800; color:var(--text); }
+.hp-stat-sub { font-size:.72rem; color:var(--text-muted); margin-top:.15rem; }
+#hp-sync { color:var(--text-success, #10b981); font-weight:600; opacity:0; transition:opacity .3s; }
+#hp-sync.show { opacity:1; }
+
+/* Upload zone */
+.hp-upload-zone {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:3rem 2rem; border:2px dashed var(--border); border-radius:14px;
+  background:var(--card-bg, #fff); text-align:center; cursor:pointer; transition:all .2s;
+}
+.hp-upload-zone:hover, .hp-upload-zone.dragover { border-color:var(--primary); background:rgba(99,102,241,.04); }
+.hp-upload-zone .icon { font-size:2.5rem; opacity:.15; margin-bottom:.8rem; }
+.hp-upload-zone h3 { font-size:1rem; font-weight:700; color:var(--text); margin:0 0 .3rem; }
+.hp-upload-zone p { font-size:.82rem; color:var(--text-muted); margin:0; }
+#hp-file-input { display:none; }
+
+/* Day selector */
+.hp-day-bar {
+  display:flex; gap:.5rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;
+}
+.hp-day-bar label { font-size:.82rem; font-weight:700; color:var(--text); }
+.hp-day-bar select {
+  padding:.45rem .7rem; border:1px solid var(--border); border-radius:8px;
+  font-size:.85rem; background:var(--card-bg, #fff); color:var(--text);
+}
+.hp-day-chips { display:flex; gap:.3rem; flex-wrap:wrap; }
+.hp-day-chip {
+  padding:.35rem .6rem; border-radius:8px; border:1px solid var(--border);
+  background:var(--card-bg, #fff); font-size:.72rem; font-weight:600; cursor:pointer;
+  transition:all .15s;
+}
+.hp-day-chip:hover { border-color:var(--primary); color:var(--primary); }
+.hp-day-chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.hp-day-chip.has-data { background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.3); }
+.hp-day-chip.has-data.active { background:var(--primary); border-color:var(--primary); }
+
+/* Entry cards */
+.hp-entries { display:flex; flex-direction:column; gap:.8rem; margin-bottom:1rem; }
+.hp-entry-card {
+  background:var(--card-bg, #fff); border:1px solid var(--border); border-radius:12px;
+  padding:1rem; transition:all .2s;
+}
+.hp-entry-card:hover { border-color:var(--primary); box-shadow:0 2px 8px rgba(99,102,241,.08); }
+.hp-entry-row { display:flex; gap:.5rem; flex-wrap:wrap; align-items:end; margin-bottom:.5rem; }
+.hp-entry-row:last-child { margin-bottom:0; }
+
+.hp-field { display:flex; flex-direction:column; gap:.15rem; }
+.hp-field label { font-size:.65rem; font-weight:600; text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted); }
+.hp-field input, .hp-field select {
+  padding:.4rem .5rem; border:1px solid var(--border); border-radius:6px;
+  font-size:.82rem; background:var(--bg, #f8fafc); color:var(--text);
+  outline:none; transition:border-color .15s;
+}
+.hp-field input:focus, .hp-field select:focus { border-color:var(--primary); }
+.hp-field input[type="number"] { width:85px; text-align:right; }
+.hp-field.wide input, .hp-field.wide select { min-width:140px; }
+
+.hp-entry-total {
+  font-size:.9rem; font-weight:800; color:var(--primary);
+  padding:.4rem .6rem; background:rgba(99,102,241,.06); border-radius:6px;
+  min-width:80px; text-align:right;
+}
+
+.hp-delete-btn {
+  background:none; border:none; color:#ef4444; cursor:pointer; padding:.3rem;
+  border-radius:4px; transition:all .15s; opacity:.5;
+}
+.hp-delete-btn:hover { opacity:1; background:rgba(239,68,68,.08); }
+
+/* Day total */
+.hp-day-total {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:.8rem 1rem; background:var(--card-bg, #fff); border:1px solid var(--border);
+  border-radius:12px; margin-bottom:1rem;
+}
+.hp-day-total-label { font-size:.85rem; font-weight:700; color:var(--text); }
+.hp-day-total-value { font-size:1.2rem; font-weight:800; color:var(--primary); }
+
+/* Toast */
+.hp-toast {
+  position:fixed; bottom:1.5rem; right:1.5rem; padding:.7rem 1.2rem; border-radius:10px;
+  background:#10b981; color:#fff; font-size:.82rem; font-weight:600;
+  box-shadow:0 4px 16px rgba(0,0,0,.15); z-index:999;
+  transform:translateY(80px); opacity:0; transition:all .3s;
+}
+.hp-toast.show { transform:translateY(0); opacity:1; }
+
+/* Animations */
+@keyframes hpFadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.hp-animate { animation: hpFadeUp .3s ease both; }
+
+/* Responsive */
+@media(max-width:768px) {
+  .hp-header { flex-direction:column; align-items:flex-start; }
+  .hp-stats { flex-direction:column; }
+  .hp-entry-row { flex-direction:column; }
+  .hp-field input[type="number"] { width:100%; }
+}
+</style>
+
+<div class="hp-page">
+  <!-- Header -->
+  <div class="hp-header hp-animate">
+    <div>
+      <h1><i data-feather="file-text" style="width:24px;height:24px;vertical-align:middle;margin-right:.3rem;opacity:.5;"></i>HP / Admin</h1>
+      <p style="font-size:.82rem;color:var(--text-muted);margin:.2rem 0 0;">Hotel Promotion & Administration — Factures F&B internes</p>
+    </div>
+    <div class="hp-header-actions" id="hp-actions" style="display:none;">
+      <button class="hp-btn" onclick="document.getElementById('hp-file-input').click()"><i data-feather="upload"></i> Charger un autre</button>
+      <button class="hp-btn" onclick="downloadHP()"><i data-feather="download"></i> Exporter Excel</button>
+    </div>
+  </div>
+
+  <!-- Upload zone -->
+  <div id="hp-upload" class="hp-upload-zone hp-animate"
+       ondragover="event.preventDefault();this.classList.add('dragover')"
+       ondragleave="this.classList.remove('dragover')"
+       ondrop="handleDrop(event)"
+       onclick="document.getElementById('hp-file-input').click()">
+    <div class="icon"><i data-feather="upload-cloud"></i></div>
+    <h3>Déposez votre fichier HP ici</h3>
+    <p>Fichier mensuel HP (ex: hp022026.xlsx)</p>
+  </div>
+  <input type="file" id="hp-file-input" accept=".xlsx,.xls" onchange="uploadFile(this.files[0])">
+
+  <!-- Stats bar -->
+  <div class="hp-stats hp-animate" id="hp-stats" style="display:none;">
+    <div class="hp-stat">
+      <div class="hp-stat-label">Période</div>
+      <div class="hp-stat-value" id="stat-period">—</div>
+    </div>
+    <div class="hp-stat">
+      <div class="hp-stat-label">Jours avec données</div>
+      <div class="hp-stat-value" id="stat-days">—</div>
+    </div>
+    <div class="hp-stat">
+      <div class="hp-stat-label">Total mensuel</div>
+      <div class="hp-stat-value" id="stat-total">—</div>
+    </div>
+    <div class="hp-stat">
+      <div class="hp-stat-label">Jour sélectionné</div>
+      <div class="hp-stat-value" id="stat-day-total">—</div>
+      <div class="hp-stat-sub" id="hp-sync">✓ Synchronisé</div>
+    </div>
+  </div>
+
+  <!-- Day selector -->
+  <div id="hp-day-section" style="display:none;">
+    <div class="hp-day-bar">
+      <label>Jour :</label>
+      <div class="hp-day-chips" id="hp-day-chips"></div>
+    </div>
+
+    <!-- Entries for selected day -->
+    <div class="hp-entries" id="hp-entries"></div>
+
+    <!-- Add entry button -->
+    <div style="margin-bottom:1rem;">
+      <button class="hp-btn primary" onclick="addEntry()"><i data-feather="plus"></i> Ajouter une facture</button>
+      <button class="hp-btn" onclick="saveDayEntries()" style="margin-left:.3rem;"><i data-feather="save"></i> Sauvegarder</button>
+    </div>
+
+    <!-- Day total -->
+    <div class="hp-day-total" id="hp-day-total-bar">
+      <span class="hp-day-total-label">Total jour</span>
+      <span class="hp-day-total-value" id="day-total-val">$0.00</span>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="hp-toast" id="hp-toast"></div>
+
+<script>
+/* ── State ── */
+let HP = null;
+let currentDay = new Date().getDate(); // Default to today's day of month
+const AREAS = ['Piazza', 'Tabagie', 'Banquet', 'Link', 'Cupola', 'Serv Ch.'];
+const PMTS = ['14 - Administration', '15 - Hotel promotion'];
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+  loadExisting();
+});
+
+async function loadExisting() {
+  try {
+    const r = await fetch('/api/hp/load');
+    const d = await r.json();
+    if (d.loaded) {
+      HP = d.data;
+      showUI();
+    }
+  } catch(e) { console.error(e); }
+}
+
+/* ── Upload ── */
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
+}
+
+async function uploadFile(file) {
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch('/api/hp/upload', { method:'POST', body:fd });
+    const d = await r.json();
+    if (d.success) {
+      HP = d.data;
+      showUI();
+      toast('Fichier HP chargé');
+    } else {
+      toast(d.error || 'Erreur', true);
+    }
+  } catch(e) { toast('Erreur de téléchargement', true); }
+}
+
+/* ── Show UI ── */
+function showUI() {
+  document.getElementById('hp-upload').style.display = 'none';
+  document.getElementById('hp-actions').style.display = '';
+  document.getElementById('hp-stats').style.display = '';
+  document.getElementById('hp-day-section').style.display = '';
+  updateStats();
+  renderDayChips();
+  renderEntries();
+  feather.replace();
+}
+
+/* ── Stats ── */
+function updateStats() {
+  if (!HP) return;
+  document.getElementById('stat-period').textContent = HP.period || '—';
+  document.getElementById('stat-days').textContent = HP.available_days.length;
+  document.getElementById('stat-total').textContent = fmt(HP.monthly_totals?.grand_total || 0);
+  updateDayTotal();
+}
+
+function updateDayTotal() {
+  const entries = HP.entries_by_day[String(currentDay)] || [];
+  const total = entries.reduce((s, e) => s + (e.total || 0), 0);
+  document.getElementById('stat-day-total').textContent = fmt(total);
+  document.getElementById('day-total-val').textContent = fmt(total);
+}
+
+/* ── Day chips ── */
+function renderDayChips() {
+  const container = document.getElementById('hp-day-chips');
+  container.innerHTML = '';
+  // Show days 1-31
+  for (let d = 1; d <= 31; d++) {
+    const hasData = HP.entries_by_day[String(d)] && HP.entries_by_day[String(d)].length > 0;
+    const chip = document.createElement('div');
+    chip.className = `hp-day-chip ${d === currentDay ? 'active' : ''} ${hasData ? 'has-data' : ''}`;
+    chip.textContent = d;
+    chip.onclick = () => { currentDay = d; renderDayChips(); renderEntries(); updateDayTotal(); };
+    container.appendChild(chip);
+  }
+}
+
+/* ── Render entries ── */
+function renderEntries() {
+  const container = document.getElementById('hp-entries');
+  container.innerHTML = '';
+  const entries = HP.entries_by_day[String(currentDay)] || [];
+
+  if (entries.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--text-muted);font-size:.85rem;">Aucune facture pour le jour ' + currentDay + '. Cliquez "Ajouter une facture" pour commencer.</div>';
+    return;
+  }
+
+  entries.forEach((entry, idx) => {
+    container.appendChild(createEntryCard(entry, idx));
+  });
+  feather.replace();
+}
+
+function createEntryCard(entry, idx) {
+  const card = document.createElement('div');
+  card.className = 'hp-entry-card hp-animate';
+  card.dataset.index = idx;
+
+  const total = calcEntryTotal(entry);
+
+  card.innerHTML = `
+    <div class="hp-entry-row">
+      <div class="hp-field wide">
+        <label>Département</label>
+        <select data-f="area" onchange="entryChanged()">
+          ${AREAS.map(a => `<option ${entry.area === a ? 'selected' : ''}>${a}</option>`).join('')}
+          <option ${!AREAS.includes(entry.area) && entry.area ? 'selected' : ''} value="${entry.area || ''}">${entry.area && !AREAS.includes(entry.area) ? entry.area : ''}</option>
+        </select>
+      </div>
+      <div class="hp-field">
+        <label>Nourriture</label>
+        <input type="number" step="0.01" data-f="nourriture" value="${entry.nourriture || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-field">
+        <label>Boisson</label>
+        <input type="number" step="0.01" data-f="boisson" value="${entry.boisson || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-field">
+        <label>Bière</label>
+        <input type="number" step="0.01" data-f="biere" value="${entry.biere || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-field">
+        <label>Vin</label>
+        <input type="number" step="0.01" data-f="vin" value="${entry.vin || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-field">
+        <label>Minéraux</label>
+        <input type="number" step="0.01" data-f="mineraux" value="${entry.mineraux || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-field">
+        <label>Autre</label>
+        <input type="number" step="0.01" data-f="autre" value="${entry.autre || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-field">
+        <label>Pourboire</label>
+        <input type="number" step="0.01" data-f="pourboire" value="${entry.pourboire || ''}" oninput="entryChanged()">
+      </div>
+      <div class="hp-entry-total" id="entry-total-${idx}">${fmt(total)}</div>
+      <button class="hp-delete-btn" onclick="deleteEntry(${idx})" title="Supprimer"><i data-feather="trash-2" style="width:14px;height:14px;"></i></button>
+    </div>
+    <div class="hp-entry-row">
+      <div class="hp-field wide">
+        <label>Paiement</label>
+        <select data-f="paiement" onchange="entryChanged()">
+          ${PMTS.map(p => `<option ${entry.paiement === p ? 'selected' : ''}>${p}</option>`).join('')}
+        </select>
+      </div>
+      <div class="hp-field wide">
+        <label>Raison</label>
+        <input type="text" data-f="raison" value="${entry.raison || ''}" placeholder="ex: Administration" oninput="entryChanged()">
+      </div>
+      <div class="hp-field wide">
+        <label>Employé</label>
+        <input type="text" data-f="qui" value="${entry.qui || ''}" placeholder="Nom" oninput="entryChanged()">
+      </div>
+      <div class="hp-field wide">
+        <label>Autorisé par</label>
+        <input type="text" data-f="autorise_par" value="${entry.autorise_par || ''}" placeholder="" oninput="entryChanged()">
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function calcEntryTotal(entry) {
+  return (entry.nourriture || 0) + (entry.boisson || 0) + (entry.biere || 0) +
+         (entry.vin || 0) + (entry.mineraux || 0) + (entry.autre || 0) + (entry.pourboire || 0);
+}
+
+/* ── Entry actions ── */
+function addEntry() {
+  const dayKey = String(currentDay);
+  if (!HP.entries_by_day[dayKey]) HP.entries_by_day[dayKey] = [];
+  HP.entries_by_day[dayKey].push({
+    day: currentDay, area: 'Piazza', nourriture: 0, boisson: 0, biere: 0,
+    vin: 0, mineraux: 0, autre: 0, pourboire: 0, paiement: '14 - Administration',
+    raison: '', qui: '', autorise_par: '', total: 0
+  });
+  renderEntries();
+  updateDayTotal();
+  renderDayChips();
+}
+
+function deleteEntry(idx) {
+  const dayKey = String(currentDay);
+  const entries = HP.entries_by_day[dayKey] || [];
+  entries.splice(idx, 1);
+  renderEntries();
+  recalcFromDOM();
+  updateDayTotal();
+  renderDayChips();
+}
+
+let saveTimeout = null;
+function entryChanged() {
+  recalcFromDOM();
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => saveDayEntries(), 1200);
+}
+
+function recalcFromDOM() {
+  const dayKey = String(currentDay);
+  const cards = document.querySelectorAll('.hp-entry-card');
+  const entries = [];
+
+  cards.forEach((card, idx) => {
+    const get = (f) => {
+      const el = card.querySelector(`[data-f="${f}"]`);
+      return el ? el.value : '';
+    };
+    const getN = (f) => parseFloat(get(f)) || 0;
+
+    const entry = {
+      day: currentDay,
+      area: get('area'),
+      nourriture: getN('nourriture'),
+      boisson: getN('boisson'),
+      biere: getN('biere'),
+      vin: getN('vin'),
+      mineraux: getN('mineraux'),
+      autre: getN('autre'),
+      pourboire: getN('pourboire'),
+      paiement: get('paiement'),
+      raison: get('raison'),
+      qui: get('qui'),
+      autorise_par: get('autorise_par'),
+    };
+    entry.total = entry.nourriture + entry.boisson + entry.biere + entry.vin +
+                  entry.mineraux + entry.autre + entry.pourboire;
+
+    // Update total display
+    const totalEl = document.getElementById(`entry-total-${idx}`);
+    if (totalEl) totalEl.textContent = fmt(entry.total);
+
+    entries.push(entry);
+  });
+
+  HP.entries_by_day[dayKey] = entries;
+  updateDayTotal();
+}
+
+async function saveDayEntries() {
+  const dayKey = String(currentDay);
+  const entries = HP.entries_by_day[dayKey] || [];
+
+  try {
+    const r = await fetch('/api/hp/save-day', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ day: currentDay, entries: entries })
+    });
+    const d = await r.json();
+    if (d.success) {
+      HP = d.data;
+      updateStats();
+      renderDayChips();
+      showSyncIndicator();
+      toast('Sauvegardé');
+    } else {
+      toast(d.error || 'Erreur', true);
+    }
+  } catch(e) { toast('Erreur de sauvegarde', true); }
+}
+
+/* ── Download ── */
+function downloadHP() {
+  window.location.href = '/api/hp/download';
+}
+
+/* ── Helpers ── */
+let syncTimeout2 = null;
+function showSyncIndicator() {
+  const el = document.getElementById('hp-sync');
+  if (el) {
+    el.classList.add('show');
+    clearTimeout(syncTimeout2);
+    syncTimeout2 = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+}
+
+function fmt(n) { return '$' + (n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function toast(msg, isError) {
+  const t = document.getElementById('hp-toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#ef4444' : '#10b981';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+{% endblock %}

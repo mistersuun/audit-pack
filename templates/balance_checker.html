@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+{% block title %}Correcteur de Balances{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════
+   TOKENS
+   ═══════════════════════════════════════ */
+.bc {
+  --bg:#f8f9fb; --card:#ffffff; --border:#eef0f3;
+  --text:#1a1d23; --text-secondary:#5a6070; --text-muted:#8b92a5;
+  --primary:#3b82f6; --primary-bg:rgba(59,130,246,0.08);
+  --emerald:#10b981; --emerald-bg:rgba(16,185,129,0.08);
+  --rose:#ef4444; --rose-bg:rgba(239,68,68,0.08);
+  --amber:#f59e0b; --amber-bg:rgba(245,158,11,0.08);
+  --violet:#8b5cf6; --violet-bg:rgba(139,92,246,0.08);
+  --radius:14px; --radius-sm:10px; --radius-xs:6px;
+  --mono:'JetBrains Mono','SF Mono',monospace;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,0.06);
+}
+.bc-page { max-width:1200px; margin:0 auto; padding:1.5rem 2rem 4rem; }
+
+/* HEADER */
+.bc-header { display:flex; align-items:center; justify-content:space-between; padding-bottom:1.25rem; margin-bottom:1.5rem; border-bottom:1px solid var(--border); }
+.bc-header h1 { font-size:1.35rem; font-weight:700; letter-spacing:-0.3px; color:var(--text); }
+.bc-header p { font-size:0.82rem; color:var(--text-secondary); margin-top:2px; }
+
+/* UPLOAD ZONE */
+.upload-zone {
+  border:2px dashed var(--border); border-radius:var(--radius);
+  padding:32px; text-align:center; background:var(--card);
+  transition:all .2s; cursor:pointer; margin-bottom:20px;
+}
+.upload-zone:hover, .upload-zone.dragover { border-color:var(--primary); background:var(--primary-bg); }
+.upload-zone h3 { font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px; }
+.upload-zone p { font-size:12px; color:var(--text-muted); }
+
+.file-slots { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.file-slot {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:16px; position:relative; min-height:120px;
+}
+.file-slot-label { font-size:10.5px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:8px; }
+.file-slot-name { font-size:13px; font-weight:600; color:var(--text); margin-bottom:4px; }
+.file-slot-desc { font-size:11.5px; color:var(--text-secondary); line-height:1.4; }
+.file-slot.loaded { border-color:var(--emerald); }
+.file-slot.loaded .file-slot-label { color:var(--emerald); }
+.file-slot.required { border-left:3px solid var(--primary); }
+.file-slot input[type=file] { display:none; }
+.file-slot-btn {
+  display:inline-block; margin-top:10px; padding:6px 14px;
+  background:var(--primary-bg); color:var(--primary); border:1px solid rgba(59,130,246,0.2);
+  border-radius:var(--radius-xs); font-size:11.5px; font-weight:500; cursor:pointer;
+  transition:all .15s;
+}
+.file-slot-btn:hover { background:var(--primary); color:#fff; }
+.file-slot-status { font-family:var(--mono); font-size:11px; margin-top:6px; }
+.file-slot-status.ok { color:var(--emerald); }
+.file-slot-status.pending { color:var(--text-muted); }
+
+.analyze-btn {
+  display:block; width:100%; padding:14px; border:none; border-radius:var(--radius-sm);
+  background:linear-gradient(135deg, #3b82f6, #8b5cf6); color:#fff;
+  font-size:15px; font-weight:600; cursor:pointer; transition:all .2s;
+  letter-spacing:-0.2px;
+}
+.analyze-btn:hover { transform:translateY(-1px); box-shadow:0 4px 16px rgba(59,130,246,0.3); }
+.analyze-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; box-shadow:none; }
+
+/* RESULTS */
+.results { display:none; }
+.results.active { display:block; }
+
+/* HEALTH BANNER */
+.health-banner {
+  border-radius:var(--radius); padding:24px 28px; margin-bottom:20px;
+  display:flex; align-items:center; gap:20px; color:#fff;
+}
+.health-banner.perfect { background:linear-gradient(135deg, #059669, #10b981); }
+.health-banner.good { background:linear-gradient(135deg, #0284c7, #3b82f6); }
+.health-banner.warning { background:linear-gradient(135deg, #d97706, #f59e0b); }
+.health-banner.critical { background:linear-gradient(135deg, #dc2626, #ef4444); }
+.health-icon { font-size:42px; line-height:1; }
+.health-text h2 { font-size:20px; font-weight:700; margin-bottom:4px; }
+.health-text p { font-size:13px; opacity:0.9; }
+.health-stats { margin-left:auto; text-align:right; }
+.health-stat { font-family:var(--mono); font-size:13px; opacity:0.85; }
+.health-stat strong { font-size:18px; }
+
+/* CHECK CARDS */
+.check-grid { display:flex; flex-direction:column; gap:14px; }
+.check-card {
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  overflow:hidden; box-shadow:var(--shadow);
+}
+.check-header {
+  display:flex; align-items:center; gap:12px; padding:16px 20px;
+  cursor:pointer; user-select:none; transition:background .15s;
+}
+.check-header:hover { background:rgba(0,0,0,0.01); }
+.check-indicator { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.check-indicator.ok { background:var(--emerald); box-shadow:0 0 6px rgba(16,185,129,0.4); }
+.check-indicator.error { background:var(--rose); box-shadow:0 0 6px rgba(239,68,68,0.4); }
+.check-indicator.warning { background:var(--amber); box-shadow:0 0 6px rgba(245,158,11,0.4); }
+.check-indicator.skip { background:var(--text-muted); opacity:0.4; }
+.check-title { font-size:14px; font-weight:600; color:var(--text); }
+.check-desc { font-size:11.5px; color:var(--text-muted); }
+.check-variance {
+  margin-left:auto; font-family:var(--mono); font-size:13px; font-weight:600;
+  padding:4px 10px; border-radius:var(--radius-xs);
+}
+.check-variance.ok { color:var(--emerald); background:var(--emerald-bg); }
+.check-variance.error { color:var(--rose); background:var(--rose-bg); }
+.check-variance.warning { color:var(--amber); background:var(--amber-bg); }
+.check-variance.skip { color:var(--text-muted); background:rgba(0,0,0,0.03); }
+.check-arrow { color:var(--text-muted); transition:transform .2s; font-size:14px; }
+.check-card.open .check-arrow { transform:rotate(90deg); }
+
+.check-body { display:none; padding:0 20px 16px; }
+.check-card.open .check-body { display:block; }
+
+/* ITEMS TABLE */
+.check-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.check-table th { text-align:left; font-weight:500; color:var(--text-muted); padding:6px 8px; border-bottom:1px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; }
+.check-table td { padding:8px; border-bottom:1px solid rgba(0,0,0,0.03); }
+.check-table .mono { font-family:var(--mono); }
+.check-table .ok-cell { color:var(--emerald); }
+.check-table .err-cell { color:var(--rose); font-weight:600; }
+
+.suggestion-box {
+  margin-top:12px; padding:12px 16px; border-radius:var(--radius-xs);
+  background:var(--amber-bg); border-left:3px solid var(--amber);
+  font-size:12.5px; color:var(--text-secondary); line-height:1.5;
+}
+.suggestion-box strong { color:var(--amber); }
+
+/* SPINNER */
+.spinner-overlay {
+  display:none; position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(255,255,255,0.85); z-index:9999;
+  align-items:center; justify-content:center; flex-direction:column;
+}
+.spinner-overlay.active { display:flex; }
+.spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--primary); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.spinner-label { margin-top:12px; font-size:13px; color:var(--text-secondary); }
+
+@media(max-width:900px) { .file-slots { grid-template-columns:1fr; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bc">
+  <div class="bc-page">
+    <!-- HEADER -->
+    <div class="bc-header">
+      <div>
+        <h1>Correcteur de Balances</h1>
+        <p>Téléversez vos fichiers — l'outil détecte automatiquement les erreurs et suggère des corrections</p>
+      </div>
+    </div>
+
+    <!-- FILE UPLOAD SECTION -->
+    <div class="file-slots">
+      <div class="file-slot required" id="slot-rj">
+        <div class="file-slot-label">Requis</div>
+        <div class="file-slot-name">Fichier RJ</div>
+        <div class="file-slot-desc">Le rapport journalier Excel (.xls) — contient Recap, Transelect, GEAC, DueBack, Jour</div>
+        <input type="file" id="input-rj" accept=".xls,.xlsx" onchange="fileSelected('rj',this)">
+        <span class="file-slot-btn" onclick="document.getElementById('input-rj').click()">Choisir un fichier</span>
+        <div class="file-slot-status pending" id="status-rj">Aucun fichier</div>
+      </div>
+      <div class="file-slot" id="slot-quasi">
+        <div class="file-slot-label">Optionnel</div>
+        <div class="file-slot-name">Rapport Quasimodo</div>
+        <div class="file-slot-desc">Réconciliation cartes de crédit — améliore la précision de la vérification Visa/MC/Amex</div>
+        <input type="file" id="input-quasi" accept=".xls,.xlsx" onchange="fileSelected('quasi',this)">
+        <span class="file-slot-btn" onclick="document.getElementById('input-quasi').click()">Choisir un fichier</span>
+        <div class="file-slot-status pending" id="status-quasi">Aucun fichier</div>
+      </div>
+      <div class="file-slot" id="slot-sd">
+        <div class="file-slot-label">Optionnel</div>
+        <div class="file-slot-name">Fichier SD</div>
+        <div class="file-slot-desc">Sommaire des Dépôts — vérifie les variances de dépôt par employé</div>
+        <input type="file" id="input-sd" accept=".xls,.xlsx" onchange="fileSelected('sd',this)">
+        <span class="file-slot-btn" onclick="document.getElementById('input-sd').click()">Choisir un fichier</span>
+        <div class="file-slot-status pending" id="status-sd">Aucun fichier</div>
+        <div style="margin-top:6px">
+          <label style="font-size:11px;color:var(--text-muted)">Jour (1-31): </label>
+          <input type="number" id="sd-day" min="1" max="31" value="1" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px">
+        </div>
+      </div>
+    </div>
+
+    <button class="analyze-btn" id="btn-analyze" onclick="analyze()" disabled>
+      Analyser les balances
+    </button>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+      <div id="health-banner"></div>
+      <div class="check-grid" id="check-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SPINNER -->
+<div class="spinner-overlay" id="spinner">
+  <div class="spinner"></div>
+  <div class="spinner-label">Analyse en cours...</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const FILES = { rj: null, quasi: null, sd: null };
+
+function fileSelected(type, input) {
+  const file = input.files[0];
+  if(!file) return;
+  FILES[type] = file;
+  const slot = document.getElementById(`slot-${type === 'quasi' ? 'quasi' : type}`);
+  const status = document.getElementById(`status-${type === 'quasi' ? 'quasi' : type}`);
+  slot.classList.add('loaded');
+  status.className = 'file-slot-status ok';
+  status.textContent = `✓ ${file.name} (${(file.size/1024).toFixed(0)} KB)`;
+  updateAnalyzeBtn();
+}
+
+function updateAnalyzeBtn() {
+  document.getElementById('btn-analyze').disabled = !FILES.rj;
+}
+
+async function analyze() {
+  if(!FILES.rj) return;
+
+  const spinner = document.getElementById('spinner');
+  spinner.classList.add('active');
+
+  const formData = new FormData();
+  formData.append('rj_file', FILES.rj);
+  if(FILES.quasi) formData.append('quasimodo_file', FILES.quasi);
+  if(FILES.sd) {
+    formData.append('sd_file', FILES.sd);
+    formData.append('sd_day', document.getElementById('sd-day').value);
+  }
+
+  try {
+    const resp = await fetch('/api/balance-checker/analyze', { method:'POST', body:formData });
+    const data = await resp.json();
+
+    if(data.success) {
+      renderReport(data.report);
+    } else {
+      alert('Erreur: ' + (data.error || 'Inconnue'));
+    }
+  } catch(e) {
+    alert('Erreur réseau: ' + e.message);
+  } finally {
+    spinner.classList.remove('active');
+  }
+}
+
+function fmt(v) {
+  if(v === null || v === undefined) return '—';
+  return new Intl.NumberFormat('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2}).format(v);
+}
+
+function renderReport(report) {
+  const results = document.getElementById('results');
+  results.classList.add('active');
+
+  const s = report.summary;
+  const icons = { perfect:'✓', good:'✓', warning:'⚠', critical:'✗' };
+
+  // Health banner
+  document.getElementById('health-banner').innerHTML = `
+    <div class="health-banner ${s.health}">
+      <div class="health-icon">${icons[s.health]||'?'}</div>
+      <div class="health-text">
+        <h2>${s.health_label}</h2>
+        <p>${report.audit_date ? 'Audit du ' + report.audit_date : ''} · Fichiers: ${report.files_loaded.join(', ')}</p>
+      </div>
+      <div class="health-stats">
+        <div class="health-stat"><strong>${s.passed}</strong>/${s.total_checks} OK</div>
+        ${s.total_variance > 0 ? `<div class="health-stat">Variance totale: <strong>$${fmt(s.total_variance)}</strong></div>` : ''}
+      </div>
+    </div>
+  `;
+
+  // Check cards
+  const grid = document.getElementById('check-grid');
+  let html = '';
+
+  const checkOrder = ['quasimodo','cash_recap','ar_balance','dueback','deposit_variance','revenue_crosscheck'];
+  const checkIcons = {
+    quasimodo:'💳', cash_recap:'💵', ar_balance:'📊',
+    dueback:'👤', deposit_variance:'🏦', revenue_crosscheck:'📋'
+  };
+
+  for(const key of checkOrder) {
+    const c = report.checks[key];
+    if(!c) continue;
+
+    const varClass = c.status === 'ok' ? 'ok' : c.severity === 'warning' ? 'warning' : c.status === 'skip' ? 'skip' : 'error';
+    const varText = c.status === 'skip' ? 'N/A' : c.status === 'ok' ? '$0.00' : `$${fmt(c.total_variance)}`;
+
+    html += `<div class="check-card" onclick="this.classList.toggle('open')">
+      <div class="check-header">
+        <div class="check-indicator ${varClass}"></div>
+        <div>
+          <div class="check-title">${checkIcons[key]||''} ${c.name}</div>
+          <div class="check-desc">${c.description}</div>
+        </div>
+        <div class="check-variance ${varClass}">${varText}</div>
+        <div class="check-arrow">▸</div>
+      </div>
+      <div class="check-body">`;
+
+    // Items table
+    if(c.items && c.items.length) {
+      html += `<table class="check-table"><thead><tr>
+        <th>Élément</th><th>Attendu</th><th>Réel</th><th>Écart</th><th>Statut</th>
+      </tr></thead><tbody>`;
+      for(const item of c.items) {
+        const cls = item.ok ? 'ok-cell' : 'err-cell';
+        html += `<tr>
+          <td>${item.label}</td>
+          <td class="mono">$${fmt(item.expected)}</td>
+          <td class="mono">$${fmt(item.actual)}</td>
+          <td class="mono ${cls}">$${fmt(item.variance)}</td>
+          <td class="${cls}">${item.ok ? '✓' : '✗'}</td>
+        </tr>`;
+      }
+      html += `</tbody></table>`;
+    }
+
+    // Suggestion
+    if(c.suggestion) {
+      html += `<div class="suggestion-box"><strong>💡 Suggestion :</strong> ${c.suggestion}</div>`;
+    }
+
+    html += `</div></div>`;
+  }
+
+  grid.innerHTML = html;
+
+  // Scroll to results
+  results.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+</script>
+{% endblock %}

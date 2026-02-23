@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>{{ title }} — Sheraton Laval</title>
+<style>
+  @page { size: letter; margin: 1.5cm 1.5cm 1cm 1.5cm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #000; }
+
+  .page { page-break-after: always; padding: 10px 0; }
+  .page:last-child { page-break-after: avoid; }
+
+  .hotel-name { font-size: 16px; font-weight: 700; text-align: center; margin-bottom: 2px; }
+  .report-title { font-size: 13px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .report-subtitle { font-size: 10px; text-align: center; margin-bottom: 10px; color: #444; }
+  .report-date { font-size: 11px; text-align: center; margin-bottom: 14px; color: #222; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+  th, td { border: 1px solid #999; padding: 4px 6px; text-align: left; font-size: 10.5px; }
+  th { background: #e8e8e8; font-weight: 700; font-size: 10px; text-transform: uppercase; }
+  .num { text-align: right; font-family: 'Courier New', monospace; font-size: 10.5px; }
+  .total-row { font-weight: 700; background: #f0f0f0; border-top: 2px solid #000; }
+  .subtotal-row { font-weight: 600; background: #f7f7f7; }
+  .section-header { background: #d1d5db; font-weight: 700; font-size: 10px; }
+  .section-label { font-weight: 700; font-size: 11px; margin: 14px 0 6px 0; }
+  .signature-area { margin-top: 30px; display: flex; justify-content: space-between; }
+  .signature-line { width: 45%; border-top: 1px solid #000; padding-top: 4px; font-size: 10px; }
+  .balance-ok { color: #16a34a; font-weight: 700; }
+  .balance-err { color: #dc2626; font-weight: 700; }
+  .empty-cell { background: #f5f5f5; }
+  .dim { opacity: 0.35; }
+  .code-col { font-size: 9px; color: #666; text-align: center; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none !important; }
+  }
+
+  .toolbar { background: #1e293b; color: #fff; padding: 10px 20px; display: flex; gap: 10px; align-items: center; }
+  .toolbar button { background: #3b82f6; color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .toolbar button:hover { background: #2563eb; }
+  .toolbar .title { flex: 1; font-weight: 600; }
+  @media print { .toolbar { display: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- Toolbar (hidden on print) -->
+<div class="toolbar no-print">
+  <span class="title">Impression — {{ title }}</span>
+  <button onclick="window.print()">Imprimer</button>
+  <button onclick="window.close()">Fermer</button>
+</div>
+
+{% if report_type == 'sd' %}
+<!-- ═══════════════════════════════════════════ -->
+<!-- SD — SOMMAIRE JOURNALIER DES DÉPÔTS        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="hotel-name">SHERATON — LAVAL</div>
+  <div class="report-title">SOMMAIRE JOURNALIER DES DÉPÔTS ET DES SURPLUS ET DÉFICIT</div>
+  <div class="report-date">Date: {{ audit_date_display }}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:18%">Département</th>
+        <th style="width:25%">Nom (lettres moulées)</th>
+        <th style="width:8%;text-align:center">CDN/US</th>
+        <th style="width:14%" class="num">Montant</th>
+        <th style="width:14%" class="num">Montant vérifié</th>
+        <th style="width:10%" class="num">Remb.</th>
+        <th style="width:11%" class="num">Variance</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in sd_entries %}
+      <tr>
+        <td>{{ entry.department }}</td>
+        <td>{{ entry.name }}</td>
+        <td style="text-align:center">{{ entry.currency }}</td>
+        <td class="num">{{ "%.2f"|format(entry.amount) }}</td>
+        <td class="num">{{ "%.2f"|format(entry.verified) }}</td>
+        <td class="num">{{ "%.2f"|format(entry.reimbursement) }}</td>
+        <td class="num" style="{% if entry.variance|abs > 0.01 %}color:#dc2626{% else %}color:#16a34a{% endif %}">
+          {{ "%.2f"|format(entry.variance) }}
+        </td>
+      </tr>
+      {% endfor %}
+      {% if not sd_entries %}
+      <tr><td colspan="7" style="text-align:center;color:#888;padding:20px">Aucune entrée pour ce jour</td></tr>
+      {% endif %}
+      <tr class="total-row">
+        <td colspan="3">TOTAL</td>
+        <td class="num">{{ "%.2f"|format(sd_totals.montant) }}</td>
+        <td class="num">{{ "%.2f"|format(sd_totals.verifie) }}</td>
+        <td class="num">{{ "%.2f"|format(sd_totals.remb) }}</td>
+        <td class="num" style="{% if sd_totals.variance|abs > 0.01 %}color:#dc2626{% else %}color:#16a34a{% endif %}">
+          {{ "%.2f"|format(sd_totals.variance) }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="signature-area">
+    <div class="signature-line">SIGNATURE AUDITEUR DE NUIT: {{ auditor_name }}</div>
+    <div class="signature-line">SIGNATURE COMPTABILITÉ:</div>
+  </div>
+</div>
+{% endif %}
+
+{% if report_type == 'recap' %}
+<!-- ═══════════════════════════════════════════ -->
+<!-- RECAP — RECONCILIATION COMPTANT             -->
+<!-- Fidèle au layout Excel: Lecture / Correction / Net + codes -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="hotel-name">SHERATON — LAVAL</div>
+  <div class="report-title">RECAP</div>
+  <div class="report-date">Date: {{ audit_date_display }}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:38%">Description</th>
+        <th class="num" style="width:16%">Lecture</th>
+        <th class="num" style="width:16%">Correction</th>
+        <th class="num" style="width:16%">Net</th>
+        <th style="width:14%;text-align:center">Code</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Cash Receipts -->
+      <tr><td colspan="5" class="section-header">ENCAISSEMENTS</td></tr>
+      <tr>
+        <td>Comptant LightSpeed</td>
+        <td class="num">{{ "%.2f"|format(recap.cash_ls_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cash_ls_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cash_ls_net) }}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Comptant POSitouch</td>
+        <td class="num">{{ "%.2f"|format(recap.cash_pos_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cash_pos_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cash_pos_net) }}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Chèque A/R</td>
+        <td class="num">{{ "%.2f"|format(recap.cheque_ar_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cheque_ar_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cheque_ar_net) }}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Chèque Daily Rev</td>
+        <td class="num">{{ "%.2f"|format(recap.cheque_dr_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cheque_dr_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.cheque_dr_net) }}</td>
+        <td></td>
+      </tr>
+      <tr class="subtotal-row">
+        <td>Sous-total encaissements</td>
+        <td class="num">{{ "%.2f"|format(recap.sub_cash_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.sub_cash_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.sub_cash_net) }}</td>
+        <td></td>
+      </tr>
+
+      <!-- Refunds -->
+      <tr><td colspan="5" class="section-header" style="background:#fecaca">REMBOURSEMENTS</td></tr>
+      <tr>
+        <td>Remb. gratuite</td>
+        <td class="num">{{ "%.2f"|format(recap.remb_gratuite_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.remb_gratuite_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.remb_gratuite_net) }}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Remb. client</td>
+        <td class="num">{{ "%.2f"|format(recap.remb_client_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.remb_client_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.remb_client_net) }}</td>
+        <td></td>
+      </tr>
+      <tr class="subtotal-row">
+        <td>Sous-total remboursements</td>
+        <td class="num">{{ "%.2f"|format(recap.sub_remb_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.sub_remb_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.sub_remb_net) }}</td>
+        <td></td>
+      </tr>
+
+      <!-- DueBack -->
+      <tr><td colspan="5" class="section-header" style="background:#dbeafe">DUE BACK</td></tr>
+      <tr>
+        <td>Due Back Réception</td>
+        <td class="num">{{ "%.2f"|format(recap.dueback_reception_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.dueback_reception_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.dueback_reception_net) }}</td>
+        <td class="code-col">WR</td>
+      </tr>
+      <tr>
+        <td>Due Back N/B</td>
+        <td class="num">{{ "%.2f"|format(recap.dueback_nb_lecture) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.dueback_nb_corr) }}</td>
+        <td class="num">{{ "%.2f"|format(recap.dueback_nb_net) }}</td>
+        <td class="code-col">WN</td>
+      </tr>
+
+      <!-- Deposits -->
+      <tr><td colspan="5" class="section-header" style="background:#d1fae5">DÉPÔTS</td></tr>
+      <tr>
+        <td>Dépôt Canadien</td>
+        <td class="num" colspan="2"></td>
+        <td class="num">{{ "%.2f"|format(recap.deposit_cdn) }}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Dépôt US</td>
+        <td class="num" colspan="2"></td>
+        <td class="num">{{ "%.2f"|format(recap.deposit_us) }}</td>
+        <td></td>
+      </tr>
+
+      <!-- Balance -->
+      <tr class="total-row">
+        <td>SOLDE</td>
+        <td colspan="2"></td>
+        <td class="num {% if recap.balance|abs < 0.02 %}balance-ok{% else %}balance-err{% endif %}" style="font-size:12px">
+          {{ "%.2f"|format(recap.balance) }}
+        </td>
+        <td class="code-col" style="font-weight:700">{% if recap.balance|abs > 0.01 %}WS{% endif %}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="signature-area">
+    <div class="signature-line">Préparé par: {{ auditor_name }}</div>
+    <div class="signature-line">Date: {{ audit_date_display }}</div>
+  </div>
+</div>
+{% endif %}
+
+{% if report_type == 'geac' %}
+<!-- ═══════════════════════════════════════════ -->
+<!-- GEAC — CASH OUT vs DAILY REV + BALANCE SHEET -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="hotel-name">HÔTEL SHERATON LAVAL — Property 858</div>
+  <div class="report-title">GEAC/UX — System Balance Sheet</div>
+  <div class="report-date">Night Audit Date: {{ audit_date_display }}</div>
+
+  <!-- ── Part 1: Daily Cash Out vs Daily Revenue ── -->
+  <div class="section-label">Daily Cash Out vs Daily Revenue</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28%">Type de carte</th>
+        <th class="num" style="width:18%">Cash Out L1</th>
+        <th class="num" style="width:18%">Cash Out L2</th>
+        <th class="num" style="width:18%">Total Cash Out</th>
+        <th class="num" style="width:18%">Daily Revenue</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for card in geac_cards %}
+      <tr>
+        <td style="font-weight:600">{{ card.label }}</td>
+        <td class="num">{{ "%.2f"|format(card.co1) }}</td>
+        <td class="num">{{ "%.2f"|format(card.co2) }}</td>
+        <td class="num" style="font-weight:600">{{ "%.2f"|format(card.co_total) }}</td>
+        <td class="num">{{ "%.2f"|format(card.daily_rev) }}</td>
+      </tr>
+      {% endfor %}
+      <tr class="total-row">
+        <td>TOTAL</td>
+        <td class="num">{{ "%.2f"|format(geac_totals.co1) }}</td>
+        <td class="num">{{ "%.2f"|format(geac_totals.co2) }}</td>
+        <td class="num">{{ "%.2f"|format(geac_totals.co_total) }}</td>
+        <td class="num">{{ "%.2f"|format(geac_totals.daily_rev) }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table style="width:50%;margin-top:4px">
+    <tr style="font-weight:700;font-size:11px">
+      <td style="border:none;width:60%">Variance cartes (Total CashOut − Daily Rev)</td>
+      <td class="num {% if geac_totals.card_variance|abs < 0.02 %}balance-ok{% else %}balance-err{% endif %}" style="border:1px solid #999;font-size:12px">
+        {{ "%.2f"|format(geac_totals.card_variance) }}
+      </td>
+    </tr>
+  </table>
+
+  <!-- ── Part 2: System Balance Sheet ── -->
+  <div class="section-label" style="margin-top:20px">System Balance Sheet</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:28%">Description</th>
+        <th class="num" style="width:18%">Daily Revenue</th>
+        <th class="num" style="width:18%">Guest Ledger</th>
+        <th class="num" style="width:18%">A/R Summary</th>
+        <th class="num" style="width:18%">Advance Deposit</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="font-weight:600">Balance Previous Day</td>
+        <td class="num">{{ "%.2f"|format(bs.prev_dr) }}</td>
+        <td class="num">{{ "%.2f"|format(bs.prev_gl) }}</td>
+        <td class="empty-cell"></td>
+        <td class="empty-cell"></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600">Balance Today</td>
+        <td class="num">{{ "%.2f"|format(bs.today_dr) }}</td>
+        <td class="num">{{ "%.2f"|format(bs.today_gl) }}</td>
+        <td class="empty-cell"></td>
+        <td class="empty-cell"></td>
+      </tr>
+      <tr style="border-top:2px solid #666">
+        <td style="font-weight:600">Facture Direct</td>
+        <td class="num">{{ "%.2f"|format(bs.facture_dr) }}</td>
+        <td class="empty-cell"></td>
+        <td class="num">{{ "%.2f"|format(bs.facture_ar) }}</td>
+        <td class="empty-cell"></td>
+      </tr>
+      <tr>
+        <td style="font-weight:600">Adv. Deposit Applied</td>
+        <td class="num">{{ "%.2f"|format(bs.advdep_dr) }}</td>
+        <td class="empty-cell"></td>
+        <td class="empty-cell"></td>
+        <td class="num">{{ "%.2f"|format(bs.advdep_ad) }}</td>
+      </tr>
+      <tr class="dim">
+        <td>Today Moved In</td>
+        <td class="num">0.00</td>
+        <td class="num">0.00</td>
+        <td class="num">0.00</td>
+        <td class="num">0.00</td>
+      </tr>
+      <tr class="dim">
+        <td>Today Moved Out</td>
+        <td class="num">0.00</td>
+        <td class="num">0.00</td>
+        <td class="num">0.00</td>
+        <td class="num">0.00</td>
+      </tr>
+      <tr class="total-row">
+        <td>New Balance</td>
+        <td class="num">{{ "%.2f"|format(bs.newbal_dr) }}</td>
+        <td class="num">{{ "%.2f"|format(bs.newbal_gl) }}</td>
+        <td class="empty-cell"></td>
+        <td class="empty-cell"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="margin-top:6px;font-size:10px;color:#666">
+    Hotel Contact: Mandy Le &nbsp;|&nbsp; GEAC Support: 1-800-434-9990
+  </div>
+</div>
+{% endif %}
+
+{% if report_type == 'hp' %}
+<!-- ═══════════════════════════════════════════ -->
+<!-- HP PAGE 1 — DONNÉES (transactions brutes du jour) -->
+<!-- Reproduit l'onglet "données" filtré pour le jour  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="hotel-name">SHERATON — LAVAL</div>
+  <div class="report-title">HP — DONNÉES</div>
+  <div class="report-date">Jour {{ audit_day }} — {{ audit_date_display }}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:5%">Date</th>
+        <th>Aera</th>
+        <th class="num">Nourriture</th>
+        <th class="num">Boisson</th>
+        <th class="num">Bière</th>
+        <th class="num">Vin</th>
+        <th class="num">Minéraux</th>
+        <th class="num">Tabagie</th>
+        <th class="num">Autres</th>
+        <th class="num">Pourboire</th>
+        <th>Paiement</th>
+        <th class="num">Total</th>
+        <th>Raison</th>
+        <th>Qui</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for e in hp_donnees %}
+      <tr>
+        <td style="text-align:center">{{ audit_day }}</td>
+        <td>{{ e.area }}</td>
+        <td class="num">{{ "%.2f"|format(e.nourriture) if e.nourriture else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.boisson) if e.boisson else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.biere) if e.biere else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.vin) if e.vin else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.mineraux) if e.mineraux else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.tabagie) if e.tabagie else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.autres) if e.autres else '' }}</td>
+        <td class="num">{{ "%.2f"|format(e.pourboire) if e.pourboire else '' }}</td>
+        <td style="font-size:9px">{{ e.paiement_code }}</td>
+        <td class="num" style="font-weight:600">{{ "%.2f"|format(e.total) }}</td>
+        <td style="font-size:9px">{{ e.raison }}</td>
+        <td style="font-size:9px">{{ e.qui }}</td>
+      </tr>
+      {% endfor %}
+      {% if not hp_donnees %}
+      <tr><td colspan="14" style="text-align:center;color:#888;padding:20px">Aucune entrée HP pour ce jour</td></tr>
+      {% endif %}
+      {% if hp_donnees %}
+      <tr class="total-row">
+        <td colspan="2">TOTAL</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.nourriture) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.boisson) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.biere) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.vin) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.mineraux) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.tabagie) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.autres) }}</td>
+        <td class="num">{{ "%.2f"|format(hp_don_totals.pourboire) }}</td>
+        <td></td>
+        <td class="num" style="font-size:11px">{{ "%.2f"|format(hp_don_totals.total) }}</td>
+        <td colspan="2"></td>
+      </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- HP PAGE 2 — JOURNALIER (pivot par Area)    -->
+<!-- Reproduit l'onglet "Journalier" filtré      -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="hotel-name">SHERATON — LAVAL</div>
+  <div class="report-title">Rapport Quotidien des factures Hôtel Promotion</div>
+  <div class="report-date">Jour {{ audit_day }} — {{ audit_date_display }}</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:20%">Aera</th>
+        <th style="width:25%">Données</th>
+        <th class="num" style="width:18%;background:#d1fae5">15 - Promotion</th>
+        <th class="num" style="width:18%;background:#dbeafe">14 - Administration</th>
+        <th class="num" style="width:19%">Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for area in journalier_areas %}
+      {% for row in area.rows %}
+      <tr {% if row.is_total %}style="font-weight:700;border-top:1px solid #999"{% endif %}>
+        <td>{% if loop.first %}{{ area.name }}{% endif %}</td>
+        <td>{{ row.label }}</td>
+        <td class="num" style="{% if row.is_total %}font-weight:700{% endif %}">{{ "%.2f"|format(row.promo) if row.promo else '' }}</td>
+        <td class="num" style="{% if row.is_total %}font-weight:700{% endif %}">{{ "%.2f"|format(row.admin) if row.admin else '' }}</td>
+        <td class="num" style="font-weight:{% if row.is_total %}700{% else %}600{% endif %}">{{ "%.2f"|format(row.total) if row.total else '' }}</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+
+      {% if not journalier_areas %}
+      <tr><td colspan="5" style="text-align:center;color:#888;padding:20px">Aucune entrée HP pour ce jour</td></tr>
+      {% endif %}
+
+      {% if journalier_grand %}
+      {% for row in journalier_grand %}
+      <tr class="{% if row.is_total %}total-row{% else %}subtotal-row{% endif %}">
+        <td colspan="2">{{ row.label }}</td>
+        <td class="num">{{ "%.2f"|format(row.promo) if row.promo else '' }}</td>
+        <td class="num">{{ "%.2f"|format(row.admin) if row.admin else '' }}</td>
+        <td class="num" style="font-weight:700">{{ "%.2f"|format(row.total) if row.total else '' }}</td>
+      </tr>
+      {% endfor %}
+      {% endif %}
+    </tbody>
+  </table>
+
+  <div class="signature-area">
+    <div class="signature-line">Préparé par: {{ auditor_name }}</div>
+    <div class="signature-line">Date: {{ audit_date_display }}</div>
+  </div>
+</div>
+{% endif %}
+
+</body>
+</html>

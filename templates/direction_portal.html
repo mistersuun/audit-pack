@@ -1,0 +1,3346 @@
+{% extends "base.html" %}
+{% block title %}Direction — Portail Exécutif{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<style>
+/* ═══════════════════════════════════════
+   DIRECTION PORTAL — Executive Dashboard
+   ═══════════════════════════════════════ */
+
+/* Hide base template sidebar & reset main margin */
+nav.sidebar { display: none !important; }
+main.with-sidebar { margin-left: 0 !important; padding: 0 !important; }
+
+/* Layout */
+.dir-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg, #0f1117);
+}
+
+/* Sidebar */
+.dir-sidebar {
+  width: 240px;
+  background: var(--card-bg, #1a1d27);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 0;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
+/* scrollbar styles moved to .dir-sidebar-nav */
+
+/* Sidebar groups */
+.sidebar-group {
+  margin-bottom: 4px;
+}
+
+.sidebar-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.sidebar-group-header:hover {
+  color: var(--text, #e2e8f0);
+  background: rgba(255,255,255,0.03);
+}
+
+.sidebar-group-header.section-active {
+  color: var(--text, #e2e8f0);
+  background: rgba(255,255,255,0.05);
+}
+
+.sidebar-group-header.section-active .sidebar-group-header-icon {
+  color: #818cf8;
+}
+
+.sidebar-group-header svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s;
+}
+
+.sidebar-group-header.expanded svg {
+  transform: rotate(180deg);
+}
+
+.sidebar-group-header-icon {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.sidebar-group-header-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.sidebar-group-content {
+  display: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.sidebar-group-content.expanded {
+  display: block;
+  max-height: 500px;
+}
+
+/* Sidebar items */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 1px 8px 1px 16px;
+  border-radius: 6px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s, background 0.15s;
+}
+
+.sidebar-item:hover {
+  color: var(--text, #e2e8f0);
+  background: rgba(255,255,255,0.04);
+}
+
+.sidebar-item.active {
+  color: var(--text, #e2e8f0);
+  background: rgba(255,255,255,0.07);
+  font-weight: 500;
+}
+
+.sidebar-item svg {
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+/* Sidebar scrollable nav area */
+.dir-sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 0 12px;
+}
+
+.dir-sidebar-nav::-webkit-scrollbar { width: 6px; }
+.dir-sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.dir-sidebar-nav::-webkit-scrollbar-thumb { background: var(--border, #2a2d3a); border-radius: 3px; }
+
+/* Sidebar footer */
+.dir-sidebar-footer {
+  flex-shrink: 0;
+  padding: 10px 12px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+.dir-user-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+
+.dir-user-profile:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+.dir-user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  flex-shrink: 0;
+}
+
+.dir-user-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.dir-user-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text, #e2e8f0);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dir-user-role {
+  font-size: 0.7rem;
+  color: var(--text-muted, #64748b);
+}
+
+.dir-sidebar-actions {
+  display: flex;
+  gap: 2px;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.dir-sidebar-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--text-muted, #64748b);
+  transition: color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+
+.dir-sidebar-action:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text, #e2e8f0);
+}
+
+.dir-sidebar-action.dir-logout:hover {
+  background: rgba(239, 68, 68, 0.08);
+  color: #f87171;
+}
+
+.dir-sidebar-action svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Main content area */
+.dir-main {
+  flex: 1;
+  margin-left: 240px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.dir-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 24px 60px;
+  width: 100%;
+}
+
+/* Header */
+.dir-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+}
+
+.dir-header h1 {
+  font-size: 1.35rem;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.dir-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dir-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #10b981;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.12);
+}
+
+.dir-badge::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+  animation: pulse-dot 2s ease infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1 }
+  50% { opacity: .3 }
+}
+
+/* Filter bar */
+.filter-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-btn {
+  padding: 7px 16px;
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  color: var(--text, #e2e8f0);
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+.filter-btn.active {
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.3);
+  font-weight: 600;
+}
+
+.date-select {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  color: var(--text, #e2e8f0);
+  padding: 7px 14px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.date-select:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Sections */
+.section {
+  display: none;
+}
+
+.section.active {
+  display: block;
+}
+
+/* ═══ KPI CARDS ═══ */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.kpi-card {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 12px 12px 0 0;
+}
+
+.kpi-card.accent-indigo::before { background: #6366f1; }
+.kpi-card.accent-emerald::before { background: #10b981; }
+.kpi-card.accent-amber::before { background: #f59e0b; }
+.kpi-card.accent-blue::before { background: #3b82f6; }
+.kpi-card.accent-violet::before { background: #8b5cf6; }
+.kpi-card.accent-teal::before { background: #0d9488; }
+.kpi-card.accent-rose::before { background: #ef4444; }
+
+.kpi-label {
+  font-size: 0.72rem;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-meta {
+  font-size: 0.78rem;
+  margin-top: 6px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.kpi-delta {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.kpi-delta.pos {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.kpi-delta.neg {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ═══ ALERT TABLE ═══ */
+.alert-grid {
+  margin-bottom: 24px;
+}
+
+.alert-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.alert-table thead th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #64748b);
+  border-bottom: 1px solid var(--border, #2a2d3a);
+}
+
+.alert-table thead th:last-child { text-align: right; }
+
+.alert-table tbody tr {
+  transition: background 0.15s;
+}
+
+.alert-table tbody tr:hover {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.alert-table tbody td {
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: var(--text, #e2e8f0);
+  border-bottom: 1px solid rgba(42, 45, 58, 0.4);
+  vertical-align: middle;
+}
+
+.alert-table tbody td:last-child { text-align: right; }
+
+.alert-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.alert-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.alert-dot.critical { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+.alert-dot.warning { background: #f59e0b; }
+.alert-dot.success { background: #10b981; }
+.alert-dot.info { background: #64748b; }
+
+.alert-name {
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+}
+
+.alert-desc {
+  font-size: 0.78rem;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 2px;
+}
+
+.alert-metric-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.alert-threshold-cell {
+  color: var(--text-muted, #64748b);
+  font-size: 0.8rem;
+}
+
+.alert-summary-bar {
+  display: flex;
+  gap: 20px;
+  padding: 14px 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+}
+
+.alert-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.alert-summary-count {
+  font-weight: 700;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══ RECOMMENDATIONS ═══ */
+.recommendations-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rec-group-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted, #64748b);
+  padding: 18px 0 8px;
+}
+
+.rec-group-label:first-child { padding-top: 0; }
+
+.rec-item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.rec-item:hover {
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.rec-item-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.rec-item-icon.high { background: rgba(239,68,68,0.1); }
+.rec-item-icon.medium { background: rgba(245,158,11,0.1); }
+.rec-item-icon.low { background: rgba(16,185,129,0.08); }
+
+.rec-item-content {
+  min-width: 0;
+}
+
+.rec-item-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+  margin-bottom: 3px;
+}
+
+.rec-item-desc {
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.45;
+}
+
+.rec-item-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.rec-item-expand {
+  display: none;
+  padding: 12px 0 4px 46px;
+}
+
+.rec-item.open .rec-item-expand { display: block; }
+
+.rec-item-expand .rec-actions-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.rec-actions-list li {
+  position: relative;
+  padding: 6px 0 6px 18px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.4;
+}
+
+.rec-actions-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border, #2a2d3a);
+}
+
+.rec-context-line {
+  font-size: 0.75rem;
+  color: var(--text-muted, #526077);
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══ CHART PANELS ═══ */
+.chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.chart-panel {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.chart-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #818cf8;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chart-container {
+  position: relative;
+  height: 280px;
+}
+
+.chart-full {
+  grid-column: 1 / -1;
+}
+
+.chart-full .chart-container {
+  height: 320px;
+}
+
+/* ═══ YOY TABLE ═══ */
+.yoy-panel {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+}
+
+.yoy-panel h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #818cf8;
+  margin-bottom: 14px;
+}
+
+.yoy-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.yoy-table th {
+  background: rgba(99, 102, 241, 0.08);
+  color: #818cf8;
+  text-align: right;
+  padding: 8px 10px;
+  border-bottom: 2px solid var(--border, #2a2d3a);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.yoy-table th:first-child {
+  text-align: left;
+}
+
+.yoy-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(42, 45, 58, 0.5);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.yoy-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.yoy-table tr:hover td {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.delta-tag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+.delta-tag.pos {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.delta-tag.neg {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* ═══ DOW GRID ═══ */
+.dow-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.dow-card {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+
+.dow-card.peak {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.04);
+}
+
+.dow-card.low {
+  border-color: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.dow-day {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.dow-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dow-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted, #94a3b8);
+  margin-top: 4px;
+}
+
+/* ═══ RJ VIEWER ═══ */
+.rj-viewer-header {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rj-session-select {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  color: var(--text, #e2e8f0);
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  min-width: 260px;
+}
+
+.rj-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.rj-block {
+  background: rgba(99, 102, 241, 0.04);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.rj-block-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #818cf8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+}
+
+.rj-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 0.85rem;
+}
+
+.rj-row.highlight {
+  border-top: 1px solid var(--border, #2a2d3a);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.rj-label {
+  color: var(--text-muted, #94a3b8);
+}
+
+.rj-value {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.rj-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted, #94a3b8);
+  font-style: italic;
+}
+
+.rj-entries-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-top: 8px;
+}
+
+.rj-entries-table th {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 2px solid var(--border, #2a2d3a);
+  color: #818cf8;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.rj-entries-table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(42, 45, 58, 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.rj-entries-table tr:hover td {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+/* ═══ REPORT TABS ═══ */
+.dir-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 0;
+  background: var(--card-bg, #1a1d27);
+  padding: 6px 6px 0;
+  border-radius: 10px 10px 0 0;
+  border: 1px solid var(--border, #2a2d3a);
+  border-bottom: none;
+  overflow-x: auto;
+}
+
+.dir-tab {
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.dir-tab:hover {
+  color: var(--text, #e2e8f0);
+  background: rgba(99, 102, 241, 0.1);
+}
+
+.dir-tab.active {
+  color: #818cf8;
+  background: var(--bg, #0f1117);
+  font-weight: 600;
+  border-bottom: 2px solid #6366f1;
+}
+
+.dir-content {
+  display: none;
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.dir-content.active {
+  display: block;
+}
+
+.dir-loading {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.dir-loading .spinner {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border, #2a2d3a);
+  border-top: 3px solid #6366f1;
+  border-radius: 50%;
+  animation: dirspin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes dirspin {
+  to { transform: rotate(360deg); }
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.no-data h2 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+}
+
+.no-data p {
+  color: var(--text-muted, #94a3b8);
+}
+
+/* Report tables */
+.rpt-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 4px;
+  color: #818cf8;
+}
+
+.rpt-subtitle {
+  text-align: center;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+}
+
+.rpt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  margin-bottom: 16px;
+}
+
+.rpt-table th {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  text-align: right;
+  padding: 6px 10px;
+  border-bottom: 2px solid var(--border, #2a2d3a);
+  font-weight: 600;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.rpt-table th:first-child {
+  text-align: left;
+}
+
+.rpt-table td {
+  padding: 5px 10px;
+  border-bottom: 1px solid rgba(42, 45, 58, 0.5);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.rpt-table td:first-child {
+  text-align: left;
+  font-weight: 500;
+}
+
+.rpt-table tr:hover td {
+  background: rgba(99, 102, 241, 0.04);
+}
+
+.rpt-table tr.section-header td {
+  font-weight: 700;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.06);
+  border-top: 2px solid var(--border, #2a2d3a);
+  padding-top: 10px;
+}
+
+.rpt-table tr.total-row td {
+  font-weight: 700;
+  border-top: 2px solid #6366f1;
+  border-bottom: 2px solid #6366f1;
+}
+
+.rpt-table tr.subtotal-row td {
+  font-weight: 600;
+  border-top: 1px solid var(--border, #2a2d3a);
+  color: #818cf8;
+}
+
+.rpt-table tr.grand-total td {
+  font-weight: 700;
+  border-top: 3px double #6366f1;
+  font-size: 0.9rem;
+  color: #34d399;
+  padding: 8px 10px;
+}
+
+.rpt-table .indent {
+  padding-left: 24px;
+}
+
+.neg { color: #ef4444; }
+.pos { color: #10b981; }
+.pct { color: var(--text-muted, #94a3b8); font-size: 0.78rem; }
+
+/* P&L layout */
+.pl-layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 20px;
+}
+
+.pl-stats {
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.pl-stats h3 {
+  font-size: 0.85rem;
+  color: #818cf8;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pl-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(42, 45, 58, 0.4);
+  font-size: 0.82rem;
+}
+
+.pl-stat .label {
+  color: var(--text-muted, #94a3b8);
+}
+
+.pl-stat .val {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══ MONTHLY BAR SECTION ═══ */
+.monthly-panel {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 1024px) {
+  .chart-grid { grid-template-columns: 1fr; }
+  .dow-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .dir-sidebar {
+    width: 0;
+    left: -240px;
+    transition: left 0.3s ease;
+  }
+
+  .dir-sidebar.mobile-open {
+    left: 0;
+  }
+
+  .dir-main {
+    margin-left: 0;
+  }
+
+  .mobile-menu-toggle {
+    display: block;
+    background: var(--card-bg, #1a1d27);
+    border: 1px solid var(--border, #2a2d3a);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-right: 12px;
+  }
+
+  .pl-layout { grid-template-columns: 1fr; }
+  .rpt-table { font-size: 0.75rem; }
+  .rpt-table th, .rpt-table td { padding: 4px 6px; }
+  .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .dow-grid { grid-template-columns: repeat(3, 1fr); }
+  .chart-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .dir-sidebar, .dir-header, .filter-bar, .dir-tabs { display: none !important; }
+  .dir-content { display: block !important; border: none; padding: 0; }
+  .rpt-table { font-size: 9pt; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dir-layout">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="dir-sidebar">
+    <div class="dir-sidebar-nav">
+    <!-- Dashboard -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header expanded section-active" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="grid"></i>
+          <span>Tableau de Bord</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content expanded">
+        <div class="sidebar-item active" onclick="switchSidebarSection('dashboard', 'overview', this)">
+          <i data-feather="eye"></i>
+          <span>Vue d'ensemble</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('dashboard', 'dow', this)">
+          <i data-feather="calendar"></i>
+          <span>Jour de la semaine</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('dashboard', 'audits', this)">
+          <i data-feather="check-circle"></i>
+          <span>Audits récents</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Trends -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="trending-up"></i>
+          <span>Tendances</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content">
+        <div class="sidebar-item" onclick="switchSidebarSection('trends', 'revenue', this)">
+          <i data-feather="dollar-sign"></i>
+          <span>Revenus</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('trends', 'occupation', this)">
+          <i data-feather="home"></i>
+          <span>Occupation & ADR</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('trends', 'monthly', this)">
+          <i data-feather="bar-chart"></i>
+          <span>Mensuel</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Year over Year -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="layers"></i>
+          <span>Année / Année</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content">
+        <div class="sidebar-item" onclick="switchSidebarSection('yoy', 'comparison', this)">
+          <i data-feather="bar-chart-2"></i>
+          <span>Comparatif</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('yoy', 'charts', this)">
+          <i data-feather="line-chart"></i>
+          <span>Graphiques</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RJ Reports -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="file-text"></i>
+          <span>Rapports Journaliers</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content">
+        <div class="sidebar-item" onclick="switchSidebarSection('rj', 'viewer', this)">
+          <i data-feather="eye"></i>
+          <span>Visualiseur RJ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Direction Reports -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="bar-chart-2"></i>
+          <span>Rapports Direction</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content">
+        <div class="sidebar-item" onclick="switchSidebarSection('reports', 'p1', this)">
+          <i data-feather="barcode"></i>
+          <span>Sommaire Revenus</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('reports', 'p2', this)">
+          <i data-feather="users"></i>
+          <span>Heures & Employés</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('reports', 'p3', this)">
+          <i data-feather="zap"></i>
+          <span>Analyse Détaillée</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('reports', 'pl', this)">
+          <i data-feather="trending-down"></i>
+          <span>État Rev. & Dépenses</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cross Analysis -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="git-merge"></i>
+          <span>Analyse Croisée</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content">
+        <div class="sidebar-item" onclick="switchSidebarSection('cross', 'labor', this)">
+          <i data-feather="percent"></i>
+          <span>Coût Main-d'œuvre</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('cross', 'dept', this)">
+          <i data-feather="briefcase"></i>
+          <span>Par Département</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('cross', 'gl', this)">
+          <i data-feather="book-open"></i>
+          <span>Grand Livre (GL)</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('cross', 'combined', this)">
+          <i data-feather="activity"></i>
+          <span>Vue Combinée</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analyses & Alerts -->
+    <div class="sidebar-group">
+      <div class="sidebar-group-header" onclick="toggleSidebarGroup(this)">
+        <span>
+          <i class="sidebar-group-header-icon" data-feather="alert-circle"></i>
+          <span>Analyses & Alertes</span>
+        </span>
+        <i data-feather="chevron-down"></i>
+      </div>
+      <div class="sidebar-group-content">
+        <div class="sidebar-item" onclick="switchSidebarSection('analytics', 'alerts', this)">
+          <i data-feather="alert-triangle"></i>
+          <span>Alertes actives</span>
+        </div>
+        <div class="sidebar-item" onclick="switchSidebarSection('analytics', 'recommendations', this)">
+          <i data-feather="lightbulb"></i>
+          <span>Recommandations</span>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- end dir-sidebar-nav -->
+
+    <!-- Sidebar Footer -->
+    <div class="dir-sidebar-footer">
+      <a href="{{ url_for('auth_v2.profile') }}" class="dir-user-profile">
+        <div class="dir-user-avatar">{{ (session.get('user_name', 'U')[0] or 'U')|upper }}</div>
+        <div class="dir-user-info">
+          <div class="dir-user-name">{{ session.get('user_name', 'Utilisateur') }}</div>
+          <div class="dir-user-role">{{ user_role_label }}</div>
+        </div>
+      </a>
+      <div class="dir-sidebar-actions">
+        <a href="javascript:void(0)" onclick="toggleTheme()" class="dir-sidebar-action" title="Changer le thème">
+          <i data-feather="sun" class="theme-icon-sun" style="display:none"></i>
+          <i data-feather="moon" class="theme-icon-moon"></i>
+        </a>
+        <a href="{{ url_for('auth_v2.logout') }}" class="dir-sidebar-action dir-logout" title="Déconnexion">
+          <i data-feather="log-out"></i>
+        </a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="dir-main">
+    <div class="dir-page">
+      <!-- Header -->
+      <div class="dir-header">
+        <div>
+          <h1 id="section-title">Tableau de bord</h1>
+          <p style="font-size:0.82rem;color:var(--text-muted,#94a3b8);margin-top:2px;" id="header-subtitle">Portail Direction — Sheraton Laval</p>
+        </div>
+        <div class="dir-header-right">
+          <div class="dir-badge">Données en direct</div>
+          <select class="date-select" id="date-select" onchange="onDateChange()">
+            <option value="">Chargement...</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Period filter bar -->
+      <div class="filter-bar" id="filter-bar">
+        <button class="filter-btn" onclick="setPeriod(7, this)">7 jours</button>
+        <button class="filter-btn active" onclick="setPeriod(30, this)">30 jours</button>
+        <button class="filter-btn" onclick="setPeriod(90, this)">90 jours</button>
+        <button class="filter-btn" onclick="setPeriod(365, this)">1 an</button>
+        <button class="filter-btn" onclick="setPeriod(0, this)">Tout (5 ans)</button>
+      </div>
+
+      <!-- ═══════════════ DASHBOARD ═══════════════ -->
+      <div class="section active" id="dashboard-section">
+        <div class="kpi-grid" id="kpi-grid"></div>
+
+        <div class="chart-grid">
+          <div class="chart-panel chart-full">
+            <div class="chart-title"><i data-feather="dollar-sign" style="width:16px;height:16px;"></i> Revenus quotidiens</div>
+            <div class="chart-container"><canvas id="dash-revenue-chart"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="pie-chart" style="width:16px;height:16px;"></i> Répartition des revenus</div>
+            <div class="chart-container"><canvas id="dash-mix-chart"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="credit-card" style="width:16px;height:16px;"></i> Paiements par carte</div>
+            <div class="chart-container"><canvas id="dash-payments-chart"></canvas></div>
+          </div>
+        </div>
+
+        <!-- DOW analysis -->
+        <div style="margin-bottom:14px;"><span style="font-size:0.88rem;font-weight:600;color:#818cf8;">Performance par jour de la semaine</span></div>
+        <div class="dow-grid" id="dow-grid"></div>
+
+        <!-- Recent audits -->
+        <div class="yoy-panel" id="recent-audits-panel">
+          <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+            <h3 style="margin:0;">Rapports Journaliers</h3>
+            <span id="recent-audits-count" style="font-size:0.75rem;color:var(--text-muted,#64748b);"></span>
+          </div>
+          <div id="recent-audits-list"><div style="text-align:center;padding:20px;color:var(--text-muted,#94a3b8);">Chargement...</div></div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ TRENDS ═══════════════ -->
+      <div class="section" id="trends-section">
+        <div class="chart-grid">
+          <div class="chart-panel chart-full">
+            <div class="chart-title"><i data-feather="dollar-sign" style="width:16px;height:16px;"></i> Revenus (Chambres vs F&B)</div>
+            <div class="chart-container"><canvas id="trend-revenue-split"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="home" style="width:16px;height:16px;"></i> Taux d'occupation</div>
+            <div class="chart-container"><canvas id="trend-occ"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="tag" style="width:16px;height:16px;"></i> ADR & RevPAR</div>
+            <div class="chart-container"><canvas id="trend-adr-revpar"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Monthly summary bars -->
+        <div class="monthly-panel">
+          <div class="chart-title"><i data-feather="bar-chart" style="width:16px;height:16px;"></i> Revenus mensuels (historique)</div>
+          <div class="chart-container" style="height:340px;"><canvas id="monthly-bar-chart"></canvas></div>
+        </div>
+
+        <!-- Monthly RevPAR line -->
+        <div class="chart-grid">
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="activity" style="width:16px;height:16px;"></i> RevPAR mensuel</div>
+            <div class="chart-container"><canvas id="monthly-revpar"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="users" style="width:16px;height:16px;"></i> Occupation mensuelle</div>
+            <div class="chart-container"><canvas id="monthly-occ"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ YOY ═══════════════ -->
+      <div class="section" id="yoy-section">
+        <div class="yoy-panel">
+          <h3>Comparaison Année par Année (2021–2026)</h3>
+          <table class="yoy-table" id="yoy-table">
+            <thead>
+              <tr><th>Année</th><th>Jours</th><th>ADR moy.</th><th>Occ. moy.</th><th>RevPAR moy.</th><th>Revenus total</th><th>Rev. Chambres</th><th>Rev. F&B</th><th>Ch. vendues</th><th>Clients</th></tr>
+            </thead>
+            <tbody id="yoy-tbody"></tbody>
+          </table>
+        </div>
+
+        <div class="chart-grid">
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="trending-up" style="width:16px;height:16px;"></i> ADR par année</div>
+            <div class="chart-container"><canvas id="yoy-adr-chart"></canvas></div>
+          </div>
+          <div class="chart-panel">
+            <div class="chart-title"><i data-feather="bar-chart-2" style="width:16px;height:16px;"></i> Revenus par année</div>
+            <div class="chart-container"><canvas id="yoy-rev-chart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ RJ VIEWER (14 tabs complets) ═══════════════ -->
+      <div class="section" id="rj-section">
+        <div class="rj-viewer-header">
+          <span style="font-weight:600;color:#818cf8;">Session RJ :</span>
+          <select class="rj-session-select" id="rj-session-select" onchange="loadRJSession()">
+            <option value="">Sélectionner un RJ...</option>
+          </select>
+          <span id="rj-status-badge" style="font-size:0.78rem;padding:3px 10px;border-radius:20px;background:rgba(99,102,241,0.15);color:#818cf8;display:none;"></span>
+        </div>
+
+        <!-- 23 RJ Tabs (14 original + 9 new specialized sheets) -->
+        <div class="dir-tabs" id="rj-tabs-bar" style="display:none;flex-wrap:wrap;">
+          <button class="dir-tab active" onclick="switchRJTab('controle',this)">Contrôle</button>
+          <button class="dir-tab" onclick="switchRJTab('dueback',this)">DueBack</button>
+          <button class="dir-tab" onclick="switchRJTab('recap',this)">Recap</button>
+          <button class="dir-tab" onclick="switchRJTab('transelect',this)">Transelect</button>
+          <button class="dir-tab" onclick="switchRJTab('geac',this)">GEAC</button>
+          <button class="dir-tab" onclick="switchRJTab('sd',this)">SD/Dépôt</button>
+          <button class="dir-tab" onclick="switchRJTab('setd',this)">SetD</button>
+          <button class="dir-tab" onclick="switchRJTab('hpadmin',this)">HP/Admin</button>
+          <button class="dir-tab" onclick="switchRJTab('internet',this)">Internet</button>
+          <button class="dir-tab" onclick="switchRJTab('sonifi',this)">Sonifi</button>
+          <button class="dir-tab" onclick="switchRJTab('jour',this)">Jour</button>
+          <button class="dir-tab" onclick="switchRJTab('quasimodo',this)">Quasimodo</button>
+          <button class="dir-tab" onclick="switchRJTab('dbrs',this)">DBRS</button>
+          <button class="dir-tab" onclick="switchRJTab('analyse_gl',this)">Analyse GL</button>
+          <button class="dir-tab" onclick="switchRJTab('diff_caisse',this)">Diff.Caisse</button>
+          <button class="dir-tab" onclick="switchRJTab('socan',this)">SOCAN</button>
+          <button class="dir-tab" onclick="switchRJTab('resonne',this)">Résonne</button>
+          <button class="dir-tab" onclick="switchRJTab('vestiaire',this)">Vestiaire</button>
+          <button class="dir-tab" onclick="switchRJTab('admin_ad',this)">AD</button>
+          <button class="dir-tab" onclick="switchRJTab('massage',this)">Massage</button>
+          <button class="dir-tab" onclick="switchRJTab('ristourne',this)">Ristourne</button>
+          <button class="dir-tab" onclick="switchRJTab('resume',this)">Sommaire</button>
+        </div>
+        <div id="rj-tab-content" class="dir-content active" style="display:none;"></div>
+
+        <div id="rj-placeholder" style="text-align:center;padding:60px;color:var(--text-muted,#94a3b8);">
+          <p style="font-size:1.1rem;margin-bottom:8px;">Sessions RJ disponibles</p>
+          <p>Sélectionnez une session dans le menu ci-dessus pour consulter le rapport journalier complet (14 onglets).</p>
+        </div>
+      </div>
+
+      <!-- ═══════════════ RAPPORTS DIRECTION ═══════════════ -->
+      <div class="section" id="reports-section">
+        <div class="dir-tabs">
+          <button class="dir-tab active" onclick="switchDirTab('p1', this)">Sommaire Revenus</button>
+          <button class="dir-tab" onclick="switchDirTab('p2', this)">Heures & Employés</button>
+          <button class="dir-tab" onclick="switchDirTab('p3', this)">Analyse Détaillée</button>
+          <button class="dir-tab" onclick="switchDirTab('pl', this)">État Rev. & Dépenses</button>
+        </div>
+        <div id="tab-p1" class="dir-content active"><div class="dir-loading" id="loading-p1"><div class="spinner"></div><br>Chargement...</div><div id="content-p1" style="display:none;"></div></div>
+        <div id="tab-p2" class="dir-content"><div class="dir-loading" id="loading-p2"><div class="spinner"></div><br>Chargement...</div><div id="content-p2" style="display:none;"></div></div>
+        <div id="tab-p3" class="dir-content"><div class="dir-loading" id="loading-p3"><div class="spinner"></div><br>Chargement...</div><div id="content-p3" style="display:none;"></div></div>
+        <div id="tab-pl" class="dir-content"><div class="dir-loading" id="loading-pl"><div class="spinner"></div><br>Chargement...</div><div id="content-pl" style="display:none;"></div></div>
+      </div>
+
+      <!-- ═══════════════ ANALYSE CROISÉE ═══════════════ -->
+      <div class="section" id="cross-section">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+          <span style="font-weight:600;color:#818cf8;font-size:0.85rem;">Période :</span>
+          <select class="date-select" id="cross-period-select" onchange="loadCrossSection()" style="min-width:140px;">
+            <option value="7">7 jours</option>
+            <option value="30" selected>30 jours</option>
+            <option value="90">90 jours</option>
+            <option value="365">1 an</option>
+          </select>
+        </div>
+        <div class="dir-tabs">
+          <button class="dir-tab active" onclick="switchCrossTab('labor',this)">Coût Main-d'œuvre</button>
+          <button class="dir-tab" onclick="switchCrossTab('dept',this)">Par Département</button>
+          <button class="dir-tab" onclick="switchCrossTab('gl',this)">Grand Livre (GL)</button>
+          <button class="dir-tab" onclick="switchCrossTab('combined',this)">Vue Combinée</button>
+        </div>
+        <div id="cross-tab-labor" class="dir-content active">
+          <div class="dir-loading" id="loading-cross"><div class="spinner"></div><br>Chargement de l'analyse croisée...</div>
+          <div id="content-cross-labor" style="display:none;">
+            <div class="kpi-grid" id="labor-kpi-grid"></div>
+            <div class="chart-grid">
+              <div class="chart-panel chart-full">
+                <div class="chart-title"><i data-feather="percent" style="width:16px;height:16px;"></i> % Coût main-d'œuvre vs Revenus (quotidien)</div>
+                <div class="chart-container"><canvas id="cross-labor-pct-chart"></canvas></div>
+              </div>
+              <div class="chart-panel">
+                <div class="chart-title"><i data-feather="bar-chart" style="width:16px;height:16px;"></i> Top départements (coût total)</div>
+                <div class="chart-container"><canvas id="cross-dept-bar-chart"></canvas></div>
+              </div>
+              <div class="chart-panel">
+                <div class="chart-title"><i data-feather="dollar-sign" style="width:16px;height:16px;"></i> Revenus vs Main-d'œuvre</div>
+                <div class="chart-container"><canvas id="cross-rev-labor-chart"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="cross-tab-dept" class="dir-content">
+          <div id="content-cross-dept" style="display:none;">
+            <div id="dept-breakdown-container"></div>
+          </div>
+          <div class="dir-loading" id="loading-dept"><div class="spinner"></div><br>Chargement...</div>
+        </div>
+        <div id="cross-tab-gl" class="dir-content">
+          <div id="content-cross-gl" style="display:none;">
+            <div class="kpi-grid" id="gl-kpi-grid"></div>
+            <div class="chart-grid">
+              <div class="chart-panel chart-full">
+                <div class="chart-title"><i data-feather="book-open" style="width:16px;height:16px;"></i> Top comptes GL par montant</div>
+                <div class="chart-container" style="height:350px;"><canvas id="cross-gl-accounts-chart"></canvas></div>
+              </div>
+            </div>
+            <div id="gl-dates-container"></div>
+          </div>
+          <div class="dir-loading" id="loading-gl"><div class="spinner"></div><br>Chargement...</div>
+        </div>
+        <div id="cross-tab-combined" class="dir-content">
+          <div id="content-cross-combined" style="display:none;">
+            <div class="chart-grid">
+              <div class="chart-panel chart-full">
+                <div class="chart-title"><i data-feather="activity" style="width:16px;height:16px;"></i> Vue consolidée quotidienne</div>
+                <div class="chart-container" style="height:350px;"><canvas id="cross-combined-chart"></canvas></div>
+              </div>
+            </div>
+            <div id="combined-table-container"></div>
+          </div>
+          <div class="dir-loading" id="loading-combined"><div class="spinner"></div><br>Chargement...</div>
+        </div>
+      </div>
+
+      <!-- ═══════════════ ANALYSES & ALERTES ═══════════════ -->
+      <div class="section" id="analytics-section">
+        <div class="dir-tabs">
+          <button class="dir-tab active" onclick="switchAnalyticsTab('alerts',this)">Alertes</button>
+          <button class="dir-tab" onclick="switchAnalyticsTab('recommendations',this)">Recommandations</button>
+        </div>
+        <div id="analytics-tab-alerts" class="dir-content active">
+          <div class="alert-grid" id="alert-grid">
+            <div style="text-align:center;padding:60px;color:var(--text-muted,#94a3b8);grid-column:1/-1;">
+              <p>Chargement des alertes...</p>
+            </div>
+          </div>
+        </div>
+        <div id="analytics-tab-recommendations" class="dir-content">
+          <div id="recommendations-grid" class="recommendations-grid">
+            <div style="text-align:center;padding:60px;color:var(--text-muted,#94a3b8);">
+              <p>Chargement des recommandations...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ═══════════════════════════════════════
+   DIRECTION PORTAL — JavaScript
+   ═══════════════════════════════════════ */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const fmt = n => n == null ? '—' : Number(n).toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtK = n => n == null ? '—' : (Math.abs(n) >= 1000000 ? (n/1000000).toFixed(1)+'M' : Math.abs(n) >= 1000 ? (n/1000).toFixed(0)+'K' : fmt(n));
+const fmtInt = n => n == null ? '—' : Math.round(n).toLocaleString('fr-CA');
+const fmtPct = n => n == null ? '—' : (n * 100).toFixed(1) + '%';
+const fmtPctRaw = n => n == null ? '—' : n.toFixed(1) + '%';
+const cls = n => n < 0 ? 'neg' : (n > 0 ? 'pos' : '');
+const deltaTag = (n, suffix='') => {
+  if (n == null) return '';
+  const c = n > 0 ? 'pos' : (n < 0 ? 'neg' : '');
+  const sign = n > 0 ? '+' : '';
+  return `<span class="delta-tag ${c}">${sign}${typeof n === 'number' && Math.abs(n) > 100 ? fmtInt(n) : fmt(n)}${suffix}</span>`;
+};
+
+// ═══ THRESHOLDS FOR ALERTS ═══
+const THRESHOLDS = {
+  occ_critical_low: 50,
+  occ_warning_low: 65,
+  occ_target: 84,
+  adr_target: 221.41,
+  adr_warning_low: 180,
+  revpar_target: 185,
+  revpar_critical_low: 120,
+  labor_pct_warning: 25,
+  labor_pct_critical: 35,
+  labor_pct_target: 20,
+  cash_variance_ok: 0.02,
+  cash_variance_warning: 5,
+  cash_variance_critical: 50,
+  quasi_variance_ok: 0.02,
+  quasi_variance_warning: 1,
+  quasi_variance_critical: 10,
+  fb_pct_target: 35,
+  fb_pct_warning_low: 25,
+  rooms_sold_critical_low: 150,
+  rooms_sold_warning_low: 200,
+};
+
+let CHARTS = {};
+let currentSection = 'dashboard';
+let currentPeriodDays = 30;
+let allDates = [];
+let overviewCache = null;
+let currentSidebarItem = null;
+
+// ═══ COLORS ═══
+const C = {
+  indigo:'#6366f1', indigoBg:'rgba(99,102,241,0.1)',
+  emerald:'#10b981', emeraldBg:'rgba(16,185,129,0.1)',
+  amber:'#f59e0b', amberBg:'rgba(245,158,11,0.1)',
+  blue:'#3b82f6', blueBg:'rgba(59,130,246,0.1)',
+  violet:'#8b5cf6', violetBg:'rgba(139,92,246,0.1)',
+  teal:'#0d9488', tealBg:'rgba(13,148,136,0.1)',
+  rose:'#ef4444', roseBg:'rgba(239,68,68,0.1)',
+  cyan:'#06b6d4', pink:'#ec4899', orange:'#f97316',
+  grid:'rgba(42,45,58,0.3)', tick:'#94a3b8',
+};
+
+// ═══ CHART DEFAULTS ═══
+const lineOpts = {
+  responsive:true, maintainAspectRatio:false,
+  plugins:{legend:{display:true, labels:{color:C.tick, boxWidth:12, padding:12, font:{size:11}}}},
+  scales:{
+    y:{beginAtZero:false, ticks:{color:C.tick, callback:v=>v.toLocaleString('fr-CA')}, grid:{color:C.grid}},
+    x:{ticks:{color:C.tick, maxRotation:45, font:{size:10}}, grid:{display:false}}
+  },
+  interaction:{mode:'index', intersect:false},
+  elements:{point:{radius:1, hoverRadius:4}},
+};
+
+function destroyCharts() { Object.values(CHARTS).forEach(c => { if(c&&c.destroy) c.destroy(); }); CHARTS = {}; }
+function mkChart(id, type, data, opts={}) {
+  const el = $(`#${id}`);
+  if (!el) return null;
+  if (CHARTS[id]) { CHARTS[id].destroy(); delete CHARTS[id]; }
+  CHARTS[id] = new Chart(el.getContext('2d'), {type, data, options:{...lineOpts, ...opts}});
+  return CHARTS[id];
+}
+
+// ═══════════════ SIDEBAR NAVIGATION ═══════════════
+function toggleSidebarGroup(header) {
+  header.classList.toggle('expanded');
+  const content = header.nextElementSibling;
+  content.classList.toggle('expanded');
+}
+
+function switchSidebarSection(sectionId, view, item) {
+  // Clear previous active states
+  if (currentSidebarItem) {
+    currentSidebarItem.classList.remove('active');
+  }
+  $$('.sidebar-group-header.section-active').forEach(h => h.classList.remove('section-active'));
+
+  // Set new active item
+  item.classList.add('active');
+  currentSidebarItem = item;
+
+  // Highlight parent group header + auto-expand it
+  const group = item.closest('.sidebar-group');
+  if (group) {
+    const header = group.querySelector('.sidebar-group-header');
+    const content = group.querySelector('.sidebar-group-content');
+    if (header) header.classList.add('section-active');
+    // Auto-expand active group
+    if (header && !header.classList.contains('expanded')) {
+      header.classList.add('expanded');
+      if (content) content.classList.add('expanded');
+    }
+    // Collapse other groups
+    $$('.sidebar-group').forEach(g => {
+      if (g !== group) {
+        const h = g.querySelector('.sidebar-group-header');
+        const c = g.querySelector('.sidebar-group-content');
+        if (h && h.classList.contains('expanded')) {
+          h.classList.remove('expanded');
+          if (c) c.classList.remove('expanded');
+        }
+      }
+    });
+  }
+
+  // Load the main section
+  if (sectionId === 'dashboard') switchSection('dashboard', null);
+  else if (sectionId === 'trends') switchSection('trends', null);
+  else if (sectionId === 'yoy') switchSection('yoy', null);
+  else if (sectionId === 'rj') switchSection('rj', null);
+  else if (sectionId === 'reports') {
+    switchSection('reports', null);
+    switchDirTab(view, $$(`button[onclick*="switchDirTab('${view}'"]`)[0]);
+  }
+  else if (sectionId === 'cross') {
+    switchSection('cross', null);
+    // switchSection already triggers loadCrossSection() which loads labor tab by default
+    // Only explicitly switch tab if NOT the default 'labor' view
+    if (view && view !== 'labor') {
+      // Wait for crossCache to be populated, then switch tab
+      const waitAndSwitch = () => {
+        if (crossCache) {
+          switchCrossTab(view, $$(`button[onclick*="switchCrossTab('${view}'"]`)[0]);
+        } else {
+          setTimeout(waitAndSwitch, 200);
+        }
+      };
+      waitAndSwitch();
+    }
+  }
+  else if (sectionId === 'analytics') {
+    switchSection('analytics', null);
+    if (view === 'recommendations') {
+      switchAnalyticsTab('recommendations', $$(`button[onclick*="switchAnalyticsTab('recommendations'"]`)[0]);
+    } else {
+      switchAnalyticsTab('alerts', $$(`button[onclick*="switchAnalyticsTab('alerts'"]`)[0]);
+    }
+  }
+}
+
+// ═══════════════ SECTION NAVIGATION ═══════════════
+function switchSection(sectionId, el) {
+  $$('.section').forEach(sec => sec.classList.remove('active'));
+  const sec = $(`#${sectionId}-section`);
+  if (sec) sec.classList.add('active');
+  const titles = {dashboard:'Tableau de bord', trends:'Tendances & Historique', yoy:'Comparaison Année/Année', rj:'Rapports Journaliers', reports:'Rapports Direction', cross:'Analyse Croisée', analytics:'Analyses & Alertes'};
+  $('#section-title').textContent = titles[sectionId] || '';
+  currentSection = sectionId;
+
+  // Show/hide filter bar and date picker
+  const filterBar = $('#filter-bar');
+  const dateSelect = $('#date-select');
+  if (['dashboard','trends'].includes(sectionId)) {
+    filterBar.style.display = 'flex';
+    dateSelect.style.display = 'none';
+  } else if (['reports'].includes(sectionId)) {
+    filterBar.style.display = 'none';
+    dateSelect.style.display = '';
+  } else {
+    filterBar.style.display = 'none';
+    dateSelect.style.display = 'none';
+  }
+
+  feather.replace();
+  loadSectionContent(sectionId);
+}
+
+function switchDirTab(id, btn) {
+  const reportSection = $('#reports-section');
+  if (!reportSection) return;
+  reportSection.querySelectorAll('.dir-content').forEach(c => c.classList.remove('active'));
+  reportSection.querySelectorAll('.dir-tab').forEach(t => t.classList.remove('active'));
+  const tabEl = $(`#tab-${id}`);
+  if (tabEl) tabEl.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function switchRJTab(id, btn) {
+  const rjSection = $('#rj-section');
+  rjSection.querySelectorAll('.dir-content').forEach(c => c.classList.remove('active'));
+  rjSection.querySelectorAll('.dir-tab').forEach(t => t.classList.remove('active'));
+  const el = rjSection.querySelector(`#rj-${id}`);
+  if (el) el.classList.add('active');
+  btn.classList.add('active');
+}
+
+function switchCrossTab(id, btn) {
+  const crossSection = $('#cross-section');
+  if (!crossSection) return;
+  crossSection.querySelectorAll('[id^="cross-tab-"]').forEach(c => c.classList.remove('active'));
+  crossSection.querySelectorAll('.dir-tab').forEach(t => t.classList.remove('active'));
+  const tabEl = $(`#cross-tab-${id}`);
+  if (tabEl) tabEl.classList.add('active');
+  if (btn) btn.classList.add('active');
+  loadCrossTabContent(id);
+}
+
+function setPeriod(days, btn) {
+  $$('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentPeriodDays = days;
+  loadSectionContent(currentSection);
+}
+
+function onDateChange() {
+  if (currentSection === 'reports') loadReport($('#date-select').value);
+}
+
+// ═══════════════ INIT ═══════════════
+async function initPortal() {
+  try {
+    // Load all dates for the date picker
+    const [datesRes, sessionsRes] = await Promise.all([
+      fetch('/api/direction/all-dates'),
+      fetch('/api/direction/rj-sessions'),
+    ]);
+    const datesData = await datesRes.json();
+    const sessData = await sessionsRes.json();
+
+    allDates = datesData.dates || [];
+
+    // Populate date picker
+    if (allDates.length > 0) {
+      const sel = $('#date-select');
+      sel.innerHTML = '';
+      const months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
+      const jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+      allDates.slice(0, 180).forEach(ds => {
+        const dt = new Date(ds + 'T12:00:00');
+        const opt = document.createElement('option');
+        opt.value = ds;
+        opt.textContent = `${jours[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear()}`;
+        sel.appendChild(opt);
+      });
+      sel.value = allDates[0];
+    }
+
+    // Populate RJ session picker
+    const rjSel = $('#rj-session-select');
+    const sessions = sessData.sessions || [];
+    sessions.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.date;
+      opt.textContent = `${s.date_display} — ${s.auditor} (${s.status})`;
+      rjSel.appendChild(opt);
+    });
+
+    // Initial state
+    $('#filter-bar').style.display = 'flex';
+    $('#date-select').style.display = 'none';
+
+    // Load dashboard
+    loadSectionContent('dashboard');
+  } catch (e) { console.error('Init error:', e); }
+}
+
+// ═══════════════ SECTION LOADER ═══════════════
+function loadSectionContent(section) {
+  if (section === 'dashboard') loadDashboard();
+  else if (section === 'trends') loadTrends();
+  else if (section === 'yoy') loadYoY();
+  else if (section === 'rj') {} // loaded on select
+  else if (section === 'reports') loadReport($('#date-select').value);
+  else if (section === 'cross') loadCrossSection();
+  else if (section === 'analytics') loadAnalytics();
+}
+
+// ═══════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════
+async function loadDashboard() {
+  const days = currentPeriodDays;
+  let url = '/api/direction/overview';
+  if (days > 0) {
+    const end = allDates[0] || new Date().toISOString().slice(0,10);
+    const startD = new Date(end + 'T12:00:00');
+    startD.setDate(startD.getDate() - days);
+    url += `?start_date=${startD.toISOString().slice(0,10)}&end_date=${end}`;
+  }
+
+  try {
+    const [ovRes, dashRes] = await Promise.all([
+      fetch(url),
+      fetch(`/api/direction/dashboard?date=${allDates[0] || ''}&days=${days}`),
+    ]);
+    const ov = await ovRes.json();
+    const dash = await dashRes.json();
+
+    if (!ov.has_data) {
+      $('#kpi-grid').innerHTML = '<div class="no-data"><h2>Aucune donnée</h2></div>';
+      return;
+    }
+    overviewCache = ov;
+
+    // ── KPI Cards ──
+    const k = ov.kpis;
+    const adv = ov.advanced || {};
+    const periodLabel = days === 0 ? 'Total' : `${days}j`;
+    const kpis = [
+      {label:'RevPAR', value:fmt(k.revpar), accent:'indigo', meta:`Moy. ${periodLabel}`, delta: dash.revpar_budget_var, deltaSuffix:' vs budget'},
+      {label:'Tarif Moyen (ADR)', value:'$'+fmt(k.adr), accent:'emerald', meta:`Moy. ${periodLabel}`, delta: dash.adr_budget_var, deltaSuffix:' vs budget'},
+      {label:'Taux d\'Occupation', value:fmtPctRaw(k.occupancy_rate), accent:'amber', meta:`Moy. ${periodLabel}`, delta: dash.occupation_budget_var ? dash.occupation_budget_var*100 : null, deltaSuffix:'pts'},
+      {label:'Revenus Total', value:'$'+fmtK(k.total_revenue), accent:'blue', meta:`${k.days_count} jours`},
+      {label:'Rev. Chambres', value:'$'+fmtK(k.room_revenue), accent:'violet', meta:fmtPctRaw(k.room_revenue/k.total_revenue*100)+' du total'},
+      {label:'Rev. F&B', value:'$'+fmtK(k.fb_revenue), accent:'teal', meta:fmtPctRaw(k.fb_revenue/k.total_revenue*100)+' du total'},
+      {label:'Clients/Jour', value:fmtInt(k.avg_clients_per_day), accent:'rose', meta:`${fmtInt(k.total_guests || k.avg_clients_per_day * k.days_count)} total`},
+    ];
+
+    let kpiHtml = '';
+    kpis.forEach(kp => {
+      let deltaHtml = '';
+      if (kp.delta != null) {
+        const c = kp.delta > 0 ? 'pos' : kp.delta < 0 ? 'neg' : '';
+        const sign = kp.delta > 0 ? '+' : '';
+        deltaHtml = `<div class="kpi-delta ${c}">${sign}${typeof kp.delta === 'number' ? kp.delta.toFixed(1) : kp.delta}${kp.deltaSuffix||''}</div>`;
+      }
+      kpiHtml += `<div class="kpi-card accent-${kp.accent}"><div class="kpi-label">${kp.label}</div><div class="kpi-value">${kp.value}</div>${deltaHtml}<div class="kpi-meta">${kp.meta||''}</div></div>`;
+    });
+    $('#kpi-grid').innerHTML = kpiHtml;
+
+    // ── Revenue Trend Chart ──
+    // API returns [{date, day, total, room_revenue, fb_revenue, ...}] — transform to chart format
+    const trendRaw = Array.isArray(ov.trend) ? ov.trend : [];
+    const tr = {
+      labels: trendRaw.map(t => t.date || `J${t.day}`),
+      total: trendRaw.map(t => t.total || 0),
+      rooms: trendRaw.map(t => t.room_revenue || 0),
+      fb: trendRaw.map(t => t.fb_revenue || 0),
+    };
+    if (tr.labels.length > 0) {
+      mkChart('dash-revenue-chart', 'line', {
+        labels: tr.labels,
+        datasets: [
+          {label:'Total', data:tr.total, borderColor:C.indigo, backgroundColor:C.indigoBg, tension:0.4, fill:true},
+          {label:'Chambres', data:tr.rooms, borderColor:C.emerald, backgroundColor:'transparent', tension:0.4, borderDash:[5,3]},
+          {label:'F&B', data:tr.fb, borderColor:C.amber, backgroundColor:'transparent', tension:0.4, borderDash:[3,3]},
+        ]
+      });
+    }
+
+    // ── Revenue Mix Chart ──
+    const fb = ov.fb || {};
+    if (k.room_revenue && k.fb_revenue) {
+      mkChart('dash-mix-chart', 'doughnut', {
+        labels: ['Chambres', 'Nourriture', 'Boisson', 'Autres'],
+        datasets: [{
+          data: [k.room_revenue, (fb.category_totals||{}).Nourriture||0, (fb.category_totals||{}).Boisson||0, k.other_revenue||0],
+          backgroundColor: [C.indigo, C.emerald, C.amber, C.violet],
+          borderWidth: 0,
+        }]
+      }, {plugins:{legend:{display:true, position:'bottom', labels:{color:C.tick, padding:10, font:{size:11}}}}, scales:{}});
+    }
+
+    // ── Payments Chart ──
+    const pay = ov.payments || {};
+    const payBreakdown = pay.by_type || pay.breakdown;
+    if (payBreakdown) {
+      const types = Object.keys(payBreakdown);
+      // values could be {amount, pct} objects or raw numbers
+      const vals = Object.values(payBreakdown).map(v => typeof v === 'object' ? v.amount : v);
+      const colors = [C.blue, C.emerald, C.violet, C.amber, C.rose, C.teal];
+      mkChart('dash-payments-chart', 'doughnut', {
+        labels: types,
+        datasets: [{data:vals, backgroundColor:colors.slice(0,types.length), borderWidth:0}]
+      }, {plugins:{legend:{display:true, position:'bottom', labels:{color:C.tick, padding:8, font:{size:10}}}}, scales:{}});
+    }
+
+    // ── DOW Grid ──
+    // API returns {by_dow: [{dow:0, name, avg_total_rev, avg_occ, avg_adr, ...}], best_day, worst_day}
+    const dowData = ov.dow || {};
+    const byDow = dowData.by_dow || [];
+    const dowDays = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    if (byDow.length > 0) {
+      let maxRev = 0, minRev = Infinity;
+      byDow.forEach(d => { const r = d.avg_total_rev||0; if(r>maxRev) maxRev=r; if(r<minRev) minRev=r; });
+      let dowHtml = '';
+      byDow.forEach((d,i) => {
+        const rev = d.avg_total_rev || 0;
+        const extra = rev === maxRev ? ' peak' : (rev === minRev ? ' low' : '');
+        dowHtml += `<div class="dow-card${extra}"><div class="dow-day">${dowDays[i]}</div><div class="dow-val">$${fmtInt(rev)}</div><div class="dow-sub">Occ ${fmtPctRaw(d.avg_occ||0)}</div><div class="dow-sub">ADR $${fmt(d.avg_adr||0)}</div></div>`;
+      });
+      $('#dow-grid').innerHTML = dowHtml;
+    }
+
+    // ── Recent Audits (from DailyJourMetrics — real RJ data) ──
+    const audits = dash.recent_audits || [];
+    const periodLabels = {7:'7 jours', 30:'30 jours', 90:'90 jours', 365:'1 an', 0:'Tout'};
+    $('#recent-audits-count').textContent = `${audits.length} nuits — ${periodLabels[days] || days+'j'}`;
+
+    if (audits.length > 0) {
+      // Compute averages for summary row
+      const avgRev = audits.reduce((s,a)=>s+a.revenue,0) / audits.length;
+      const avgOcc = audits.reduce((s,a)=>s+a.occ,0) / audits.length;
+      const avgAdr = audits.reduce((s,a)=>s+a.adr,0) / audits.length;
+      const avgRooms = audits.reduce((s,a)=>s+a.rooms_sold,0) / audits.length;
+
+      let auditHtml = '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">';
+      auditHtml += '<thead><tr style="color:var(--text-muted,#94a3b8);font-size:0.75rem;text-align:left;"><th style="padding:6px 8px;">Date</th><th style="padding:6px 8px;text-align:right;">Revenus</th><th style="padding:6px 8px;text-align:right;">Occ</th><th style="padding:6px 8px;text-align:right;">ADR</th><th style="padding:6px 8px;text-align:right;">Ch.</th></tr></thead><tbody>';
+      // Summary row
+      auditHtml += `<tr style="border-bottom:2px solid rgba(99,102,241,0.2);font-weight:600;font-size:0.83rem;">
+        <td style="padding:8px;color:var(--text-muted,#94a3b8);">Moyenne</td>
+        <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">$${fmtInt(avgRev)}</td>
+        <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">${avgOcc.toFixed(1)}%</td>
+        <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">$${fmt(avgAdr)}</td>
+        <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">${Math.round(avgRooms)}</td>
+      </tr>`;
+      audits.forEach(a => {
+        auditHtml += `<tr style="border-bottom:1px solid rgba(42,45,58,0.3);">
+          <td style="padding:8px;font-weight:500;">${a.date}</td>
+          <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">$${fmtInt(a.revenue)}</td>
+          <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">${a.occ}%</td>
+          <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">$${fmt(a.adr)}</td>
+          <td style="padding:8px;text-align:right;font-variant-numeric:tabular-nums;">${a.rooms_sold}</td>
+        </tr>`;
+      });
+      auditHtml += '</tbody></table>';
+      $('#recent-audits-list').innerHTML = auditHtml;
+    } else {
+      $('#recent-audits-list').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">Aucune donnée pour cette période.</div>';
+    }
+
+    feather.replace();
+  } catch (e) { console.error('Dashboard error:', e); }
+}
+
+
+// ═══════════════════════════════════════
+// TRENDS
+// ═══════════════════════════════════════
+async function loadTrends() {
+  const days = currentPeriodDays || 365;
+  try {
+    const [trendRes, monthlyRes] = await Promise.all([
+      fetch(`/api/direction/trends?days=${Math.min(days, 365)}`),
+      fetch('/api/direction/monthly-summary'),
+    ]);
+    const t = await trendRes.json();
+    const m = await monthlyRes.json();
+
+    // Revenue split: Rooms vs F&B
+    mkChart('trend-revenue-split', 'line', {
+      labels: t.revenue.labels,
+      datasets: [
+        {label:'Total', data:t.revenue.data, borderColor:C.indigo, backgroundColor:C.indigoBg, tension:0.4, fill:true},
+        {label:'Chambres', data:t.room_revenue.data, borderColor:C.emerald, backgroundColor:'transparent', tension:0.4},
+        {label:'F&B', data:t.fb.data, borderColor:C.amber, backgroundColor:'transparent', tension:0.4},
+      ]
+    });
+
+    // Occupation
+    mkChart('trend-occ', 'line', {
+      labels: t.occupation.labels,
+      datasets: [{label:'Occupation %', data:t.occupation.data, borderColor:C.emerald, backgroundColor:C.emeraldBg, tension:0.4, fill:true}]
+    }, {...lineOpts, scales:{...lineOpts.scales, y:{...lineOpts.scales.y, min:0, max:100, ticks:{...lineOpts.scales.y.ticks, callback:v=>v+'%'}}}});
+
+    // ADR + RevPAR
+    mkChart('trend-adr-revpar', 'line', {
+      labels: t.adr.labels,
+      datasets: [
+        {label:'ADR $', data:t.adr.data, borderColor:C.blue, backgroundColor:'transparent', tension:0.4},
+        {label:'RevPAR $', data:t.revpar.data, borderColor:C.violet, backgroundColor:C.violetBg, tension:0.4, fill:true},
+      ]
+    });
+
+    // Monthly revenue bar chart
+    const months = m.months || [];
+    const lastN = months.slice(-24); // last 24 months
+    mkChart('monthly-bar-chart', 'bar', {
+      labels: lastN.map(x => x.label),
+      datasets: [
+        {label:'Chambres', data:lastN.map(x => x.room_revenue), backgroundColor:C.indigo, borderRadius:4},
+        {label:'F&B', data:lastN.map(x => x.fb_revenue), backgroundColor:C.emerald, borderRadius:4},
+      ]
+    }, {
+      ...lineOpts,
+      plugins:{...lineOpts.plugins, legend:{display:true, labels:{color:C.tick, boxWidth:12, padding:10, font:{size:11}}}},
+      scales:{
+        y:{stacked:true, ticks:{color:C.tick, callback:v=>'$'+fmtK(v)}, grid:{color:C.grid}},
+        x:{stacked:true, ticks:{color:C.tick, maxRotation:45, font:{size:10}}, grid:{display:false}},
+      }
+    });
+
+    // Monthly RevPAR
+    mkChart('monthly-revpar', 'line', {
+      labels: lastN.map(x => x.label),
+      datasets: [{label:'RevPAR moy. $', data:lastN.map(x => x.avg_revpar), borderColor:C.violet, backgroundColor:C.violetBg, tension:0.4, fill:true}]
+    });
+
+    // Monthly Occ
+    mkChart('monthly-occ', 'line', {
+      labels: lastN.map(x => x.label),
+      datasets: [{label:'Occupation moy. %', data:lastN.map(x => x.avg_occ), borderColor:C.emerald, backgroundColor:C.emeraldBg, tension:0.4, fill:true}]
+    }, {...lineOpts, scales:{...lineOpts.scales, y:{...lineOpts.scales.y, min:0, max:100, ticks:{...lineOpts.scales.y.ticks, callback:v=>v+'%'}}}});
+
+    feather.replace();
+  } catch (e) { console.error('Trends error:', e); }
+}
+
+
+// ═══════════════════════════════════════
+// YEAR OVER YEAR
+// ═══════════════════════════════════════
+async function loadYoY() {
+  try {
+    const res = await fetch('/api/direction/yearly-comparison');
+    const d = await res.json();
+
+    const years = d.years || [];
+    const tbody = $('#yoy-tbody');
+    tbody.innerHTML = '';
+    years.forEach(y => {
+      const row = tbody.insertRow();
+      row.innerHTML = `
+        <td>${y.year}</td>
+        <td>${fmtInt(y.days_count || y.days)}</td>
+        <td>$${fmt(y.avg_adr)}</td>
+        <td>${fmtPctRaw(y.avg_occupancy ?? y.avg_occ)}</td>
+        <td>$${fmt(y.avg_revpar)}</td>
+        <td>$${fmtK(y.total_revenue)}</td>
+        <td>$${fmtK(y.room_revenue)}</td>
+        <td>$${fmtK(y.fb_revenue)}</td>
+        <td>${fmtInt(y.rooms_sold)}</td>
+        <td>${fmtInt(y.total_guests ?? y.guests)}</td>
+      `;
+    });
+
+    // ADR Chart
+    const adrData = years.map(y => y.avg_adr);
+    const revData = years.map(y => y.total_revenue);
+    const yearLabels = years.map(y => y.year);
+
+    mkChart('yoy-adr-chart', 'line', {
+      labels: yearLabels,
+      datasets: [{label:'ADR moy. $', data:adrData, borderColor:C.indigo, backgroundColor:C.indigoBg, tension:0.4, fill:true}]
+    });
+
+    mkChart('yoy-rev-chart', 'bar', {
+      labels: yearLabels,
+      datasets: [{label:'Revenus totaux', data:revData, backgroundColor:C.emerald, borderRadius:4}]
+    }, {...lineOpts, scales:{...lineOpts.scales, y:{...lineOpts.scales.y, ticks:{...lineOpts.scales.y.ticks, callback:v=>'$'+fmtK(v)}}}});
+
+    feather.replace();
+  } catch (e) { console.error('YoY error:', e); }
+}
+
+
+// ═══════════════════════════════════════
+// RJ VIEWER — Complete 22-tab viewer
+// ═══════════════════════════════════════
+let RJ = null;
+let currentRJTab = 'controle';
+
+function switchRJTab(tabId, btn) {
+  $$('#rj-tabs-bar .dir-tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  currentRJTab = tabId;
+  renderRJTab(tabId);
+}
+
+async function loadRJSession() {
+  const dateVal = $('#rj-session-select').value;
+  if (!dateVal) return;
+  try {
+    const r = await fetch(`/api/direction/rj-summary/${dateVal}`);
+    if (!r.ok) {
+      $('#rj-placeholder').innerHTML = '<div class="no-data"><h2>Aucun RJ</h2><p>Pas de rapport journalier pour cette date.</p></div>';
+      $('#rj-tabs-bar').style.display = 'none';
+      $('#rj-tab-content').style.display = 'none';
+      $('#rj-status-badge').style.display = 'none';
+      return;
+    }
+    RJ = await r.json();
+    const badge = $('#rj-status-badge');
+    badge.textContent = RJ.status || 'draft';
+    badge.style.display = '';
+    badge.style.background = RJ.status === 'submitted' ? 'rgba(16,185,129,0.12)' : 'rgba(99,102,241,0.15)';
+    badge.style.color = RJ.status === 'submitted' ? '#10b981' : '#818cf8';
+    $('#rj-tabs-bar').style.display = 'flex';
+    $('#rj-tab-content').style.display = 'block';
+    $('#rj-placeholder').style.display = 'none';
+    $$('#rj-tabs-bar .dir-tab').forEach(t => t.classList.remove('active'));
+    $$('#rj-tabs-bar .dir-tab')[0].classList.add('active');
+    currentRJTab = 'controle';
+    renderRJTab('controle');
+  } catch (e) { console.error('RJ error:', e); }
+}
+
+function rjRow(label, value, highlight=false) {
+  return `<div class="rj-row${highlight?' highlight':''}"><span class="rj-label"${highlight?' style="font-weight:600;"':''}>${label}</span><span class="rj-value"${highlight?' style="color:#818cf8;"':''}>${value}</span></div>`;
+}
+function rjBlock(title, content) { return `<div class="rj-block"><div class="rj-block-title">${title}</div>${content}</div>`; }
+function v(field) { return RJ[field] || 0; }
+function vf(field) { return fmt(RJ[field] || 0); }
+
+function renderRJTab(tab) {
+  const el = $('#rj-tab-content');
+  const renderers = {
+    controle: renderRJ_Controle, dueback: renderRJ_DueBack, recap: renderRJ_Recap,
+    transelect: renderRJ_Transelect, geac: renderRJ_GEAC, sd: renderRJ_SD,
+    setd: renderRJ_SetD, hpadmin: renderRJ_HPAdmin, internet: renderRJ_Internet,
+    sonifi: renderRJ_Sonifi, jour: renderRJ_Jour, quasimodo: renderRJ_Quasimodo,
+    dbrs: renderRJ_DBRS, analyse_gl: renderRJ_AnalyseGL, diff_caisse: renderRJ_DiffCaisse,
+    socan: renderRJ_SOCAN, resonne: renderRJ_Resonne, vestiaire: renderRJ_Vestiaire,
+    admin_ad: renderRJ_Admin, massage: renderRJ_Massage, ristourne: renderRJ_Ristourne,
+    resume: renderRJ_Resume,
+  };
+  const fn = renderers[tab];
+  el.innerHTML = fn ? fn() : '<div class="rj-empty">Onglet non disponible.</div>';
+}
+
+function renderRJ_Controle() {
+  return `<div class="rj-grid">
+    ${rjBlock('Informations', rjRow('Date', RJ.audit_date_display||RJ.audit_date||'—') + rjRow('Auditeur', RJ.auditor_name||'—') + rjRow('Température', RJ.temperature||'—') + rjRow('Météo', RJ.weather_condition||'—') + rjRow('Chambres à refaire', v('chambres_refaire')))}
+    ${rjBlock('Statut', rjRow('État', `<span style="color:${RJ.status==='submitted'?'#10b981':'#818cf8'}">${RJ.status||'draft'}</span>`) + rjRow('Créé', RJ.created_at ? new Date(RJ.created_at).toLocaleString('fr-CA') : '—') + rjRow('Soumis', RJ.submitted_at ? new Date(RJ.submitted_at).toLocaleString('fr-CA') : '—'))}
+  </div>`;
+}
+function renderRJ_DueBack() {
+  const entries = RJ.dueback_entries || [];
+  if (!entries.length) return '<div class="rj-empty">Aucune entrée DueBack.</div>';
+  let rows = entries.map(e => `<tr><td>${e.name||'—'}</td><td style="text-align:right;">${fmt(e.previous||0)}</td><td style="text-align:right;">${fmt(e.nouveau||0)}</td></tr>`).join('');
+  return `<table class="rj-entries-table"><thead><tr><th>Réceptionniste</th><th style="text-align:right;">Précédent</th><th style="text-align:right;">Nouveau</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderRJ_Recap() {
+  const lines = [['Encaisse L.S.','cash_ls'],['Encaisse POS','cash_pos'],['Chèques AR','cheque_ar'],['Chèques DR','cheque_dr'],['Remb. Gratuité','remb_gratuite'],['Remb. Client','remb_client'],['DueBack Réception','dueback_reception'],['DueBack NB','dueback_nb']];
+  let html = '<table class="rj-entries-table"><thead><tr><th>Ligne</th><th style="text-align:right;">Lecture</th><th style="text-align:right;">Correction</th><th style="text-align:right;">NET</th></tr></thead><tbody>';
+  lines.forEach(([label, prefix]) => { const lec=v(`${prefix}_lecture`),cor=v(`${prefix}_corr`); html+=`<tr><td>${label}</td><td style="text-align:right;">${fmt(lec)}</td><td style="text-align:right;">${fmt(cor)}</td><td style="text-align:right;font-weight:600;">${fmt(lec+cor)}</td></tr>`; });
+  html += '</tbody></table>';
+  html += `<div class="rj-grid" style="margin-top:16px;">${rjBlock('Dépôts', rjRow('Dépôt CDN', vf('deposit_cdn'), true) + rjRow('Dépôt US', vf('deposit_us'), true))}${rjBlock('Balance', rjRow('Balance Recap', `<span class="${cls(v('recap_balance'))}" style="font-size:1.1rem;font-weight:700;">${vf('recap_balance')}</span>`, true))}</div>`;
+  return html;
+}
+function renderRJ_Transelect() {
+  const rest=RJ.transelect_restaurant||{}, rec=RJ.transelect_reception||{};
+  if (!Object.keys(rest).length && !Object.keys(rec).length) return '<div class="rj-empty">Aucune donnée Transelect.</div>';
+  let html='';
+  if (Object.keys(rest).length) {
+    html+='<div class="rj-block-title">Restaurant (par terminal)</div><table class="rj-entries-table"><thead><tr><th>Terminal</th><th style="text-align:right;">Visa</th><th style="text-align:right;">MC</th><th style="text-align:right;">Amex</th><th style="text-align:right;">Débit</th><th style="text-align:right;">Total</th></tr></thead><tbody>';
+    for (const [term,cards] of Object.entries(rest)) { const vi=cards.visa||0,mc=cards.mastercard||0,am=cards.amex||0,de=cards.debit||0; html+=`<tr><td>${term}</td><td style="text-align:right;">${fmt(vi)}</td><td style="text-align:right;">${fmt(mc)}</td><td style="text-align:right;">${fmt(am)}</td><td style="text-align:right;">${fmt(de)}</td><td style="text-align:right;font-weight:600;">${fmt(vi+mc+am+de)}</td></tr>`; }
+    html+='</tbody></table>';
+  }
+  if (Object.keys(rec).length) {
+    html+='<div class="rj-block-title" style="margin-top:16px;">Réception (par carte)</div><table class="rj-entries-table"><thead><tr><th>Carte</th>';
+    const terminals=new Set(); Object.values(rec).forEach(t=>Object.keys(t).forEach(k=>terminals.add(k)));
+    [...terminals].forEach(t=>{html+=`<th style="text-align:right;">${t}</th>`;});
+    html+='<th style="text-align:right;">Total</th></tr></thead><tbody>';
+    for (const [card,terms] of Object.entries(rec)) { let total=0; html+=`<tr><td>${card}</td>`; [...terminals].forEach(t=>{const val=terms[t]||0;total+=val;html+=`<td style="text-align:right;">${fmt(val)}</td>`;}); html+=`<td style="text-align:right;font-weight:600;">${fmt(total)}</td></tr>`; }
+    html+='</tbody></table>';
+  }
+  return html;
+}
+function renderRJ_GEAC() {
+  const cashout=RJ.geac_cashout||{}, dailyRev=RJ.geac_daily_rev||{};
+  if (!Object.keys(cashout).length && !Object.keys(dailyRev).length) return '<div class="rj-empty">Aucune donnée GEAC.</div>';
+  let html='<table class="rj-entries-table"><thead><tr><th>Carte</th><th style="text-align:right;">Cashout</th><th style="text-align:right;">Daily Rev</th><th style="text-align:right;">Écart</th></tr></thead><tbody>';
+  const allCards=new Set([...Object.keys(cashout),...Object.keys(dailyRev)]);
+  allCards.forEach(card=>{const co=cashout[card]||0,dr=dailyRev[card]||0,diff=co-dr;html+=`<tr><td>${card}</td><td style="text-align:right;">${fmt(co)}</td><td style="text-align:right;">${fmt(dr)}</td><td style="text-align:right;" class="${cls(diff)}">${fmt(diff)}</td></tr>`;});
+  html+='</tbody></table>'+rjRow('AR Balance',vf('geac_ar_balance'),true);
+  return html;
+}
+function renderRJ_SD() {
+  const entries=RJ.sd_entries||[], depot=RJ.depot_data||{};
+  let html='<div class="rj-block-title">Entrées SD</div>';
+  if (entries.length) { html+='<table class="rj-entries-table"><thead><tr><th>Département</th><th>Nom</th><th style="text-align:right;">Montant</th><th>Devise</th><th>Vérifié</th></tr></thead><tbody>'; entries.forEach(e=>{html+=`<tr><td>${e.department||''}</td><td>${e.name||''}</td><td style="text-align:right;">${fmt(e.amount||0)}</td><td>${e.currency||'CDN'}</td><td>${e.verified?'✓':'—'}</td></tr>`;}); html+='</tbody></table>'; } else { html+='<div class="rj-empty">Aucune entrée SD.</div>'; }
+  html+='<div class="rj-block-title" style="margin-top:16px;">Dépôt (Enveloppes)</div>';
+  if (depot.client6||depot.client8) { const c6=depot.client6||{},c8=depot.client8||{}; html+='<div class="rj-grid">'; if(c6.date||(c6.amounts&&c6.amounts.length)){html+=rjBlock('Client 6',rjRow('Date',c6.date||'—')+(c6.amounts||[]).map((a,i)=>rjRow(`Montant ${i+1}`,fmt(a))).join(''));} if(c8.date||(c8.amounts&&c8.amounts.length)){html+=rjBlock('Client 8',rjRow('Date',c8.date||'—')+(c8.amounts||[]).map((a,i)=>rjRow(`Montant ${i+1}`,fmt(a))).join(''));} html+='</div>'; } else { html+='<div class="rj-empty">Aucune donnée de dépôt.</div>'; }
+  return html;
+}
+function renderRJ_SetD() {
+  const entries=RJ.setd_personnel||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune entrée Set-Déjeuner.</div>';
+  let html='<table class="rj-entries-table"><thead><tr><th>Nom</th><th style="text-align:right;">Montant</th></tr></thead><tbody>'; let total=0;
+  entries.forEach(e=>{total+=e.amount||0;html+=`<tr><td>${e.name||''}</td><td style="text-align:right;">${fmt(e.amount||0)}</td></tr>`;});
+  html+=`<tr style="font-weight:700;border-top:2px solid var(--border,#2a2d3a);"><td>TOTAL</td><td style="text-align:right;">${fmt(total)}</td></tr></tbody></table>`;
+  return html;
+}
+function renderRJ_HPAdmin() {
+  const entries=RJ.hp_admin_entries||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune entrée HP/Admin.</div>';
+  let html='<table class="rj-entries-table"><thead><tr><th>Zone</th><th style="text-align:right;">Nourriture</th><th style="text-align:right;">Boisson</th><th style="text-align:right;">Bière</th><th style="text-align:right;">Vin</th><th>Raison</th><th>Autorisé par</th></tr></thead><tbody>';
+  entries.forEach(e=>{html+=`<tr><td>${e.area||''}</td><td style="text-align:right;">${fmt(e.nourriture||0)}</td><td style="text-align:right;">${fmt(e.boisson||0)}</td><td style="text-align:right;">${fmt(e.biere||0)}</td><td style="text-align:right;">${fmt(e.vin||0)}</td><td>${e.raison||''}</td><td>${e.autorise_par||''}</td></tr>`;});
+  html+='</tbody></table>'; return html;
+}
+function renderRJ_Internet() {
+  return `<div class="rj-grid">${rjBlock('Internet',rjRow('CD 36.1 (LS)',vf('internet_ls_361'))+rjRow('CD 36.5 (LS)',vf('internet_ls_365'))+rjRow('Variance',`<span class="${cls(v('internet_variance'))}" style="font-size:1.1rem;font-weight:700;">${vf('internet_variance')}</span>`,true))}</div>`;
+}
+function renderRJ_Sonifi() {
+  return `<div class="rj-grid">${rjBlock('Sonifi',rjRow('CD 35.2',vf('sonifi_cd_352'))+rjRow('Email PDF',RJ.sonifi_email||'—')+rjRow('Variance',`<span class="${cls(v('sonifi_variance'))}" style="font-size:1.1rem;font-weight:700;">${vf('sonifi_variance')}</span>`,true))}</div>`;
+}
+function renderRJ_Jour() {
+  const depts=[{name:'Giotto (Café Link)',prefix:'jour_cafe_'},{name:'Piazza',prefix:'jour_piazza_'},{name:'Spesa',prefix:'jour_spesa_'},{name:'Service aux chambres',prefix:'jour_chambres_svc_'},{name:'Banquets',prefix:'jour_banquet_'}];
+  let fbHtml='<table class="rj-entries-table"><thead><tr><th>Département</th><th style="text-align:right;">Nourriture</th><th style="text-align:right;">Boisson</th><th style="text-align:right;">Bières</th><th style="text-align:right;">Vins</th><th style="text-align:right;">Minéraux</th><th style="text-align:right;">Total</th></tr></thead><tbody>';
+  let grandTotal=0;
+  depts.forEach(d=>{const n=v(d.prefix+'nourriture'),b=v(d.prefix+'boisson'),bi=v(d.prefix+'bieres'),vi=v(d.prefix+'vins'),mi=v(d.prefix+'mineraux'),total=n+b+bi+vi+mi;grandTotal+=total;fbHtml+=`<tr><td>${d.name}</td><td style="text-align:right;">${fmt(n)}</td><td style="text-align:right;">${fmt(b)}</td><td style="text-align:right;">${fmt(bi)}</td><td style="text-align:right;">${fmt(vi)}</td><td style="text-align:right;">${fmt(mi)}</td><td style="text-align:right;font-weight:600;">${fmt(total)}</td></tr>`;});
+  fbHtml+=`<tr class="grand-total" style="font-weight:700;border-top:2px solid var(--border,#2a2d3a);"><td>TOTAL F&B</td><td colspan="5"></td><td style="text-align:right;color:#10b981;">${fmt(grandTotal)}</td></tr></tbody></table>`;
+  const roomsSold=v('jour_rooms_simple')+v('jour_rooms_double')+v('jour_rooms_suite')+v('jour_rooms_comp');
+  return `<div class="rj-grid">${rjBlock('Revenus F&B',fbHtml)}${rjBlock('Hébergement & Autres',rjRow('Rev. Chambres',vf('jour_room_revenue')||vf('jour_rev_chambres'))+rjRow('Total Revenue',vf('jour_total_revenue'),true))}${rjBlock('Occupation',rjRow('Simples',v('jour_rooms_simple'))+rjRow('Doubles',v('jour_rooms_double'))+rjRow('Suites',v('jour_rooms_suite'))+rjRow('Comp.',v('jour_rooms_comp'))+rjRow('Hors-usage',v('jour_rooms_hors_usage'))+rjRow('Total vendues',roomsSold,true)+rjRow('Clients',v('jour_nb_clients'))+rjRow('Occupation',fmtPctRaw(v('jour_occupancy_rate')),true))}${rjBlock('KPIs',rjRow('ADR',vf('jour_adr'))+rjRow('RevPAR',vf('jour_revpar'))+rjRow('Total Revenue',vf('jour_total_revenue'),true))}</div>`;
+}
+function renderRJ_Quasimodo() {
+  const cards=['debit','visa','mc','amex','discover'];
+  let html='<table class="rj-entries-table"><thead><tr><th>Carte</th><th style="text-align:right;">FB</th><th style="text-align:right;">Rec</th></tr></thead><tbody>';
+  cards.forEach(c=>{html+=`<tr><td>${c.toUpperCase()}</td><td style="text-align:right;">${vf('quasi_fb_'+c)}</td><td style="text-align:right;">${vf('quasi_rec_'+c)}</td></tr>`;});
+  html+='</tbody></table>';
+  html+=`<div class="rj-grid" style="margin-top:16px;">${rjBlock('Réconciliation',rjRow('Facteur AMEX',v('quasi_amex_factor'))+rjRow('Cash CDN',vf('quasi_cash_cdn'))+rjRow('Cash USD',vf('quasi_cash_usd'))+rjRow('Total Cartes + Cash',vf('quasi_total'),true)+rjRow('Total RJ (Jour)',vf('quasi_rj_total'),true)+`<div class="rj-row highlight"><span class="rj-label" style="font-weight:700;">VARIANCE</span><span class="rj-value ${cls(v('quasi_variance'))}" style="font-size:1.2rem;font-weight:700;">${vf('quasi_variance')}</span></div>`)}</div>`;
+  return html;
+}
+function renderRJ_DBRS() {
+  const segments=RJ.dbrs_market_segments||{};
+  return `<div class="rj-grid">${rjBlock('Daily Business Review',rjRow('Rev. Journalier',vf('dbrs_daily_rev_today'))+rjRow('ADR',vf('dbrs_adr'))+rjRow('House Count',v('dbrs_house_count'))+rjRow('No-Show Count',v('dbrs_noshow_count'))+rjRow('No-Show Revenue',vf('dbrs_noshow_revenue')))}${rjBlock('Segments de marché',Object.keys(segments).length?Object.entries(segments).map(([k,val])=>rjRow(k,typeof val==='number'?fmt(val):val)).join(''):'<div class="rj-empty">Aucun segment.</div>')}</div>`;
+}
+function renderRJ_Resume() {
+  const roomsSold=v('jour_rooms_simple')+v('jour_rooms_double')+v('jour_rooms_suite')+v('jour_rooms_comp');
+  const checks=[{name:'Recap Balance',value:v('recap_balance'),ok:Math.abs(v('recap_balance'))<0.02},{name:'Quasimodo Variance',value:v('quasi_variance'),ok:Math.abs(v('quasi_variance'))<0.02},{name:'Internet Variance',value:v('internet_variance'),ok:Math.abs(v('internet_variance'))<1},{name:'Sonifi Variance',value:v('sonifi_variance'),ok:Math.abs(v('sonifi_variance'))<1},{name:'Chambres vendues > 0',value:roomsSold,ok:roomsSold>0},{name:'Revenue > 0',value:v('jour_total_revenue'),ok:v('jour_total_revenue')>0}];
+  let html='<div class="rj-block-title">Validation de soumission</div><table class="rj-entries-table"><thead><tr><th>Vérification</th><th style="text-align:right;">Valeur</th><th style="text-align:center;">Statut</th></tr></thead><tbody>';
+  checks.forEach(c=>{const icon=c.ok?'<span style="color:#10b981;">✓</span>':'<span style="color:#ef4444;">✗</span>';html+=`<tr><td>${c.name}</td><td style="text-align:right;">${fmt(c.value)}</td><td style="text-align:center;">${icon}</td></tr>`;});
+  html+='</tbody></table>';
+  html+=`<div class="rj-grid" style="margin-top:16px;">${rjBlock('Résumé',rjRow('Date',RJ.audit_date_display||RJ.audit_date||'—')+rjRow('Auditeur',RJ.auditor_name||'—')+rjRow('Statut',`<span style="color:${RJ.status==='submitted'?'#10b981':'#818cf8'};font-weight:700;">${(RJ.status||'draft').toUpperCase()}</span>`)+rjRow('Revenue Total',vf('jour_total_revenue'),true)+rjRow('Chambres Vendues',roomsSold)+rjRow('Occupation',fmtPctRaw(v('jour_occupancy_rate')))+rjRow('ADR',vf('jour_adr'))+rjRow('RevPAR',vf('jour_revpar')))}</div>`;
+  return html;
+}
+function renderRJ_AnalyseGL() {
+  return `<div class="rj-grid">${rjBlock('Analyse GL — Compte 101100',rjRow('Solde précédent',vf('gl_101100_previous'))+rjRow('Additions',vf('gl_101100_additions'))+rjRow('Déductions',vf('gl_101100_deductions'))+rjRow('Nouveau solde',vf('gl_101100_new_balance'))+rjRow('Variance',vf('gl_101100_variance'),true))}${rjBlock('Analyse GL — Compte 100401',rjRow('Solde précédent',vf('gl_100401_previous'))+rjRow('Additions',vf('gl_100401_additions'))+rjRow('Déductions',vf('gl_100401_deductions'))+rjRow('Nouveau solde',vf('gl_100401_new_balance'))+rjRow('Variance',vf('gl_100401_variance'),true))}</div>`;
+}
+function renderRJ_DiffCaisse() {
+  const entries=RJ.diff_caisse_entries||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune entrée Diff.Caisse.</div>';
+  let rows=entries.map(e=>`<tr><td>${e.register||'—'}</td><td style="text-align:right;">${fmt(e.system||0)}</td><td style="text-align:right;">${fmt(e.physical||0)}</td><td style="text-align:right;font-weight:600;">${fmt(e.difference||0)}</td><td>${e.notes||''}</td></tr>`).join('');
+  return `<div class="rj-block-title">Différence de Caisse</div><table class="rj-entries-table"><thead><tr><th>Caisse</th><th style="text-align:right;">Système</th><th style="text-align:right;">Physique</th><th style="text-align:right;">Différence</th><th>Notes</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:700;">Total:</td><td style="text-align:right;font-weight:700;">${vf('diff_caisse_total')}</td><td>${v('diff_caisse_reconciled')?'✓ Balancé':'⚠ Variance'}</td></tr></tfoot></table>`;
+}
+function renderRJ_SOCAN() {
+  return `<div class="rj-grid">${rjBlock('SOCAN — Redevances musicales',rjRow('Restaurant',vf('socan_allocation_resto'))+rjRow('Bar',vf('socan_allocation_bar'))+rjRow('Banquet',vf('socan_allocation_banquet'))+rjRow('Total SOCAN',vf('socan_charge'),true))}</div>`;
+}
+function renderRJ_Resonne() {
+  const entries=RJ.resonne_entries||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune charge Résonne.</div>';
+  let rows=entries.map(e=>`<tr><td>${e.department||'—'}</td><td>${e.event||'—'}</td><td style="text-align:right;">${e.usage_hours||0}h</td><td style="text-align:right;">${fmt(e.rate||0)}</td><td style="text-align:right;font-weight:600;">${fmt(e.charge||0)}</td></tr>`).join('');
+  return `<div class="rj-block-title">Résonne</div><table class="rj-entries-table"><thead><tr><th>Département</th><th>Événement</th><th style="text-align:right;">Heures</th><th style="text-align:right;">Tarif</th><th style="text-align:right;">Charge</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="4" style="text-align:right;font-weight:700;">Total:</td><td style="text-align:right;font-weight:700;">${vf('resonne_total')}</td></tr></tfoot></table>`;
+}
+function renderRJ_Vestiaire() {
+  const entries=RJ.vestiaire_entries||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune donnée Vestiaire.</div>';
+  let rows=entries.map(e=>`<tr><td>${e.station||'—'}</td><td style="text-align:right;">${fmt(e.expected||0)}</td><td style="text-align:right;">${fmt(e.actual||0)}</td><td style="text-align:right;font-weight:600;">${fmt(e.variance||0)}</td></tr>`).join('');
+  return `<div class="rj-block-title">Vestiaire</div><table class="rj-entries-table"><thead><tr><th>Station</th><th style="text-align:right;">Attendu</th><th style="text-align:right;">Réel</th><th style="text-align:right;">Variance</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td style="text-align:right;font-weight:700;">Totaux:</td><td style="text-align:right;font-weight:700;">${vf('vestiaire_total_revenue')}</td><td></td><td style="text-align:right;font-weight:700;">${vf('vestiaire_total_variance')}</td></tr></tfoot></table>`;
+}
+function renderRJ_Admin() {
+  const entries=RJ.admin_entries||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune charge administrative.</div>';
+  let rows=entries.map(e=>`<tr><td>${e.description||'—'}</td><td>${e.department||'—'}</td><td>${e.gl_account||'—'}</td><td style="text-align:right;font-weight:600;">${fmt(e.amount||0)}</td></tr>`).join('');
+  return `<div class="rj-block-title">AD — Administration</div><table class="rj-entries-table"><thead><tr><th>Description</th><th>Département</th><th>Compte GL</th><th style="text-align:right;">Montant</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:700;">Total:</td><td style="text-align:right;font-weight:700;">${vf('admin_total')}</td></tr></tfoot></table>`;
+}
+function renderRJ_Massage() {
+  const entries=RJ.massage_entries||[];
+  if (!entries.length) { if(v('jour_massage')) return `<div class="rj-grid">${rjBlock('Massage',rjRow('Total Massage (Jour)',vf('jour_massage'),true))}</div>`; return '<div class="rj-empty">Aucune donnée Massage.</div>'; }
+  let rows=entries.map(e=>`<tr><td>${e.therapist||'—'}</td><td>${e.service_type||'—'}</td><td style="text-align:right;">${fmt(e.revenue||0)}</td><td style="text-align:right;">${fmt(e.tips||0)}</td></tr>`).join('');
+  return `<div class="rj-block-title">Massage — Détail spa</div><table class="rj-entries-table"><thead><tr><th>Thérapeute</th><th>Service</th><th style="text-align:right;">Revenu</th><th style="text-align:right;">Pourboire</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="2" style="text-align:right;font-weight:700;">Totaux:</td><td style="text-align:right;font-weight:700;">${vf('massage_total_revenue')}</td><td style="text-align:right;font-weight:700;">${vf('massage_total_tips')}</td></tr></tfoot></table>`;
+}
+function renderRJ_Ristourne() {
+  const entries=RJ.ristourne_entries||[];
+  if (!entries.length) return '<div class="rj-empty">Aucune ristourne.</div>';
+  let rows=entries.map(e=>`<tr><td>${e.guest||'—'}</td><td>${e.department||'—'}</td><td style="text-align:right;">${fmt(e.original_amount||0)}</td><td style="text-align:right;font-weight:600;color:#ef4444;">${fmt(e.rebate_amount||0)}</td><td>${e.reason||''}</td><td>${e.authorized_by||''}</td></tr>`).join('');
+  const byDept=RJ.ristourne_by_dept||{};
+  const deptSummary=Object.entries(byDept).map(([d,val])=>`<span style="margin-right:12px;"><b>${d}:</b> ${fmt(val)}</span>`).join('')||'';
+  return `<div class="rj-block-title">Ristourne — Rabais et ajustements</div><table class="rj-entries-table"><thead><tr><th>Client</th><th>Département</th><th style="text-align:right;">Original</th><th style="text-align:right;">Ristourne</th><th>Raison</th><th>Autorisé par</th></tr></thead><tbody>${rows}</tbody><tfoot><tr><td colspan="3" style="text-align:right;font-weight:700;">Total:</td><td style="text-align:right;font-weight:700;color:#ef4444;">${vf('ristourne_total')}</td><td colspan="2"></td></tr></tfoot></table>${deptSummary?`<div style="margin-top:12px;font-size:13px;">${deptSummary}</div>`:''}`;
+}
+
+
+// ═══════════════════════════════════════
+// REPORTS DIRECTION (P1/P2/P3/PL)
+// ═══════════════════════════════════════
+async function loadReport(dateStr) {
+  if (!dateStr) return;
+  ['p1','p2','p3','pl'].forEach(id => { $(`#loading-${id}`).style.display=''; $(`#content-${id}`).style.display='none'; });
+  try {
+    const r = await fetch(`/api/direction/daily-report/${dateStr}`);
+    if (!r.ok) { const err = await r.json().catch(()=>({})); ['p1','p2','p3','pl'].forEach(id => { $(`#loading-${id}`).innerHTML=`<div class="no-data"><h2>Aucune donnée</h2><p>${err.error||''}</p></div>`; }); return; }
+    const DATA = await r.json();
+    renderP1(DATA); renderP2(DATA); renderP3(DATA); renderPL(DATA);
+  } catch (e) { console.error(e); ['p1','p2','p3','pl'].forEach(id => { $(`#loading-${id}`).innerHTML='<div class="no-data"><h2>Erreur</h2></div>'; }); }
+}
+
+function renderP1(d) {
+  const p=d.rapp_p1, rv=p.revenus, mo=p.main_oeuvre;
+  let html=`<div class="rpt-title">SHERATON LAVAL</div><div class="rpt-subtitle">SOMMAIRE DES REVENUS — ${d.date} (Jour ${d.day})</div>`;
+  html+=`<table class="rpt-table"><thead><tr><th></th><th>CE JOUR $</th><th>CE MOIS $</th><th>BUDGET JOUR</th><th>BUDGET MOIS</th></tr></thead><tbody>`;
+  [['Chambres Louées',rv.chambres_louees,true],['Taux Moyen',rv.taux_moyen],['Total Chambres',rv.total_chambres],['Location salle',rv.location_salle],['Giotto',rv.giotto],['Piazza',rv.piazza],['Cupola',rv.cupola],['Banquets Hôtel',rv.banquets],['Banquets II',rv.banquets_ii]].forEach(([l,val,isI])=>{const f=isI?fmtInt:fmt;html+=`<tr><td>${l}</td><td>${f(val.jour)}</td><td>${f(val.mois)}</td><td>${f(val.budget_jour)}</td><td>${f(val.budget_mois)}</td></tr>`;});
+  html+=`<tr class="subtotal-row"><td>Total Restauration</td><td>${fmt(rv.total_restauration.jour)}</td><td>${fmt(rv.total_restauration.mois)}</td><td></td><td></td></tr>`;
+  [['Mini-Bar',rv.minibar],['Téléphone',rv.telephone],['Autres Revenus',rv.autres_revenus]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.jour)}</td><td>${fmt(val.mois)}</td><td></td><td></td></tr>`;});
+  html+=`<tr class="grand-total"><td>RECETTES TOTAL</td><td>${fmt(rv.recettes_total.jour)}</td><td>${fmt(rv.recettes_total.mois)}</td><td></td><td></td></tr>`;
+  html+=`<tr><td>Recettes Nourriture</td><td>${fmt(rv.recettes_nourriture.jour)}</td><td>${fmt(rv.recettes_nourriture.mois)}</td><td></td><td></td></tr>`;
+  html+=`<tr><td>Recettes Boisson</td><td>${fmt(rv.recettes_boisson.jour)}</td><td>${fmt(rv.recettes_boisson.mois)}</td><td></td><td></td></tr></tbody></table>`;
+  html+=`<div class="rpt-title" style="margin-top:24px;">SOMMAIRE COÛT DE LA MAIN D'ŒUVRE</div>`;
+  html+=`<table class="rpt-table"><thead><tr><th>DÉPARTEMENT</th><th>CE MOIS $</th><th>% MOIS</th><th>BUDGET MOIS</th></tr></thead><tbody>`;
+  const heb=mo.hebergement;
+  [['Réception',heb.reception],['Femme de chambre',heb.femme_chambre],['Équipier',heb.equipier],['Gouvernante',heb.gouvernante],['Buanderie',heb.buanderie]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.mois)}</td><td class="pct">${fmtPct(val.pct_mois)}</td><td>${fmt(val.budget_mois)}</td></tr>`;});
+  html+=`<tr class="subtotal-row"><td>TOTAL HÉBERGEMENT</td><td>${fmt(mo.total_hebergement.mois)}</td><td></td><td></td></tr>`;
+  const rest=mo.restauration;
+  [['Giotto',rest.giotto],['Piazza',rest.piazza],['Cupola',rest.cupola],['Banquets',rest.banquets],['Banquets II',rest.banquets_ii],['Cuisine',rest.cuisine]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.mois)}</td><td class="pct">${fmtPct(val.pct_mois)}</td><td>${fmt(val.budget_mois)}</td></tr>`;});
+  html+=`<tr class="subtotal-row"><td>TOTAL RESTAURATION</td><td>${fmt(mo.total_restauration.mois)}</td><td></td><td></td></tr>`;
+  const aut=mo.autres;
+  [['Adm. Générale',aut.adm_generale],['Marketing',aut.marketing],['Entretien',aut.entretien]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.mois)}</td><td class="pct">${fmtPct(val.pct_mois)}</td><td>${fmt(val.budget_mois)}</td></tr>`;});
+  html+=`<tr class="grand-total"><td>TOTAL SALAIRES</td><td>${fmt(mo.total_salaires.mois)}</td><td></td><td></td></tr></tbody></table>`;
+  $('#content-p1').innerHTML=html; $('#loading-p1').style.display='none'; $('#content-p1').style.display='';
+}
+
+function renderP2(d) {
+  const p=d.rapp_p2;
+  let html=`<div class="rpt-title">SHERATON LAVAL</div><div class="rpt-subtitle">HEURES & EMPLOYÉS — ${d.date} (${d.days_in_period} jours)</div>`;
+  html+=`<table class="rpt-table"><thead><tr><th>DÉPARTEMENT</th><th>HEURES MOIS</th><th>EMPLOYÉS/JOUR</th></tr></thead><tbody>`;
+  const heb=p.hebergement;
+  [['Réception',heb.reception],['Femme de chambre',heb.femme_chambre],['Équipier',heb.equipier],['Gouvernante',heb.gouvernante],['Buanderie',heb.buanderie]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.heures_mois)}</td><td>${fmt(val.employes_mois)}</td></tr>`;});
+  let tH=Object.values(heb).reduce((s,val)=>s+val.heures_mois,0), tE=Object.values(heb).reduce((s,val)=>s+val.employes_mois,0);
+  html+=`<tr class="subtotal-row"><td>TOTAL HÉBERGEMENT</td><td>${fmt(tH)}</td><td>${fmt(tE)}</td></tr>`;
+  const rest=p.restauration;
+  [['Piazza',rest.piazza],['Cupola',rest.cupola],['Banquets',rest.banquets],['Banquets II',rest.banquets_ii],['Cuisine',rest.cuisine]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.heures_mois)}</td><td>${fmt(val.employes_mois)}</td></tr>`;});
+  let tHR=Object.values(rest).reduce((s,val)=>s+val.heures_mois,0), tER=Object.values(rest).reduce((s,val)=>s+val.employes_mois,0);
+  html+=`<tr class="subtotal-row"><td>TOTAL RESTAURATION</td><td>${fmt(tHR)}</td><td>${fmt(tER)}</td></tr>`;
+  const autres=p.autres;
+  [['Adm. Générale',autres.adm_generale],['Marketing',autres.marketing],['Entretien',autres.entretien]].forEach(([l,val])=>{html+=`<tr><td>${l}</td><td>${fmt(val.heures_mois)}</td><td>${fmt(val.employes_mois)}</td></tr>`;});
+  html+=`<tr class="grand-total"><td>TOTAL</td><td>${fmt(tH+tHR+Object.values(autres).reduce((s,val)=>s+val.heures_mois,0))}</td><td>${fmt(tE+tER+Object.values(autres).reduce((s,val)=>s+val.employes_mois,0))}</td></tr></tbody></table>`;
+  const fcs=p.femme_chambre_stats;
+  html+=`<table class="rpt-table" style="max-width:500px;margin-top:20px;"><thead><tr><th>FONCTION</th><th>EMP./JOUR</th><th>MOY. CH./EMP.</th></tr></thead><tbody><tr><td>FEMME DE CHAMBRE</td><td>${fmt(fcs.employes_mois)}</td><td>${fmt(fcs.moy_chambre_emp)}</td></tr></tbody></table>`;
+  $('#content-p2').innerHTML=html; $('#loading-p2').style.display='none'; $('#content-p2').style.display='';
+}
+
+function renderP3(d) {
+  const p=d.rapp_p3;
+  let html=`<div class="rpt-title">SHERATON LAVAL</div><div class="rpt-subtitle">ANALYSE DÉTAILLÉE — ${d.date}</div>`;
+  html+=`<table class="rpt-table"><thead><tr><th></th><th colspan="2">JOURNALIER</th><th colspan="4">MENSUEL</th><th colspan="2">BUDGET</th><th colspan="2">ÉCART</th></tr><tr><th></th><th>Rev.</th><th>%</th><th>Rev.</th><th>Hrs</th><th>Sal.</th><th>%</th><th>Rev.</th><th>Sal.</th><th>Sal.</th><th>%</th></tr></thead><tbody>`;
+  [['CHAMBRES',p.chambres],['NOURRITURE',p.nourriture],['PIAZZA',p.piazza],['BANQUET',p.banquet],['BOISSON',p.boisson],['LOCATION',p.location],['BUANDERIE',p.buanderie],['ENTRETIEN',p.entretien]].forEach(([l,s])=>{
+    const rv=s.revenus,ec=s.ecart_salaires;
+    html+=`<tr class="section-header"><td>${l}</td><td>${fmt(rv.jour)}</td><td></td><td>${fmt(rv.mois)}</td><td>${fmt(s.heures_mois)}</td><td>${fmt(s.salaires_mois)}</td><td class="pct">${fmtPct(s.pct_mois)}</td><td>${fmt(rv.budget)}</td><td>${fmt(s.budget_salaires)}</td><td class="${cls(ec)}">${fmt(ec)}</td><td class="pct ${cls(ec)}">${s.budget_salaires?fmtPct(ec/s.budget_salaires):'—'}</td></tr>`;
+  });
+  const t=p.total.revenus;
+  html+=`<tr class="grand-total"><td>TOTAL</td><td>${fmt(t.jour)}</td><td></td><td>${fmt(t.mois)}</td><td></td><td></td><td></td><td>${fmt(t.budget)}</td><td></td><td></td><td></td></tr></tbody></table>`;
+  $('#content-p3').innerHTML=html; $('#loading-p3').style.display='none'; $('#content-p3').style.display='';
+}
+
+function renderPL(d) {
+  const e=d.etat_rev;
+  let html=`<div class="rpt-title">SHERATON LAVAL</div><div class="rpt-subtitle">ÉTAT DES REVENUS ET DÉPENSES — ${d.date}</div><div class="pl-layout"><div>`;
+  html+=`<table class="rpt-table"><thead><tr><th></th><th>% BDG</th><th>JOUR $</th><th>MOIS $</th><th>%</th></tr></thead><tbody>`;
+  const ch=e.chambres;
+  html+=`<tr class="section-header"><td>CHAMBRES</td><td></td><td></td><td></td><td></td></tr>`;
+  html+=`<tr><td class="indent">Chambres Louées</td><td class="pct">${fmtPct(ch.occ_jour)}</td><td>${fmtInt(ch.louees_jour)}</td><td></td><td></td></tr>`;
+  html+=`<tr><td class="indent">Ventes</td><td></td><td>${fmt(ch.ventes_jour)}</td><td>${fmt(ch.ventes_mois)}</td><td></td></tr>`;
+  html+=`<tr><td class="indent">Salaires</td><td></td><td></td><td>${fmt(ch.salaires_mois)}</td><td class="pct">${fmtPct(ch.pct_sal)}</td></tr>`;
+  html+=`<tr><td class="indent">Bénéfices Marginaux</td><td class="pct">${fmtPct(ch.pct_ben)}</td><td></td><td>${fmt(ch.ben_marg_mois)}</td><td></td></tr>`;
+  html+=`<tr><td class="indent">Coût Variable</td><td class="pct">${fmtPct(ch.pct_var)}</td><td>${fmt(ch.cost_var_jour)}</td><td>${fmt(ch.cost_var_mois)}</td><td></td></tr>`;
+  html+=`<tr class="subtotal-row"><td class="indent">Marge</td><td></td><td>${fmt(ch.marge_jour)}</td><td>${fmt(ch.marge_mois)}</td><td></td></tr>`;
+  const re=e.restauration;
+  html+=`<tr class="section-header"><td>RESTAURATION</td><td></td><td></td><td></td><td></td></tr>`;
+  html+=`<tr><td class="indent">Ventes</td><td class="pct">${fmtPct(re.pct_ventes)}</td><td>${fmt(re.ventes_jour)}</td><td>${fmt(re.ventes_mois)}</td><td></td></tr>`;
+  html+=`<tr><td class="indent">Salaires</td><td></td><td></td><td>${fmt(re.salaires_mois)}</td><td class="pct">${fmtPct(re.pct_sal)}</td></tr>`;
+  html+=`<tr><td class="indent">Bénéfices</td><td></td><td></td><td>${fmt(re.ben_marg_mois)}</td><td></td></tr>`;
+  html+=`<tr><td class="indent">Coût Variable</td><td class="pct">${fmtPct(re.pct_var)}</td><td>${fmt(re.cost_var_jour)}</td><td>${fmt(re.cost_var_mois)}</td><td></td></tr>`;
+  html+=`<tr><td class="indent">Autres Coûts</td><td class="pct">${fmtPct(re.pct_autres)}</td><td>${fmt(re.cost_autres_jour)}</td><td>${fmt(re.cost_autres_mois)}</td><td></td></tr>`;
+  html+=`<tr class="subtotal-row"><td class="indent">Marge</td><td></td><td>${fmt(re.marge_jour)}</td><td>${fmt(re.marge_mois)}</td><td></td></tr>`;
+  html+=`<tr class="section-header"><td>AUTRES</td><td></td><td></td><td></td><td></td></tr>`;
+  html+=`<tr><td class="indent">Autres Revenus</td><td></td><td>${fmt(e.autres.revenus_jour)}</td><td>${fmt(e.autres.revenus_mois)}</td><td></td></tr>`;
+  const sal=e.salaires;
+  html+=`<tr class="section-header"><td>SALAIRES</td><td></td><td></td><td></td><td></td></tr>`;
+  html+=`<tr><td class="indent">Autres Salaires</td><td></td><td></td><td>${fmt(sal.autres_sal_mois)}</td><td></td></tr>`;
+  html+=`<tr><td class="indent">Bénéfices</td><td></td><td></td><td>${fmt(sal.ben_marg_mois)}</td><td></td></tr>`;
+  html+=`<tr class="subtotal-row"><td>TOTAL SAL. & CHARGES</td><td></td><td></td><td>${fmt(sal.total_sal_charges_mois)}</td><td></td></tr>`;
+  const pr=e.profit;
+  html+=`<tr class="total-row"><td>PROFIT AVANT FIXES</td><td></td><td>${fmt(pr.avant_fixes_jour)}</td><td>${fmt(pr.avant_fixes_mois)}</td><td class="pct">${fmtPct(pr.pct_fixes_mois)}</td></tr>`;
+  const fc=e.couts_fixes;
+  html+=`<tr class="section-header"><td>COÛTS FIXES</td><td></td><td></td><td></td><td></td></tr>`;
+  [['Marketing',fc.marketing],['Administration',fc.admin],['Entretien',fc.entretien],['Énergie',fc.energie],['Taxes & Assurances',fc.taxes],['Amortissement',fc.amortissement],['Intérêts',fc.interet]].forEach(([l,val])=>{html+=`<tr><td class="indent">${l}</td><td></td><td></td><td>${fmt(val)}</td><td></td></tr>`;});
+  html+=`<tr class="subtotal-row"><td>Total Fixes</td><td></td><td></td><td>${fmt(fc.total)}</td><td></td></tr>`;
+  const res=e.resultat;
+  html+=`<tr class="total-row"><td>PROFIT AVANT LOYER</td><td></td><td></td><td class="${cls(res.profit_avant_loyer)}">${fmt(res.profit_avant_loyer)}</td><td class="pct">${fmtPct(res.pct_avant_loyer)}</td></tr>`;
+  html+=`<tr><td class="indent">Loyer</td><td></td><td></td><td>${fmt(fc.loyer)}</td><td></td></tr>`;
+  html+=`<tr class="grand-total"><td>BÉNÉFICE (PERTE)</td><td></td><td></td><td class="${cls(res.benefice_net)}">${fmt(res.benefice_net)}</td><td class="pct">${fmtPct(res.pct_net)}</td></tr></tbody></table></div>`;
+  const st=e.stats;
+  html+=`<div class="pl-stats"><h3>Statistiques</h3>
+    <div class="pl-stat"><span class="label">Ventes Jour</span><span class="val">${fmt(st.ventes_jour)}</span></div>
+    <div class="pl-stat"><span class="label">Ventes Mois</span><span class="val">${fmt(st.ventes_mois)}</span></div>
+    <div class="pl-stat"><span class="label">Salaires/Jour</span><span class="val">${fmt(st.sal_jour)}</span></div>
+    <div class="pl-stat"><span class="label">% Sal./Rev.</span><span class="val">${fmtPct(st.sal_pct)}</span></div>
+    <hr style="border-color:var(--border,#2a2d3a);margin:8px 0;">
+    <div class="pl-stat"><span class="label">ADR Jour</span><span class="val">${fmt(st.tarif_moyen_jour)}</span></div>
+    <div class="pl-stat"><span class="label">ADR Mois</span><span class="val">${fmt(st.tarif_moyen_mois)}</span></div>
+    <div class="pl-stat"><span class="label">Clients</span><span class="val">${fmtInt(st.nb_clients)}</span></div>
+    <div class="pl-stat"><span class="label">Moy/Client</span><span class="val">${fmt(st.moy_client)}</span></div>
+    <hr style="border-color:var(--border,#2a2d3a);margin:8px 0;">
+    <div class="pl-stat"><span class="label">REVCD</span><span class="val">${fmt(st.revcd)}</span></div>
+    <div class="pl-stat"><span class="label">REVPAR</span><span class="val">${fmt(st.revpar)}</span></div>
+    <hr style="border-color:var(--border,#2a2d3a);margin:8px 0;">
+    <h3>Occupation</h3>
+    <div class="pl-stat"><span class="label">Disponible</span><span class="val">${fmtInt(st.occ_disponible)}</span></div>
+    <div class="pl-stat"><span class="label">Simple</span><span class="val">${fmtInt(st.occ_simple)} (${fmtPct(st.pct_simple)})</span></div>
+    <div class="pl-stat"><span class="label">Double</span><span class="val">${fmtInt(st.occ_double)}</span></div>
+    <div class="pl-stat"><span class="label">Suite</span><span class="val">${fmtInt(st.occ_suite)} (${fmtPct(st.pct_suite)})</span></div>
+  </div></div>`;
+  $('#content-pl').innerHTML=html; $('#loading-pl').style.display='none'; $('#content-pl').style.display='';
+}
+
+
+// ═══════════════════════════════════════
+// CROSS ANALYSIS
+// ═══════════════════════════════════════
+let crossCache = null;
+let crossCharts = {};
+
+function destroyCrossChart(id) { if (crossCharts[id]) { crossCharts[id].destroy(); delete crossCharts[id]; } }
+
+async function loadCrossSection() {
+  const period = $('#cross-period-select').value || 30;
+  crossCache = null;
+  ['loading-cross','loading-dept','loading-gl','loading-combined'].forEach(id => { const el=$(`#${id}`); if(el) el.style.display=''; });
+  ['content-cross-labor','content-cross-dept','content-cross-gl','content-cross-combined'].forEach(id => { const el=$(`#${id}`); if(el) el.style.display='none'; });
+  try {
+    const res = await fetch(`/api/direction/cross-analysis?days=${period}`);
+    if (!res.ok) throw new Error('API error');
+    crossCache = await res.json();
+    loadCrossLabor();
+  } catch (e) {
+    console.error('Cross section error:', e);
+    $('#loading-cross').innerHTML = '<div class="no-data"><h2>Erreur de chargement</h2></div>';
+  }
+}
+
+function loadCrossTabContent(tab) {
+  if (!crossCache) { loadCrossSection(); return; }
+  if (tab === 'labor') loadCrossLabor();
+  else if (tab === 'dept') loadCrossDept();
+  else if (tab === 'gl') loadCrossGL();
+  else if (tab === 'combined') loadCrossCombined();
+}
+
+function loadCrossLabor() {
+  if (!crossCache) return;
+  const data = crossCache;
+  const daily = data.daily || [];
+  const summary = data.summary || {};
+
+  // KPIs
+  const avgLaborPct = summary.avg_labor_pct || 0;
+  const totalLabor = summary.total_labor || 0;
+  const totalRev = summary.total_revenue || 0;
+  const laborStatus = avgLaborPct > 35 ? 'critical' : avgLaborPct > 30 ? 'warning' : 'success';
+
+  $('#labor-kpi-grid').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Coût total main-d'œuvre</div>
+      <div class="kpi-value">${fmt(totalLabor)}</div>
+      <div class="kpi-sub">sur ${summary.total_days||0} jours</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">% moy. main-d'œuvre/revenus</div>
+      <div class="kpi-value" style="color:${laborStatus==='critical'?'#ef4444':laborStatus==='warning'?'#f59e0b':'#10b981'};">${avgLaborPct.toFixed(1)}%</div>
+      <div class="kpi-sub">cible: ≤ 30%</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Revenus totaux</div>
+      <div class="kpi-value">${fmt(totalRev)}</div>
+      <div class="kpi-sub">${summary.total_days||0} jours</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Heures totales</div>
+      <div class="kpi-value">${fmtInt(daily.reduce((s,d)=>s+(d.labor_hours||0),0))}</div>
+      <div class="kpi-sub">moy/jour: ${daily.length?Math.round(daily.reduce((s,d)=>s+(d.labor_hours||0),0)/daily.length):0}h</div>
+    </div>
+  `;
+
+  // Charts — wrapped in try-catch for CDN failure resilience
+  try {
+    if (typeof Chart === 'undefined') throw new Error('Chart.js not loaded');
+
+    // Labor % chart (line)
+    destroyCrossChart('laborPct');
+    const ctx1 = $('#cross-labor-pct-chart').getContext('2d');
+    crossCharts.laborPct = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: daily.map(d => d.date.slice(5)),
+        datasets: [{
+          label: '% Main-d\'œuvre',
+          data: daily.map(d => d.labor_pct),
+          borderColor: '#818cf8',
+          backgroundColor: 'rgba(129,140,248,0.1)',
+          fill: true,
+          tension: 0.3,
+          pointRadius: daily.length > 60 ? 0 : 3
+        }, {
+          label: 'Cible 30%',
+          data: daily.map(() => 30),
+          borderColor: '#ef4444',
+          borderDash: [6,3],
+          pointRadius: 0,
+          fill: false
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { x: { ticks: { color: '#64748b', maxRotation: 45 } }, y: { ticks: { color: '#64748b', callback: v => v+'%' }, beginAtZero: true } } }
+    });
+
+    // Dept bar
+    destroyCrossChart('deptBar');
+    const totalFB = daily.reduce((s,d) => s+(d.fb_revenue||0), 0);
+    const totalRoom = daily.reduce((s,d) => s+(d.room_revenue||0), 0);
+    const totalOther = totalRev - totalFB - totalRoom;
+    const ctx2 = $('#cross-dept-bar-chart').getContext('2d');
+    crossCharts.deptBar = new Chart(ctx2, {
+      type: 'bar',
+      data: {
+        labels: ['Hébergement', 'F&B', 'Autres'],
+        datasets: [{ label: 'Revenus', data: [totalRoom, totalFB, Math.max(0,totalOther)], backgroundColor: ['#818cf8','#10b981','#f59e0b'] }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#64748b', callback: v => '$'+v.toLocaleString() } }, y: { ticks: { color: '#94a3b8' } } } }
+    });
+
+    // Rev vs Labor
+    destroyCrossChart('revLabor');
+    const ctx3 = $('#cross-rev-labor-chart').getContext('2d');
+    crossCharts.revLabor = new Chart(ctx3, {
+      type: 'line',
+      data: {
+        labels: daily.map(d => d.date.slice(5)),
+        datasets: [{
+          label: 'Revenus',
+          data: daily.map(d => d.revenue),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.1)',
+          fill: true, tension: 0.3,
+          yAxisID: 'y',
+          pointRadius: daily.length > 60 ? 0 : 2
+        }, {
+          label: 'Main-d\'œuvre',
+          data: daily.map(d => d.labor_cost),
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239,68,68,0.1)',
+          fill: true, tension: 0.3,
+          yAxisID: 'y',
+          pointRadius: daily.length > 60 ? 0 : 2
+        }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { x: { ticks: { color: '#64748b', maxRotation: 45 } }, y: { ticks: { color: '#64748b', callback: v => '$'+v.toLocaleString() }, beginAtZero: true } } }
+    });
+  } catch (chartErr) {
+    console.error('Cross labor charts error:', chartErr);
+  }
+
+  $('#loading-cross').style.display = 'none';
+  $('#content-cross-labor').style.display = 'block';
+  feather.replace();
+}
+
+function loadCrossDept() {
+  if (!crossCache) return;
+  const daily = crossCache.daily || [];
+
+  // Build department breakdown table
+  const totalRoom = daily.reduce((s,d) => s+(d.room_revenue||0), 0);
+  const totalFB = daily.reduce((s,d) => s+(d.fb_revenue||0), 0);
+  const totalRev = crossCache.summary.total_revenue || 1;
+  const totalOther = Math.max(0, totalRev - totalRoom - totalFB);
+
+  const depts = [
+    { name: 'Hébergement', rev: totalRoom, pct: (totalRoom/totalRev*100).toFixed(1) },
+    { name: 'F&B (Nourriture & Boisson)', rev: totalFB, pct: (totalFB/totalRev*100).toFixed(1) },
+    { name: 'Autres revenus', rev: totalOther, pct: (totalOther/totalRev*100).toFixed(1) }
+  ];
+
+  let html = '<table class="rj-entries-table"><thead><tr><th>Département</th><th style="text-align:right;">Revenus</th><th style="text-align:right;">% du total</th><th style="text-align:right;">Moy/jour</th></tr></thead><tbody>';
+  depts.forEach(d => {
+    html += `<tr><td>${d.name}</td><td style="text-align:right;">${fmt(d.rev)}</td><td style="text-align:right;">${d.pct}%</td><td style="text-align:right;">${fmt(d.rev / (daily.length||1))}</td></tr>`;
+  });
+  html += `<tr style="font-weight:700;border-top:2px solid var(--border,#2a2d3a);"><td>TOTAL</td><td style="text-align:right;">${fmt(totalRev)}</td><td style="text-align:right;">100%</td><td style="text-align:right;">${fmt(totalRev / (daily.length||1))}</td></tr></tbody></table>`;
+
+  // Daily trend by department
+  html += '<div class="chart-grid" style="margin-top:16px;"><div class="chart-panel chart-full"><div class="chart-title">Revenus quotidiens par segment</div><div class="chart-container" style="height:300px;"><canvas id="dept-daily-chart"></canvas></div></div></div>';
+
+  $('#dept-breakdown-container').innerHTML = html;
+  $('#loading-dept').style.display = 'none';
+  $('#content-cross-dept').style.display = 'block';
+
+  // Chart
+  try {
+    destroyCrossChart('deptDaily');
+    const ctx = $('#dept-daily-chart').getContext('2d');
+    crossCharts.deptDaily = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: daily.map(d => d.date.slice(5)),
+        datasets: [
+          { label: 'Hébergement', data: daily.map(d => d.room_revenue), backgroundColor: 'rgba(129,140,248,0.7)', stack: 'stack' },
+          { label: 'F&B', data: daily.map(d => d.fb_revenue), backgroundColor: 'rgba(16,185,129,0.7)', stack: 'stack' },
+          { label: 'Autres', data: daily.map(d => Math.max(0,(d.revenue||0)-(d.room_revenue||0)-(d.fb_revenue||0))), backgroundColor: 'rgba(245,158,11,0.7)', stack: 'stack' }
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#94a3b8' } } }, scales: { x: { stacked: true, ticks: { color: '#64748b', maxRotation: 45 } }, y: { stacked: true, ticks: { color: '#64748b', callback: v => '$'+v.toLocaleString() } } } }
+    });
+  } catch(e) { console.error('Dept chart error:', e); }
+  feather.replace();
+}
+
+function loadCrossGL() {
+  if (!crossCache) return;
+  const daily = crossCache.daily || [];
+  const summary = crossCache.summary || {};
+
+  // GL KPIs
+  const daysWithGL = summary.days_with_gl || 0;
+  const totalGLEntries = daily.reduce((s,d) => s+(d.gl_entries||0), 0);
+  const totalGLAmt = daily.reduce((s,d) => s+Math.abs(d.gl_total||0), 0);
+
+  $('#gl-kpi-grid').innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-label">Jours avec écritures GL</div>
+      <div class="kpi-value">${daysWithGL}</div>
+      <div class="kpi-sub">sur ${summary.total_days||0} jours</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Total écritures</div>
+      <div class="kpi-value">${fmtInt(totalGLEntries)}</div>
+      <div class="kpi-sub">moy/jour: ${daily.length?Math.round(totalGLEntries/daily.length):0}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Volume GL total</div>
+      <div class="kpi-value">${fmt(totalGLAmt)}</div>
+      <div class="kpi-sub">montant absolu</div>
+    </div>
+  `;
+
+  // GL chart — entries count over time
+  try {
+  destroyCrossChart('glAccounts');
+  const ctx = $('#cross-gl-accounts-chart').getContext('2d');
+  crossCharts.glAccounts = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: daily.map(d => d.date.slice(5)),
+      datasets: [{
+        label: 'Écritures GL',
+        data: daily.map(d => d.gl_entries),
+        backgroundColor: 'rgba(129,140,248,0.6)'
+      }, {
+        label: 'Montant GL ($)',
+        data: daily.map(d => d.gl_total),
+        type: 'line',
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16,185,129,0.1)',
+        fill: true, tension: 0.3,
+        yAxisID: 'y1',
+        pointRadius: daily.length > 60 ? 0 : 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#94a3b8' } } },
+      scales: {
+        x: { ticks: { color: '#64748b', maxRotation: 45 } },
+        y: { position: 'left', ticks: { color: '#818cf8' }, title: { display: true, text: 'Écritures', color: '#818cf8' } },
+        y1: { position: 'right', ticks: { color: '#10b981', callback: v => '$'+v.toLocaleString() }, title: { display: true, text: 'Montant $', color: '#10b981' }, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+  } catch(e) { console.error('GL chart error:', e); }
+
+  // Dates table
+  const glDays = daily.filter(d => d.gl_entries > 0).slice(-15);
+  let tbl = '<div style="margin-top:16px;"><div class="rj-block-title">Dernières écritures GL</div><table class="rj-entries-table"><thead><tr><th>Date</th><th style="text-align:right;">Écritures</th><th style="text-align:right;">Montant</th></tr></thead><tbody>';
+  glDays.forEach(d => { tbl += `<tr><td>${d.date}</td><td style="text-align:right;">${d.gl_entries}</td><td style="text-align:right;">${fmt(d.gl_total)}</td></tr>`; });
+  tbl += '</tbody></table></div>';
+  $('#gl-dates-container').innerHTML = tbl;
+
+  $('#loading-gl').style.display = 'none';
+  $('#content-cross-gl').style.display = 'block';
+  feather.replace();
+}
+
+function loadCrossCombined() {
+  if (!crossCache) return;
+  const daily = crossCache.daily || [];
+  const summary = crossCache.summary || {};
+
+  // Combined chart: revenue + labor + occupancy
+  try {
+    destroyCrossChart('combined');
+    const ctx = $('#cross-combined-chart').getContext('2d');
+    crossCharts.combined = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: daily.map(d => d.date.slice(5)),
+        datasets: [{
+          label: 'Revenus',
+          data: daily.map(d => d.revenue),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.05)',
+          fill: true, tension: 0.3,
+          yAxisID: 'y',
+          pointRadius: daily.length > 60 ? 0 : 2
+        }, {
+          label: 'Main-d\'œuvre',
+          data: daily.map(d => d.labor_cost),
+          borderColor: '#ef4444',
+          tension: 0.3,
+          yAxisID: 'y',
+          pointRadius: daily.length > 60 ? 0 : 2
+        }, {
+          label: 'Occupation %',
+          data: daily.map(d => d.occupancy),
+          borderColor: '#818cf8',
+          borderDash: [4,2],
+          tension: 0.3,
+          yAxisID: 'y1',
+          pointRadius: daily.length > 60 ? 0 : 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#64748b', maxRotation: 45 } },
+          y: { position: 'left', ticks: { color: '#64748b', callback: v => '$'+v.toLocaleString() } },
+          y1: { position: 'right', min: 0, max: 100, ticks: { color: '#818cf8', callback: v => v+'%' }, grid: { drawOnChartArea: false } }
+        }
+      }
+    });
+  } catch(e) { console.error('Combined chart error:', e); }
+
+  // Combined table
+  let html = '<div style="margin-top:16px;max-height:400px;overflow-y:auto;"><table class="rj-entries-table"><thead><tr><th>Date</th><th style="text-align:right;">Revenus</th><th style="text-align:right;">Chambres</th><th style="text-align:right;">F&B</th><th style="text-align:right;">Main-d\'œuvre</th><th style="text-align:right;">% M.O.</th><th style="text-align:right;">Occ.</th><th style="text-align:right;">ADR</th><th style="text-align:center;">RJ</th></tr></thead><tbody>';
+  daily.slice().reverse().forEach(d => {
+    const laborCls = d.labor_pct > 35 ? 'neg' : d.labor_pct > 30 ? '' : 'pos';
+    const rjIcon = d.has_rj ? (d.rj_status === 'submitted' ? '<span style="color:#10b981;">✓</span>' : '<span style="color:#818cf8;">◐</span>') : '<span style="color:#64748b;">—</span>';
+    html += `<tr><td>${d.date}</td><td style="text-align:right;">${fmt(d.revenue)}</td><td style="text-align:right;">${fmt(d.room_revenue)}</td><td style="text-align:right;">${fmt(d.fb_revenue)}</td><td style="text-align:right;">${fmt(d.labor_cost)}</td><td style="text-align:right;" class="${laborCls}">${d.labor_pct.toFixed(1)}%</td><td style="text-align:right;">${d.occupancy.toFixed(1)}%</td><td style="text-align:right;">${fmt(d.adr)}</td><td style="text-align:center;">${rjIcon}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  $('#combined-table-container').innerHTML = html;
+
+  $('#loading-combined').style.display = 'none';
+  $('#content-cross-combined').style.display = 'block';
+  feather.replace();
+}
+
+
+// ═══════════════════════════════════════
+// ANALYTICS & ALERTS SYSTEM
+// ═══════════════════════════════════════
+function generateAlerts(overviewData, crossData) {
+  const alerts = [];
+
+  if (!overviewData || !overviewData.kpis) return alerts;
+
+  const k = overviewData.kpis;
+  const fb = overviewData.fb || {};
+
+  // Occupation alerts
+  if (k.occupancy_rate < THRESHOLDS.occ_critical_low) {
+    alerts.push({
+      severity: 'critical',
+      icon: '🔴',
+      title: 'Occupation critique',
+      metric: `${fmtPctRaw(k.occupancy_rate)}`,
+      threshold: `${THRESHOLDS.occ_critical_low}%`,
+      recommendation: 'Taux d\'occupation bien en dessous du seuil critique. Vérifier les tarifs, promotions et initiatives de marketing.'
+    });
+  } else if (k.occupancy_rate < THRESHOLDS.occ_warning_low) {
+    alerts.push({
+      severity: 'warning',
+      icon: '⚠️',
+      title: 'Occupation faible',
+      metric: `${fmtPctRaw(k.occupancy_rate)}`,
+      threshold: `${THRESHOLDS.occ_warning_low}%`,
+      recommendation: 'Occupation sous le seuil de 65%. Revoir les stratégies tarifaires et les partenariats corporatifs.'
+    });
+  }
+
+  // ADR alerts
+  if (k.adr < THRESHOLDS.adr_warning_low) {
+    alerts.push({
+      severity: 'warning',
+      icon: '⚠️',
+      title: 'ADR faible',
+      metric: `$${fmt(k.adr)}`,
+      threshold: `$${THRESHOLDS.adr_warning_low}`,
+      recommendation: 'Tarif moyen en dessous de $180. Vérifier la mix chambre et les tarifs appliqués.'
+    });
+  }
+
+  // RevPAR alerts
+  if (k.revpar < THRESHOLDS.revpar_critical_low) {
+    alerts.push({
+      severity: 'critical',
+      icon: '🔴',
+      title: 'RevPAR critique',
+      metric: `$${fmt(k.revpar)}`,
+      threshold: `$${THRESHOLDS.revpar_critical_low}`,
+      recommendation: 'RevPAR en dessous du seuil de $120. Impact sur la rentabilité globale.'
+    });
+  }
+
+  // Rooms sold alerts
+  const roomsSold = k.rooms_sold || 0;
+  if (roomsSold < THRESHOLDS.rooms_sold_critical_low) {
+    alerts.push({
+      severity: 'critical',
+      icon: '🔴',
+      title: 'Chambres vendues critiques',
+      metric: `${fmtInt(roomsSold)}`,
+      threshold: `${THRESHOLDS.rooms_sold_critical_low}`,
+      recommendation: 'Ventes de chambres anormalement basses. Revoir les stratégies commerciales.'
+    });
+  }
+
+  // F&B revenue alerts
+  const fbPct = k.fb_revenue && k.total_revenue ? (k.fb_revenue / k.total_revenue) * 100 : 0;
+  if (fbPct < THRESHOLDS.fb_pct_warning_low) {
+    alerts.push({
+      severity: 'info',
+      icon: 'ℹ️',
+      title: 'Revenus F&B faibles',
+      metric: `${fbPct.toFixed(1)}%`,
+      threshold: `${THRESHOLDS.fb_pct_target}%`,
+      recommendation: 'Les revenus F&B sont sous la cible de 35%. Vérifier les taux d\'utilisation des restaurants.'
+    });
+  }
+
+  // Success alerts
+  if (k.occupancy_rate >= THRESHOLDS.occ_target) {
+    alerts.push({
+      severity: 'success',
+      icon: '✅',
+      title: 'Occupation excellent',
+      metric: `${fmtPctRaw(k.occupancy_rate)}`,
+      threshold: `≥ ${THRESHOLDS.occ_target}%`,
+      recommendation: 'Occupation dépasse la cible de 84% de Sheraton.'
+    });
+  }
+
+  if (k.adr >= THRESHOLDS.adr_target) {
+    alerts.push({
+      severity: 'success',
+      icon: '✅',
+      title: 'ADR fort',
+      metric: `$${fmt(k.adr)}`,
+      threshold: `≥ $${THRESHOLDS.adr_target}`,
+      recommendation: 'Tarif moyen au-dessus de la cible budgétaire.'
+    });
+  }
+
+  return alerts;
+}
+
+async function loadAnalytics() {
+  try {
+    // Load overview data if not cached
+    if (!overviewCache) {
+      const res = await fetch('/api/direction/overview');
+      overviewCache = await res.json();
+    }
+
+    const alerts = generateAlerts(overviewCache, null);
+    renderAlerts(alerts);
+
+    // Also pre-load recommendations
+    const recs = generateRecommendations(overviewCache);
+    renderRecommendations(recs);
+  } catch (e) {
+    console.error('Analytics error:', e);
+  }
+}
+
+function renderAlerts(alerts) {
+  if (!alerts || alerts.length === 0) {
+    $('#alert-grid').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted,#94a3b8);"><p>Aucune alerte pour le moment.</p></div>';
+    return;
+  }
+
+  const counts = {critical:0, warning:0, success:0, info:0};
+  alerts.forEach(a => counts[a.severity] = (counts[a.severity]||0) + 1);
+
+  let html = `<div class="alert-summary-bar">
+    ${counts.critical ? `<div class="alert-summary-item"><span class="alert-dot critical"></span><span class="alert-summary-count" style="color:#ef4444;">${counts.critical}</span> critique${counts.critical>1?'s':''}</div>` : ''}
+    ${counts.warning ? `<div class="alert-summary-item"><span class="alert-dot warning"></span><span class="alert-summary-count" style="color:#f59e0b;">${counts.warning}</span> attention</div>` : ''}
+    ${counts.success ? `<div class="alert-summary-item"><span class="alert-dot success"></span><span class="alert-summary-count" style="color:#10b981;">${counts.success}</span> conforme${counts.success>1?'s':''}</div>` : ''}
+    ${counts.info ? `<div class="alert-summary-item"><span class="alert-dot info"></span><span class="alert-summary-count">${counts.info}</span> info</div>` : ''}
+  </div>`;
+
+  html += `<table class="alert-table"><thead><tr><th style="width:40px;"></th><th>Indicateur</th><th>Valeur</th><th>Seuil</th><th>Note</th></tr></thead><tbody>`;
+  alerts.forEach(a => {
+    html += `<tr>
+      <td><span class="alert-dot ${a.severity}"></span></td>
+      <td><div class="alert-name">${a.title}</div></td>
+      <td class="alert-metric-cell">${a.metric}</td>
+      <td class="alert-threshold-cell">${a.threshold}</td>
+      <td style="font-size:0.8rem;color:var(--text-muted,#94a3b8);max-width:300px;">${a.recommendation}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  $('#alert-grid').innerHTML = html;
+}
+
+
+// ═══════════════════════════════════════
+// ANALYTICS TAB SWITCH
+// ═══════════════════════════════════════
+function switchAnalyticsTab(tab, btn) {
+  const section = $('#analytics-section');
+  if (!section) return;
+  section.querySelectorAll('.dir-content').forEach(c => c.classList.remove('active'));
+  section.querySelectorAll('.dir-tab').forEach(t => t.classList.remove('active'));
+  const tabEl = $(`#analytics-tab-${tab}`);
+  if (tabEl) tabEl.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tab === 'recommendations') loadRecommendations();
+}
+
+
+// ═══════════════════════════════════════
+// RECOMMENDATIONS ENGINE
+// ═══════════════════════════════════════
+async function loadRecommendations() {
+  try {
+    if (!overviewCache) {
+      const res = await fetch('/api/direction/overview');
+      overviewCache = await res.json();
+    }
+    const recs = generateRecommendations(overviewCache);
+    renderRecommendations(recs);
+  } catch (e) {
+    console.error('Recommendations error:', e);
+    $('#recommendations-grid').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);">Erreur de chargement.</div>';
+  }
+}
+
+function generateRecommendations(data) {
+  const recs = [];
+  if (!data || !data.kpis) return recs;
+
+  const k = data.kpis;
+  const fb = data.fb || {};
+  const dow = data.dow || {};
+  const trend = data.trend || {};
+  const rooms = data.rooms || {};
+  const monthly = data.monthly || [];
+
+  // ── OCCUPATION RECOMMENDATIONS ──
+  if (k.occupancy_rate < 60) {
+    recs.push({
+      priority: 'high',
+      icon: '🏨',
+      title: 'Plan d\'urgence occupation',
+      body: `Le taux d'occupation est à ${fmtPctRaw(k.occupancy_rate)}, bien en dessous du seuil critique de 60%. Cela nécessite une action immédiate sur plusieurs fronts.`,
+      actions: [
+        'Réviser les tarifs BAR et les étages de prix pour les 30 prochains jours',
+        'Activer les promotions last-minute sur les OTAs (Booking, Expedia)',
+        'Contacter les comptes corporatifs pour négocier des blocs de chambres',
+        'Vérifier la compétitivité tarifaire vs les hôtels concurrents (Hilton Laval, Holiday Inn)',
+      ],
+      context: `ADR actuel: $${fmt(k.adr)} | RevPAR: $${fmt(k.revpar)} | ${k.days_count} jours analysés`
+    });
+  } else if (k.occupancy_rate < 75) {
+    recs.push({
+      priority: 'medium',
+      icon: '📊',
+      title: 'Optimisation du taux d\'occupation',
+      body: `L'occupation moyenne est à ${fmtPctRaw(k.occupancy_rate)}. Il y a une marge d'amélioration pour atteindre la cible Sheraton de 84%.`,
+      actions: [
+        'Analyser les jours faibles et ajuster les tarifs dynamiquement',
+        'Renforcer les partenariats avec les agences de voyage locales',
+        'Proposer des forfaits weekend incluant le restaurant',
+      ],
+      context: `Cible Sheraton: 84% | Écart: ${(84 - k.occupancy_rate).toFixed(1)} points`
+    });
+  } else if (k.occupancy_rate >= 90) {
+    recs.push({
+      priority: 'low',
+      icon: '🎯',
+      title: 'Optimisation des revenus en haute occupation',
+      body: `Avec ${fmtPctRaw(k.occupancy_rate)} d'occupation, c'est le moment d'optimiser le rendement par chambre.`,
+      actions: [
+        'Augmenter les tarifs BAR de 5-10% pour les dates à forte demande',
+        'Réduire l\'allocation OTA et favoriser les réservations directes',
+        'Proposer des surclassements payants (upsell suites)',
+        'Maximiser le RevPAR en fermant les tarifs bas',
+      ],
+      context: `ADR: $${fmt(k.adr)} | Potentiel d'augmentation si demande soutenue`
+    });
+  }
+
+  // ── ADR RECOMMENDATIONS ──
+  if (k.adr < 170) {
+    recs.push({
+      priority: 'high',
+      icon: '💰',
+      title: 'Tarif moyen (ADR) sous la cible',
+      body: `L'ADR est à $${fmt(k.adr)}, sous le seuil minimum de $170. L'hôtel perd du revenu potentiel par chambre.`,
+      actions: [
+        'Vérifier si des tarifs négociés trop bas diluent l\'ADR',
+        'Analyser le mix de segments (trop de tarifs corporate bas?)',
+        'Réduire les chambres offertes sur les canaux à forte commission',
+        'Implémenter une stratégie de prix plancher par saison',
+      ],
+      context: `Cible budget: $195 | Écart: -$${fmt(195 - k.adr)}/chambre/nuit`
+    });
+  } else if (k.adr > 220) {
+    recs.push({
+      priority: 'low',
+      icon: '✅',
+      title: 'ADR performant — maintenir la stratégie',
+      body: `L'ADR de $${fmt(k.adr)} dépasse la cible budgétaire. La stratégie tarifaire fonctionne.`,
+      actions: [
+        'Documenter les conditions de marché actuelles pour référence',
+        'Surveiller l\'impact sur l\'occupation (risque de price-out)',
+      ],
+      context: `Au-dessus du budget de $${fmt(k.adr - 195)}`
+    });
+  }
+
+  // ── F&B RECOMMENDATIONS ──
+  const fbPct = k.total_revenue > 0 ? (k.fb_revenue / k.total_revenue * 100) : 0;
+  if (fbPct < 25 && k.total_revenue > 0) {
+    recs.push({
+      priority: 'medium',
+      icon: '🍽️',
+      title: 'Revenus F&B sous-performants',
+      body: `Les revenus F&B ne représentent que ${fbPct.toFixed(1)}% du total (cible: 35%). Le Giotto, Piazza et Spesa génèrent moins que prévu.`,
+      actions: [
+        'Analyser la fréquentation des restaurants par jour de la semaine',
+        'Créer des forfaits chambre + dîner pour les invités in-house',
+        'Revoir les horaires d\'ouverture et le menu du Piazza',
+        'Lancer une promotion déjeuner d\'affaires pour les corporatifs locaux',
+        'Évaluer la performance du service aux chambres vs le coût',
+      ],
+      context: `F&B total: $${fmtK(k.fb_revenue)} | Nourriture: $${fmtK((fb.category_totals||{}).Nourriture||0)} | Boisson: $${fmtK((fb.category_totals||{}).Boisson||0)}`
+    });
+  }
+
+  // ── DAY-OF-WEEK ANALYSIS ──
+  const byDowRecs = (dow.by_dow || []);
+  if (byDowRecs.length > 0) {
+    const dowLabels = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+    let minDay = '', minRev = Infinity, maxDay = '', maxRev = 0;
+    byDowRecs.forEach((d, i) => {
+      const rev = d.avg_total_rev || 0;
+      if (rev < minRev) { minRev = rev; minDay = dowLabels[i]; }
+      if (rev > maxRev) { maxRev = rev; maxDay = dowLabels[i]; }
+    });
+    if (maxRev > 0 && minRev / maxRev < 0.6) {
+      recs.push({
+        priority: 'medium',
+        icon: '📅',
+        title: `Écart revenus important entre ${maxDay} et ${minDay}`,
+        body: `${minDay} génère en moyenne $${fmtInt(minRev)} vs $${fmtInt(maxRev)} le ${maxDay} (${((1 - minRev/maxRev)*100).toFixed(0)}% de moins). Un potentiel de revenus est perdu sur les jours faibles.`,
+        actions: [
+          `Créer une promotion spécifique pour le ${minDay} (tarif + souper inclus)`,
+          'Évaluer les besoins en personnel pour les jours faibles vs forts',
+          `Cibler les réservations de groupe et événements pour les ${minDay}s`,
+        ],
+        context: `Ratio jour faible/fort: ${(minRev/maxRev*100).toFixed(0)}%`
+      });
+    }
+  }
+
+  // ── REVPAR RECOMMENDATIONS ──
+  if (k.revpar < 120) {
+    recs.push({
+      priority: 'high',
+      icon: '📉',
+      title: 'RevPAR critique — action requise',
+      body: `Le RevPAR est à $${fmt(k.revpar)}, en dessous du seuil de $120. C'est la métrique la plus importante car elle combine occupation et tarif.`,
+      actions: [
+        'Concentrer les efforts sur l\'occupation si ADR est acceptable',
+        'Concentrer sur les tarifs si occupation est acceptable',
+        'Revoir l\'ensemble de la stratégie de revenue management',
+        'Comparer avec le RevPAR du marché (STR report)',
+      ],
+      context: `RevPAR = ADR × Occupation = $${fmt(k.adr)} × ${fmtPctRaw(k.occupancy_rate)}`
+    });
+  }
+
+  // ── COMP ROOMS ──
+  if (k.rooms_comp > 5) {
+    recs.push({
+      priority: 'medium',
+      icon: '🎁',
+      title: 'Volume de chambres gratuites élevé',
+      body: `${k.rooms_comp || 0} chambres comp ont été attribuées sur la période. Chaque chambre comp représente une perte de revenu.`,
+      actions: [
+        'Vérifier que chaque comp est justifiée et autorisée',
+        'Établir un rapport mensuel des comp par motif',
+        'Fixer un plafond de comp par semaine/mois',
+      ],
+      context: `Valeur estimée perdue: $${fmtInt((k.rooms_comp||0) * k.adr)}`
+    });
+  }
+
+  // ── NO-SHOWS (from NAS data) ──
+  if (k.avg_noshow > 3) {
+    recs.push({
+      priority: 'medium',
+      icon: '👤',
+      title: 'Taux de No-Show élevé',
+      body: `Moyenne de ${k.avg_noshow?.toFixed(1) || '?'} no-shows par nuit. Chaque no-show impacte l'occupation réelle.`,
+      actions: [
+        'Revoir la politique de garantie de réservation',
+        'Implémenter des rappels SMS/email 24h avant l\'arrivée',
+        'Appliquer systématiquement les frais de no-show',
+        'Surréserver de façon contrôlée (overbooking intelligent)',
+      ],
+      context: `Perte estimée: $${fmtInt((k.avg_noshow||0) * k.adr)}/nuit`
+    });
+  }
+
+  // ── DEFAULT: ALWAYS ADD A GENERAL REC ──
+  recs.push({
+    priority: 'low',
+    icon: '💡',
+    title: 'Bonnes pratiques — Revenue Management',
+    body: 'Recommandations générales pour optimiser la performance de l\'hôtel selon les standards Sheraton/Marriott.',
+    actions: [
+      'Vérifier les tarifs compétiteurs chaque lundi matin',
+      'Tenir une réunion revenue hebdomadaire (Revenue Strategy Meeting)',
+      'Analyser les réservations OTB (On-The-Books) à 30/60/90 jours',
+      'Suivre le pickup quotidien vs l\'année précédente',
+      'Documenter les événements locaux qui impactent la demande',
+    ],
+    context: 'Standards Marriott — à consulter régulièrement'
+  });
+
+  return recs;
+}
+
+function renderRecommendations(recs) {
+  if (!recs || recs.length === 0) {
+    $('#recommendations-grid').innerHTML = '<div style="text-align:center;padding:60px;color:var(--text-muted,#94a3b8);"><p>Aucune recommandation disponible.</p></div>';
+    return;
+  }
+
+  const order = {high: 0, medium: 1, low: 2};
+  recs.sort((a, b) => (order[a.priority]||9) - (order[b.priority]||9));
+
+  const groups = {high: [], medium: [], low: []};
+  recs.forEach(r => (groups[r.priority] || groups.low).push(r));
+  const groupLabels = {high: 'Actions requises', medium: 'À surveiller', low: 'Informations'};
+
+  let html = '';
+  let idx = 0;
+  for (const [priority, items] of Object.entries(groups)) {
+    if (!items.length) continue;
+    html += `<div class="rec-group-label">${groupLabels[priority]}</div>`;
+    items.forEach(r => {
+      const actionsHtml = r.actions ? `<ul class="rec-actions-list">${r.actions.map(a => `<li>${a}</li>`).join('')}</ul>` : '';
+      const contextHtml = r.context ? `<div class="rec-context-line">${r.context}</div>` : '';
+      html += `
+        <div class="rec-item" onclick="this.classList.toggle('open')" data-idx="${idx++}">
+          <div class="rec-item-icon ${r.priority}">${r.icon}</div>
+          <div class="rec-item-content">
+            <div class="rec-item-title">${r.title}</div>
+            <div class="rec-item-desc">${r.body}</div>
+            <div class="rec-item-expand">
+              ${actionsHtml}
+              ${contextHtml}
+            </div>
+          </div>
+          <div class="rec-item-meta">${r.actions ? r.actions.length + ' actions' : ''}</div>
+        </div>`;
+    });
+  }
+  $('#recommendations-grid').innerHTML = html;
+}
+
+
+// ═══ INIT ═══
+document.addEventListener('DOMContentLoaded', () => { initPortal(); feather.replace(); });
+</script>
+{% endblock %}

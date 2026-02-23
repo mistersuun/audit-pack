@@ -1,0 +1,590 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Utilisateurs{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="page-header">
+        <h1>Gestion des Utilisateurs</h1>
+        <p>Créer et gérer les comptes utilisateur</p>
+    </div>
+
+    <div class="page-content">
+        <!-- Create User Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Créer un Nouvel Utilisateur</h2>
+            </div>
+            <div class="card-body">
+                <form id="create-user-form" class="form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="username">Nom d'utilisateur *</label>
+                            <input type="text"
+                                   id="username"
+                                   name="username"
+                                   placeholder="p.ex. jdupont"
+                                   required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="full_name_fr">Nom Complet</label>
+                            <input type="text"
+                                   id="full_name_fr"
+                                   name="full_name_fr"
+                                   placeholder="Jean Dupont">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email"
+                                   id="email"
+                                   name="email"
+                                   placeholder="jean@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="role">Rôle *</label>
+                            <select id="role" name="role" required>
+                                <option value="">Sélectionner un rôle...</option>
+                                <option value="night_auditor">Auditeur de nuit</option>
+                                <option value="admin">Administrateur</option>
+                                <option value="gm">Directeur général</option>
+                                <option value="gsm">Directeur adjoint</option>
+                                <option value="front_desk_supervisor">Superviseur réception</option>
+                                <option value="accounting">Comptabilité</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Mot de passe initial *</label>
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               placeholder="Minimum 8 caractères"
+                               minlength="8"
+                               required>
+                    </div>
+
+                    <div class="form-note">
+                        <i data-feather="info"></i>
+                        L'utilisateur devra changer ce mot de passe à sa première connexion
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="plus"></i>
+                        Créer Utilisateur
+                    </button>
+                </form>
+
+                <div id="form-message" class="form-message" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Users Table Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Utilisateurs Existants</h2>
+                <span class="user-count">{{ users|length }} utilisateur(s)</span>
+            </div>
+            <div class="card-body">
+                {% if users %}
+                <div class="table-responsive">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>Nom d'utilisateur</th>
+                                <th>Nom Complet</th>
+                                <th>Rôle</th>
+                                <th>Email</th>
+                                <th>Statut</th>
+                                <th>Dernière Connexion</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr class="user-row" data-user-id="{{ user.id }}">
+                                <td class="username">{{ user.username }}</td>
+                                <td>{{ user.full_name_fr or '-' }}</td>
+                                <td>
+                                    <span class="role-badge role-{{ user.role }}">
+                                        {% if user.role == 'night_auditor' %}
+                                            Auditeur de nuit
+                                        {% elif user.role == 'admin' %}
+                                            Administrateur
+                                        {% elif user.role == 'gm' %}
+                                            Directeur général
+                                        {% elif user.role == 'gsm' %}
+                                            Directeur adjoint
+                                        {% elif user.role == 'front_desk_supervisor' %}
+                                            Superviseur réception
+                                        {% elif user.role == 'accounting' %}
+                                            Comptabilité
+                                        {% else %}
+                                            {{ user.role }}
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td>{{ user.email or '-' }}</td>
+                                <td>
+                                    {% if user.is_active %}
+                                        <span class="status status-active">Actif</span>
+                                    {% else %}
+                                        <span class="status status-inactive">Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.last_login %}
+                                        {{ user.last_login.strftime('%d %b %Y %H:%M') }}
+                                    {% else %}
+                                        Jamais
+                                    {% endif %}
+                                </td>
+                                <td class="actions">
+                                    <button class="btn-action toggle-user" data-user-id="{{ user.id }}" title="{% if user.is_active %}Désactiver{% else %}Activer{% endif %}">
+                                        <i data-feather="{% if user.is_active %}lock{% else %}unlock{% endif %}"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i data-feather="users"></i>
+                    <p>Aucun utilisateur créé</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .page-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 30px 20px;
+    }
+
+    .page-header {
+        margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 8px;
+    }
+
+    .page-header p {
+        font-size: 16px;
+        color: #718096;
+    }
+
+    .page-content {
+        display: grid;
+        gap: 20px;
+    }
+
+    .card {
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e0e3e8;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        padding: 20px;
+        border-bottom: 1px solid #e0e3e8;
+        background: #f9fafb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h2 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1a202c;
+        margin: 0;
+    }
+
+    .user-count {
+        font-size: 14px;
+        color: #718096;
+        background: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        border: 1px solid #e0e3e8;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+        font-weight: 500;
+        color: #1a202c;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 10px 12px;
+        border: 1px solid #e0e3e8;
+        border-radius: 6px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #e91e63;
+        box-shadow: 0 0 0 3px rgba(233, 30, 99, 0.1);
+    }
+
+    .form-note {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 6px;
+        color: #1e40af;
+        font-size: 13px;
+    }
+
+    .form-note i {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    .form-message {
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-message.success {
+        background-color: #d1fae5;
+        border: 1px solid #6ee7b7;
+        color: #065f46;
+    }
+
+    .form-message.error {
+        background-color: #fee2e2;
+        border: 1px solid #fca5a5;
+        color: #991b1b;
+    }
+
+    .btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-primary {
+        background-color: #e91e63;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: #c2185b;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+    }
+
+    .btn i {
+        width: 18px;
+        height: 18px;
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .users-table thead {
+        background-color: #f9fafb;
+        border-bottom: 2px solid #e0e3e8;
+    }
+
+    .users-table th {
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        color: #718096;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .users-table tbody tr {
+        border-bottom: 1px solid #e0e3e8;
+        transition: background-color 0.2s;
+    }
+
+    .users-table tbody tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .users-table td {
+        padding: 12px;
+        color: #1a202c;
+    }
+
+    .username {
+        font-weight: 500;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .role-admin {
+        background-color: #fca5a5;
+        color: #991b1b;
+    }
+
+    .role-night_auditor {
+        background-color: #a5e8f0;
+        color: #0c4a6e;
+    }
+
+    .role-gm {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .role-gsm {
+        background-color: #dbeafe;
+        color: #0c2d6b;
+    }
+
+    .role-front_desk_supervisor {
+        background-color: #feefd3;
+        color: #78350f;
+    }
+
+    .role-accounting {
+        background-color: #e9d5ff;
+        color: #6b21a8;
+    }
+
+    .status {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .status-inactive {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .actions {
+        text-align: center;
+    }
+
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border: 1px solid #e0e3e8;
+        background-color: white;
+        color: #718096;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-action:hover {
+        background-color: #f9fafb;
+        color: #e91e63;
+        border-color: #e91e63;
+    }
+
+    .btn-action i {
+        width: 18px;
+        height: 18px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #718096;
+    }
+
+    .empty-state i {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        font-size: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .card-header {
+            flex-direction: column;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .users-table {
+            font-size: 13px;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 10px 8px;
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle form submission
+        const form = document.getElementById('create-user-form');
+        const messageDiv = document.getElementById('form-message');
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value || null,
+                full_name_fr: document.getElementById('full_name_fr').value || null,
+                role: document.getElementById('role').value,
+                password: document.getElementById('password').value
+            };
+
+            try {
+                const response = await fetch('{{ url_for("auth_v2.api_create_user") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.className = 'form-message success';
+                    messageDiv.textContent = 'Utilisateur créé avec succès! La page se rafraîchit...';
+                    messageDiv.style.display = 'block';
+                    form.reset();
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    messageDiv.className = 'form-message error';
+                    messageDiv.textContent = data.error || 'Erreur lors de la création de l\'utilisateur';
+                    messageDiv.style.display = 'block';
+                }
+            } catch (error) {
+                messageDiv.className = 'form-message error';
+                messageDiv.textContent = 'Erreur réseau: ' + error.message;
+                messageDiv.style.display = 'block';
+            }
+        });
+
+        // Handle user toggle
+        document.querySelectorAll('.toggle-user').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const userId = this.dataset.userId;
+
+                try {
+                    const response = await fetch(`{{ url_for("auth_v2.api_toggle_user", user_id=0) }}`.replace('0', userId), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                } catch (error) {
+                    alert('Erreur: ' + error.message);
+                }
+            });
+        });
+
+        // Initialize icons
+        feather.replace();
+    });
+</script>
+{% endblock %}

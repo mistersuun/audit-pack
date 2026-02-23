@@ -1,0 +1,297 @@
+<!-- SD Tab Fragment - Loaded via AJAX lazy-loading -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+        <div class="rj-card">
+          <div class="forms">
+            <div class="form-tile">
+          <h4>SD - Sommaire Journalier des Dépôts</h4>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+            Uploadez le fichier SD (Sommaire Journalier) séparé et sélectionnez le jour à remplir.
+          </p>
+
+          <!-- SD File Upload Section -->
+          <div style="background: linear-gradient(135deg, #e7f3ff 0%, #cfe2ff 100%); padding: 1.5rem; border: 2px solid #0d6efd; border-radius: 12px; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+              <div style="flex: 1; min-width: 200px;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #084298;">
+                  <i data-feather="upload"></i> Upload fichier SD
+                </h5>
+                <p style="margin: 0; font-size: 0.875rem; color: #084298;">
+                  Le fichier SD est un Excel séparé avec 31 onglets (un par jour du mois)
+                </p>
+              </div>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <label for="sd-file-input" class="rj-btn" style="background: #0d6efd; color: white; cursor: pointer; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                  <i data-feather="file"></i> Choisir fichier SD
+                  <input type="file" id="sd-file-input" accept=".xls,.xlsx" style="display: none;" onchange="uploadSDFile()">
+                </label>
+              </div>
+            </div>
+            <div id="sd-file-info" style="display: none; margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px; border: 1px solid #0d6efd;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; color: #198754; font-weight: 600; margin-bottom: 0.5rem;">
+                <i data-feather="check-circle" style="width: 18px; height: 18px;"></i>
+                <span id="sd-filename">Fichier SD chargé</span>
+              </div>
+              <div style="font-size: 0.875rem; color: #6c757d;">
+                <span id="sd-file-size"></span> • <span id="sd-available-days"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Day Selector -->
+          <div id="sd-day-selector" style="display: none; background: #f8f9fa; padding: 1.5rem; border-radius: 12px; border: 2px solid #6c757d; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: space-between;">
+              <div>
+                <h5 style="margin: 0 0 0.5rem 0; color: #495057;">
+                  <i data-feather="calendar"></i> Sélectionner le jour
+                </h5>
+                <p style="margin: 0; font-size: 0.875rem; color: #6c757d;">
+                  Choisissez le jour du mois pour voir et éditer les entrées
+                </p>
+              </div>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <label for="sd-current-day" style="font-weight: 600; color: #495057;">Jour:</label>
+                <input type="number" id="sd-current-day" min="1" max="31" value="1" style="width: 80px; padding: 0.5rem; border: 2px solid #6c757d; border-radius: 6px; font-size: 1rem; text-align: center;">
+                <button type="button" onclick="loadSDDay()" class="rj-btn" style="background: #6c757d; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">
+                  <i data-feather="refresh-cw"></i> Charger jour
+                </button>
+                <button type="button" onclick="downloadSDFile()" class="rj-btn" style="background: #198754; color: white; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600;">
+                  <i data-feather="download"></i> Télécharger SD
+                </button>
+              </div>
+            </div>
+            <div id="sd-day-info" style="display: none; margin-top: 1rem; padding: 1rem; background: white; border-radius: 8px;">
+              <div style="font-size: 0.875rem; color: #495057;">
+                <strong>Date:</strong> <span id="sd-day-date">-</span> •
+                <strong>Entrées:</strong> <span id="sd-day-entries-count">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:#fff3cd; padding:1rem; border-radius:6px; border-left:4px solid #ffc107; margin-bottom:1.5rem;">
+            <strong style="color:#856404;">ℹ️ Note:</strong>
+            <p style="margin:0.5rem 0 0 0; font-size:0.875rem; color:#856404;">
+              Le <strong>MONTANT VÉRIFIÉ</strong> total sera automatiquement transféré dans le Recap "Dépôt Canadien" et peut être enregistré dans la feuille depot.
+            </p>
+          </div>
+
+          <!-- LIVE VALIDATION DASHBOARD - Sticky pour toujours visible -->
+          <div id="live-validation-dashboard" style="position: sticky; top: 10px; z-index: 100; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.5rem 0; padding: 1rem; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 12px; border: 2px solid #dee2e6; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+
+            <!-- DEPOT PREVIEW -->
+            <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #007bff;">
+              <h6 style="margin: 0 0 0.5rem 0; color: #007bff; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-feather="archive" style="width: 16px; height: 16px;"></i>
+                → Depot
+              </h6>
+              <div style="text-align: center; padding: 0.25rem 0; border-bottom: 1px solid #eee; margin-bottom: 0.5rem;">
+                <div style="font-size: 0.65rem; color: #6c757d;">À importer</div>
+                <div id="live-depot-amount" style="font-size: 1.25rem; font-weight: 700; color: #007bff;">$0.00</div>
+              </div>
+              <!-- Entries list for both clients -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.7rem;">
+                <!-- Client 6 -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <span style="font-weight: 600; color: #007bff;">Client 6</span>
+                    <span id="live-depot-c6-count" style="font-size: 0.65rem; color: #6c757d;">0/7</span>
+                  </div>
+                  <div style="background: #e9ecef; border-radius: 3px; height: 4px; margin-bottom: 0.25rem;">
+                    <div id="live-depot-c6-bar" style="background: #007bff; height: 100%; border-radius: 3px; width: 0%; transition: width 0.3s;"></div>
+                  </div>
+                  <!-- Excel-style headers -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 0.55rem; font-weight: 700; color: #495057; background: #dee2e6; padding: 0.15rem 0.2rem; border-radius: 3px 3px 0 0;">
+                    <span>DATE</span>
+                    <span style="text-align: right;">MONTANTS</span>
+                    <span style="text-align: right;">TOTAL</span>
+                  </div>
+                  <div id="live-depot-c6-entries" style="max-height: 80px; overflow-y: auto; background: #f8f9fa; border-radius: 0 0 4px 4px; padding: 0.25rem;">
+                    <div style="color: #999; font-style: italic; text-align: center; font-size: 0.65rem;">Vide</div>
+                  </div>
+                  <div style="text-align: right; margin-top: 0.25rem; font-weight: 600;">
+                    Total: <span id="live-depot-c6-total" style="color: #007bff;">$0.00</span>
+                  </div>
+                </div>
+                <!-- Client 8 -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                    <span style="font-weight: 600; color: #17a2b8;">Client 8</span>
+                    <span id="live-depot-c8-count" style="font-size: 0.65rem; color: #6c757d;">0/7</span>
+                  </div>
+                  <div style="background: #e9ecef; border-radius: 3px; height: 4px; margin-bottom: 0.25rem;">
+                    <div id="live-depot-c8-bar" style="background: #17a2b8; height: 100%; border-radius: 3px; width: 0%; transition: width 0.3s;"></div>
+                  </div>
+                  <!-- Excel-style headers -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; font-size: 0.55rem; font-weight: 700; color: #495057; background: #dee2e6; padding: 0.15rem 0.2rem; border-radius: 3px 3px 0 0;">
+                    <span>DATE</span>
+                    <span style="text-align: right;">MONTANTS</span>
+                    <span style="text-align: right;">TOTAL</span>
+                  </div>
+                  <div id="live-depot-c8-entries" style="max-height: 80px; overflow-y: auto; background: #f8f9fa; border-radius: 0 0 4px 4px; padding: 0.25rem;">
+                    <div style="color: #999; font-style: italic; text-align: center; font-size: 0.65rem;">Vide</div>
+                  </div>
+                  <div style="text-align: right; margin-top: 0.25rem; font-weight: 600;">
+                    Total: <span id="live-depot-c8-total" style="color: #17a2b8;">$0.00</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Target indicator -->
+              <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.7rem; color: #6c757d;">Prochain import →</span>
+                <span id="live-depot-target" style="font-size: 0.75rem; font-weight: 700; color: #007bff;">Client 6</span>
+              </div>
+              <!-- Rotation warning -->
+              <div id="live-depot-rotation" style="display: none; margin-top: 0.5rem; padding: 0.25rem 0.5rem; background: #fff3cd; border-radius: 4px; font-size: 0.65rem; color: #856404;">
+                ⚠️ Rotation auto activée
+              </div>
+            </div>
+
+            <!-- SETD PREVIEW -->
+            <div style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #28a745;">
+              <h6 style="margin: 0 0 0.75rem 0; color: #28a745; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-feather="users" style="width: 16px; height: 16px;"></i>
+                → SetD
+              </h6>
+              <div id="live-setd-list" style="max-height: 120px; overflow-y: auto; font-size: 0.8rem;">
+                <div style="color: #999; font-style: italic; text-align: center; padding: 1rem;">Aucune variance</div>
+              </div>
+              <div style="border-top: 1px solid #eee; padding-top: 0.5rem; margin-top: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; color: #6c757d;">Total SetD:</span>
+                <span id="live-setd-total" style="font-weight: 700; color: #28a745;">$0.00</span>
+              </div>
+            </div>
+
+            <!-- BALANCE INDICATOR -->
+            <div id="live-balance-card" style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #6c757d;">
+              <h6 style="margin: 0 0 0.75rem 0; color: #6c757d; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+                <i data-feather="check-circle" style="width: 16px; height: 16px;"></i>
+                Balance
+              </h6>
+              <div style="text-align: center; padding: 0.5rem 0;">
+                <div id="live-balance-icon" style="font-size: 2.5rem; margin-bottom: 0.25rem;">⚪</div>
+                <div id="live-balance-status" style="font-size: 0.85rem; font-weight: 600; color: #6c757d;">En attente...</div>
+              </div>
+              <div style="border-top: 1px solid #eee; padding-top: 0.5rem; margin-top: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 0.25rem;">
+                  <span style="color: #6c757d;">Variance SD:</span>
+                  <span id="live-variance-sd" style="font-weight: 600;">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                  <span style="color: #6c757d;">Différence:</span>
+                  <span id="live-variance-diff" style="font-weight: 700;">$0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+            <table id="sd-table" class="excel-table" style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="background:#4a90e2; color:white;">
+                  <th class="excel-header" style="width: 150px;">DÉPARTEMENT</th>
+                  <th class="excel-header" style="width: 200px;">NOM LETTRES MOULÉES</th>
+                  <th class="excel-header" style="width: 100px;">CDN/US</th>
+                  <th class="excel-header" style="width: 150px;">MONTANT</th>
+                  <th class="excel-header" style="width: 150px; background:#ffc107; color:#000;">MONTANT VÉRIFIÉ</th>
+                  <th class="excel-header" style="width: 150px;">REMBOURSEMENT</th>
+                  <th class="excel-header" style="width: 150px;">VARIANCE</th>
+                  <th class="excel-header" style="width: 80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="sd-body">
+                <!-- Rows added dynamically -->
+              </tbody>
+              <tfoot>
+                <tr style="background:#2c3e50; color:white; font-weight:600;">
+                  <td colspan="3" style="text-align:right; padding:0.75rem; font-size:1rem;">TOTAL:</td>
+                  <td class="excel-cell">
+                    <input type="number" step="0.01" class="excel-input" id="sd-total-montant" readonly style="background:#34495e; color:white; font-weight:600;">
+                  </td>
+                  <td class="excel-cell" style="background:#ffc107;">
+                    <input type="number" step="0.01" class="excel-input" id="sd-total-verifie" readonly style="background:#ffca2c; color:#000; font-weight:700; font-size:1.05rem;">
+                  </td>
+                  <td class="excel-cell">
+                    <input type="number" step="0.01" class="excel-input" id="sd-total-remboursement" readonly style="background:#34495e; color:white; font-weight:600;">
+                  </td>
+                  <td class="excel-cell">
+                    <input type="number" step="0.01" class="excel-input" id="sd-total-variance" readonly style="background:#34495e; color:white; font-weight:600;">
+                  </td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+            <!-- Datalist for autocomplete name filtering (must be outside table) -->
+            <datalist id="setd-names-datalist">
+              <!-- Options will be populated by JavaScript -->
+            </datalist>
+          </div>
+
+          <button class="rj-btn" onclick="addSDRow()" style="background:#28a745; padding:0.5rem 1rem; font-size:0.875rem; margin-bottom:1rem;">
+            <i data-feather="plus"></i> Ajouter une ligne SD
+          </button>
+
+          <!-- EXPORT TO SETD SECTION -->
+          <div style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); padding: 1.25rem; border-radius: 8px; border: 2px solid #28a745; margin-bottom: 1.5rem; margin-top: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+              <div style="flex: 1; min-width: 250px;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #155724; display: flex; align-items: center; gap: 0.5rem;">
+                  <i data-feather="upload" style="width: 20px; height: 20px;"></i>
+                  Exporter variances vers SetD
+                </h5>
+                <p style="margin: 0; font-size: 0.875rem; color: #155724;">
+                  Envoie les <strong>variances par employé</strong> dans la feuille SetD du RJ (colonne correspondant au nom).
+                </p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="text-align: center;">
+                  <div style="font-size: 0.75rem; color: #155724; font-weight: 600;">Variances à exporter</div>
+                  <div id="sd-setd-preview-count" style="font-size: 1.5rem; font-weight: 700; color: #155724;">0</div>
+                </div>
+                <button onclick="showSDSetDPreview()" class="rj-btn" style="background: #17a2b8; color: white; border: 2px solid #138496; padding: 0.75rem 1rem; font-weight: 600;">
+                  <i data-feather="eye"></i> Aperçu
+                </button>
+                <button onclick="exportSDToSetD()" class="rj-btn" style="background: #28a745; color: white; border: 2px solid #1e7e34; padding: 0.75rem 1.5rem; font-weight: 700;">
+                  <i data-feather="send"></i> Exporter vers SetD
+                </button>
+              </div>
+            </div>
+            <!-- Variances preview (collapsed by default) -->
+            <div id="sd-setd-preview" style="display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed #28a745;">
+              <div style="font-size: 0.875rem; font-weight: 600; color: #155724; margin-bottom: 0.5rem;">
+                <i data-feather="list" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                Aperçu des variances par employé:
+              </div>
+              <div id="sd-setd-preview-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; max-height: 200px; overflow-y: auto;">
+                <!-- Filled dynamically -->
+              </div>
+              <div id="sd-setd-unmatched" style="display: none; margin-top: 0.75rem; padding: 0.5rem; background: #fff3cd; border-radius: 4px; font-size: 0.8rem; color: #856404;">
+                <strong>Noms non reconnus:</strong> <span id="sd-setd-unmatched-names"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="rj-btn" onclick="saveSD(event)">
+              <i data-feather="save"></i> Enregistrer SD
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Preview Section -->
+        <div class="excel-preview-container" style="margin-top: 2rem;">
+          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-feather="eye"></i> Aperçu Excel - SD
+          </h4>
+          <div id="sd-preview-wrapper" style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+            <table id="sd-preview-table" class="excel-preview" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <tr><td style="text-align: center; padding: 2rem; color: #999;">Chargement de l'aperçu...</td></tr>
+            </table>
+          </div>
+        </div>
+          </div>
+        </div>
+
+<script src="/static/js/audit/sd_manager.js"></script>
+{% endif %}

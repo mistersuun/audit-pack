@@ -1,0 +1,665 @@
+{% extends "base.html" %}
+{% block title %}Pourboires — POD{% endblock %}
+
+{% block content %}
+<style>
+/* ── POD Scoped Styles ── */
+.pod-page { max-width:1400px; margin:0 auto; padding:1.5rem 1rem; }
+.pod-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem; }
+.pod-header h1 { font-size:1.5rem; font-weight:800; color:var(--text-primary); margin:0; }
+.pod-header-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+.pod-btn {
+  display:inline-flex; align-items:center; gap:.4rem;
+  padding:.55rem 1rem; border-radius:10px; border:1px solid var(--border);
+  background:var(--card-bg, #ffffff); color:var(--text-primary); font-size:.82rem; font-weight:600;
+  cursor:pointer; transition:all .2s;
+}
+.pod-btn:hover { border-color:var(--primary); color:var(--primary); }
+.pod-btn.primary { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pod-btn.primary:hover { opacity:.85; }
+.pod-btn svg { width:16px; height:16px; }
+
+/* Stats bar */
+.pod-stats { display:flex; gap:1rem; margin-bottom:1.5rem; flex-wrap:wrap; }
+.pod-stat {
+  flex:1; min-width:160px; padding:.9rem 1.1rem; border-radius:14px;
+  background:var(--card-bg, #ffffff); border:1px solid var(--border);
+}
+.pod-stat-label { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted); margin-bottom:.25rem; }
+.pod-stat-value { font-size:1.25rem; font-weight:800; color:var(--text-primary); }
+.pod-stat-sub { font-size:.72rem; color:var(--text-muted); margin-top:.15rem; }
+#stat-sync { color:var(--text-success, #10b981); font-weight:600; opacity:0; transition:opacity .3s; }
+#stat-sync.show { opacity:1; }
+
+/* Upload zone */
+.pod-upload-zone {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:3rem 2rem; border:2px dashed var(--border); border-radius:14px;
+  background:var(--card-bg, #ffffff); text-align:center; cursor:pointer; transition:all .2s;
+}
+.pod-upload-zone:hover, .pod-upload-zone.dragover { border-color:var(--primary); background:rgba(99,102,241,.04); }
+.pod-upload-zone .icon { font-size:2.5rem; opacity:.15; margin-bottom:.8rem; }
+.pod-upload-zone h3 { font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 .3rem; }
+.pod-upload-zone p { font-size:.82rem; color:var(--text-muted); margin:0; }
+#pod-file-input { display:none; }
+
+/* Tabs (day selector) */
+.pod-day-tabs {
+  display:flex; gap:.3rem; overflow-x:auto; padding-bottom:.3rem;
+  margin-bottom:1rem; scrollbar-width:thin;
+}
+.pod-day-tab {
+  flex-shrink:0; padding:.4rem .7rem; border-radius:8px; border:1px solid var(--border);
+  background:var(--card-bg, #ffffff); font-size:.72rem; font-weight:600; cursor:pointer;
+  transition:all .15s; white-space:nowrap; text-align:center; min-width:56px;
+}
+.pod-day-tab:hover { border-color:var(--primary); color:var(--primary); }
+.pod-day-tab.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pod-day-tab .day-name { display:block; font-size:.65rem; opacity:.7; }
+.pod-day-tab .day-date { display:block; font-weight:800; }
+.pod-day-tab.has-data { background:rgba(16,185,129,.08); border-color:rgba(16,185,129,.3); }
+.pod-day-tab.has-data.active { background:var(--primary); border-color:var(--primary); }
+
+/* Batch entry section */
+.pod-batch {
+  background:var(--card-bg, #ffffff); border:1px solid var(--border); border-radius:14px;
+  padding:1rem 1.2rem; margin-bottom:1rem;
+}
+.pod-batch-title { font-size:.82rem; font-weight:700; color:var(--text-primary); margin-bottom:.6rem; display:flex; align-items:center; gap:.4rem; }
+.pod-batch-row { display:flex; gap:.6rem; align-items:end; flex-wrap:wrap; margin-bottom:.6rem; }
+.pod-field { display:flex; flex-direction:column; gap:.2rem; }
+.pod-field label { font-size:.68rem; font-weight:600; text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted); }
+.pod-field input, .pod-field select {
+  padding:.45rem .6rem; border:1px solid var(--border); border-radius:8px;
+  font-size:.85rem; background:var(--bg-main); color:var(--text-primary);
+  outline:none; transition:border-color .15s;
+}
+.pod-field input:focus, .pod-field select:focus { border-color:var(--primary); }
+.pod-field input[type="number"] { width:110px; }
+
+/* Employee chips for batch selection */
+.pod-chips { display:flex; flex-wrap:wrap; gap:.35rem; margin-top:.5rem; }
+.pod-chip {
+  display:inline-flex; align-items:center; gap:.3rem;
+  padding:.3rem .6rem; border-radius:20px; border:1px solid var(--border);
+  font-size:.72rem; font-weight:600; cursor:pointer; transition:all .15s;
+  background:var(--card-bg, #ffffff); color:var(--text-secondary);
+}
+.pod-chip:hover { border-color:var(--primary); color:var(--primary); }
+.pod-chip.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+.pod-chip .chip-amount { font-size:.65rem; opacity:.7; margin-left:.2rem; }
+
+/* Main table */
+.pod-table-wrap {
+  background:var(--card-bg, #ffffff); border:1px solid var(--border); border-radius:14px;
+  overflow-x:auto;
+}
+.pod-table {
+  width:100%; border-collapse:collapse; font-size:.8rem;
+}
+.pod-table th {
+  padding:.55rem .6rem; text-align:left; font-weight:700; font-size:.7rem;
+  text-transform:uppercase; letter-spacing:.03em; color:var(--text-muted);
+  border-bottom:2px solid var(--border); white-space:nowrap;
+  position:sticky; top:0; background:var(--card-bg, #ffffff); z-index:2;
+}
+.pod-table td {
+  padding:.4rem .6rem; border-bottom:1px solid var(--border);
+  color:var(--text-primary); white-space:nowrap;
+}
+.pod-table tr:hover { background:rgba(99,102,241,.03); }
+.pod-table .emp-name { font-weight:600; min-width:160px; }
+.pod-table .emp-id { font-size:.7rem; color:var(--text-muted); }
+.pod-table input.cell-input {
+  width:80px; padding:.3rem .4rem; border:1px solid transparent; border-radius:6px;
+  font-size:.8rem; background:transparent; color:var(--text-primary);
+  text-align:right; transition:all .15s;
+}
+.pod-table input.cell-input:hover { border-color:var(--border); background:var(--bg-main); }
+.pod-table input.cell-input:focus { border-color:var(--primary); background:var(--bg-main); outline:none; }
+.pod-table .cell-computed { text-align:right; color:var(--text-muted); font-style:italic; }
+.pod-table .row-total { font-weight:700; color:var(--primary); text-align:right; }
+
+/* Autocomplete dropdown */
+.pod-autocomplete {
+  position:absolute; z-index:100; background:var(--card-bg, #ffffff); border:1px solid var(--border);
+  border-radius:10px; max-height:200px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,.12);
+  display:none; min-width:220px;
+}
+.pod-autocomplete .ac-item {
+  padding:.45rem .7rem; cursor:pointer; font-size:.8rem; transition:background .1s;
+}
+.pod-autocomplete .ac-item:hover, .pod-autocomplete .ac-item.active { background:rgba(99,102,241,.08); }
+.pod-autocomplete .ac-item .ac-id { font-size:.65rem; color:var(--text-muted); margin-left:.4rem; }
+
+/* Empty state within table */
+.pod-empty-day { text-align:center; padding:2rem; color:var(--text-muted); font-size:.85rem; }
+
+/* Animations */
+@keyframes podFadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.pod-animate { animation: podFadeUp .3s ease both; }
+
+/* Responsive */
+@media(max-width:768px) {
+  .pod-header { flex-direction:column; align-items:flex-start; }
+  .pod-stats { flex-direction:column; }
+  .pod-batch-row { flex-direction:column; }
+  .pod-field input[type="number"] { width:100%; }
+}
+
+/* Summary view */
+.pod-summary-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:.8rem; margin-top:1rem;
+}
+.pod-summary-card {
+  background:var(--card-bg, #ffffff); border:1px solid var(--border); border-radius:12px;
+  padding:.8rem 1rem; display:flex; justify-content:space-between; align-items:center;
+}
+.pod-summary-name { font-weight:700; font-size:.85rem; }
+.pod-summary-emp { font-size:.7rem; color:var(--text-muted); }
+.pod-summary-amounts { text-align:right; }
+.pod-summary-amounts .main { font-size:1rem; font-weight:800; color:var(--primary); }
+.pod-summary-amounts .sub { font-size:.7rem; color:var(--text-muted); }
+
+/* View toggle */
+.pod-view-toggle { display:flex; gap:.3rem; background:var(--bg-main); border-radius:10px; padding:.2rem; }
+.pod-view-btn {
+  padding:.35rem .7rem; border-radius:8px; border:none; font-size:.75rem; font-weight:600;
+  cursor:pointer; background:transparent; color:var(--text-muted); transition:all .15s;
+}
+.pod-view-btn.active { background:var(--card-bg, #ffffff); color:var(--text-primary); box-shadow:0 1px 3px rgba(0,0,0,.08); }
+
+/* Modal dialog */
+#pod-new-dialog {
+  position:fixed; inset:0; background:rgba(0,0,0,.5);
+  z-index:500; display:flex; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden; transition:opacity .25s ease, visibility .25s ease;
+}
+#pod-new-dialog.show { opacity:1; visibility:visible; }
+#pod-new-dialog .pod-modal-inner {
+  background:var(--card-bg, #ffffff); border-radius:14px; padding:1.5rem;
+  max-width:360px; width:90%; box-shadow:0 12px 40px rgba(0,0,0,.25);
+  transform:translateY(20px) scale(.97); transition:transform .25s ease;
+}
+#pod-new-dialog.show .pod-modal-inner { transform:translateY(0) scale(1); }
+
+/* Toast */
+.pod-toast {
+  position:fixed; bottom:1.5rem; right:1.5rem; padding:.7rem 1.2rem; border-radius:10px;
+  background:#10b981; color:#fff; font-size:.82rem; font-weight:600;
+  box-shadow:0 4px 16px rgba(0,0,0,.15); z-index:999;
+  transform:translateY(80px); opacity:0; transition:all .3s;
+}
+.pod-toast.show { transform:translateY(0); opacity:1; }
+</style>
+
+<div class="pod-page">
+  <!-- Header -->
+  <div class="pod-header pod-animate">
+    <div>
+      <h1><i data-feather="dollar-sign" style="width:24px;height:24px;vertical-align:middle;margin-right:.3rem;opacity:.5;"></i>Registre des Pourboires</h1>
+    </div>
+    <div class="pod-header-actions" id="pod-actions" style="display:none;">
+      <div class="pod-view-toggle" id="view-toggle">
+        <button class="pod-view-btn active" onclick="setView('daily')">Journalier</button>
+        <button class="pod-view-btn" onclick="setView('summary')">Sommaire</button>
+      </div>
+      <button class="pod-btn" onclick="showNewPeriodDialog()"><i data-feather="plus-circle"></i> Nouvelle période</button>
+      <button class="pod-btn" onclick="document.getElementById('pod-file-input').click()"><i data-feather="upload"></i> Charger un autre</button>
+      <button class="pod-btn" onclick="downloadPod()"><i data-feather="download"></i> Exporter Excel</button>
+    </div>
+  </div>
+
+  <!-- Upload zone (shown when no file loaded) -->
+  <div id="pod-upload" class="pod-upload-zone pod-animate"
+       ondragover="event.preventDefault();this.classList.add('dragover')"
+       ondragleave="this.classList.remove('dragover')"
+       ondrop="handleDrop(event)"
+       onclick="document.getElementById('pod-file-input').click()">
+    <div class="icon"><i data-feather="upload-cloud"></i></div>
+    <h3>Déposez votre fichier POD ici</h3>
+    <p>ou cliquez pour sélectionner un fichier .xlsx</p>
+  </div>
+  <input type="file" id="pod-file-input" accept=".xlsx,.xls" onchange="uploadFile(this.files[0])">
+
+  <!-- Stats bar -->
+  <div class="pod-stats pod-animate" id="pod-stats" style="display:none;">
+    <div class="pod-stat">
+      <div class="pod-stat-label">Période</div>
+      <div class="pod-stat-value" id="stat-period">—</div>
+      <div class="pod-stat-sub" id="stat-period-sub"></div>
+    </div>
+    <div class="pod-stat">
+      <div class="pod-stat-label">Employés actifs</div>
+      <div class="pod-stat-value" id="stat-employees">—</div>
+      <div class="pod-stat-sub" id="stat-employees-sub"></div>
+    </div>
+    <div class="pod-stat">
+      <div class="pod-stat-label">Ventes totales</div>
+      <div class="pod-stat-value" id="stat-ventes">—</div>
+    </div>
+    <div class="pod-stat">
+      <div class="pod-stat-label">Pourboires bruts</div>
+      <div class="pod-stat-value" id="stat-pourb">—</div>
+      <div class="pod-stat-sub" id="stat-sync">✓ Synchronisé</div>
+    </div>
+  </div>
+
+  <!-- Day tabs -->
+  <div class="pod-day-tabs" id="pod-day-tabs" style="display:none;"></div>
+
+  <!-- Batch entry -->
+  <div class="pod-batch pod-animate" id="pod-batch" style="display:none;">
+    <div class="pod-batch-title"><i data-feather="zap" style="width:14px;height:14px;"></i> Entrée rapide</div>
+    <div class="pod-batch-row">
+      <div class="pod-field">
+        <label>Montant ventes</label>
+        <input type="number" id="batch-ventes" step="0.01" placeholder="0.00" oninput="updateBatchPourb()">
+      </div>
+      <div class="pod-field">
+        <label>Pourboire (10%)</label>
+        <input type="number" id="batch-pourb" step="0.01" placeholder="Auto" readonly style="opacity:.6;">
+      </div>
+      <button class="pod-btn primary" onclick="applyBatch()"><i data-feather="check"></i> Appliquer aux sélectionnés</button>
+    </div>
+    <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.3rem;">Sélectionnez les employés avec le même montant :</div>
+    <div class="pod-chips" id="pod-chips"></div>
+  </div>
+
+  <!-- Daily view: table -->
+  <div id="pod-daily-view" style="display:none;">
+    <div class="pod-table-wrap pod-animate">
+      <table class="pod-table" id="pod-table">
+        <thead>
+          <tr>
+            <th style="width:40px;">#</th>
+            <th>Employé</th>
+            <th style="text-align:right;">Ventes $</th>
+            <th style="text-align:right;">Pourb $</th>
+            <th style="text-align:right;">Dist $</th>
+            <th style="text-align:right;">Reçus $</th>
+            <th style="text-align:right;">Total période</th>
+          </tr>
+        </thead>
+        <tbody id="pod-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Summary view -->
+  <div id="pod-summary-view" style="display:none;">
+    <div class="pod-summary-grid" id="pod-summary-grid"></div>
+  </div>
+
+  <!-- New period dialog -->
+  <div id="pod-new-dialog" onclick="if(event.target===this)hideNewPeriodDialog()">
+    <div class="pod-modal-inner">
+      <h3 style="margin:0 0 .8rem;font-size:1rem;">Nouvelle période de paye</h3>
+      <div class="pod-field" style="margin-bottom:1rem;">
+        <label>Date de début</label>
+        <input type="date" id="new-period-date" style="width:100%;">
+      </div>
+      <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+        <button class="pod-btn" onclick="hideNewPeriodDialog()">Annuler</button>
+        <button class="pod-btn primary" onclick="generateNewPeriod()">Générer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="pod-toast" id="pod-toast"></div>
+
+<script>
+/* ── State ── */
+let POD = null;           // Parsed POD data
+let currentDay = 0;       // Selected day index (0-13)
+let currentView = 'daily';
+let batchSelected = new Set();
+const JOURS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+const MOIS_FR = ['jan','fév','mar','avr','mai','jun','jul','aoû','sep','oct','nov','déc'];
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+  loadExisting();
+});
+
+async function loadExisting() {
+  try {
+    const r = await fetch('/api/pod/load');
+    const d = await r.json();
+    if (d.loaded) {
+      POD = d.data;
+      showPodUI();
+    }
+  } catch(e) { console.error(e); }
+}
+
+/* ── Upload ── */
+function handleDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  const files = e.dataTransfer.files;
+  if (files.length) uploadFile(files[0]);
+}
+
+async function uploadFile(file) {
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('file', file);
+  try {
+    const r = await fetch('/api/pod/upload', { method:'POST', body:fd });
+    const d = await r.json();
+    if (d.success) {
+      POD = d.data;
+      showPodUI();
+      toast('Fichier chargé avec succès');
+    } else {
+      toast(d.error || 'Erreur', true);
+    }
+  } catch(e) { toast('Erreur de téléchargement', true); }
+}
+
+/* ── Show UI ── */
+function showPodUI() {
+  document.getElementById('pod-upload').style.display = 'none';
+  document.getElementById('pod-actions').style.display = '';
+  document.getElementById('pod-stats').style.display = '';
+  document.getElementById('pod-day-tabs').style.display = '';
+  document.getElementById('pod-batch').style.display = '';
+  document.getElementById('pod-daily-view').style.display = '';
+
+  updateStats();
+  renderDayTabs();
+  renderChips();
+  renderTable();
+  feather.replace();
+}
+
+/* ── Stats ── */
+function updateStats() {
+  if (!POD) return;
+  const dates = POD.dates;
+  if (dates.length >= 2) {
+    const s = fmtDate(dates[0]), e = fmtDate(dates[dates.length-1]);
+    document.getElementById('stat-period').textContent = `${s} — ${e}`;
+    document.getElementById('stat-period-sub').textContent = `${dates.length} jours`;
+  }
+
+  const active = POD.employees.filter(e => e.summary.ventes_total > 0);
+  document.getElementById('stat-employees').textContent = active.length;
+  document.getElementById('stat-employees-sub').textContent = `/ ${POD.employees.length} total`;
+
+  const totalVentes = POD.employees.reduce((s,e) => s + e.summary.ventes_total, 0);
+  const totalPourb = POD.employees.reduce((s,e) => s + e.summary.pourb_bruts, 0);
+  document.getElementById('stat-ventes').textContent = fmt(totalVentes);
+  document.getElementById('stat-pourb').textContent = fmt(totalPourb);
+}
+
+/* ── Day tabs ── */
+function renderDayTabs() {
+  const container = document.getElementById('pod-day-tabs');
+  container.innerHTML = '';
+  POD.dates.forEach((dateStr, i) => {
+    const d = new Date(dateStr + 'T12:00:00');
+    const hasData = POD.employees.some(e => e.daily[i] && e.daily[i].ventes > 0);
+    const tab = document.createElement('div');
+    tab.className = `pod-day-tab ${i === currentDay ? 'active' : ''} ${hasData ? 'has-data' : ''}`;
+    tab.innerHTML = `<span class="day-name">${JOURS_FR[d.getDay()]}</span><span class="day-date">${d.getDate()} ${MOIS_FR[d.getMonth()]}</span>`;
+    tab.onclick = () => { currentDay = i; renderDayTabs(); renderTable(); renderChips(); };
+    container.appendChild(tab);
+  });
+}
+
+/* ── Chips (batch selection) ── */
+function renderChips() {
+  const container = document.getElementById('pod-chips');
+  container.innerHTML = '';
+  batchSelected.clear();
+  POD.employees.forEach(emp => {
+    const dayData = emp.daily[currentDay];
+    const chip = document.createElement('div');
+    chip.className = 'pod-chip';
+    chip.dataset.row = emp.row;
+    const amountText = dayData && dayData.ventes > 0 ? ` (${fmt(dayData.ventes)})` : '';
+    chip.innerHTML = `${shortName(emp.name)}<span class="chip-amount">${amountText}</span>`;
+    chip.onclick = () => toggleChip(chip, emp.row);
+    container.appendChild(chip);
+  });
+}
+
+function toggleChip(el, row) {
+  if (batchSelected.has(row)) {
+    batchSelected.delete(row);
+    el.classList.remove('selected');
+  } else {
+    batchSelected.add(row);
+    el.classList.add('selected');
+  }
+}
+
+function updateBatchPourb() {
+  const v = parseFloat(document.getElementById('batch-ventes').value) || 0;
+  document.getElementById('batch-pourb').value = (v * 0.10).toFixed(2);
+}
+
+async function applyBatch() {
+  if (batchSelected.size === 0) return toast('Sélectionnez au moins un employé', true);
+  const ventes = parseFloat(document.getElementById('batch-ventes').value) || 0;
+  if (ventes === 0) return toast('Entrez un montant de ventes', true);
+
+  try {
+    const r = await fetch('/api/pod/save-batch', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        day_index: currentDay,
+        ventes: ventes,
+        rows: Array.from(batchSelected),
+        auto_tips: true
+      })
+    });
+    const d = await r.json();
+    if (d.success) {
+      POD = d.data;
+      renderTable();
+      renderDayTabs();
+      renderChips();
+      updateStats();
+      document.getElementById('batch-ventes').value = '';
+      document.getElementById('batch-pourb').value = '';
+      showSyncIndicator();
+      toast(`${batchSelected.size} employé(s) mis à jour`);
+      batchSelected.clear();
+    }
+  } catch(e) { toast('Erreur de sauvegarde', true); }
+}
+
+/* ── Table ── */
+function renderTable() {
+  const tbody = document.getElementById('pod-tbody');
+  tbody.innerHTML = '';
+
+  POD.employees.forEach((emp, idx) => {
+    const day = emp.daily[currentDay] || {ventes:0,pourb:0,dist:0,recus:0};
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="emp-id">${emp.emp_id}</td>
+      <td class="emp-name">${emp.name}</td>
+      <td><input class="cell-input" type="number" step="0.01" value="${day.ventes||''}" data-row="${emp.row}" data-field="ventes" onchange="cellChanged(this)" oninput="autoCalcPourb(this)"></td>
+      <td><input class="cell-input" type="number" step="0.01" value="${day.pourb||''}" data-row="${emp.row}" data-field="pourb" onchange="cellChanged(this)"></td>
+      <td><input class="cell-input" type="number" step="0.01" value="${day.dist||''}" data-row="${emp.row}" data-field="dist" onchange="cellChanged(this)"></td>
+      <td><input class="cell-input" type="number" step="0.01" value="${day.recus||''}" data-row="${emp.row}" data-field="recus" onchange="cellChanged(this)"></td>
+      <td class="row-total">${emp.summary.pourb_bruts > 0 ? fmt(emp.summary.pourb_bruts) : '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function autoCalcPourb(input) {
+  const v = parseFloat(input.value) || 0;
+  const row = input.closest('tr');
+  const pourbInput = row.querySelector('[data-field="pourb"]');
+  if (pourbInput && (!pourbInput.value || pourbInput.dataset.autoSet === 'true')) {
+    pourbInput.value = (v * 0.10).toFixed(2);
+    pourbInput.dataset.autoSet = 'true';
+  }
+}
+
+let saveTimeout = null;
+function cellChanged(input) {
+  if (input.dataset.field === 'pourb') input.dataset.autoSet = 'false';
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => saveDayData(), 800);
+}
+
+async function saveDayData() {
+  const entries = [];
+  document.querySelectorAll('#pod-tbody tr').forEach(tr => {
+    const inputs = tr.querySelectorAll('.cell-input');
+    if (inputs.length < 4) return;
+    const row = parseInt(inputs[0].dataset.row);
+    entries.push({
+      row,
+      ventes: parseFloat(inputs[0].value) || 0,
+      pourb: parseFloat(inputs[1].value) || 0,
+      dist: parseFloat(inputs[2].value) || 0,
+      recus: parseFloat(inputs[3].value) || 0,
+    });
+  });
+
+  try {
+    const r = await fetch('/api/pod/save-day', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ day_index: currentDay, entries })
+    });
+    const d = await r.json();
+    if (d.success) {
+      POD = d.data;
+      updateStats();
+      renderDayTabs();
+      showSyncIndicator();
+      toast('Sauvegardé');
+    }
+  } catch(e) { toast('Erreur', true); }
+}
+
+/* ── Summary view ── */
+function renderSummary() {
+  const grid = document.getElementById('pod-summary-grid');
+  grid.innerHTML = '';
+
+  const sorted = [...POD.employees].sort((a,b) => b.summary.pourb_bruts - a.summary.pourb_bruts);
+  sorted.forEach(emp => {
+    if (emp.summary.ventes_total === 0 && emp.summary.pourb_bruts === 0) return;
+    const card = document.createElement('div');
+    card.className = 'pod-summary-card pod-animate';
+    card.innerHTML = `
+      <div>
+        <div class="pod-summary-name">${emp.name}</div>
+        <div class="pod-summary-emp">#${emp.emp_id} · Ventes: ${fmt(emp.summary.ventes_total)}</div>
+      </div>
+      <div class="pod-summary-amounts">
+        <div class="main">${fmt(emp.summary.pourb_bruts)}</div>
+        <div class="sub">pourb. bruts</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  if (grid.children.length === 0) {
+    grid.innerHTML = '<div class="pod-empty-day">Aucune donnée pour cette période</div>';
+  }
+}
+
+/* ── View toggle ── */
+function setView(view) {
+  currentView = view;
+  document.querySelectorAll('.pod-view-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.pod-view-btn[onclick="setView('${view}')"]`).classList.add('active');
+
+  document.getElementById('pod-daily-view').style.display = view === 'daily' ? '' : 'none';
+  document.getElementById('pod-batch').style.display = view === 'daily' ? '' : 'none';
+  document.getElementById('pod-day-tabs').style.display = view === 'daily' ? '' : 'none';
+  document.getElementById('pod-summary-view').style.display = view === 'summary' ? '' : 'none';
+
+  if (view === 'summary') renderSummary();
+}
+
+/* ── New period ── */
+function showNewPeriodDialog() {
+  const dialog = document.getElementById('pod-new-dialog');
+  dialog.classList.add('show');
+  // Pre-fill with next period date
+  if (POD && POD.dates.length > 0) {
+    const last = new Date(POD.dates[POD.dates.length - 1] + 'T12:00:00');
+    const next = new Date(last.getTime() + 86400000);
+    document.getElementById('new-period-date').value = next.toISOString().split('T')[0];
+  }
+}
+function hideNewPeriodDialog() { document.getElementById('pod-new-dialog').classList.remove('show'); }
+
+async function generateNewPeriod() {
+  const dateStr = document.getElementById('new-period-date').value;
+  if (!dateStr) return toast('Choisissez une date', true);
+
+  try {
+    const r = await fetch('/api/pod/generate-new', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ start_date: dateStr })
+    });
+    const d = await r.json();
+    if (d.success) {
+      POD = d.data;
+      currentDay = 0;
+      showPodUI();
+      hideNewPeriodDialog();
+      toast('Nouvelle période générée');
+    } else {
+      toast(d.error || 'Erreur', true);
+    }
+  } catch(e) { toast('Erreur', true); }
+}
+
+/* ── Download ── */
+function downloadPod() {
+  window.location.href = '/api/pod/download';
+}
+
+/* ── Helpers ── */
+let syncTimeout = null;
+function showSyncIndicator() {
+  const el = document.getElementById('stat-sync');
+  if (el) {
+    el.classList.add('show');
+    clearTimeout(syncTimeout);
+    syncTimeout = setTimeout(() => {
+      el.classList.remove('show');
+    }, 3000);
+  }
+}
+
+function fmt(n) { return '$' + (n||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtDate(s) {
+  const d = new Date(s + 'T12:00:00');
+  return `${d.getDate()} ${MOIS_FR[d.getMonth()]} ${d.getFullYear()}`;
+}
+function shortName(name) {
+  if (!name) return '?';
+  const parts = name.replace(/,/g, ' ').trim().split(/\s+/);
+  if (parts.length >= 2) return parts[0].charAt(0) + '. ' + parts[parts.length-1];
+  return parts[0];
+}
+function toast(msg, isError) {
+  const t = document.getElementById('pod-toast');
+  t.textContent = msg;
+  t.style.background = isError ? '#ef4444' : '#10b981';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+{% endblock %}

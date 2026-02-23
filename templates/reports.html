@@ -1,0 +1,840 @@
+{% extends "base.html" %}
+{% block title %}Rapports{% endblock %}
+
+{% block content %}
+<div class="reports-page">
+  <div class="page-header">
+    <div>
+      <h1>Rapports & Analytiques</h1>
+      <p>Visualisez les tendances, variances et statistiques de vos audits.</p>
+    </div>
+    <div class="header-actions">
+      <button onclick="exportPDF()" class="btn-secondary">
+        <i data-feather="file-text"></i> Export PDF
+      </button>
+      <button onclick="exportExcel()" class="btn-secondary">
+        <i data-feather="download"></i> Export Excel
+      </button>
+    </div>
+  </div>
+
+  <!-- Daily Summary Cards -->
+  <div class="stats-grid">
+    <div class="stat-card revenue">
+      <div class="stat-icon">
+        <i data-feather="dollar-sign"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Revenus Total</div>
+        <div class="stat-value" id="total-revenue">$0.00</div>
+        <div class="stat-change" id="revenue-change">
+          <span class="change-value">--</span>
+          <span class="change-label">vs hier</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card deposits">
+      <div class="stat-icon">
+        <i data-feather="briefcase"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Dépôts</div>
+        <div class="stat-value" id="total-deposits">$0.00</div>
+        <div class="stat-change" id="deposits-change">
+          <span class="change-value">--</span>
+          <span class="change-label">vs hier</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-card variance">
+      <div class="stat-icon">
+        <i data-feather="activity"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Variance</div>
+        <div class="stat-value" id="variance-value">$0.00</div>
+        <div class="stat-badge" id="variance-badge">--</div>
+      </div>
+    </div>
+
+    <div class="stat-card dueback">
+      <div class="stat-icon">
+        <i data-feather="users"></i>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">DueBack Total</div>
+        <div class="stat-value" id="dueback-total">$0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <!-- Revenue Trend Chart -->
+    <div class="chart-card large">
+      <div class="chart-header">
+        <h3>Tendance des Revenus</h3>
+        <div class="period-selector">
+          <button onclick="loadTrends(7)" class="period-btn active" data-period="7">7 jours</button>
+          <button onclick="loadTrends(30)" class="period-btn" data-period="30">30 jours</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="revenue-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- Credit Card Breakdown -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Répartition Cartes</h3>
+      </div>
+      <div class="chart-container">
+        <canvas id="card-chart"></canvas>
+      </div>
+      <div class="card-legend" id="card-legend">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Variance Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3>
+        <i data-feather="alert-triangle"></i>
+        Rapport de Variances
+      </h3>
+      <div class="section-filters">
+        <input type="date" id="variance-start" onchange="loadVariances()">
+        <input type="date" id="variance-end" onchange="loadVariances()">
+        <select id="variance-receptionist" onchange="loadVariances()">
+          <option value="">Tous les réceptionnistes</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Variance Summary -->
+    <div class="variance-summary">
+      <div class="summary-stat">
+        <span class="summary-label">Total Variance</span>
+        <span class="summary-value" id="variance-total">$0.00</span>
+      </div>
+      <div class="summary-stat alert">
+        <span class="summary-label">Alertes (>$50)</span>
+        <span class="summary-value" id="alert-count">0</span>
+      </div>
+    </div>
+
+    <!-- Variance Table -->
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Réceptionniste</th>
+            <th>Attendu</th>
+            <th>Réel</th>
+            <th>Variance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="variance-table-body">
+          <tr>
+            <td colspan="6" class="empty-state">Aucune donnée disponible</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Save Report Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3>
+        <i data-feather="save"></i>
+        Sauvegarder le Rapport du Jour
+      </h3>
+    </div>
+    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+      Sauvegardez les données du jour dans la base de données pour l'historique et les tendances.
+    </p>
+    <div class="save-actions">
+      <textarea id="report-notes" placeholder="Notes optionnelles..." rows="2" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px;"></textarea>
+      <button onclick="saveDailyReport()" class="btn-primary">
+        <i data-feather="save"></i> Sauvegarder dans l'historique
+      </button>
+    </div>
+    <div id="save-status" style="margin-top: 1rem; display: none;"></div>
+  </div>
+</div>
+
+<style>
+.reports-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+  color: var(--text-primary);
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card.revenue .stat-icon { background: #dcfce7; color: #16a34a; }
+.stat-card.deposits .stat-icon { background: #dbeafe; color: #2563eb; }
+.stat-card.variance .stat-icon { background: #fef3c7; color: #d97706; }
+.stat-card.dueback .stat-icon { background: #f3e8ff; color: #9333ea; }
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-change {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.813rem;
+}
+
+.stat-change .change-value {
+  font-weight: 600;
+}
+
+.stat-change .change-value.positive { color: #16a34a; }
+.stat-change .change-value.negative { color: #dc2626; }
+
+.stat-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.stat-badge.ok { background: #dcfce7; color: #16a34a; }
+.stat-badge.alert { background: #fee2e2; color: #dc2626; }
+
+/* Charts */
+.charts-section {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.chart-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.chart-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.period-selector {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.period-btn {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.813rem;
+  transition: all 0.2s;
+}
+
+.period-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.chart-container {
+  height: 250px;
+  position: relative;
+}
+
+.card-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.813rem;
+}
+
+.legend-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+/* Section Cards */
+.section-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+}
+
+.section-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.section-filters input,
+.section-filters select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+/* Variance Summary */
+.variance-summary {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-label {
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+}
+
+.summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.summary-stat.alert .summary-value {
+  color: #dc2626;
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: 0.813rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.data-table tr:hover {
+  background: var(--bg-secondary);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem !important;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.ok {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.status-badge.alert {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.positive { color: #16a34a; }
+.negative { color: #dc2626; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .charts-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  .page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Global chart instances
+let revenueChart = null;
+let cardChart = null;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  feather.replace();
+  loadDailySummary();
+  loadTrends(7);
+  loadCreditCards();
+  loadVariances();
+  loadReceptionists();
+
+  // Set default dates for variance filter
+  const today = new Date();
+  const weekAgo = new Date(today - 7 * 24 * 60 * 60 * 1000);
+  document.getElementById('variance-end').value = today.toISOString().split('T')[0];
+  document.getElementById('variance-start').value = weekAgo.toISOString().split('T')[0];
+});
+
+// Load daily summary
+async function loadDailySummary() {
+  try {
+    const res = await fetch('/api/reports/daily-summary');
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('total-revenue').textContent = formatCurrency(data.revenue?.total || 0);
+      document.getElementById('total-deposits').textContent = formatCurrency(data.deposits?.total || 0);
+      document.getElementById('variance-value').textContent = formatCurrency(data.variance || 0);
+      document.getElementById('dueback-total').textContent = formatCurrency(data.dueback_total || 0);
+
+      // Set variance badge
+      const variance = data.variance || 0;
+      const badge = document.getElementById('variance-badge');
+      if (Math.abs(variance) < 1) {
+        badge.textContent = 'Balancé';
+        badge.className = 'stat-badge ok';
+      } else {
+        badge.textContent = variance > 0 ? 'Surplus' : 'Déficit';
+        badge.className = 'stat-badge alert';
+      }
+    }
+
+    // Load comparison
+    const compRes = await fetch('/api/reports/daily-comparison');
+    const compData = await compRes.json();
+
+    if (compData.success && compData.changes) {
+      updateChangeIndicator('revenue-change', compData.changes.revenue);
+      updateChangeIndicator('deposits-change', compData.changes.deposits);
+    }
+  } catch (err) {
+    console.error('Error loading summary:', err);
+  }
+}
+
+function updateChangeIndicator(elementId, change) {
+  if (!change) return;
+  const el = document.getElementById(elementId);
+  const valueEl = el.querySelector('.change-value');
+
+  const percent = change.percent || 0;
+  const isPositive = percent >= 0;
+
+  valueEl.textContent = `${isPositive ? '+' : ''}${percent.toFixed(1)}%`;
+  valueEl.className = `change-value ${isPositive ? 'positive' : 'negative'}`;
+}
+
+// Load trends chart
+async function loadTrends(days) {
+  // Update button states
+  document.querySelectorAll('.period-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.period == days);
+  });
+
+  try {
+    const res = await fetch(`/api/reports/trends?period=${days}`);
+    const data = await res.json();
+
+    if (data.success) {
+      renderRevenueChart(data);
+    }
+  } catch (err) {
+    console.error('Error loading trends:', err);
+  }
+}
+
+function renderRevenueChart(data) {
+  const ctx = document.getElementById('revenue-chart').getContext('2d');
+
+  if (revenueChart) {
+    revenueChart.destroy();
+  }
+
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Revenus',
+        data: data.datasets.revenue,
+        borderColor: '#3b82f6',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        fill: true,
+        tension: 0.3
+      }, {
+        label: 'Dépôts',
+        data: data.datasets.deposits,
+        borderColor: '#10b981',
+        backgroundColor: 'transparent',
+        tension: 0.3
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'top',
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: value => '$' + value.toLocaleString()
+          }
+        }
+      }
+    }
+  });
+}
+
+// Load credit card breakdown
+async function loadCreditCards() {
+  try {
+    const res = await fetch('/api/reports/credit-cards');
+    const data = await res.json();
+
+    if (data.success) {
+      renderCardChart(data);
+    }
+  } catch (err) {
+    console.error('Error loading credit cards:', err);
+  }
+}
+
+function renderCardChart(data) {
+  const ctx = document.getElementById('card-chart').getContext('2d');
+
+  const cardData = data.by_type || {};
+  const colors = {
+    visa: '#1a73e8',
+    mastercard: '#ff5722',
+    amex: '#00bcd4',
+    debit: '#4caf50'
+  };
+
+  if (cardChart) {
+    cardChart.destroy();
+  }
+
+  cardChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Visa', 'Mastercard', 'Amex', 'Débit'],
+      datasets: [{
+        data: [cardData.visa || 0, cardData.mastercard || 0, cardData.amex || 0, cardData.debit || 0],
+        backgroundColor: [colors.visa, colors.mastercard, colors.amex, colors.debit]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
+
+  // Update legend
+  const legend = document.getElementById('card-legend');
+  legend.innerHTML = Object.entries(cardData).map(([type, value]) => `
+    <div class="legend-item">
+      <div class="legend-color" style="background: ${colors[type] || '#ccc'}"></div>
+      <span>${type.charAt(0).toUpperCase() + type.slice(1)}: ${formatCurrency(value)}</span>
+    </div>
+  `).join('');
+}
+
+// Load variances
+async function loadVariances() {
+  const start = document.getElementById('variance-start').value;
+  const end = document.getElementById('variance-end').value;
+  const receptionist = document.getElementById('variance-receptionist').value;
+
+  let url = '/api/reports/variances?';
+  if (start) url += `start=${start}&`;
+  if (end) url += `end=${end}&`;
+  if (receptionist) url += `receptionist=${encodeURIComponent(receptionist)}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('variance-total').textContent = formatCurrency(data.summary?.total_variance || 0);
+      document.getElementById('alert-count').textContent = data.summary?.alert_count || 0;
+
+      const tbody = document.getElementById('variance-table-body');
+
+      if (data.records && data.records.length > 0) {
+        tbody.innerHTML = data.records.map(r => `
+          <tr>
+            <td>${r.date}</td>
+            <td>${r.receptionist}</td>
+            <td>${formatCurrency(r.expected)}</td>
+            <td>${formatCurrency(r.actual)}</td>
+            <td class="${r.variance >= 0 ? 'positive' : 'negative'}">${formatCurrency(r.variance)}</td>
+            <td>
+              <span class="status-badge ${r.is_alert ? 'alert' : 'ok'}">
+                ${r.is_alert ? '⚠️ Alerte' : '✓ OK'}
+              </span>
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucune donnée pour cette période</td></tr>';
+      }
+    }
+  } catch (err) {
+    console.error('Error loading variances:', err);
+  }
+}
+
+// Load receptionists for dropdown
+async function loadReceptionists() {
+  try {
+    const res = await fetch('/api/reports/receptionists');
+    const data = await res.json();
+
+    if (data.success && data.receptionists) {
+      const select = document.getElementById('variance-receptionist');
+      data.receptionists.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+      });
+    }
+  } catch (err) {
+    console.error('Error loading receptionists:', err);
+  }
+}
+
+// Save daily report
+async function saveDailyReport() {
+  const notes = document.getElementById('report-notes').value;
+  const statusEl = document.getElementById('save-status');
+
+  try {
+    const res = await fetch('/api/reports/save-daily', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notes })
+    });
+
+    const data = await res.json();
+
+    statusEl.style.display = 'block';
+    if (data.success) {
+      statusEl.innerHTML = `<div style="padding: 1rem; background: #dcfce7; color: #16a34a; border-radius: 8px;">✓ ${data.message}</div>`;
+    } else {
+      statusEl.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">✗ ${data.error}</div>`;
+    }
+
+    setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+  } catch (err) {
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">✗ Erreur réseau</div>`;
+  }
+}
+
+// Export functions (placeholder)
+function exportPDF() {
+  alert('Export PDF - Fonctionnalité à venir');
+}
+
+function exportExcel() {
+  alert('Export Excel - Fonctionnalité à venir');
+}
+
+// Utility
+function formatCurrency(value) {
+  return '$' + (value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+</script>
+{% endblock %}

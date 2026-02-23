@@ -3,7 +3,10 @@ flask-sqlalchemy
 python-dotenv
 python-docx
 openpyxl
-playwright
 Pillow
-xlrd==1.2.0
-xlutils
+xlrd==2.0.1
+xlwt==1.3.0
+xlutils==2.0.0
+oletools==0.60.2
+pywin32; sys_platform == 'win32'
+pyautogui

@@ -1,119 +1,621 @@
 {% extends "base.html" %}
-{% block title %}FAQ{% endblock %}
+{% block title %}Glossaire & Guide de Référence{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <div class="page-title">
-        <h1>FAQ</h1>
-        <p>Réponses rapides pour l’audit de nuit</p>
+<style>
+  /* Glossary Page Scoped Styles */
+  .glossary-page {
+    display: flex;
+    gap: 24px;
+    padding-bottom: 40px;
+  }
+
+  .glossary-sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+  }
+
+  .glossary-sidebar-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+
+  .category-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .category-nav button {
+    text-align: left;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 200ms ease;
+  }
+
+  .category-nav button:hover {
+    background: var(--primary-bg);
+    color: var(--primary);
+  }
+
+  .category-nav button.active {
+    background: var(--primary-bg);
+    color: var(--primary);
+    font-weight: 600;
+    border-left: 3px solid var(--primary);
+    padding-left: 10px;
+  }
+
+  .glossary-main {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-box {
+    margin-bottom: 28px;
+  }
+
+  .search-box input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text);
+    font-size: 1rem;
+    transition: all 200ms ease;
+  }
+
+  .search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-bg);
+  }
+
+  .search-box input::placeholder {
+    color: var(--text-muted);
+  }
+
+  .category-section {
+    margin-bottom: 36px;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary-bg);
+  }
+
+  .category-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .category-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-bg);
+    border-radius: 6px;
+    color: var(--primary);
+  }
+
+  .glossary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  .glossary-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    transition: all 200ms ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .glossary-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .card-term {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .card-english {
+    font-size: 0.85rem;
+    color: var(--primary);
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .card-badge {
+    display: inline-block;
+    background: var(--primary-bg);
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: fit-content;
+  }
+
+  .card-definition {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 8px 0;
+  }
+
+  .card-context {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 10px;
+    background: var(--bg);
+    border-left: 3px solid var(--primary-light);
+    border-radius: 4px;
+    margin-top: auto;
+  }
+
+  /* Procedure/guide cards (different layout - single column) */
+  .guide-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 16px;
+    transition: all 200ms ease;
+  }
+
+  .guide-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  }
+
+  .guide-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 10px 0;
+  }
+
+  .guide-content {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Page header with stats */
+  .glossary-header {
+    margin-bottom: 32px;
+  }
+
+  .header-content {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .header-title h1 {
+    margin: 0 0 6px 0;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .header-title p {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+  }
+
+  .header-stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-item {
+    background: var(--primary-bg);
+    border: 1px solid var(--primary-border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+
+  .no-results svg {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  .hidden-category {
+    display: none;
+  }
+
+  /* Scrollbar styling */
+  .glossary-sidebar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .glossary-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .glossary-sidebar::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+  }
+
+  .glossary-sidebar::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .glossary-page {
+      gap: 16px;
+    }
+
+    .glossary-sidebar {
+      width: 200px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .glossary-page {
+      flex-direction: column;
+    }
+
+    .glossary-sidebar {
+      width: 100%;
+      position: relative;
+      top: 0;
+      max-height: none;
+    }
+
+    .header-content {
+      grid-template-columns: 1fr;
+    }
+
+    .glossary-cards {
+      grid-template-columns: 1fr;
+    }
+
+    .category-nav {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    .category-nav button {
+      flex: 1;
+      min-width: 120px;
+    }
+  }
+</style>
+
+<!-- Page Header -->
+<div class="glossary-header">
+  <div class="header-content">
+    <div class="header-title">
+      <h1>Glossaire & Guide</h1>
+      <p>Référence complète pour l'audit de nuit</p>
     </div>
+    <div class="header-stats">
+      <div class="stat-item">
+        <div class="stat-number">{{ glossary_count }}</div>
+        <div class="stat-label">Termes définis</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ categories|length }}</div>
+        <div class="stat-label">Catégories</div>
+      </div>
+    </div>
+  </div>
 </div>
 
-<section class="faq-hero">
-    <div class="faq-hero-left">
-        <div class="faq-hero-title">
-            <span class="eyebrow">Support audit</span>
-            <h2>Questions fréquentes</h2>
-            <p>Guides rapides Front et Back, impressions, balances, classements et timing PART.</p>
-        </div>
-        <div class="faq-stats">
-            <div class="faq-stat-card">
-                <div class="stat-label">Entrées FAQ</div>
-                <div class="stat-value">{{ faqs|length }}</div>
-            </div>
-            <div class="faq-stat-card">
-                <div class="stat-label">Front</div>
-                <div class="stat-value">{{ front_count }}</div>
-            </div>
-            <div class="faq-stat-card">
-                <div class="stat-label">Back</div>
-                <div class="stat-value">{{ back_count }}</div>
-            </div>
-        </div>
+<!-- Main Content -->
+<div class="glossary-page">
+  <!-- Sidebar Navigation -->
+  <aside class="glossary-sidebar">
+    <div class="glossary-sidebar-title">Catégories</div>
+    <div class="category-nav">
+      {% for category in categories %}
+      <button
+        class="category-btn {% if loop.first %}active{% endif %}"
+        data-category="{{ category|replace(' ', '-')|lower }}"
+        onclick="scrollToCategory(this)"
+      >
+        {{ category }}
+      </button>
+      {% endfor %}
     </div>
-    <div class="faq-hero-right">
-        <div class="faq-search">
-            <input type="text" id="faq-search" placeholder="Rechercher (ex: Transelect, VNC, DueBack)..." oninput="filterFAQ()">
-        </div>
-        <div class="faq-tags">
-            <button class="tag-btn active" data-tag="all" onclick="filterTag(this)">Tous</button>
-            {% for tag in tags %}
-            <button class="tag-btn" data-tag="{{ tag|lower }}" onclick="filterTag(this)">{{ tag }}</button>
-            {% endfor %}
-        </div>
-    </div>
-</section>
+  </aside>
 
-<div class="faq-layout">
-    <div class="faq-list">
-        {% for item in faqs %}
-        <div class="faq-item" data-tags="{{ item.tags|join(',') if item.tags else '' }}">
-            <button class="faq-question" onclick="toggleFAQ(this)">
-                <span>{{ item.q }}</span>
-                <i data-feather="chevron-down"></i>
-            </button>
-            <div class="faq-answer">
-                {{ item.a|safe }}
-            </div>
+  <!-- Main Content -->
+  <div class="glossary-main">
+    <!-- Search -->
+    <div class="search-box">
+      <input
+        type="text"
+        id="glossary-search"
+        placeholder="Rechercher un terme, une procédure... (ex: PART, DueBack, Internet)"
+        oninput="filterGlossary()"
+      >
+    </div>
+
+    <!-- Glossaire des termes -->
+    {% set glossaire = glossary.get('Glossaire des termes', []) %}
+    {% if glossaire %}
+    <div class="category-section glossary-section" data-category="glossaire-des-termes">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <h2>Glossaire des termes</h2>
+      </div>
+      <div class="glossary-cards">
+        {% for entry in glossaire %}
+        <div class="glossary-card search-item" data-searchable="{{ entry.term|lower }} {{ entry.english|lower }} {{ entry.definition|lower }}">
+          <h3 class="card-term">{{ entry.term }}</h3>
+          <p class="card-english">{{ entry.english }}</p>
+          <span class="card-badge">Terme</span>
+          <p class="card-definition">{{ entry.definition }}</p>
+          <p class="card-context">{{ entry.context }}</p>
         </div>
         {% endfor %}
+      </div>
     </div>
-    <aside class="faq-glossary">
-        <div class="glossary-title">Filtres rapides</div>
-        <ul>
-            <li onclick="quickFilter('front')">Front</li>
-            <li onclick="quickFilter('back')">Back</li>
-            <li onclick="quickFilter('impressions')">Impressions</li>
-            <li onclick="quickFilter('moneris')">Moneris / PART</li>
-            <li onclick="quickFilter('cartes')">Cartes / Transelect</li>
-            <li onclick="quickFilter('classement')">Classement / Piles</li>
-        </ul>
-    </aside>
+    {% endif %}
+
+    <!-- Procédures Front Desk -->
+    {% set front_procs = glossary.get('Procédures Front Desk', []) %}
+    {% if front_procs %}
+    <div class="category-section glossary-section" data-category="procédures-front-desk">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="1"></circle>
+            <path d="M12 1v6m0 6v6"></path>
+            <path d="M4.22 4.22l4.24 4.24m5.08 5.08l4.24 4.24"></path>
+            <path d="M1 12h6m6 0h6"></path>
+            <path d="M4.22 19.78l4.24-4.24m5.08-5.08l4.24-4.24"></path>
+          </svg>
+        </div>
+        <h2>Procédures Front Desk</h2>
+      </div>
+      {% for proc in front_procs %}
+      <div class="guide-card search-item" data-searchable="{{ proc.title|lower }} {{ proc.content|lower }}">
+        <h3 class="guide-title">{{ proc.title }}</h3>
+        <p class="guide-content">{{ proc.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Procédures Back Office -->
+    {% set back_procs = glossary.get('Procédures Back Office', []) %}
+    {% if back_procs %}
+    <div class="category-section glossary-section" data-category="procédures-back-office">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="2" y1="17" x2="22" y2="17"></line>
+          </svg>
+        </div>
+        <h2>Procédures Back Office</h2>
+      </div>
+      {% for proc in back_procs %}
+      <div class="guide-card search-item" data-searchable="{{ proc.title|lower }} {{ proc.content|lower }}">
+        <h3 class="guide-title">{{ proc.title }}</h3>
+        <p class="guide-content">{{ proc.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Classement & Documents -->
+    {% set classement = glossary.get('Classement & Documents', []) %}
+    {% if classement %}
+    <div class="category-section glossary-section" data-category="classement-documents">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+            <polyline points="13 2 13 9 20 9"></polyline>
+          </svg>
+        </div>
+        <h2>Classement & Documents</h2>
+      </div>
+      {% for proc in classement %}
+      <div class="guide-card search-item" data-searchable="{{ proc.title|lower }} {{ proc.content|lower }}">
+        <h3 class="guide-title">{{ proc.title }}</h3>
+        <p class="guide-content">{{ proc.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Raccourcis App Web -->
+    {% set app_shortcuts = glossary.get('Raccourcis App Web', []) %}
+    {% if app_shortcuts %}
+    <div class="category-section glossary-section" data-category="raccourcis-app-web">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            <path d="M22 4s-7 1-9 3c-2 2-7-4-7-4"></path>
+          </svg>
+        </div>
+        <h2>Raccourcis App Web</h2>
+      </div>
+      {% for proc in app_shortcuts %}
+      <div class="guide-card search-item" data-searchable="{{ proc.title|lower }} {{ proc.content|lower }}">
+        <h3 class="guide-title">{{ proc.title }}</h3>
+        <p class="guide-content">{{ proc.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Numéros & Contacts -->
+    {% set contacts = glossary.get('Numéros & Contacts', []) %}
+    {% if contacts %}
+    <div class="category-section glossary-section" data-category="numéros-contacts">
+      <div class="category-header">
+        <div class="category-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+          </svg>
+        </div>
+        <h2>Numéros & Contacts</h2>
+      </div>
+      {% for proc in contacts %}
+      <div class="guide-card search-item" data-searchable="{{ proc.title|lower }} {{ proc.content|lower }}">
+        <h3 class="guide-title">{{ proc.title }}</h3>
+        <p class="guide-content">{{ proc.content }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- No results -->
+    <div class="no-results" id="no-results" style="display: none;">
+      <p><strong>Aucun résultat trouvé</strong></p>
+      <p style="font-size: 0.9rem;">Essayez une autre recherche ou vérifiez l'orthographe.</p>
+    </div>
+  </div>
 </div>
+
 {% endblock %}
 
 {% block scripts %}
 <script>
 feather.replace();
-function filterFAQ() {
-    const term = document.getElementById('faq-search').value.toLowerCase();
-    document.querySelectorAll('.faq-item').forEach(item => {
-        const text = item.innerText.toLowerCase();
-        const matchesSearch = text.includes(term);
-        const matchesTag = item.dataset.tagMatch !== 'false';
-        item.style.display = matchesSearch && matchesTag ? 'block' : 'none';
-    });
+
+function filterGlossary() {
+  const searchTerm = document.getElementById('glossary-search').value.toLowerCase();
+  const items = document.querySelectorAll('.search-item');
+  let visibleCount = 0;
+
+  items.forEach(item => {
+    const searchable = item.dataset.searchable || '';
+    const matches = searchable.includes(searchTerm);
+    item.style.display = matches ? 'block' : 'none';
+    if (matches) visibleCount++;
+  });
+
+  // Show/hide sections if they have visible items
+  document.querySelectorAll('.category-section').forEach(section => {
+    const visibleInSection = section.querySelectorAll('.search-item:not([style*="display: none"])').length;
+    section.style.display = visibleInSection > 0 ? 'block' : 'none';
+  });
+
+  // Show no results message
+  const noResults = document.getElementById('no-results');
+  if (visibleCount === 0) {
+    noResults.style.display = 'block';
+  } else {
+    noResults.style.display = 'none';
+  }
 }
-function toggleFAQ(btn) {
-    const item = btn.parentElement;
-    item.classList.toggle('open');
-    const icon = btn.querySelector('i');
-    if (item.classList.contains('open')) {
-        icon.dataset.icon = 'chevron-up';
-    } else {
-        icon.dataset.icon = 'chevron-down';
+
+function scrollToCategory(btn) {
+  // Update active button
+  document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Find and scroll to section
+  const category = btn.dataset.category;
+  const sections = document.querySelectorAll('.category-section');
+  let found = false;
+
+  sections.forEach(section => {
+    if (section.dataset.category === category) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      found = true;
     }
-    feather.replace();
+  });
 }
-function filterTag(btn) {
-    const tag = btn.dataset.tag;
-    document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.faq-item').forEach(item => {
-        if (tag === 'all') {
-            item.dataset.tagMatch = 'true';
-        } else {
-            const tags = (item.dataset.tags || '').toLowerCase();
-            item.dataset.tagMatch = tags.includes(tag) ? 'true' : 'false';
-        }
+
+// Intersection observer to update active nav button
+document.addEventListener('DOMContentLoaded', function() {
+  const sections = document.querySelectorAll('.category-section');
+  const navButtons = document.querySelectorAll('.category-btn');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const category = entry.target.dataset.category;
+        navButtons.forEach(btn => {
+          if (btn.dataset.category === category) {
+            navButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+          }
+        });
+      }
     });
-    filterFAQ();
-}
-function quickFilter(tag) {
-    const btn = document.querySelector(`.tag-btn[data-tag=\"${tag}\"]`);
-    if (btn) {
-        filterTag(btn);
-    }
-}
+  }, { threshold: 0.3 });
+
+  sections.forEach(section => observer.observe(section));
+});
 </script>
 {% endblock %}

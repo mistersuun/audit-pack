@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block title %}Gestion RJ{% endblock %}
+
+{% block content %}
+<div class="rj-page">
+  <!-- ============================================================
+       COMPACT TOOLBAR — File status + actions in one slim bar
+       ============================================================ -->
+  <div class="rj-toolbar">
+    <div class="rj-toolbar-left">
+      <div class="rj-toolbar-title">
+        <div class="rj-toolbar-icon">
+          <i data-feather="file-text" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h1>Gestion RJ</h1>
+          <div class="rj-file-status" id="rj-file-status">
+            <span class="rj-status-dot offline"></span>
+            <span id="stat-file">Aucun fichier chargé</span>
+            <span class="rj-file-meta" id="stat-size" style="display:none"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="rj-toolbar-actions">
+      <button class="rj-toolbar-btn primary" onclick="document.getElementById('rj-file-input').click()" id="btn-upload-rj" aria-label="Uploader un fichier RJ">
+        <i data-feather="upload" aria-hidden="true"></i>
+        <span>Charger RJ</span>
+      </button>
+      <input type="file" id="rj-file-input" accept=".xls,.xlsx" style="display:none" onchange="uploadRJFile()">
+      <button class="rj-toolbar-btn" onclick="downloadWithCheck()" id="btn-download-rj" disabled aria-label="Télécharger le fichier RJ">
+        <i data-feather="download" aria-hidden="true"></i>
+        <span>Télécharger</span>
+      </button>
+      <button class="rj-toolbar-btn" onclick="generateQuasimodo()" id="btn-quasimodo" disabled aria-label="Générer le fichier Quasimodo">
+        <i data-feather="credit-card" aria-hidden="true"></i>
+        <span>Quasimodo</span>
+      </button>
+      <button class="rj-toolbar-btn" onclick="exportPDFReport()" id="btn-pdf-report" disabled aria-label="Générer le rapport PDF pour le GM">
+        <i data-feather="file-text" aria-hidden="true"></i>
+        <span>Rapport PDF</span>
+      </button>
+      <button class="rj-toolbar-btn danger" onclick="resetRJ()" id="btn-reset-rj" disabled aria-label="Réinitialiser le RJ">
+        <i data-feather="refresh-cw" aria-hidden="true"></i>
+        <span>Reset</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       TABBED INTERFACE — Numbered workflow steps
+       ============================================================ -->
+  <div class="rj-tabs-container">
+    <div class="rj-tabs-nav" id="rj-tabs-nav" role="tablist">
+      <button class="rj-tab-btn tab-config active" data-tab="nouveau-jour" onclick="switchRJTab('nouveau-jour')" role="tab">
+        <span class="tab-step">⚙</span>
+        <span class="tab-label">Nouveau Jour</span>
+      </button>
+      <button class="rj-tab-btn" data-tab="sd" onclick="switchRJTab('sd')" role="tab">
+        <span class="tab-step">1</span>
+        <span class="tab-label">SD</span>
+      </button>
+      <button class="rj-tab-btn" data-tab="depot" onclick="switchRJTab('depot')" role="tab">
+        <span class="tab-step">2</span>
+        <span class="tab-label">Dépôt</span>
+      </button>
+      <button class="rj-tab-btn" data-tab="dueback" onclick="switchRJTab('dueback')" role="tab">
+        <span class="tab-step">3</span>
+        <span class="tab-label">DueBack</span>
+      </button>
+      <button class="rj-tab-btn" data-tab="recap" onclick="switchRJTab('recap')" role="tab">
+        <span class="tab-step">4</span>
+        <span class="tab-label">Recap</span>
+      </button>
+      <button class="rj-tab-btn" data-tab="transelect" onclick="switchRJTab('transelect')" role="tab">
+        <span class="tab-step">5</span>
+        <span class="tab-label">Transelect</span>
+      </button>
+      <button class="rj-tab-btn" data-tab="geac" onclick="switchRJTab('geac')" role="tab">
+        <span class="tab-step">6</span>
+        <span class="tab-label">GEAC/UX</span>
+      </button>
+      <button class="rj-tab-btn tab-auto" data-tab="import-docs" onclick="switchRJTab('import-docs')" role="tab">
+        <span class="tab-step">⚡</span>
+        <span class="tab-label">Import Auto</span>
+      </button>
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="rj-tabs-content" id="rj-tab-container">
+      <div class="rj-loading" style="padding: 2rem; text-align: center; color: #999;">
+        <i data-feather="loader" style="animation: spin 1s linear infinite; width: 32px; height: 32px; margin-bottom: 1rem;" aria-hidden="true"></i>
+        <p>Chargement...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="notification-container"></div>
+
+<!-- Confirmation Modal -->
+<div class="rj-modal-overlay" id="confirm-modal" style="display:none">
+  <div class="rj-modal">
+    <div class="rj-modal-icon" id="confirm-modal-icon">
+      <i data-feather="alert-triangle" aria-hidden="true"></i>
+    </div>
+    <h3 id="confirm-modal-title">Confirmer</h3>
+    <p id="confirm-modal-message">Êtes-vous sûr?</p>
+    <div class="rj-modal-actions">
+      <button class="rj-toolbar-btn" onclick="closeConfirmModal(false)">Annuler</button>
+      <button class="rj-toolbar-btn danger" id="confirm-modal-ok" onclick="closeConfirmModal(true)">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+
+<script>
+// ============================================================================
+// GLOBAL STATE
+// ============================================================================
+let rjFileLoaded = false;
+
+// ============================================================================
+// TAB CACHING & LAZY LOADING
+// ============================================================================
+const tabCache = {};
+const VALID_TABS = ['nouveau-jour', 'sd', 'dueback', 'recap', 'depot', 'transelect', 'geac', 'import-docs'];
+
+async function switchRJTab(tabId) {
+  if (!VALID_TABS.includes(tabId)) {
+    console.error('Invalid tab ID:', tabId);
+    return;
+  }
+
+  // Remove active from all buttons
+  document.querySelectorAll('.rj-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+  // Mark current button as active
+  const activeBtn = document.querySelector(`.rj-tab-btn[data-tab="${tabId}"]`);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // Load or show cached content
+  try {
+    if (!tabCache[tabId]) {
+      // Show loading in container
+      const container = document.getElementById('rj-tab-container');
+      container.innerHTML = `<div style="padding: 2rem; text-align: center; color: #999;">
+        <div class="rj-spinner"></div>
+        <p style="margin-top: 1rem;">Chargement de l'onglet...</p>
+      </div>`;
+
+      const response = await fetch(`/api/rj/tab/${tabId}`);
+      if (!response.ok) throw new Error(`Failed to load tab: ${response.statusText}`);
+      tabCache[tabId] = await response.text();
+    }
+
+    const container = document.getElementById('rj-tab-container');
+    container.innerHTML = tabCache[tabId];
+
+    // Re-initialize feather icons
+    if (typeof feather !== 'undefined') feather.replace();
+
+    // Remove previously injected tab scripts before loading new ones
+    document.querySelectorAll('script[data-rj-tab-script]').forEach(s => s.remove());
+
+    // Load tab-specific scripts
+    const scripts = container.querySelectorAll('script');
+    scripts.forEach(script => {
+      const newScript = document.createElement('script');
+      newScript.textContent = script.textContent;
+      newScript.setAttribute('data-rj-tab-script', 'true');
+      document.body.appendChild(newScript);
+    });
+
+    if (typeof initTab === 'function') initTab(tabId);
+    loadTabData(tabId);
+
+    // Attach auto-save for data tabs
+    const tabSheetMap = {
+      'recap': 'recap',
+      'transelect': 'transelect',
+      'geac': 'geac_ux',
+    };
+    if (tabSheetMap[tabId]) {
+      setTimeout(() => attachAutoSave(tabSheetMap[tabId]), 200);
+    }
+
+  } catch (error) {
+    console.error('Error loading tab:', error);
+    const container = document.getElementById('rj-tab-container');
+    container.innerHTML = `<div style="padding: 2rem; color: #dc3545;">
+      <i data-feather="alert-circle"></i> Erreur: ${error.message}
+    </div>`;
+    if (typeof feather !== 'undefined') feather.replace();
+  }
+
+  localStorage.setItem('rj_current_tab', tabId);
+}
+
+async function loadTabData(tabId) {
+  try {
+    const statusRes = await fetch('/api/rj/status');
+    const statusData = await statusRes.json();
+    if (statusData.file_loaded) {
+      updateFileStatus(statusData.filename, statusData.file_size);
+    }
+  } catch (error) {
+    console.error('Error loading tab data:', error);
+  }
+}
+
+// ============================================================================
+// FILE STATUS
+// ============================================================================
+function updateFileStatus(filename, size) {
+  rjFileLoaded = true;
+  document.getElementById('stat-file').textContent = filename;
+  const sizeEl = document.getElementById('stat-size');
+  sizeEl.textContent = `(${(size / 1024).toFixed(0)} KB)`;
+  sizeEl.style.display = 'inline';
+
+  // Update status dot
+  const dot = document.querySelector('.rj-status-dot');
+  if (dot) {
+    dot.classList.remove('offline');
+    dot.classList.add('online');
+  }
+
+  // Update button label
+  const uploadBtn = document.getElementById('btn-upload-rj');
+  if (uploadBtn) {
+    uploadBtn.querySelector('span').textContent = 'Remplacer';
+  }
+
+  // Enable action buttons
+  document.getElementById('btn-download-rj').disabled = false;
+  document.getElementById('btn-quasimodo').disabled = false;
+  document.getElementById('btn-pdf-report').disabled = false;
+  document.getElementById('btn-reset-rj').disabled = false;
+
+  // Refresh progress tracker
+  if (typeof refreshProgress === 'function') refreshProgress();
+}
+
+// ============================================================================
+// CONFIRMATION MODAL
+// ============================================================================
+let confirmResolve = null;
+
+function showConfirmModal(title, message, isDanger = true) {
+  return new Promise((resolve) => {
+    confirmResolve = resolve;
+    document.getElementById('confirm-modal-title').textContent = title;
+    document.getElementById('confirm-modal-message').textContent = message;
+    const okBtn = document.getElementById('confirm-modal-ok');
+    okBtn.className = isDanger ? 'rj-toolbar-btn danger' : 'rj-toolbar-btn primary';
+    okBtn.textContent = isDanger ? 'Confirmer' : 'OK';
+    document.getElementById('confirm-modal').style.display = 'flex';
+    if (typeof feather !== 'undefined') feather.replace();
+  });
+}
+
+function closeConfirmModal(result) {
+  document.getElementById('confirm-modal').style.display = 'none';
+  if (confirmResolve) {
+    confirmResolve(result);
+    confirmResolve = null;
+  }
+}
+
+// Close modal on overlay click
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'confirm-modal') closeConfirmModal(false);
+});
+
+// ============================================================================
+// STUBS — overridden by rj_tabs.js (loaded after this script)
+// formatCurrency, notify, setupExcelNavigation are defined in rj_tabs.js
+// ============================================================================
+function formatCurrency(v) { return '$' + (parseFloat(v) || 0).toFixed(2); }
+function notify(m, t) { console.log(`[${t||'info'}] ${m}`); }
+async function uploadRJFile() { console.log('uploadRJFile stub — rj_tabs.js not loaded'); }
+async function resetRJ() { console.log('resetRJ stub'); }
+async function downloadRJ() { console.log('downloadRJ stub'); }
+async function downloadWithCheck() { console.log('downloadWithCheck stub'); }
+async function exportPDFReport() { console.log('exportPDFReport stub'); }
+async function generateQuasimodo() { console.log('generateQuasimodo stub'); }
+async function autofillQuasimodo() { console.log('autofillQuasimodo stub'); }
+async function checkRJStatus() { console.log('checkRJStatus stub'); }
+async function refreshProgress() { console.log('refreshProgress stub'); }
+
+// ============================================================================
+// INIT
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+
+  // Support deep-linking: /audit/rj?tab=transelect opens directly on that tab
+  const urlParams = new URLSearchParams(window.location.search);
+  const deepLinkTab = urlParams.get('tab');
+  const lastTab = deepLinkTab || localStorage.getItem('rj_current_tab') || 'nouveau-jour';
+  switchRJTab(lastTab);
+
+  // Clean deep-link from URL (cosmetic — so bookmark stays clean)
+  if (deepLinkTab) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  // Check if RJ is already loaded
+  fetch('/api/rj/status')
+    .then(r => r.json())
+    .then(data => {
+      if (data.file_loaded) {
+        updateFileStatus(data.filename, data.file_size);
+      }
+    })
+    .catch(() => {});
+});
+
+// Wrap switchRJTab to refresh progress after each tab load
+const _origSwitchRJTab = switchRJTab;
+switchRJTab = async function(tabId) {
+  await _origSwitchRJTab(tabId);
+  if (rjFileLoaded && typeof refreshProgress === 'function') {
+    refreshProgress();
+  }
+};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/audit/rj_tabs.js') }}"></script>
+{% endblock %}

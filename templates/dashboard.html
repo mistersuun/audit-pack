@@ -1,0 +1,562 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="db-page">
+  <!-- Header -->
+  <div class="db-header">
+    <div>
+      <h1 class="db-title">Bonsoir, {{ session.get('user_name', 'Auditeur') }}</h1>
+      <p class="db-subtitle" id="db-subtitle">Chargement du tableau de bord...</p>
+    </div>
+    <div class="db-header-right">
+      <div class="db-weather" id="weather-card" style="display:none;">
+        <span class="db-weather-icon" id="weather-icon"></span>
+        <span class="db-weather-temp" id="weather-temp"></span>
+        <span class="db-weather-cond" id="weather-cond"></span>
+      </div>
+      <button onclick="loadDashboard()" class="db-btn-icon" title="Actualiser"><i data-feather="refresh-cw"></i></button>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div id="empty-state" style="display:none;text-align:center;padding:4rem 2rem;color:var(--text-muted);">
+    <div style="font-size:3rem;opacity:.15;margin-bottom:1rem;"><i data-feather="bar-chart-2"></i></div>
+    <h2 style="color:var(--text-secondary);font-size:1.15rem;font-weight:700;margin-bottom:.4rem;">Aucune donnée disponible</h2>
+    <p style="font-size:.88rem;max-width:400px;margin:0 auto;line-height:1.6;">Importez des données RJ dans le <a href="/crm" style="color:var(--primary);font-weight:600;">CRM</a> pour activer le dashboard intelligent.</p>
+  </div>
+
+  <!-- Main content -->
+  <div id="db-content" style="display:none;">
+
+    <!-- ═══ ROW 1: Quick Actions + Shift Progress ═══ -->
+    <div class="db-row db-row-top">
+      <!-- Shift Progress -->
+      <div class="db-card db-card-shift" id="shift-card">
+        <div class="db-card-icon-wrap bg-indigo"><i data-feather="clipboard"></i></div>
+        <div class="db-shift-info">
+          <div class="db-shift-label">Progression du quart</div>
+          <div class="db-shift-progress-wrap">
+            <div class="db-shift-bar"><div class="db-shift-fill" id="shift-fill" style="width:0%"></div></div>
+            <span class="db-shift-pct" id="shift-pct">—</span>
+          </div>
+          <div class="db-shift-detail" id="shift-detail"></div>
+        </div>
+      </div>
+
+      <!-- RJ Status -->
+      <div class="db-card db-card-rj" id="rj-card">
+        <div class="db-card-icon-wrap bg-purple"><i data-feather="edit-3"></i></div>
+        <div class="db-shift-info">
+          <div class="db-shift-label">Rapport Journalier</div>
+          <div class="db-rj-status" id="rj-status">—</div>
+          <div class="db-shift-detail" id="rj-detail"></div>
+        </div>
+      </div>
+
+      <!-- MTD Budget -->
+      <div class="db-card db-card-budget" id="budget-card">
+        <div class="db-card-icon-wrap bg-green"><i data-feather="target"></i></div>
+        <div class="db-shift-info">
+          <div class="db-shift-label">Budget MTD</div>
+          <div class="db-rj-status" id="budget-status">—</div>
+          <div class="db-shift-detail" id="budget-detail"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ROW 2: KPI Cards ═══ -->
+    <div class="db-kpis" id="kpi-row">
+      <div class="db-kpi" data-accent="blue">
+        <div class="db-kpi-header">
+          <span class="db-kpi-label">RevPAR</span>
+          <canvas class="db-spark" id="spark-revpar" width="60" height="24"></canvas>
+        </div>
+        <div class="db-kpi-value" id="kpi-revpar">—</div>
+        <div class="db-kpi-compare" id="cmp-revpar"></div>
+      </div>
+      <div class="db-kpi" data-accent="green">
+        <div class="db-kpi-header">
+          <span class="db-kpi-label">ADR</span>
+          <canvas class="db-spark" id="spark-adr" width="60" height="24"></canvas>
+        </div>
+        <div class="db-kpi-value" id="kpi-adr">—</div>
+        <div class="db-kpi-compare" id="cmp-adr"></div>
+      </div>
+      <div class="db-kpi" data-accent="purple">
+        <div class="db-kpi-header">
+          <span class="db-kpi-label">Occupation</span>
+          <canvas class="db-spark" id="spark-occ" width="60" height="24"></canvas>
+        </div>
+        <div class="db-kpi-value" id="kpi-occ">—</div>
+        <div class="db-kpi-compare" id="cmp-occ"></div>
+      </div>
+      <div class="db-kpi" data-accent="orange">
+        <div class="db-kpi-header">
+          <span class="db-kpi-label">Rev. Total</span>
+          <canvas class="db-spark" id="spark-revenue" width="60" height="24"></canvas>
+        </div>
+        <div class="db-kpi-value" id="kpi-total-rev">—</div>
+        <div class="db-kpi-compare" id="cmp-total-rev"></div>
+      </div>
+      <div class="db-kpi" data-accent="pink">
+        <div class="db-kpi-header">
+          <span class="db-kpi-label">Rev. F&B</span>
+        </div>
+        <div class="db-kpi-value" id="kpi-fb-rev">—</div>
+        <div class="db-kpi-compare" id="cmp-fb-rev"></div>
+      </div>
+      <div class="db-kpi" data-accent="teal">
+        <div class="db-kpi-header">
+          <span class="db-kpi-label">F&B/Client</span>
+        </div>
+        <div class="db-kpi-value" id="kpi-fb-client">—</div>
+        <div class="db-kpi-sub" id="kpi-clients-sub"></div>
+      </div>
+    </div>
+
+    <!-- ═══ ROW 3: Alerts & Recommendations ═══ -->
+    <div class="db-card db-card-alerts" id="alerts-section">
+      <div class="db-card-title">
+        <i data-feather="zap"></i> Recommandations intelligentes
+        <span class="db-alert-count" id="alert-count"></span>
+      </div>
+      <div class="db-alerts" id="alerts-container"></div>
+    </div>
+
+    <!-- ═══ ROW 4: Cash Recon + Labor ═══ -->
+    <div class="db-row db-row-bottom">
+      <div class="db-card db-card-sm" id="cash-card" style="display:none;">
+        <div class="db-card-title"><i data-feather="shield"></i> Réconciliation</div>
+        <div class="db-mini-stats" id="cash-stats"></div>
+      </div>
+      <div class="db-card db-card-sm" id="labor-card" style="display:none;">
+        <div class="db-card-title"><i data-feather="users"></i> Main-d'œuvre</div>
+        <div class="db-mini-stats" id="labor-stats"></div>
+      </div>
+    </div>
+
+    <!-- ═══ Quick Links ═══ -->
+    <div class="db-quick-links">
+      <a href="/crm" class="db-qlink"><i data-feather="briefcase"></i> CRM Complet</a>
+      <a href="/rj/native" class="db-qlink"><i data-feather="edit-3"></i> Ouvrir le RJ</a>
+      <a href="/checklist" class="db-qlink"><i data-feather="check-square"></i> Checklist</a>
+      <a href="/generators" class="db-qlink"><i data-feather="printer"></i> Générateurs</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   SMART DASHBOARD — Premium Landing Page
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+
+:root {
+  --db-blue: #3b82f6; --db-green: #10b981; --db-purple: #8b5cf6;
+  --db-orange: #f59e0b; --db-pink: #ec4899; --db-teal: #14b8a6;
+  --db-red: #ef4444; --db-indigo: #6366f1;
+}
+
+.db-page { padding: 1.25rem 1.75rem 2rem; max-width: 1320px; margin: 0 auto; }
+
+/* Header */
+.db-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:1.25rem; animation:fadeUp .4s ease both; }
+.db-title { font-size:1.4rem; font-weight:800; letter-spacing:-.03em; color:var(--text); }
+.db-subtitle { font-size:.8rem; color:var(--text-muted); margin-top:.15rem; }
+.db-header-right { display:flex; align-items:center; gap:.75rem; }
+.db-btn-icon { width:34px; height:34px; border:1px solid var(--border); border-radius:9px; background:var(--card-bg); display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted); transition:all 180ms ease; }
+.db-btn-icon:hover { background:var(--border-light); color:var(--text); }
+.db-btn-icon svg { width:15px; height:15px; }
+
+/* Weather */
+.db-weather { display:flex; align-items:center; gap:.45rem; padding:.4rem .8rem; border-radius:10px; background:var(--card-bg); border:1px solid var(--border); font-size:.78rem; }
+.db-weather-icon { font-size:1.1rem; }
+.db-weather-temp { font-weight:700; color:var(--text); }
+.db-weather-cond { color:var(--text-muted); font-size:.72rem; }
+
+/* Top Row (shift + rj + budget) */
+.db-row-top { display:grid; grid-template-columns:1fr 1fr 1fr; gap:.75rem; margin-bottom:.75rem; animation:fadeUp .45s ease both; }
+.db-card { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:1rem 1.15rem; transition:all 200ms ease; }
+.db-card:hover { box-shadow:var(--shadow); }
+
+.db-card-shift, .db-card-rj, .db-card-budget { display:flex; align-items:center; gap:.85rem; }
+.db-card-icon-wrap { width:40px; height:40px; border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.db-card-icon-wrap svg { width:18px; height:18px; color:#fff; }
+.bg-indigo { background:var(--db-indigo); }
+.bg-purple { background:var(--db-purple); }
+.bg-green  { background:var(--db-green); }
+
+.db-shift-info { flex:1; min-width:0; }
+.db-shift-label { font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:var(--text-muted); margin-bottom:.3rem; }
+.db-shift-progress-wrap { display:flex; align-items:center; gap:.5rem; }
+.db-shift-bar { flex:1; height:6px; background:var(--border-light); border-radius:3px; overflow:hidden; }
+.db-shift-fill { height:100%; background:var(--db-indigo); border-radius:3px; transition:width .5s ease; }
+.db-shift-pct { font-size:.85rem; font-weight:800; color:var(--text); min-width:36px; text-align:right; }
+.db-shift-detail { font-size:.7rem; color:var(--text-muted); margin-top:.2rem; }
+
+.db-rj-status { font-size:.88rem; font-weight:700; color:var(--text); }
+.db-rj-status .status-badge { display:inline-flex; align-items:center; gap:.3rem; padding:.15rem .5rem; border-radius:6px; font-size:.7rem; font-weight:700; }
+.status-draft { background:rgba(245,158,11,.1); color:var(--db-orange); }
+.status-progress { background:rgba(59,130,246,.1); color:var(--db-blue); }
+.status-submitted { background:rgba(16,185,129,.1); color:var(--db-green); }
+.status-locked { background:rgba(139,92,246,.1); color:var(--db-purple); }
+.status-none { background:var(--border-light); color:var(--text-muted); }
+
+/* KPI Cards */
+.db-kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:.75rem; margin-bottom:.75rem; animation:fadeUp .5s ease both; }
+.db-kpi { background:var(--card-bg); border:1px solid var(--border); border-radius:14px; padding:.9rem 1rem; position:relative; overflow:hidden; transition:all 200ms ease; }
+.db-kpi::after { content:''; position:absolute; bottom:0; left:0; right:0; height:2px; opacity:0; transition:opacity 200ms ease; }
+.db-kpi:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
+.db-kpi:hover::after { opacity:1; }
+[data-accent="blue"]::after { background:var(--db-blue); }
+[data-accent="green"]::after { background:var(--db-green); }
+[data-accent="purple"]::after { background:var(--db-purple); }
+[data-accent="orange"]::after { background:var(--db-orange); }
+[data-accent="pink"]::after { background:var(--db-pink); }
+[data-accent="teal"]::after { background:var(--db-teal); }
+.db-kpi-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:.25rem; }
+.db-kpi-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.07em; color:var(--text-muted); font-weight:700; }
+.db-spark { display:block; }
+.db-kpi-value { font-size:1.35rem; font-weight:800; color:var(--text); line-height:1.15; letter-spacing:-.02em; }
+.db-kpi-compare { font-size:.62rem; color:var(--text-muted); margin-top:.2rem; line-height:1.4; }
+.db-kpi-compare .up { color:var(--db-green); font-weight:700; }
+.db-kpi-compare .down { color:var(--db-red); font-weight:700; }
+.db-kpi-compare .neutral { color:var(--text-muted); }
+.db-kpi-sub { font-size:.68rem; color:var(--text-secondary); margin-top:.15rem; }
+
+/* Alerts */
+.db-card-alerts { margin-bottom:.75rem; animation:fadeUp .55s ease both; }
+.db-card-title { display:flex; align-items:center; gap:.4rem; font-size:.82rem; font-weight:700; color:var(--text); margin-bottom:.65rem; }
+.db-card-title svg { width:15px; height:15px; color:var(--text-muted); }
+.db-alert-count { font-size:.62rem; font-weight:700; padding:.12rem .45rem; border-radius:6px; margin-left:.35rem; background:rgba(239,68,68,.08); color:var(--db-red); }
+.db-alerts { display:flex; flex-direction:column; gap:.4rem; }
+.db-alert { display:flex; gap:.7rem; padding:.7rem .85rem; border-radius:10px; border:1px solid transparent; transition:all 200ms ease; animation:slideIn .3s ease both; }
+.db-alert:hover { transform:translateX(2px); }
+.db-alert.critical { background:rgba(239,68,68,.04); border-color:rgba(239,68,68,.1); }
+.db-alert.warning { background:rgba(245,158,11,.04); border-color:rgba(245,158,11,.1); }
+.db-alert.info { background:rgba(59,130,246,.04); border-color:rgba(59,130,246,.1); }
+.db-alert.success { background:rgba(16,185,129,.04); border-color:rgba(16,185,129,.1); }
+.db-alert-dot { width:8px; height:8px; border-radius:50%; margin-top:.35rem; flex-shrink:0; }
+.critical .db-alert-dot { background:var(--db-red); }
+.warning .db-alert-dot { background:var(--db-orange); }
+.info .db-alert-dot { background:var(--db-blue); }
+.success .db-alert-dot { background:var(--db-green); }
+.db-alert-body { flex:1; }
+.db-alert-msg { font-size:.8rem; color:var(--text); font-weight:600; line-height:1.4; }
+.db-alert-action { font-size:.72rem; color:var(--text-secondary); margin-top:.2rem; line-height:1.5; display:flex; align-items:flex-start; gap:.3rem; }
+.db-alert-action::before { content:'→'; color:var(--text-muted); font-weight:700; flex-shrink:0; }
+.db-alert-category { font-size:.58rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700; color:var(--text-muted); background:var(--border-light); padding:.1rem .35rem; border-radius:4px; margin-left:auto; align-self:flex-start; flex-shrink:0; }
+
+/* Bottom row */
+.db-row-bottom { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; margin-bottom:.75rem; animation:fadeUp .6s ease both; }
+.db-card-sm { padding:.85rem 1rem; }
+.db-mini-stats { display:flex; gap:1.25rem; }
+.db-mini-stat { flex:1; }
+.db-mini-stat-label { font-size:.6rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:700; }
+.db-mini-stat-value { font-size:1.1rem; font-weight:800; color:var(--text); margin-top:.1rem; }
+.db-mini-stat-sub { font-size:.65rem; color:var(--text-secondary); margin-top:.05rem; }
+
+/* Quick Links */
+.db-quick-links { display:flex; gap:.5rem; animation:fadeUp .65s ease both; }
+.db-qlink { display:flex; align-items:center; gap:.4rem; padding:.5rem .85rem; border:1px solid var(--border); border-radius:10px; background:var(--card-bg); font-size:.78rem; font-weight:600; color:var(--text-secondary); text-decoration:none; transition:all 180ms ease; }
+.db-qlink:hover { background:var(--border-light); color:var(--text); border-color:var(--text-muted); }
+.db-qlink svg { width:14px; height:14px; }
+
+/* Responsive */
+@media (max-width:1100px) { .db-kpis { grid-template-columns:repeat(3,1fr); } }
+@media (max-width:900px) {
+  .db-page { padding:1rem; }
+  .db-row-top, .db-row-bottom { grid-template-columns:1fr; }
+  .db-kpis { grid-template-columns:repeat(2,1fr); }
+  .db-quick-links { flex-wrap:wrap; }
+}
+@media (max-width:480px) { .db-kpis { grid-template-columns:1fr; } }
+</style>
+
+<script>
+let dashState = null;
+
+function fmt(n) { return '$'+Number(n||0).toLocaleString('fr-CA',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function fmt2(n) { return '$'+Number(n||0).toLocaleString('fr-CA',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function pct(n) { return (n||0).toFixed(1)+'%'; }
+
+const DOW_FR = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+
+async function loadDashboard() {
+  try {
+    const res = await fetch('/api/dashboard/smart');
+    dashState = await res.json();
+
+    if (!dashState.has_data) {
+      document.getElementById('empty-state').style.display = 'block';
+      document.getElementById('db-content').style.display = 'none';
+      document.getElementById('db-subtitle').textContent = 'Aucune donnée disponible';
+      feather.replace();
+      return;
+    }
+
+    document.getElementById('empty-state').style.display = 'none';
+    document.getElementById('db-content').style.display = 'block';
+
+    const d = new Date(dashState.today.date);
+    const dow = DOW_FR[d.getDay()];
+    document.getElementById('db-subtitle').textContent =
+      `${dow} ${dashState.today.date} · ${dashState.today.rooms_sold} chambres vendues · ${dashState.today.nb_clients} clients`;
+
+    renderWeather();
+    renderShift();
+    renderRJ();
+    renderBudget();
+    renderKPIs();
+    renderAlerts();
+    renderCash();
+    renderLabor();
+    renderSparklines();
+
+    feather.replace();
+  } catch(e) { console.error('Dashboard error:', e); }
+}
+
+// ═══ WEATHER ═══
+function renderWeather() {
+  const w = dashState.weather;
+  if (!w) return;
+  document.getElementById('weather-card').style.display = 'flex';
+  const icons = { ensoleille:'☀️', nuageux:'⛅', pluie:'🌧️', neige:'❄️', orage:'⛈️', brouillard:'🌫️', venteux:'💨' };
+  document.getElementById('weather-icon').textContent = icons[w.condition] || '🌤️';
+  document.getElementById('weather-temp').textContent = (w.temperature || '—') + '°C';
+  document.getElementById('weather-cond').textContent = w.condition || '';
+}
+
+// ═══ SHIFT PROGRESS ═══
+function renderShift() {
+  const s = dashState.shift;
+  if (!s) {
+    document.getElementById('shift-pct').textContent = '—';
+    document.getElementById('shift-detail').textContent = 'Aucun quart démarré ce soir';
+    return;
+  }
+  document.getElementById('shift-fill').style.width = s.progress_pct + '%';
+  document.getElementById('shift-pct').textContent = Math.round(s.progress_pct) + '%';
+  document.getElementById('shift-detail').textContent =
+    `${s.completed_tasks}/${s.total_tasks} tâches complétées`;
+}
+
+// ═══ RJ STATUS ═══
+function renderRJ() {
+  const rj = dashState.rj;
+  const statusEl = document.getElementById('rj-status');
+  const detailEl = document.getElementById('rj-detail');
+
+  if (!rj) {
+    statusEl.innerHTML = '<span class="status-badge status-none">Non démarré</span>';
+    detailEl.textContent = 'Aucune session RJ ce soir';
+    return;
+  }
+
+  const statusMap = {
+    draft: { cls: 'status-draft', label: 'Brouillon' },
+    in_progress: { cls: 'status-progress', label: 'En cours' },
+    submitted: { cls: 'status-submitted', label: 'Soumis' },
+    locked: { cls: 'status-locked', label: 'Verrouillé' },
+  };
+  const st = statusMap[rj.status] || { cls: 'status-none', label: rj.status };
+  statusEl.innerHTML = `<span class="status-badge ${st.cls}">${st.label}</span>`;
+  detailEl.textContent = `${rj.date}${rj.auditor ? ' · ' + rj.auditor : ''}`;
+}
+
+// ═══ BUDGET MTD ═══
+function renderBudget() {
+  const b = dashState.budget;
+  const mtd = dashState.mtd;
+  const statusEl = document.getElementById('budget-status');
+  const detailEl = document.getElementById('budget-detail');
+
+  if (!b) {
+    statusEl.textContent = fmt(mtd ? mtd.total_revenue : 0);
+    detailEl.textContent = mtd ? `${mtd.days} jours · Occ moy ${mtd.avg_occ}%` : '';
+    return;
+  }
+
+  const cls = b.on_track ? 'up' : 'down';
+  const sign = b.variance >= 0 ? '+' : '';
+  statusEl.innerHTML = `<span style="color:var(--${b.on_track ? 'db-green' : 'db-red'});font-weight:800;">${sign}${fmt(b.variance)}</span>`;
+  detailEl.innerHTML = `${b.on_track ? 'En avance' : 'En retard'} de ${pct(Math.abs(b.variance_pct))} sur le budget proraté`;
+}
+
+// ═══ KPIs ═══
+function renderKPIs() {
+  const t = dashState.today;
+  const cmp = dashState.comparisons;
+
+  document.getElementById('kpi-revpar').textContent = fmt2(t.revpar);
+  document.getElementById('kpi-adr').textContent = fmt2(t.adr);
+  document.getElementById('kpi-occ').textContent = pct(t.occupancy_rate);
+  document.getElementById('kpi-total-rev').textContent = fmt(t.total_revenue);
+  document.getElementById('kpi-fb-rev').textContent = fmt(t.fb_revenue);
+  document.getElementById('kpi-fb-client').textContent = fmt2(t.fb_per_client);
+  document.getElementById('kpi-clients-sub').textContent = `${t.nb_clients} clients · ${t.rooms_comp} comp`;
+
+  // Comparisons
+  renderCompare('cmp-revpar', cmp, 'revpar');
+  renderCompare('cmp-adr', cmp, 'adr');
+  renderCompare('cmp-occ', cmp, 'occupancy_rate');
+  renderCompare('cmp-total-rev', cmp, 'total_revenue');
+  renderCompare('cmp-fb-rev', cmp, 'fb_revenue');
+}
+
+function renderCompare(elId, cmp, key) {
+  const el = document.getElementById(elId);
+  if (!el || !cmp) return;
+
+  let parts = [];
+  ['yesterday', 'last_week', 'avg_30d'].forEach(period => {
+    const c = cmp[period];
+    if (!c || !c.deltas) return;
+    const v = c.deltas[key];
+    if (v === undefined || v === null) return;
+    const sign = v >= 0 ? '+' : '';
+    const cls = v > 0 ? 'up' : v < 0 ? 'down' : 'neutral';
+    parts.push(`<span class="${cls}">${sign}${v.toFixed(1)}%</span> ${c.label}`);
+  });
+
+  el.innerHTML = parts.join(' · ');
+}
+
+// ═══ SPARKLINES ═══
+function renderSparklines() {
+  const sp = dashState.sparklines;
+  if (!sp) return;
+  drawSparkline('spark-revpar', sp.revpar, '#3b82f6');
+  drawSparkline('spark-adr', sp.adr, '#10b981');
+  drawSparkline('spark-occ', sp.occupancy, '#8b5cf6');
+  drawSparkline('spark-revenue', sp.revenue, '#f59e0b');
+}
+
+function drawSparkline(canvasId, data, color) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !data || data.length < 2) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0, 0, w, h);
+
+  const min = Math.min(...data) * 0.95;
+  const max = Math.max(...data) * 1.05;
+  const range = max - min || 1;
+  const step = w / (data.length - 1);
+
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.lineJoin = 'round';
+  data.forEach((v, i) => {
+    const x = i * step;
+    const y = h - ((v - min) / range) * h;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Fill
+  ctx.lineTo((data.length - 1) * step, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fillStyle = color + '12';
+  ctx.fill();
+}
+
+// ═══ ALERTS ═══
+function renderAlerts() {
+  const alerts = dashState.alerts || [];
+  const container = document.getElementById('alerts-container');
+  const countEl = document.getElementById('alert-count');
+
+  const criticals = alerts.filter(a => a.severity === 'critical').length;
+  const warnings = alerts.filter(a => a.severity === 'warning').length;
+
+  if (criticals + warnings > 0) {
+    countEl.textContent = `${criticals + warnings} alerte${criticals + warnings > 1 ? 's' : ''}`;
+    countEl.style.display = 'inline-flex';
+  } else {
+    countEl.style.display = 'none';
+  }
+
+  if (!alerts.length) {
+    container.innerHTML = '<div class="db-alert success"><div class="db-alert-dot"></div><div class="db-alert-body"><div class="db-alert-msg">Tout est normal — aucune alerte à signaler ce soir</div></div></div>';
+    return;
+  }
+
+  const catLabels = { occupation:'Occupation', adr:'ADR', revpar:'RevPAR', fb:'F&B', cash:'Caisse', labor:"Main-d'œuvre", cards:'Cartes', trends:'Tendance' };
+
+  container.innerHTML = alerts.map((a, i) => `
+    <div class="db-alert ${a.severity}" style="animation-delay:${i * .06}s">
+      <div class="db-alert-dot"></div>
+      <div class="db-alert-body">
+        <div class="db-alert-msg">${a.message}</div>
+        <div class="db-alert-action">${a.action}</div>
+      </div>
+      <div class="db-alert-category">${catLabels[a.category] || a.category}</div>
+    </div>
+  `).join('');
+}
+
+// ═══ CASH ═══
+function renderCash() {
+  const c = dashState.cash;
+  if (!c) return;
+  document.getElementById('cash-card').style.display = 'block';
+  const surplusCls = Math.abs(c.surplus_deficit) > 20 ? 'color:var(--db-red)' : 'color:var(--db-green)';
+  const quasiCls = Math.abs(c.quasimodo_variance) > 5 ? 'color:var(--db-red)' : 'color:var(--db-green)';
+  document.getElementById('cash-stats').innerHTML = `
+    <div class="db-mini-stat">
+      <div class="db-mini-stat-label">Surplus/Déficit</div>
+      <div class="db-mini-stat-value" style="${surplusCls}">${fmt2(c.surplus_deficit)}</div>
+      <div class="db-mini-stat-sub">Caisse du ${c.date}</div>
+    </div>
+    <div class="db-mini-stat">
+      <div class="db-mini-stat-label">Quasimodo</div>
+      <div class="db-mini-stat-value" style="${quasiCls}">${fmt2(c.quasimodo_variance)}</div>
+      <div class="db-mini-stat-sub">${c.auditor_name || '—'}</div>
+    </div>
+    <div class="db-mini-stat">
+      <div class="db-mini-stat-label">Dépôts</div>
+      <div class="db-mini-stat-value">${fmt(c.deposit_cdn)}</div>
+      <div class="db-mini-stat-sub">CDN · USD ${fmt(c.deposit_usd)}</div>
+    </div>
+  `;
+}
+
+// ═══ LABOR ═══
+function renderLabor() {
+  const l = dashState.labor;
+  if (!l) return;
+  document.getElementById('labor-card').style.display = 'block';
+  const pctCls = l.labor_pct > 32 ? 'color:var(--db-red)' : 'color:var(--db-green)';
+  document.getElementById('labor-stats').innerHTML = `
+    <div class="db-mini-stat">
+      <div class="db-mini-stat-label">Ratio MO/Rev</div>
+      <div class="db-mini-stat-value" style="${pctCls}">${l.labor_pct}%</div>
+      <div class="db-mini-stat-sub">Cible: <30%</div>
+    </div>
+    <div class="db-mini-stat">
+      <div class="db-mini-stat-label">Coût MO</div>
+      <div class="db-mini-stat-value">${fmt(l.total_cost)}</div>
+      <div class="db-mini-stat-sub">${l.month}</div>
+    </div>
+    <div class="db-mini-stat">
+      <div class="db-mini-stat-label">Revenus</div>
+      <div class="db-mini-stat-value">${fmt(l.revenue)}</div>
+      <div class="db-mini-stat-sub">${l.month}</div>
+    </div>
+  `;
+}
+
+// ═══ INIT ═══
+document.addEventListener('DOMContentLoaded', () => { loadDashboard(); feather.replace(); });
+</script>
+{% endblock %}

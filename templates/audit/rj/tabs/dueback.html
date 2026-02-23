@@ -1,0 +1,474 @@
+<!-- DUEBACK TAB FRAGMENT -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+        <div class="rj-card">
+          <h3>DUBACK# - Jour <span id="dueback-current-day">__</span></h3>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+            Entrez les montants Previous DueBack et Current DueBack depuis les rapports de caisse des réceptionnistes.
+          </p>
+
+          <!-- Add Entry Form -->
+          <div style="background: white; padding: 2rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border: 1px solid #e5e7eb;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+              <div style="background: #3b82f6; padding: 0.5rem; border-radius: 8px;">
+                <i data-feather="user-plus" style="color: white; width: 20px; height: 20px;"></i>
+              </div>
+              <h4 style="margin: 0; font-size: 1.125rem; color: #1f2937; font-weight: 600; letter-spacing: 0.3px;">Nouvelle entrée DueBack</h4>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+              <!-- Receptionist Dropdown -->
+              <div style="position: relative;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.813rem; color: #374151; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i data-feather="user" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                  Réceptionniste
+                </label>
+                <div style="position: relative;">
+                  <select id="dueback-receptionist-select"
+                          style="width: 100%;
+                                 padding: 0.875rem 2.5rem 0.875rem 1rem;
+                                 border: 2px solid #d1d5db;
+                                 border-radius: 10px;
+                                 font-size: 0.9375rem;
+                                 background: white;
+                                 color: #1f2937;
+                                 font-weight: 500;
+                                 cursor: pointer;
+                                 transition: all 0.2s ease;
+                                 appearance: none;
+                                 -webkit-appearance: none;
+                                 -moz-appearance: none;"
+                          onfocus="this.style.border='2px solid #3b82f6'; this.style.boxShadow='0 0 0 3px rgba(59, 130, 246, 0.1)';"
+                          onblur="this.style.border='2px solid #d1d5db'; this.style.boxShadow='none';">
+                    <option value="">Sélectionner un réceptionniste...</option>
+                  </select>
+                  <div style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                    <i data-feather="chevron-down" style="width: 20px; height: 20px; color: #6b7280;"></i>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Previous DueBack -->
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.813rem; color: #374151; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i data-feather="arrow-down-circle" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                  Previous
+                </label>
+                <input type="number" step="0.01" id="dueback-previous-input" placeholder="0.00"
+                       style="width: 100%;
+                              padding: 0.875rem 1rem;
+                              border: 2px solid #d1d5db;
+                              border-radius: 10px;
+                              text-align: right;
+                              font-size: 1rem;
+                              font-weight: 600;
+                              background: white;
+                              color: #dc2626;
+                              transition: all 0.2s ease;"
+                       onfocus="this.style.border='2px solid #dc2626'; this.style.boxShadow='0 0 0 3px rgba(220, 38, 38, 0.1)';"
+                       onblur="this.style.border='2px solid #d1d5db'; this.style.boxShadow='none';">
+              </div>
+
+              <!-- Current DueBack -->
+              <div>
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.813rem; color: #374151; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <i data-feather="arrow-up-circle" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                  Current
+                </label>
+                <input type="number" step="0.01" id="dueback-current-input" placeholder="0.00"
+                       style="width: 100%;
+                              padding: 0.875rem 1rem;
+                              border: 2px solid #d1d5db;
+                              border-radius: 10px;
+                              text-align: right;
+                              font-size: 1rem;
+                              font-weight: 600;
+                              background: white;
+                              color: #059669;
+                              transition: all 0.2s ease;"
+                       onfocus="this.style.border='2px solid #10b981'; this.style.boxShadow='0 0 0 3px rgba(16, 185, 129, 0.1)';"
+                       onblur="this.style.border='2px solid #d1d5db'; this.style.boxShadow='none';">
+              </div>
+
+              <!-- Add Button -->
+              <button onclick="addDuebackEntry()"
+                      style="background: #3b82f6;
+                             color: white;
+                             border: none;
+                             padding: 0.875rem 2rem;
+                             border-radius: 10px;
+                             font-weight: 600;
+                             font-size: 0.9375rem;
+                             cursor: pointer;
+                             transition: all 0.2s ease;
+                             display: flex;
+                             align-items: center;
+                             gap: 0.5rem;
+                             margin-top: 1.563rem;
+                             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);"
+                      onmouseover="this.style.background='#2563eb'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)';"
+                      onmouseout="this.style.background='#3b82f6'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)';">
+                <i data-feather="plus-circle" style="width: 18px; height: 18px;"></i>
+                <span>Ajouter</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Entries List -->
+          <div id="dueback-entries-container" style="display: none; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="background: #3b82f6; padding: 0.5rem; border-radius: 8px;">
+                  <i data-feather="list" style="color: white; width: 18px; height: 18px;"></i>
+                </div>
+                <h4 style="margin: 0; font-size: 1.125rem; color: #1f2937; font-weight: 600;">
+                  Entrées ajoutées
+                  <span style="background: #3b82f6; color: white; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.813rem; margin-left: 0.5rem;" id="dueback-entries-count">0</span>
+                </h4>
+              </div>
+            </div>
+            <div id="dueback-entries-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <!-- Entries will be added here by JavaScript -->
+            </div>
+          </div>
+
+          <!-- Totals Display -->
+          <div id="dueback-totals-display" style="display: none; margin-bottom: 2rem;">
+            <!-- Column B Total (Read-Only from 'jour' sheet) -->
+            <div style="background: white; border-radius: 16px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border: 1px solid #e5e7eb;">
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <div style="background: #8b5cf6; padding: 0.5rem; border-radius: 8px;">
+                    <i data-feather="hash" style="color: white; width: 18px; height: 18px;"></i>
+                  </div>
+                  <div>
+                    <div style="font-size: 0.9375rem; font-weight: 700; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">
+                      Total R/J (Colonne B)
+                    </div>
+                    <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                      <i data-feather="lock" style="width: 12px; height: 12px; display: inline; vertical-align: middle;"></i>
+                      Référence: feuille 'jour' (lecture seule)
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div style="background: #fef2f2; border-radius: 10px; padding: 1rem; border: 2px solid #fecaca; text-align: center;">
+                  <div style="font-size: 0.688rem; color: #dc2626; font-weight: 600; margin-bottom: 0.25rem;">PREVIOUS</div>
+                  <div id="dueback-total-b-previous" style="font-size: 1.25rem; font-weight: 700; color: #991b1b; font-family: 'Courier New', monospace;">$0.00</div>
+                </div>
+                <div style="background: #f0fdf4; border-radius: 10px; padding: 1rem; border: 2px solid #bbf7d0; text-align: center;">
+                  <div style="font-size: 0.688rem; color: #059669; font-weight: 600; margin-bottom: 0.25rem;">CURRENT</div>
+                  <div id="dueback-total-b-current" style="font-size: 1.25rem; font-weight: 700; color: #065f46; font-family: 'Courier New', monospace;">$0.00</div>
+                </div>
+                <div id="dueback-total-b-net-box" style="background: #eff6ff; border-radius: 10px; padding: 1rem; border: 2px solid #3b82f6; text-align: center;">
+                  <div style="font-size: 0.688rem; color: #1d4ed8; font-weight: 600; margin-bottom: 0.25rem;">NET</div>
+                  <div id="dueback-total-b-net" style="font-size: 1.5rem; font-weight: 800; color: #1e3a8a; font-family: 'Courier New', monospace;">$0.00</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column Z Total (Calculated from entries) -->
+            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border: 1px solid #e5e7eb;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <div style="background: #3b82f6; padding: 0.5rem; border-radius: 8px;">
+                  <i data-feather="trending-up" style="color: white; width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                  <div style="font-size: 0.9375rem; font-weight: 700; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Total Réceptionnistes (Colonne Z)
+                  </div>
+                  <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                    <i data-feather="calculator" style="width: 12px; height: 12px; display: inline; vertical-align: middle;"></i>
+                    Calculé automatiquement des entrées
+                  </div>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                <div style="background: #fef2f2; border-radius: 10px; padding: 1rem; border: 2px solid #fecaca; text-align: center;">
+                  <div style="font-size: 0.688rem; color: #dc2626; font-weight: 600; margin-bottom: 0.25rem;">PREVIOUS</div>
+                  <div id="dueback-total-previous" style="font-size: 1.25rem; font-weight: 700; color: #991b1b; font-family: 'Courier New', monospace;">$0.00</div>
+                </div>
+                <div style="background: #f0fdf4; border-radius: 10px; padding: 1rem; border: 2px solid #bbf7d0; text-align: center;">
+                  <div style="font-size: 0.688rem; color: #059669; font-weight: 600; margin-bottom: 0.25rem;">CURRENT</div>
+                  <div id="dueback-total-current" style="font-size: 1.25rem; font-weight: 700; color: #065f46; font-family: 'Courier New', monospace;">$0.00</div>
+                </div>
+                <div id="dueback-total-z-net-box" style="background: #eff6ff; border-radius: 10px; padding: 1rem; border: 2px solid #3b82f6; text-align: center;">
+                  <div style="font-size: 0.688rem; color: #1d4ed8; font-weight: 600; margin-bottom: 0.25rem;">NET</div>
+                  <div id="dueback-total-net" style="font-size: 1.5rem; font-weight: 800; color: #1e3a8a; font-family: 'Courier New', monospace;">$0.00</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <div class="form-actions">
+            <button onclick="saveDuebackData(event)"
+                    style="background: #10b981;
+                           color: white;
+                           border: none;
+                           padding: 1rem 2.5rem;
+                           border-radius: 12px;
+                           font-weight: 700;
+                           font-size: 1.125rem;
+                           cursor: pointer;
+                           transition: all 0.2s ease;
+                           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                           display: inline-flex;
+                           align-items: center;
+                           gap: 0.75rem;
+                           text-transform: uppercase;
+                           letter-spacing: 0.5px;"
+                    onmouseover="this.style.background='#059669'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0, 0, 0, 0.15)';"
+                    onmouseout="this.style.background='#10b981'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0, 0, 0, 0.1)';">
+              <i data-feather="save" style="width: 22px; height: 22px;"></i>
+              <span>Enregistrer dans RJ</span>
+            </button>
+          </div>
+
+          <div id="dueback-message" style="margin-top:1.5rem; display:none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);"></div>
+
+          <!-- Live Excel Preview -->
+          <div id="dueback-preview-container" style="margin-top: 2rem; display: none;">
+            <div style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); border: 1px solid #e5e7eb;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                <div style="background: #10b981; padding: 0.5rem; border-radius: 8px;">
+                  <i data-feather="file-text" style="color: white; width: 18px; height: 18px;"></i>
+                </div>
+                <div>
+                  <div style="font-size: 0.9375rem; font-weight: 700; color: #1f2937; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Aperçu Excel DUBACK#
+                  </div>
+                  <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.125rem;">
+                    <i data-feather="eye" style="width: 12px; height: 12px; display: inline; vertical-align: middle;"></i>
+                    Mise à jour en temps réel
+                  </div>
+                </div>
+              </div>
+
+              <!-- Excel Table Preview -->
+              <div id="dueback-excel-preview" style="overflow-x: auto; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
+                <!-- Table will be generated by JavaScript -->
+              </div>
+
+              <!-- Legend -->
+              <div style="margin-top: 1rem; padding: 0.75rem; background: #f3f4f6; border-radius: 8px; font-size: 0.75rem; color: #6b7280;">
+                <strong>Légende:</strong>
+                <span style="margin-left: 1rem; color: #8b5cf6;">🔒 Colonne B</span> = Référence jour!BY (lecture seule)
+                <span style="margin-left: 1rem; color: #3b82f6;">🧮 Colonne Z</span> = SUM(C:Y) + B (calculé)
+              </div>
+            </div>
+          </div>
+        </div>
+{% endif %}
+
+<script>
+// ============================================================================
+// DUEBACK TAB - Dynamic Receptionist Loading & Entry Management
+// ============================================================================
+
+let duebackEntries = [];
+let duebackReceptionists = [];
+
+/**
+ * Load receptionists dynamically from the DUBACK# sheet headers.
+ * Falls back to an empty list if no file is loaded.
+ */
+async function loadDuebackReceptionists() {
+  const select = document.getElementById('dueback-receptionist-select');
+  if (!select) return;
+
+  try {
+    const res = await csrfFetch('/api/rj/dueback/receptionists');
+    if (!res.ok) return;
+    const data = await res.json();
+
+    if (data.success && data.receptionists) {
+      duebackReceptionists = data.receptionists;
+
+      select.innerHTML = '<option value="">Sélectionner un réceptionniste...</option>';
+      data.receptionists.forEach(r => {
+        // Skip the 'Total' column
+        if (r.col_letter === 'Z' || (r.last_name || '').toLowerCase() === 'total') return;
+        const option = document.createElement('option');
+        option.value = r.col_letter;
+        option.textContent = r.full_name || `${r.first_name} ${r.last_name}`.trim();
+        select.appendChild(option);
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load receptionists:', e);
+  }
+
+  // Also load current day
+  try {
+    const statusRes = await csrfFetch('/api/rj/status');
+    const status = await statusRes.json();
+    if (status.current_day) {
+      const dayEl = document.getElementById('dueback-current-day');
+      if (dayEl) dayEl.textContent = status.current_day;
+
+      // Load existing DueBack data for this day
+      await loadDuebackDayData(status.current_day);
+    }
+  } catch (e) {
+    console.error('Failed to load status:', e);
+  }
+}
+
+/**
+ * Load existing DueBack data for a specific day from the file.
+ */
+async function loadDuebackDayData(day) {
+  try {
+    const res = await csrfFetch(`/api/rj/read/DUBACK%23?day=${day}`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    if (data.success && data.data && data.data.days && data.data.days[day]) {
+      const dayData = data.data.days[day];
+
+      // Update Column B totals
+      const bPrev = document.getElementById('dueback-total-b-previous');
+      const bCurr = document.getElementById('dueback-total-b-current');
+      const bNet = document.getElementById('dueback-total-b-net');
+      if (bPrev) bPrev.textContent = '$' + (dayData.rj_previous || 0).toFixed(2);
+      if (bCurr) bCurr.textContent = '$' + (dayData.rj_nouveau || 0).toFixed(2);
+      if (bNet) bNet.textContent = '$' + ((dayData.rj_previous || 0) + (dayData.rj_nouveau || 0)).toFixed(2);
+
+      // Auto-populate entries from existing data
+      const previous = dayData.previous || {};
+      const nouveau = dayData.nouveau || {};
+      const allCols = new Set([...Object.keys(previous), ...Object.keys(nouveau)]);
+
+      allCols.forEach(col => {
+        const prevData = previous[col];
+        const newData = nouveau[col];
+        const prevAmt = prevData ? prevData.amount : 0;
+        const newAmt = newData ? newData.amount : 0;
+        const name = (prevData || newData)?.name || col;
+
+        if (prevAmt !== 0 || newAmt !== 0) {
+          duebackEntries.push({
+            col: col,
+            name: name,
+            previous: prevAmt,
+            current: newAmt
+          });
+        }
+      });
+
+      renderDuebackEntries();
+    }
+  } catch (e) {
+    console.error('Failed to load DueBack day data:', e);
+  }
+}
+
+function addDuebackEntry() {
+  const select = document.getElementById('dueback-receptionist-select');
+  const prevInput = document.getElementById('dueback-previous-input');
+  const currInput = document.getElementById('dueback-current-input');
+
+  const col = select.value;
+  const previous = parseFloat(prevInput.value) || 0;
+  const current = parseFloat(currInput.value) || 0;
+
+  if (!col) {
+    notify('Veuillez sélectionner un réceptionniste', 'error');
+    return;
+  }
+
+  if (previous === 0 && current === 0) {
+    notify('Veuillez entrer au moins un montant', 'error');
+    return;
+  }
+
+  // Find name from receptionists list or option text
+  const selectedOption = select.options[select.selectedIndex];
+  const name = selectedOption ? selectedOption.textContent : col;
+
+  // Check for duplicate
+  const existing = duebackEntries.findIndex(e => e.col === col);
+  if (existing >= 0) {
+    duebackEntries[existing].previous = previous;
+    duebackEntries[existing].current = current;
+    notify(`${name} mis à jour`, 'info');
+  } else {
+    duebackEntries.push({ col, name, previous, current });
+    notify(`${name} ajouté`, 'success');
+  }
+
+  // Reset form
+  select.value = '';
+  prevInput.value = '';
+  currInput.value = '';
+
+  renderDuebackEntries();
+}
+
+function removeDuebackEntry(index) {
+  duebackEntries.splice(index, 1);
+  renderDuebackEntries();
+}
+
+function renderDuebackEntries() {
+  const container = document.getElementById('dueback-entries-container');
+  const list = document.getElementById('dueback-entries-list');
+  const countEl = document.getElementById('dueback-entries-count');
+
+  if (!container || !list) return;
+
+  if (duebackEntries.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'block';
+  if (countEl) countEl.textContent = duebackEntries.length;
+
+  let totalPrev = 0, totalCurr = 0;
+
+  list.innerHTML = duebackEntries.map((entry, idx) => {
+    totalPrev += entry.previous;
+    totalCurr += entry.current;
+    const net = entry.previous + entry.current;
+    return `
+      <div class="dueback-receptionist-entry" style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:0.75rem; align-items:center; padding:0.75rem 1rem; background:white; border-radius:10px; border:1px solid #e5e7eb; margin-bottom:0.5rem;">
+        <div style="font-weight:600; color:#1f2937;">
+          <select style="display:none;"><option value="${entry.col}" selected></option></select>
+          <span style="color:#6b7280; font-size:0.75rem;">${entry.col}</span> ${entry.name}
+        </div>
+        <div class="dueback-prev-input-wrap" style="text-align:right; color:#dc2626; font-weight:600; font-family:'Courier New',monospace;">
+          <input type="hidden" class="dueback-prev-input" value="${entry.previous}">
+          $${entry.previous.toFixed(2)}
+        </div>
+        <div class="dueback-curr-input-wrap" style="text-align:right; color:#059669; font-weight:600; font-family:'Courier New',monospace;">
+          <input type="hidden" class="dueback-curr-input" value="${entry.current}">
+          $${entry.current.toFixed(2)}
+        </div>
+        <div style="text-align:right; color:#1e40af; font-weight:700; font-family:'Courier New',monospace;">$${net.toFixed(2)}</div>
+        <button onclick="removeDuebackEntry(${idx})" style="background:none; border:none; cursor:pointer; color:#dc2626; padding:0.25rem;">
+          <i data-feather="x-circle" style="width:18px; height:18px;"></i>
+        </button>
+      </div>
+    `;
+  }).join('');
+
+  // Update Column Z totals
+  const totalNet = totalPrev + totalCurr;
+  const tPrev = document.getElementById('dueback-total-previous');
+  const tCurr = document.getElementById('dueback-total-current');
+  const tNet = document.getElementById('dueback-total-net');
+  if (tPrev) tPrev.textContent = '$' + totalPrev.toFixed(2);
+  if (tCurr) tCurr.textContent = '$' + totalCurr.toFixed(2);
+  if (tNet) tNet.textContent = '$' + totalNet.toFixed(2);
+
+  if (typeof feather !== 'undefined') feather.replace();
+}
+
+// Auto-load on tab render
+loadDuebackReceptionists();
+</script>

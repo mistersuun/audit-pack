@@ -1,0 +1,942 @@
+{% extends "base.html" %}
+{% block title %}Balances{% endblock %}
+
+{% block content %}
+<div class="balances-page">
+  <div class="page-header">
+    <div>
+      <h1>Balances & Réconciliation</h1>
+      <p>Vérifiez les balances de comptes et effectuez la réconciliation de caisse.</p>
+    </div>
+  </div>
+
+  <!-- Balance Cards -->
+  <div class="balance-grid">
+    <div class="balance-card">
+      <div class="balance-header">
+        <i data-feather="credit-card"></i>
+        <h3>AR Balance</h3>
+      </div>
+      <div class="balance-value" id="ar-balance">$0.00</div>
+      <div class="balance-secondary">
+        <span>Hier: </span>
+        <span id="ar-previous">$0.00</span>
+      </div>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-header">
+        <i data-feather="users"></i>
+        <h3>Guest Ledger</h3>
+      </div>
+      <div class="balance-value" id="guest-ledger">$0.00</div>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-header">
+        <i data-feather="building"></i>
+        <h3>City Ledger</h3>
+      </div>
+      <div class="balance-value" id="city-ledger">$0.00</div>
+    </div>
+
+    <div class="balance-card verification">
+      <div class="balance-header">
+        <i data-feather="check-circle"></i>
+        <h3>Vérification</h3>
+      </div>
+      <div class="verify-row">
+        <span>Attendu:</span>
+        <span id="expected-balance">$0.00</span>
+      </div>
+      <div class="verify-row">
+        <span>Actuel:</span>
+        <span id="actual-balance">$0.00</span>
+      </div>
+      <div class="verify-row diff">
+        <span>Différence:</span>
+        <span id="balance-diff">$0.00</span>
+      </div>
+      <div id="balance-status" class="balance-status">
+        <!-- Filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Two column layout -->
+  <div class="two-columns">
+    <!-- Cash Calculator -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>
+          <i data-feather="calculator"></i>
+          Calculatrice de Caisse
+        </h3>
+        <button onclick="clearCalculator()" class="btn-small">Effacer</button>
+      </div>
+
+      <div class="calculator-grid">
+        <!-- Bills -->
+        <div class="denom-section">
+          <h4>Billets</h4>
+          <div class="denom-row">
+            <label>$100 ×</label>
+            <input type="number" data-value="100" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$50 ×</label>
+            <input type="number" data-value="50" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$20 ×</label>
+            <input type="number" data-value="20" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$10 ×</label>
+            <input type="number" data-value="10" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$5 ×</label>
+            <input type="number" data-value="5" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+        </div>
+
+        <!-- Coins -->
+        <div class="denom-section">
+          <h4>Pièces</h4>
+          <div class="denom-row">
+            <label>$2 ×</label>
+            <input type="number" data-value="2" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$1 ×</label>
+            <input type="number" data-value="1" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$0.25 ×</label>
+            <input type="number" data-value="0.25" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$0.10 ×</label>
+            <input type="number" data-value="0.10" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+          <div class="denom-row">
+            <label>$0.05 ×</label>
+            <input type="number" data-value="0.05" class="denom-input" min="0" value="0" oninput="calculateTotal()">
+            <span class="denom-total">$0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="calculator-total">
+        <span>TOTAL COMPTÉ:</span>
+        <span id="cash-total">$0.00</span>
+      </div>
+    </div>
+
+    <!-- Cash Reconciliation -->
+    <div class="section-card">
+      <div class="section-header">
+        <h3>
+          <i data-feather="check-square"></i>
+          Réconciliation Caisse
+        </h3>
+      </div>
+
+      <div class="recon-summary">
+        <div class="recon-row">
+          <span class="recon-label">Système (Lightspeed):</span>
+          <span class="recon-value" id="system-lightspeed">$0.00</span>
+        </div>
+        <div class="recon-row">
+          <span class="recon-label">Système (Positouch):</span>
+          <span class="recon-value" id="system-positouch">$0.00</span>
+        </div>
+        <div class="recon-row total">
+          <span class="recon-label">Total Système:</span>
+          <span class="recon-value" id="system-total">$0.00</span>
+        </div>
+      </div>
+
+      <div class="recon-input">
+        <label>Montant Compté:</label>
+        <input type="number" step="0.01" id="counted-amount" placeholder="Entrez le montant compté ou utilisez la calculatrice">
+        <button onclick="applyCalculatedAmount()" class="btn-small">
+          <i data-feather="arrow-left"></i> Utiliser calculatrice
+        </button>
+      </div>
+
+      <div class="recon-result" id="recon-result" style="display: none;">
+        <div class="result-row">
+          <span>Variance:</span>
+          <span id="recon-variance">$0.00</span>
+        </div>
+        <div id="recon-status" class="recon-status"></div>
+      </div>
+
+      <div class="recon-actions">
+        <textarea id="recon-notes" placeholder="Notes optionnelles..." rows="2"></textarea>
+        <button onclick="submitReconciliation()" class="btn-primary">
+          <i data-feather="save"></i> Soumettre Réconciliation
+        </button>
+      </div>
+
+      <div id="recon-message" style="margin-top: 1rem; display: none;"></div>
+    </div>
+  </div>
+
+  <!-- Month End Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3>
+        <i data-feather="calendar"></i>
+        Fin de Mois - <span id="month-name">Janvier 2026</span>
+      </h3>
+    </div>
+
+    <div class="month-summary">
+      <div class="month-stat">
+        <span class="stat-label">Jours complétés</span>
+        <span class="stat-value" id="days-completed">0</span>
+      </div>
+      <div class="month-stat">
+        <span class="stat-label">Jours restants</span>
+        <span class="stat-value" id="days-remaining">0</span>
+      </div>
+      <div class="month-stat">
+        <span class="stat-label">Revenus Total</span>
+        <span class="stat-value" id="month-revenue">$0</span>
+      </div>
+      <div class="month-stat">
+        <span class="stat-label">Dépôts Total</span>
+        <span class="stat-value" id="month-deposits">$0</span>
+      </div>
+    </div>
+
+    <h4 style="margin: 1.5rem 0 1rem;">Checklist de Clôture</h4>
+    <div id="month-checklist" class="checklist">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+
+  <!-- Reconciliation History -->
+  <div class="section-card">
+    <div class="section-header">
+      <h3>
+        <i data-feather="clock"></i>
+        Historique des Réconciliations
+      </h3>
+    </div>
+
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Système</th>
+            <th>Compté</th>
+            <th>Variance</th>
+            <th>Auditeur</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr>
+            <td colspan="6" class="empty-state">Chargement...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<style>
+.balances-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.75rem;
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+/* Balance Grid */
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.balance-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.balance-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.balance-header h3 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.balance-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.balance-secondary {
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+}
+
+.balance-card.verification {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+
+.verify-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+}
+
+.verify-row.diff {
+  font-weight: 600;
+  padding-top: 0.5rem;
+  border-top: 1px solid #bae6fd;
+}
+
+.balance-status {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.balance-status.ok {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.balance-status.alert {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Two Columns */
+.two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+/* Section Card */
+.section-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+}
+
+/* Calculator */
+.calculator-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.denom-section h4 {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.denom-row {
+  display: grid;
+  grid-template-columns: 70px 60px 1fr;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.denom-row label {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.denom-input {
+  width: 100%;
+  padding: 0.375rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.denom-total {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+.calculator-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+/* Reconciliation */
+.recon-summary {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.recon-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.recon-row.total {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color);
+  font-weight: 600;
+}
+
+.recon-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.recon-input input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.recon-result {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.recon-status {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.recon-status.ok {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.recon-status.variance {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.recon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recon-actions textarea {
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  resize: none;
+}
+
+/* Buttons */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-small {
+  padding: 0.375rem 0.75rem;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.813rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.btn-small:hover {
+  background: var(--bg-secondary);
+}
+
+/* Month End */
+.month-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.month-stat {
+  background: var(--bg-secondary);
+  padding: 1rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.month-stat .stat-label {
+  display: block;
+  font-size: 0.813rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.25rem;
+}
+
+.month-stat .stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+/* Checklist */
+.checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.checklist-item:hover {
+  background: #e5e7eb;
+}
+
+.checklist-item.completed {
+  background: #dcfce7;
+}
+
+.checklist-item input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.checklist-item .task-text {
+  flex: 1;
+}
+
+.checklist-item.completed .task-text {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.checklist-item .completed-by {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+/* Table */
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: 0.813rem;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem !important;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge.ok { background: #dcfce7; color: #16a34a; }
+.status-badge.variance { background: #fee2e2; color: #dc2626; }
+
+.positive { color: #16a34a; }
+.negative { color: #dc2626; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .balance-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .two-columns {
+    grid-template-columns: 1fr;
+  }
+  .month-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .balance-grid {
+    grid-template-columns: 1fr;
+  }
+  .calculator-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+  feather.replace();
+  loadDailyBalance();
+  loadCashReconciliation();
+  loadMonthEnd();
+  loadReconciliationHistory();
+});
+
+// Load daily balance
+async function loadDailyBalance() {
+  try {
+    const res = await fetch('/api/balances/daily');
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('ar-balance').textContent = formatCurrency(data.accounts?.ar_balance || 0);
+      document.getElementById('ar-previous').textContent = formatCurrency(data.accounts?.ar_previous || 0);
+      document.getElementById('guest-ledger').textContent = formatCurrency(data.accounts?.guest_ledger || 0);
+      document.getElementById('city-ledger').textContent = formatCurrency(data.accounts?.city_ledger || 0);
+
+      document.getElementById('expected-balance').textContent = formatCurrency(data.verification?.expected || 0);
+      document.getElementById('actual-balance').textContent = formatCurrency(data.verification?.actual || 0);
+      document.getElementById('balance-diff').textContent = formatCurrency(data.verification?.difference || 0);
+
+      const statusEl = document.getElementById('balance-status');
+      if (data.verification?.is_balanced) {
+        statusEl.className = 'balance-status ok';
+        statusEl.textContent = '✓ Balancé';
+      } else {
+        statusEl.className = 'balance-status alert';
+        statusEl.textContent = '⚠️ Écart détecté';
+      }
+    }
+  } catch (err) {
+    console.error('Error loading balance:', err);
+  }
+}
+
+// Load cash reconciliation data
+async function loadCashReconciliation() {
+  try {
+    const res = await fetch('/api/balances/reconciliation/cash');
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('system-lightspeed').textContent = formatCurrency(data.system?.lightspeed || 0);
+      document.getElementById('system-positouch').textContent = formatCurrency(data.system?.positouch || 0);
+      document.getElementById('system-total').textContent = formatCurrency(data.system?.total || 0);
+
+      if (data.counted !== null) {
+        document.getElementById('counted-amount').value = data.counted;
+        updateReconciliationResult(data.system?.total || 0, data.counted);
+      }
+    }
+  } catch (err) {
+    console.error('Error loading reconciliation:', err);
+  }
+}
+
+// Calculate cash total from calculator
+function calculateTotal() {
+  let total = 0;
+  document.querySelectorAll('.denom-input').forEach(input => {
+    const value = parseFloat(input.dataset.value);
+    const count = parseInt(input.value) || 0;
+    const subtotal = value * count;
+
+    input.nextElementSibling.textContent = formatCurrency(subtotal);
+    total += subtotal;
+  });
+
+  document.getElementById('cash-total').textContent = formatCurrency(total);
+}
+
+// Clear calculator
+function clearCalculator() {
+  document.querySelectorAll('.denom-input').forEach(input => {
+    input.value = 0;
+  });
+  calculateTotal();
+}
+
+// Apply calculated amount to reconciliation
+function applyCalculatedAmount() {
+  const total = parseFloat(document.getElementById('cash-total').textContent.replace(/[$,]/g, '')) || 0;
+  document.getElementById('counted-amount').value = total.toFixed(2);
+
+  const systemTotal = parseFloat(document.getElementById('system-total').textContent.replace(/[$,]/g, '')) || 0;
+  updateReconciliationResult(systemTotal, total);
+}
+
+// Update reconciliation result
+function updateReconciliationResult(systemTotal, counted) {
+  const variance = counted - systemTotal;
+
+  const resultEl = document.getElementById('recon-result');
+  resultEl.style.display = 'block';
+
+  document.getElementById('recon-variance').textContent = formatCurrency(variance);
+  document.getElementById('recon-variance').className = variance >= 0 ? 'positive' : 'negative';
+
+  const statusEl = document.getElementById('recon-status');
+  if (Math.abs(variance) < 0.01) {
+    statusEl.className = 'recon-status ok';
+    statusEl.textContent = '✓ Caisse balancée';
+  } else {
+    statusEl.className = 'recon-status variance';
+    statusEl.textContent = variance > 0 ? '⚠️ Surplus de caisse' : '⚠️ Déficit de caisse';
+  }
+}
+
+// Submit reconciliation
+async function submitReconciliation() {
+  const counted = parseFloat(document.getElementById('counted-amount').value) || 0;
+  const notes = document.getElementById('recon-notes').value;
+  const msgEl = document.getElementById('recon-message');
+
+  if (!counted) {
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = '<div style="padding: 1rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">Veuillez entrer un montant compté</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/balances/reconciliation/cash', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ counted, notes })
+    });
+
+    const data = await res.json();
+
+    msgEl.style.display = 'block';
+    if (data.success) {
+      msgEl.innerHTML = `<div style="padding: 1rem; background: #dcfce7; color: #16a34a; border-radius: 8px;">✓ Réconciliation enregistrée. Variance: ${formatCurrency(data.variance)}</div>`;
+      loadReconciliationHistory();
+    } else {
+      msgEl.innerHTML = `<div style="padding: 1rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">✗ ${data.error}</div>`;
+    }
+
+    setTimeout(() => { msgEl.style.display = 'none'; }, 5000);
+  } catch (err) {
+    msgEl.style.display = 'block';
+    msgEl.innerHTML = '<div style="padding: 1rem; background: #fee2e2; color: #dc2626; border-radius: 8px;">✗ Erreur réseau</div>';
+  }
+}
+
+// Load month end data
+async function loadMonthEnd() {
+  try {
+    const res = await fetch('/api/balances/month-end');
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('month-name').textContent = data.month;
+      document.getElementById('days-completed').textContent = data.days_completed;
+      document.getElementById('days-remaining').textContent = data.days_remaining;
+      document.getElementById('month-revenue').textContent = formatCurrency(data.totals?.revenue || 0);
+      document.getElementById('month-deposits').textContent = formatCurrency(data.totals?.deposits || 0);
+
+      // Render checklist
+      const checklistEl = document.getElementById('month-checklist');
+      if (data.checklist && data.checklist.length > 0) {
+        checklistEl.innerHTML = data.checklist.map(item => `
+          <div class="checklist-item ${item.completed ? 'completed' : ''}" onclick="toggleChecklistItem(${item.id}, ${!item.completed})">
+            <input type="checkbox" ${item.completed ? 'checked' : ''} onclick="event.stopPropagation(); toggleChecklistItem(${item.id}, ${!item.completed})">
+            <span class="task-text">${item.task}</span>
+            ${item.completed_by ? `<span class="completed-by">Par ${item.completed_by}</span>` : ''}
+          </div>
+        `).join('');
+      } else {
+        checklistEl.innerHTML = '<p style="color: var(--text-secondary);">Aucune tâche de fin de mois</p>';
+      }
+    }
+  } catch (err) {
+    console.error('Error loading month end:', err);
+  }
+}
+
+// Toggle checklist item
+async function toggleChecklistItem(itemId, completed) {
+  try {
+    await fetch(`/api/balances/month-end/checklist/${itemId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ completed })
+    });
+    loadMonthEnd();
+  } catch (err) {
+    console.error('Error toggling item:', err);
+  }
+}
+
+// Load reconciliation history
+async function loadReconciliationHistory() {
+  try {
+    const res = await fetch('/api/balances/reconciliation/history?days=30');
+    const data = await res.json();
+
+    const tbody = document.getElementById('history-body');
+
+    if (data.success && data.records && data.records.length > 0) {
+      tbody.innerHTML = data.records.map(r => `
+        <tr>
+          <td>${r.date}</td>
+          <td>${formatCurrency(r.system_total)}</td>
+          <td>${formatCurrency(r.counted_total)}</td>
+          <td class="${r.variance >= 0 ? 'positive' : 'negative'}">${formatCurrency(r.variance)}</td>
+          <td>${r.auditor || '-'}</td>
+          <td>
+            <span class="status-badge ${r.is_balanced ? 'ok' : 'variance'}">
+              ${r.is_balanced ? '✓ OK' : '⚠️ Variance'}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    } else {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Aucun historique disponible</td></tr>';
+    }
+  } catch (err) {
+    console.error('Error loading history:', err);
+    document.getElementById('history-body').innerHTML = '<tr><td colspan="6" class="empty-state">Erreur de chargement</td></tr>';
+  }
+}
+
+// Listen for counted amount changes
+document.getElementById('counted-amount').addEventListener('input', function() {
+  const counted = parseFloat(this.value) || 0;
+  const systemTotal = parseFloat(document.getElementById('system-total').textContent.replace(/[$,]/g, '')) || 0;
+  updateReconciliationResult(systemTotal, counted);
+});
+
+// Utility
+function formatCurrency(value) {
+  return '$' + (value || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+</script>
+{% endblock %}

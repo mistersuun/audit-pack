@@ -2,8 +2,34 @@
 Utility to fetch weather forecast using OpenWeather API (free tier).
 """
 
+import os
 import requests
 from datetime import datetime
+
+
+def get_current_weather_data():
+    """
+    Get current weather conditions for Laval, QC as structured data.
+
+    Returns:
+        dict with temperature, feels_like, description, humidity, wind_speed
+    """
+    api_key = os.getenv('OPENWEATHER_API_KEY', 'REMOVED_KEY')
+    lat, lon = 45.5800, -73.7600
+
+    url = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={api_key}&units=metric&lang=fr"
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+    data = response.json()
+
+    return {
+        'temperature': round(data['main']['temp']),
+        'feels_like': round(data['main']['feels_like']),
+        'description': data['weather'][0]['description'].capitalize(),
+        'humidity': data['main']['humidity'],
+        'wind_speed': round(data['wind']['speed'] * 3.6),  # km/h
+        'icon': data['weather'][0]['icon'],
+    }
 
 def get_weather_forecast_laval():
     """
@@ -14,7 +40,7 @@ def get_weather_forecast_laval():
     try:
         # Using a free OpenWeather API key (public for this project)
         # You can get your own at: https://openweathermap.org/api
-        api_key = "REMOVED_KEY"  # Free tier key
+        api_key = os.getenv('OPENWEATHER_API_KEY', 'REMOVED_KEY')
 
         # Coordinates for Laval, QC
         lat, lon = 45.5800, -73.7600

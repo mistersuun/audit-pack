@@ -1,0 +1,10422 @@
+========================================================================================================================
+MACROS VBA EXTRAITES DU FICHIER RJ
+========================================================================================================================
+
+
+========================================================================================================================
+Module: Module1.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module1
+========================================================================================================================
+
+Attribute VB_Name = "Module1"
+Sub Imp_RJ()
+Attribute Imp_RJ.VB_Description = "Macro enregistrée le 10/03/99 par Stéphane Tessier"
+Attribute Imp_RJ.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' impression de la feuille de travail RJ
+' Macro mise à jour le 08/05/99 par Patrice Hall
+'
+
+    Sheets("rj").Select
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    Sheets("controle").Select
+
+End Sub
+
+
+
+========================================================================================================================
+Module: ThisWorkbook.cls
+Stream: _VBA_PROJECT_CUR/VBA/ThisWorkbook
+========================================================================================================================
+
+Attribute VB_Name = "ThisWorkbook"
+Attribute VB_Base = "0{00020819-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil1.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil1
+========================================================================================================================
+
+Attribute VB_Name = "Feuil1"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil2.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil2
+========================================================================================================================
+
+Attribute VB_Name = "Feuil2"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil3.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil3
+========================================================================================================================
+
+Attribute VB_Name = "Feuil3"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil4.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil4
+========================================================================================================================
+
+Attribute VB_Name = "Feuil4"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil5.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil5
+========================================================================================================================
+
+Attribute VB_Name = "Feuil5"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Private Sub Worksheet_SelectionChange(ByVal Target As Excel.Range)
+
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil6.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil6
+========================================================================================================================
+
+Attribute VB_Name = "Feuil6"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil15.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil15
+========================================================================================================================
+
+Attribute VB_Name = "Feuil15"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil8.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil8
+========================================================================================================================
+
+Attribute VB_Name = "Feuil8"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil9.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil9
+========================================================================================================================
+
+Attribute VB_Name = "Feuil9"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil10.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil10
+========================================================================================================================
+
+Attribute VB_Name = "Feuil10"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil11.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil11
+========================================================================================================================
+
+Attribute VB_Name = "Feuil11"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Module29.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module29
+========================================================================================================================
+
+Attribute VB_Name = "Module29"
+Sub bancaire()
+Attribute bancaire.VB_ProcData.VB_Invoke_Func = " \n14"
+
+Value = InputBox("voulez vous vraiment effacer o/n")
+
+If Value = "o" Or Value = "O" Then
+
+    Application.Goto Reference:="eff.conc.bancaire"
+    Selection.ClearContents
+    Range("b9").Select
+Else
+    Range("b9").Select
+End If
+
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil13.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil13
+========================================================================================================================
+
+Attribute VB_Name = "Feuil13"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil14.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil14
+========================================================================================================================
+
+Attribute VB_Name = "Feuil14"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Module2.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module2
+========================================================================================================================
+
+Attribute VB_Name = "Module2"
+Sub efface_sal()
+Attribute efface_sal.VB_Description = "Macro enregistrée le 16/03/99 par Stéphane Tessier"
+Attribute efface_sal.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' efface_sal Macro
+' Macro enregistrée le 16/03/99 par Stéphane Tessier
+'
+
+'
+    Application.Goto Reference:="données_sal"
+    Selection.ClearContents
+    Range("C6").Select
+End Sub
+
+
+
+========================================================================================================================
+Module: Module3.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module3
+========================================================================================================================
+
+Attribute VB_Name = "Module3"
+Sub calcul_sal()
+Attribute calcul_sal.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' calcul_sal Macro
+' Macro enregistrée le 28-07-1998 par Stéphane Tessier
+'
+' Touche de raccourci du clavier: Ctrl+s
+'
+    Dim test
+    test = Trim(Str(Worksheets("controle").Range("vjour").Value))
+    test = "_" + test
+    MsgBox test
+    Application.Goto Reference:="calcul_sal"
+    Selection.Copy
+'    Application.Goto Reference:="sal_1"
+    Application.Goto Reference:=test
+
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    Application.Goto Worksheets("salaires").Range("A1"), Scroll:=False
+
+End Sub
+
+
+
+
+
+========================================================================================================================
+Module: Feuil21.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil21
+========================================================================================================================
+
+Attribute VB_Name = "Feuil21"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil16.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil16
+========================================================================================================================
+
+Attribute VB_Name = "Feuil16"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Module4.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module4
+========================================================================================================================
+
+Attribute VB_Name = "Module4"
+Sub calcul_carte()
+Attribute calcul_carte.VB_ProcData.VB_Invoke_Func = " \n14"
+
+
+' Macro mise à jour le 25-04-1999 par Patrice Hall
+
+' copie le totale des cartes de crédit de la feuille transelect
+' directement sur la feuille de travail jour! a la colonne défini cc_ (colonne BF )
+' selon la date du jour entré sur la feuille contrôle! à la constante vjour
+
+Dim test
+Dim test2
+Value = InputBox("La date a-t-elle été changé o/n?")
+
+If Value = "o" Or Value = "O" Then
+        Application.Goto Reference:="total_carte_crédit"
+        Selection.Copy
+        
+        test = Trim(Str(Worksheets("controle").Range("vjour").Value))
+        test = "CC_" + test
+                
+                
+                Application.Goto Reference:=test
+        
+        Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+        Application.CutCopyMode = False
+        
+       
+Else:
+
+End If
+   Application.Goto Reference:="home_controle"
+End Sub
+Sub aller_jour()
+Attribute aller_jour.VB_ProcData.VB_Invoke_Func = " \n14"
+
+
+' Macro mise à jour le 25-04-1999 par Patrice Hall
+
+' va directement à la feuille de travail jour!
+' a la colonne défini J_ (colonne d) selon la date du jour entré
+' sur la feuille contrôle! à la constante vjour
+
+Dim test
+
+        test = Trim(Str(Worksheets("controle").Range("vjour").Value))
+        test = "j_" + test
+    
+        Application.Goto Reference:=test
+
+End Sub
+
+Sub aller_trans()
+Attribute aller_trans.VB_ProcData.VB_Invoke_Func = " \n14"
+
+' Macro mise à jour le 25-04-1999 par Patrice Hall
+
+
+' home_trans est le nom défini pour la case B8
+' de la feuille de travail transelect
+
+    Application.Goto Reference:="home_trans"
+
+End Sub
+Sub imp_depot()
+Attribute imp_depot.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' IMPRIMER Macro
+' Macro enregistrée le 04/01/99 par Sheraton Laval
+'
+
+'
+    ActiveWindow.SelectedSheets.PrintOut Copies:=2
+    Range("A10").Select
+    
+End Sub
+Sub Eff_depot()
+Attribute Eff_depot.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Efface Macro
+' Macro enregistrée le 04/01/99 par Sheraton Laval
+'
+
+'Range("A10:K42").Select
+
+    
+  Application.Goto Reference:="eff_depot"
+    Selection.ClearContents
+    Range("A10").Select
+End Sub
+Sub aller_depot()
+Attribute aller_depot.VB_ProcData.VB_Invoke_Func = " \n14"
+
+' Macro mise à jour le 25-04-1999 par Patrice Hall
+
+' home_dépôt est le nom défini pour la case A10
+' de la feuille de travail dépôt
+
+    Application.Goto Reference:="home_dépot"
+    Application.Goto Reference:="home_dépot2"
+
+End Sub
+
+
+
+
+========================================================================================================================
+Module: Module5.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module5
+========================================================================================================================
+
+Attribute VB_Name = "Module5"
+Sub eff_daily()
+Attribute eff_daily.VB_Description = "Macro enregistrée le 17/03/99 par Stéphane Tessier"
+Attribute eff_daily.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' eff_trans Macro
+' Macro modifié le 16/08/99 Par Patrice Hall
+
+'
+    Application.Goto Reference:="eff_daily"
+   Range("B2:B41,B44,B47").Select
+    Selection.ClearContents
+    
+End Sub
+Sub imp_trans()
+Attribute imp_trans.VB_Description = "Macro enregistrée le 17/03/99 par Stéphane Tessier"
+Attribute imp_trans.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' imp_trans Macro
+' Macro modifié le 16/08/99 Par Patrice Hall
+'
+
+'
+    ActiveWindow.SelectedSheets.PrintOut Copies:=3, Collate:=True
+    
+End Sub
+
+
+
+========================================================================================================================
+Module: Module6.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module6
+========================================================================================================================
+
+Attribute VB_Name = "Module6"
+
+Sub imp_rapport()
+Attribute imp_rapport.VB_Description = "Macro enregistrée le 17/03/99 par Stéphane Tessier"
+Attribute imp_rapport.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' imp_rapport Macro
+' Macro enregistrée le 17/03/99 par Stéphane Tessier
+'
+
+'
+    Sheets(Array("Rapp_p1", "Rapp_p2", "Rapp_p3", "Etat rev")).Select
+    Sheets("Rapp_p1").Activate
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    Sheets("controle").Select
+End Sub
+Sub Imp_entreej()
+Attribute Imp_entreej.VB_Description = "Macro enregistrée le 17/03/99 par Stéphane Tessier"
+Attribute Imp_entreej.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Imp_entreej Macro
+' Macro enregistrée le 17/03/99 par Stéphane Tessier
+'
+
+'
+    ActiveWindow.ScrollWorkbookTabs Sheets:=1
+    ActiveWindow.ScrollWorkbookTabs Sheets:=1
+    Sheets("ENTREE_JOURNAL").Select
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1, Collate:=True
+    Sheets("controle").Select
+End Sub
+
+
+
+========================================================================================================================
+Module: Module10.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module10
+========================================================================================================================
+
+Attribute VB_Name = "Module10"
+
+
+
+========================================================================================================================
+Module: Module7.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module7
+========================================================================================================================
+
+Attribute VB_Name = "Module7"
+
+Sub efface()
+Attribute efface.VB_Description = "Macro enregistrée le 16/04/99 par Sheraton Laval"
+Attribute efface.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' efface_recap Macro
+' Macro enregistrée le 16/04/99 par Sheraton Laval
+'
+
+'
+    Range("B6:C20").Select
+    Selection.ClearContents
+    Range("D9:D10").Select
+    Selection.ClearContents
+    Range("D12:D14").Select
+    Selection.ClearContents
+    Range("D16").Select
+    Selection.ClearContents
+    Range("D18").Select
+    Selection.ClearContents
+End Sub
+
+
+
+========================================================================================================================
+Module: Module8.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module8
+========================================================================================================================
+
+Attribute VB_Name = "Module8"
+
+
+
+========================================================================================================================
+Module: Module9.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module9
+========================================================================================================================
+
+Attribute VB_Name = "Module9"
+Sub aller_recap()
+Attribute aller_recap.VB_Description = "Macro enregistrée le 16/04/99 par Sheraton Laval"
+Attribute aller_recap.VB_ProcData.VB_Invoke_Func = " \n14"
+
+' Macro mise à jour le 24/04/99 par Patrice Hall
+
+' home_recap est le nom défini pour la case A1
+' de la feuille de travail recap
+
+    Application.Goto Reference:="home_recap"
+End Sub
+
+
+
+========================================================================================================================
+Module: Module12.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module12
+========================================================================================================================
+
+Attribute VB_Name = "Module12"
+Sub efface_valet()
+Attribute efface_valet.VB_Description = "Macro enregistrée le 17/04/99 par Sheraton Laval"
+Attribute efface_valet.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' efface_valet Macro
+' Macro enregistrée le 17/04/99 par Sheraton Laval
+'
+Application.Goto Reference:="effvalet"
+    Selection.ClearContents
+    Range("b9").Select
+ 
+    
+End Sub
+
+
+
+========================================================================================================================
+Module: Module11.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module11
+========================================================================================================================
+
+Attribute VB_Name = "Module11"
+Sub efface_recap()
+Attribute efface_recap.VB_Description = "Macro enregistrée le 17/04/99 par Sheraton Laval"
+Attribute efface_recap.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' efface_recap Macro
+' Macro enregistrée le 17/04/99 par Patrice Hall
+
+'
+    Application.Goto Reference:="eff_recap"
+    Selection.ClearContents
+    
+    Range("A1").Select
+End Sub
+Sub imprime_recap()
+Attribute imprime_recap.VB_Description = "Macro enregistrée le 17/04/99 par Sheraton Laval"
+Attribute imprime_recap.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' imprime_recap Macro
+' Macro enregistrée le 17/04/99 par Patrice Hall
+'
+    Range("A1:f26").Select
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1, Collate:=True
+    
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil17.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil17
+========================================================================================================================
+
+Attribute VB_Name = "Feuil17"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil18.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil18
+========================================================================================================================
+
+Attribute VB_Name = "Feuil18"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil7.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil7
+========================================================================================================================
+
+Attribute VB_Name = "Feuil7"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Module13.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module13
+========================================================================================================================
+
+Attribute VB_Name = "Module13"
+
+
+
+========================================================================================================================
+Module: Module14.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module14
+========================================================================================================================
+
+Attribute VB_Name = "Module14"
+
+
+
+========================================================================================================================
+Module: Module15.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module15
+========================================================================================================================
+
+Attribute VB_Name = "Module15"
+Sub envoie_dans_jour()
+Attribute envoie_dans_jour.VB_Description = "Macro enregistrée le 18/04/99 par Sheraton Laval"
+Attribute envoie_dans_jour.VB_ProcData.VB_Invoke_Func = " \n14"
+
+' Macro enregistrée le 18/04/99 par Patrice Hall
+'
+
+'
+Value = InputBox("La date a-t-elle été changé o/n?")
+
+If Value = "o" Or Value = "O" Then
+    
+    Range("h19:n19").Select
+    Selection.Copy
+    
+    Dim test
+    test = Trim(Str(Worksheets("controle").Range("vjour").Value))
+    test = "ar_" + test
+    Application.Goto Reference:=test
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    
+ 'home_controle est le nom défini a la case vjour de la feuille de travail controle
+Else: Application.Goto Reference:="home_controle"
+
+End If
+       
+    
+End Sub
+Sub test()
+Attribute test.VB_Description = "Macro enregistrée le 18/04/99 par Sheraton Laval"
+Attribute test.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' test Macro
+' Macro enregistrée le 18/04/99 par Sheraton Laval
+'
+
+'
+    ActiveWindow.ScrollWorkbookTabs Position:=xlFirst
+    Sheets("controle").Select
+    Application.Run "'avril-99.xls'!aller_recap"
+    Range("H14:N14").Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    ActiveWindow.ScrollWorkbookTabs Position:=xlFirst
+    
+    Range("BR20").Select
+    ActiveSheet.Paste
+End Sub
+
+
+
+========================================================================================================================
+Module: Module16.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module16
+========================================================================================================================
+
+Attribute VB_Name = "Module16"
+Sub aller_valet()
+Attribute aller_valet.VB_ProcData.VB_Invoke_Func = " \n14"
+
+' Macro mise à jour le 26/04/99 par Patrice Hall
+
+' home_valet est le nom défini pour la case b3
+' de la feuille de travail valet
+
+ Application.Goto Reference:="home_valet"
+ 
+End Sub
+
+
+
+========================================================================================================================
+Module: Module17.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module17
+========================================================================================================================
+
+Attribute VB_Name = "Module17"
+Sub message()
+Attribute message.VB_ProcData.VB_Invoke_Func = " \n14"
+
+
+
+
+End Sub
+
+
+
+========================================================================================================================
+Module: Module18.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module18
+========================================================================================================================
+
+Attribute VB_Name = "Module18"
+Sub Imp_RJ_finale()
+Attribute Imp_RJ_finale.VB_ProcData.VB_Invoke_Func = " \n14"
+
+' impression en 6 copies du rapport journalier
+' enregistrée par Patrice Hall le 04/02/18
+
+'*****nom est le nom défini sur la feuille de travail rj à la case n2 ******
+ Sheets("rj").Select
+ 
+ Range("q2").Select
+ 
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+Range("r2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+Range("s2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+Range("t2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+Range("u2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+Range("v2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+Range("w2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+
+    
+Range("x2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+     
+Range("y2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+   
+     
+Range("z2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+
+Range("aa2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    
+    
+Range("ab2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+
+
+Range("ac2").Select
+
+    Selection.Copy
+    Application.Goto Reference:="nom"
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:= _
+        False, Transpose:=False
+    Application.CutCopyMode = False
+    ActiveWindow.SelectedSheets.PrintOut Copies:=1
+    Sheets("controle").Select
+    
+'dernière sélection pour effacé le contenu à la case nom
+
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil26.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil26
+========================================================================================================================
+
+Attribute VB_Name = "Feuil26"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Module19.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module19
+========================================================================================================================
+
+Attribute VB_Name = "Module19"
+Sub recherche_auto_geac()
+Attribute recherche_auto_geac.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' recherche_auto_geac Macro
+' Macro enregistrée le 23/05/99 par Patrice Hall
+
+''''''''''''''''''''il faut changer le nom de value4 chaque mois selon le rapport journalier du mois''''''''''''''''''''
+
+''''''''''''''''''''il faut changer value2 chaque mois selon le mois ex. 199908 = août 1999'''''''''''''
+
+Dim valeur
+
+Value2 = "C:\geac-ux\199908"
+value3 = InputBox("date du jour dans ce format : jj")
+value4 = "aout-99.xls"
+Value = Value2 + value3
+
+ChDir Value
+        
+        Workbooks.OpenText FileName:=Value + "\dailyr.858", Origin:= _
+        xlWindows, StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(Array(0, _
+        1), Array(31, 1), Array(44, 1), Array(61, 1), Array(78, 1), Array(96, 1), Array(115, 1))
+     
+Range("b16").Select          '''revenue de chambre dans le daily revenue    ( dailr.858 )
+
+value1 = InputBox("le revenue de chambre " & Chr(13) & Chr(10) & " vous parait-il normal??? o/n?")
+
+If value1 = "O" Or value1 = "o" Then
+''''si le revenue de chambre est correct copie l'info du daily revenue (dailyr.858) dans (rapport GEAC)
+''''sinon copie l'info du daily revenue (dailyr01.858) dans (rapport GEAC)
+
+        Windows("dailyr.858").Activate
+        Range("B16,b19:b23,b28:b32,b37:b41,b46:b50,b55:b59,b68:b72,b76:b79,b83:b93,b97,b109:b112,b147,b154:b157,b161:b172,b177:b179,b191:b193,b205:b209,b213:b241,b251:b262,b269:b278").Select
+        Application.CutCopyMode = False
+        Selection.Copy
+        Windows(value4).Activate
+        Range("a5").Select
+        ActiveSheet.Paste
+    
+        Windows("dailyr.858").Activate
+        ActiveWorkbook.Close
+    
+    
+Else
+        Windows("dailyr.858").Activate
+        ActiveWorkbook.Close
+        
+        Workbooks.OpenText FileName:=Value + "\dailyr01.858", Origin:= _
+        xlWindows, StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(Array(0, _
+        1), Array(32, 1), Array(45, 1), Array(61, 1), Array(78, 1), Array(96, 1), Array(115, 1))
+    
+        Windows("dailyr01.858").Activate
+        Range("B16,b19:b23,b28:b32,b37:b41,b46:b50,b55:b59,b68:b72,b76:b79,b83:b92,b96,b108:b111,b146,b153:b156,b160:b171,b176:b178,b190:b192,b204:b208,b212:b240,b250:b261,b268:b277").Select
+        Application.CutCopyMode = False
+        Selection.Copy
+        Windows(value4).Activate
+        Range("a5").Select
+        ActiveSheet.Paste
+    
+    
+        Windows("dailyr01.858").Activate
+        ActiveWorkbook.Close
+        
+End If
+    
+    Dim test
+    test = value3
+    test = "chambre_" + test
+    Range("a5:a150").Select
+    Selection.Copy
+    
+    Application.Goto Reference:=test
+    Selection.PasteSpecial Paste:=xlValues, Operation:=xlNone, SkipBlanks:=False _
+        , Transpose:=True
+        
+  '     Workbooks.OpenText FileName:=Value + "\glsum.858", Origin:= _
+  '     xlWindows, StartRow:=1, DataType:=xlFixedWidth, FieldInfo:=Array(Array(0, _
+  '     1), Array(34, 1), Array(55, 1), Array(61, 1), Array(71, 1), Array(78, 1), Array(91, 1), _
+  '     Array(105, 1), Array(118, 1))
+        
+  '     Cells.Find(What:="yesterday ending", After:=ActiveCell, LookIn:= _
+  '     xlFormulas, LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:= _
+  '     xlNext, MatchCase:=False).Activate
+    
+       
+  '     Dim donnée
+  '     donnée = InputBox("inscrivez A+le numéro de la ligne")
+  '     Dim findesdonnées
+  '     findesdonnées = InputBox("inscrivez I+le numéro de la ligne finale")
+  '     Range(donnée, findesdonnées).Select
+  '     Selection.Copy
+  '     Range("a1").Select
+  '     ActiveSheet.Paste
+  '     Range("b1, b2, b3").Select
+  '     Selection.Copy
+  '     Range("j1").Select
+  '     ActiveSheet.Paste
+  '     Range("f4").Select
+  '     Selection.Copy
+  '     Range("k1").Select
+  '     ActiveSheet.Paste
+  '     Range("g5").Select
+  '     Selection.Copy
+  '     Range("l1").Select
+  '     ActiveSheet.Paste
+  '     Range("h4").Select
+  '     Selection.Copy
+  '     Range("m1").Select
+  '     ActiveSheet.Paste
+  '     Range("i5").Select
+  '     Selection.Copy
+  '     Range("n1").Select
+  '     ActiveSheet.Paste
+  '     Range("j1:n3").Select
+  '     Selection.Copy
+  '
+  '     Windows("glsum.858").Activate
+  '     ActiveWorkbook.Close
+        
+  '     Windows("aout-99.xls").Activate
+  '     Range("a250").Select
+  '     ActiveSheet.Paste
+    
+    
+    
+   
+          
+End Sub
+    
+    
+
+
+
+
+========================================================================================================================
+Module: Module20.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module20
+========================================================================================================================
+
+Attribute VB_Name = "Module20"
+Sub Macro2()
+Attribute Macro2.VB_Description = "Macro enregistrée le 06/06/99 par Sheraton Laval"
+Attribute Macro2.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro2 Macro
+' Macro enregistrée le 06/06/99 par Sheraton Laval
+'
+
+'
+    Range("D5:D111").Select
+    Selection.Copy
+    Range("D2").Select
+    Selection.PasteSpecial Paste:=xlAll, Operation:=xlNone, SkipBlanks:=False _
+        , Transpose:=True
+End Sub
+
+
+
+========================================================================================================================
+Module: Module21.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module21
+========================================================================================================================
+
+Attribute VB_Name = "Module21"
+Sub Macro1()
+Attribute Macro1.VB_Description = "Macro enregistrée le 07/06/99 par Sheraton Laval"
+Attribute Macro1.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro1 Macro
+' Macro enregistrée le 07/06/99 par Sheraton Laval
+'
+
+'
+Dim nomdefini
+nomdefini = InputBox("donner un nom a definir")
+
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_01", RefersToR1C1:= _
+        "='rapport geac'!R2C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_02", RefersToR1C1:= _
+        "='rapport geac'!R3C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_03", RefersToR1C1:= _
+        "='rapport geac'!R4C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_04", RefersToR1C1:= _
+        "='rapport geac'!R5C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_05", RefersToR1C1:= _
+        "='rapport geac'!R6C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_06", RefersToR1C1:= _
+        "='rapport geac'!R7C3"
+    
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_07", RefersToR1C1:= _
+        "='rapport geac'!R8C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_08", RefersToR1C1:= _
+        "='rapport geac'!R9C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_09", RefersToR1C1:= _
+        "='rapport geac'!R10C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_10", RefersToR1C1:= _
+        "='rapport geac'!R11C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_11", RefersToR1C1:= _
+        "='rapport geac'!R12C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_12", RefersToR1C1:= _
+        "='rapport geac'!R13C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_13", RefersToR1C1:= _
+        "='rapport geac'!R14C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_14", RefersToR1C1:= _
+        "='rapport geac'!R15C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_15", RefersToR1C1:= _
+        "='rapport geac'!R16C3"
+    
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_16", RefersToR1C1:= _
+        "='rapport geac'!R17C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_17", RefersToR1C1:= _
+        "='rapport geac'!R18C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_18", RefersToR1C1:= _
+        "='rapport geac'!R19C3"
+    
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_19", RefersToR1C1:= _
+        "='rapport geac'!R20C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_20", RefersToR1C1:= _
+        "='rapport geac'!R21C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_21", RefersToR1C1:= _
+        "='rapport geac'!R22C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_22", RefersToR1C1:= _
+        "='rapport geac'!R23C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_23", RefersToR1C1:= _
+        "='rapport geac'!R24C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_24", RefersToR1C1:= _
+        "='rapport geac'!R25C3"
+    
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_25", RefersToR1C1:= _
+        "='rapport geac'!R26C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_26", RefersToR1C1:= _
+        "='rapport geac'!R27C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_27", RefersToR1C1:= _
+        "='rapport geac'!R28C3"
+    
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_28", RefersToR1C1:= _
+        "='rapport geac'!R29C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_29", RefersToR1C1:= _
+        "='rapport geac'!R30C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_30", RefersToR1C1:= _
+        "='rapport geac'!R31C3"
+        
+    ActiveWorkbook.Names.Add Name:=nomdefini + "_31", RefersToR1C1:= _
+        "='rapport geac'!R32C3"
+        
+   
+End Sub
+Sub Macro3()
+Attribute Macro3.VB_Description = "Macro enregistrée le 07/06/99 par Sheraton Laval"
+Attribute Macro3.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro3 Macro
+' Macro enregistrée le 07/06/99 par Sheraton Laval
+'
+
+'
+    Range("D8").Select
+    ActiveWorkbook.Names.Add Name:="chambre_08", RefersToR1C1:= _
+        "='rapport geac'!R8C4"
+End Sub
+
+
+
+========================================================================================================================
+Module: Module22.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module22
+========================================================================================================================
+
+Attribute VB_Name = "Module22"
+Sub imprime_valet_20180()
+Attribute imprime_valet_20180.VB_Description = "Macro enregistrée le 08/06/99 par Sheraton Laval"
+Attribute imprime_valet_20180.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' imprime_valet_20180 Macro
+' Macro enregistrée le 08/06/99 par Sheraton Laval
+'
+
+'
+    Range("valetapayer").Select
+    Selection.PrintOut Copies:=2, Collate:=True
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil20.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil20
+========================================================================================================================
+
+Attribute VB_Name = "Feuil20"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Module23.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module23
+========================================================================================================================
+
+Attribute VB_Name = "Module23"
+Option Explicit
+
+Sub Macro4()
+Attribute Macro4.VB_Description = "Macro enregistrée le 12/07/99 par Sheraton Laval"
+Attribute Macro4.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro4 Macro
+' Macro enregistrée le 12/07/99 par Sheraton Laval
+'
+
+'
+   
+        
+        
+           
+    
+    
+
+End Sub
+
+
+
+========================================================================================================================
+Module: Module24.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module24
+========================================================================================================================
+
+Attribute VB_Name = "Module24"
+Option Explicit
+
+Sub Macro5()
+Attribute Macro5.VB_Description = "Macro enregistrée le 28/07/99 par Sheraton Laval"
+Attribute Macro5.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro5 Macro
+' Macro enregistrée le 28/07/99 par Sheraton Laval
+'
+
+'
+End Sub
+
+
+
+========================================================================================================================
+Module: Module25.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module25
+========================================================================================================================
+
+Attribute VB_Name = "Module25"
+Option Explicit
+
+Sub entrer_nom_jour()
+Attribute entrer_nom_jour.VB_Description = "Macro enregistrée le 30/07/99 par Sheraton Laval"
+Attribute entrer_nom_jour.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' entrer_nom_jour Macro
+' Macro enregistrée le 30/07/99 par Sheraton Laval
+'
+Dim nom
+
+nom = InputBox("inserer le nom")
+Range("d3").Select
+    ActiveCell.FormulaR1C1 = "=" + nom + "_01"
+ 
+
+    ActiveCell.FormulaR1C1 = "=" + nom + "_02"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_03"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_04"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_05"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_06"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_07"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_08"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_09"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_10"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_11"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_12"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_13"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_14"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_15"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_16"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_17"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_18"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_19"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_20"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_21"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_22"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_23"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_24"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_25"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_26"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_27"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_28"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_29"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_30"
+    ActiveCell.FormulaR1C1 = "=" + nom + "_31"
+    
+End Sub
+
+
+
+========================================================================================================================
+Module: Module26.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module26
+========================================================================================================================
+
+Attribute VB_Name = "Module26"
+Option Explicit
+
+Sub efface_rapport_geac()
+Attribute efface_rapport_geac.VB_Description = "Macro enregistrée le 11/08/99 par Sheraton Laval"
+Attribute efface_rapport_geac.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' efface_rapport_geac Macro
+' Macro enregistrée le 11/08/99 par Patrice Hall
+  
+    Range( _
+        "B6:C6,E6,G6:H6,J6,B8:C8,E8,G8:H8,J8,B12:C12,E12,G12:H12,J12,B32:C32,E32,B37:C37,E37,B41:C41,G41:H41,B44:C44,J44:K44,B47:C47,E47,B50:C50,E50,B53:C53,E53" _
+        ).Select
+    Selection.ClearContents
+    Range("a1").Select
+    
+End Sub
+Sub Macro7()
+Attribute Macro7.VB_Description = "Macro enregistrée le 11/08/99 par Sheraton Laval"
+Attribute Macro7.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro7 Macro
+' Macro enregistrée le 11/08/99 par Sheraton Laval
+'
+
+'
+Dim test
+Dim test2
+Dim valeur
+test = "ao" + "3"
+test2 = "ao" + "4"
+valeur = "machine_liqueur"
+    Range(test).Select
+    ActiveCell.FormulaR1C1 = "=" + valeur + "_01"
+    Range(test2).Select
+    ActiveCell.FormulaR1C1 = "=" + valeur + "_02"
+    Range("AO2").Select
+   
+End Sub
+Sub Macro9()
+Attribute Macro9.VB_Description = "Macro enregistrée le 11/08/99 par Sheraton Laval"
+Attribute Macro9.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' Macro9 Macro
+' Macro enregistrée le 11/08/99 par Sheraton Laval
+'
+
+'
+    ActiveCell.FormulaR1C1 = "=machine_liqueur_01"
+    Range("AO3").Select
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil22.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil22
+========================================================================================================================
+
+Attribute VB_Name = "Feuil22"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Option Explicit
+
+
+
+
+========================================================================================================================
+Module: Feuil231.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil231
+========================================================================================================================
+
+Attribute VB_Name = "Feuil231"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Option Explicit
+
+
+
+
+========================================================================================================================
+Module: Module27.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module27
+========================================================================================================================
+
+Attribute VB_Name = "Module27"
+Option Explicit
+
+Sub somm_valet()
+Attribute somm_valet.VB_Description = "Macro enregistrée le 25/11/99 par Patrice Hall"
+Attribute somm_valet.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' somm_valet Macro
+' Macro enregistrée le 25/11/99 par Patrice Hall
+'
+   
+    Application.Goto Reference:="aller_somm_valet"
+   
+End Sub
+Sub surplus()
+Attribute surplus.VB_Description = "Macro enregistrée le 25/11/99 par Patrice Hall"
+Attribute surplus.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' surplus_et_déficit Macro
+' Macro enregistrée le 25/11/99 par Patrice Hall
+'
+  Application.Goto Reference:="Surplus_et_déficit_de_caisse"
+
+
+End Sub
+
+Sub film_spectra()
+Attribute film_spectra.VB_Description = "Macro enregistrée le 25/11/99 par Patrice Hall"
+Attribute film_spectra.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' film_spectra Macro
+' Macro enregistrée le 25/11/99 par Patrice Hall
+'
+
+'
+   Application.Goto Reference:="Spectravision"
+
+End Sub
+
+
+
+========================================================================================================================
+Module: Module28.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module28
+========================================================================================================================
+
+Attribute VB_Name = "Module28"
+Option Explicit
+
+Sub geac_ux_report()
+Attribute geac_ux_report.VB_Description = "Macro enregistrée le 26/11/99 par Patrice Hall"
+Attribute geac_ux_report.VB_ProcData.VB_Invoke_Func = " \n14"
+'
+' geac_ux_report Macro
+' Macro enregistrée le 26/11/99 par Patrice Hall
+'
+
+'
+    ActiveWindow.ScrollWorkbookTabs Position:=xlLast
+    Sheets("geac_ux").Select
+    ActiveWindow.LargeScroll Down:=-1
+    ActiveWindow.smallscroll Down:=-1
+    ActiveWindow.LargeScroll Down:=-1
+    Range("B3").Select
+End Sub
+
+
+
+========================================================================================================================
+Module: Feuil12.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil12
+========================================================================================================================
+
+Attribute VB_Name = "Feuil12"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil19.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil19
+========================================================================================================================
+
+Attribute VB_Name = "Feuil19"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil23.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil23
+========================================================================================================================
+
+Attribute VB_Name = "Feuil23"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil29.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil29
+========================================================================================================================
+
+Attribute VB_Name = "Feuil29"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil24.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil24
+========================================================================================================================
+
+Attribute VB_Name = "Feuil24"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Feuil30.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil30
+========================================================================================================================
+
+Attribute VB_Name = "Feuil30"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+
+
+
+
+
+
+========================================================================================================================
+Module: Graph1.cls
+Stream: _VBA_PROJECT_CUR/VBA/Graph1
+========================================================================================================================
+
+Attribute VB_Name = "Graph1"
+Attribute VB_Base = "0{00020819-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil25.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil25
+========================================================================================================================
+
+Attribute VB_Name = "Feuil25"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil27.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil27
+========================================================================================================================
+
+Attribute VB_Name = "Feuil27"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil28.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil28
+========================================================================================================================
+
+Attribute VB_Name = "Feuil28"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: UserForm1.frm
+Stream: _VBA_PROJECT_CUR/VBA/UserForm1
+========================================================================================================================
+
+Attribute VB_Name = "UserForm1"
+Attribute VB_Base = "0{BEF72242-3526-421E-90DD-593B86600A6A}{F0BFA64A-39DA-4054-B92F-2C51BB32373D}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = False
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = False
+
+
+
+========================================================================================================================
+Module: Feuil35.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil35
+========================================================================================================================
+
+Attribute VB_Name = "Feuil35"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil32.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil32
+========================================================================================================================
+
+Attribute VB_Name = "Feuil32"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil36.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil36
+========================================================================================================================
+
+Attribute VB_Name = "Feuil36"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Module30.bas
+Stream: _VBA_PROJECT_CUR/VBA/Module30
+========================================================================================================================
+
+Attribute VB_Name = "Module30"
+Sub eff_trans()
+'
+' eff_trans Macro
+' Macro modifié le 29/03/23 Par Jean-Philippe Pouliot
+
+'
+    Application.Goto Reference:="eff_trans"
+   Range("B9:U13,X9:X13,B20:H24,J20:P24").Select
+    Range("P20").Activate
+    Selection.ClearContents
+    Range("B9").Select
+    
+End Sub
+
+
+
+
+========================================================================================================================
+Module: Graphique1.cls
+Stream: _VBA_PROJECT_CUR/VBA/Graphique1
+========================================================================================================================
+
+Attribute VB_Name = "Graphique1"
+Attribute VB_Base = "0{00020819-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil31.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil31
+========================================================================================================================
+
+Attribute VB_Name = "Feuil31"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil33.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil33
+========================================================================================================================
+
+Attribute VB_Name = "Feuil33"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil34.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil34
+========================================================================================================================
+
+Attribute VB_Name = "Feuil34"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+
+
+========================================================================================================================
+Module: Feuil37.cls
+Stream: _VBA_PROJECT_CUR/VBA/Feuil37
+========================================================================================================================
+
+Attribute VB_Name = "Feuil37"
+Attribute VB_Base = "0{00020820-0000-0000-C000-000000000046}"
+Attribute VB_GlobalNameSpace = False
+Attribute VB_Creatable = False
+Attribute VB_PredeclaredId = True
+Attribute VB_Exposed = True
+Attribute VB_TemplateDerived = False
+Attribute VB_Customizable = True
+
+

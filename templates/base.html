@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}Audit de Nuit{% endblock %} | Sheraton Laval</title>
 
     <!-- Google Fonts - Inter -->
@@ -14,6 +15,16 @@
     <script src="https://unpkg.com/feather-icons"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Theme: light by default, apply dark if user chose it -->
+    <script>
+        (function() {
+            var t = localStorage.getItem('theme');
+            if (t === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        })();
+    </script>
+
+    {% block head %}{% endblock %}
 </head>
 <body>
     {% if session.get('authenticated') %}
@@ -31,7 +42,54 @@
         </div>
 
         <div class="sidebar-menu">
-            <a href="{{ url_for('checklist.index') }}" class="menu-item {% if request.path == url_for('checklist.index') %}active{% endif %}">
+            {% set user_role = session.get('user_role_type', '') %}
+            {% set is_auditor = user_role in ('night_auditor', 'front_desk_supervisor') %}
+            {% set is_direction = user_role in ('gm', 'gsm', 'accounting') %}
+            {% set is_admin = user_role == 'admin' %}
+
+            {# ═══ DIRECTION sidebar (gm / gsm / accounting) ═══ #}
+            {% if is_direction %}
+            <a href="{{ url_for('direction.direction_page') }}" class="menu-item {% if request.path == '/direction' %}active{% endif %}">
+                <i data-feather="grid"></i>
+                <span>Tableau de bord</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Rapports</div>
+
+            <a href="{{ url_for('direction.direction_page') }}#rj" class="menu-item {% if request.path == '/direction' and 'rj' in (request.args.get('section','')) %}active{% endif %}" onclick="if(window.switchSection){switchSection('rj',this);return false;}">
+                <i data-feather="file-text"></i>
+                <span>Rapport Journalier</span>
+            </a>
+            <a href="{{ url_for('direction.direction_page') }}#reports" class="menu-item" onclick="if(window.switchSection){switchSection('reports',this);return false;}">
+                <i data-feather="bar-chart-2"></i>
+                <span>Rapports Direction</span>
+            </a>
+            <a href="{{ url_for('direction.direction_page') }}#trends" class="menu-item" onclick="if(window.switchSection){switchSection('trends',this);return false;}">
+                <i data-feather="trending-up"></i>
+                <span>Tendances</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Analyse</div>
+
+            <a href="{{ url_for('manager.manager_page') }}" class="menu-item {% if request.path.startswith('/manager') %}active{% endif %}">
+                <i data-feather="activity"></i>
+                <span>Analytics</span>
+            </a>
+
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Ressources</div>
+
+            <a href="{{ url_for('checklist.documentation') }}" class="menu-item {% if request.path.startswith('/documentation') %}active{% endif %}">
+                <i data-feather="book-open"></i>
+                <span>Documentation</span>
+            </a>
+            {% endif %}
+
+            {# ═══ AUDITOR + ADMIN sidebar ═══ #}
+            {% if is_auditor or is_admin %}
+            <a href="{{ url_for('dashboard.dashboard_page') }}" class="menu-item {% if request.path == '/dashboard' %}active{% endif %}">
                 <i data-feather="layout"></i>
                 <span>Dashboard</span>
             </a>
@@ -39,24 +97,92 @@
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-title">Outils</div>
 
+            <div class="menu-group {% if request.path.startswith('/checklist') %}open{% endif %}">
+                <a href="/checklist" class="menu-item menu-parent {% if request.path.startswith('/checklist') %}active{% endif %}" onclick="toggleMenuGroup(event, this)">
+                    <i data-feather="check-square"></i>
+                    <span>Checklist</span>
+                    <i data-feather="chevron-down" class="menu-arrow"></i>
+                </a>
+                <div class="menu-children">
+                    <a href="/checklist?role=front" class="menu-item menu-child {% if request.path.startswith('/checklist') and request.args.get('role') == 'front' %}active{% endif %}">
+                        <i data-feather="monitor"></i><span>Front Desk</span>
+                    </a>
+                    <a href="/checklist?role=back" class="menu-item menu-child {% if request.path.startswith('/checklist') and request.args.get('role') == 'back' %}active{% endif %}">
+                        <i data-feather="server"></i><span>Back Office</span>
+                    </a>
+                </div>
+            </div>
             <a href="{{ url_for('checklist.documentation') }}" class="menu-item {% if request.path.startswith('/documentation') %}active{% endif %}">
                 <i data-feather="book-open"></i>
                 <span>Documentation</span>
             </a>
-            <a href="{{ url_for('rj.rj_page') }}" class="menu-item {% if request.path.startswith('/rj') %}active{% endif %}">
-                <i data-feather="file-text"></i>
-                <span>Gestion RJ</span>
+            <a href="{{ url_for('rj_native.native_page') }}" class="menu-item {% if request.path == '/rj/native' %}active{% endif %}">
+                <i data-feather="edit-3"></i>
+                <span>Rapport Journalier</span>
             </a>
-            <a href="#" class="menu-item disabled" title="Bientôt disponible">
+            <div class="menu-group {% if request.path.startswith('/crm') %}open{% endif %}">
+                <a href="{{ url_for('crm.crm_page') }}" class="menu-item menu-parent {% if request.path.startswith('/crm') %}active{% endif %}" onclick="toggleMenuGroup(event, this)">
+                    <i data-feather="briefcase"></i>
+                    <span>CRM</span>
+                    <i data-feather="chevron-down" class="menu-arrow"></i>
+                </a>
+                <div class="menu-children">
+                    <a href="{{ url_for('crm.crm_page', tab='overview') }}" class="menu-item menu-child {% if request.args.get('tab', 'overview') == 'overview' and request.path.startswith('/crm') %}active{% endif %}">
+                        <i data-feather="grid"></i><span>Vue d'ensemble</span>
+                    </a>
+                    <a href="{{ url_for('crm.crm_page', tab='revenue') }}" class="menu-item menu-child {% if request.args.get('tab') == 'revenue' %}active{% endif %}">
+                        <i data-feather="trending-up"></i><span>Revenue Mgmt</span>
+                    </a>
+                    <a href="{{ url_for('crm.crm_page', tab='fb') }}" class="menu-item menu-child {% if request.args.get('tab') == 'fb' %}active{% endif %}">
+                        <i data-feather="coffee"></i><span>F&B Intelligence</span>
+                    </a>
+                    <a href="{{ url_for('crm.crm_page', tab='labor') }}" class="menu-item menu-child {% if request.args.get('tab') == 'labor' %}active{% endif %}">
+                        <i data-feather="users"></i><span>Main-d'œuvre</span>
+                    </a>
+                    <a href="{{ url_for('crm.crm_page', tab='cash') }}" class="menu-item menu-child {% if request.args.get('tab') == 'cash' %}active{% endif %}">
+                        <i data-feather="shield"></i><span>Cash & Récon</span>
+                    </a>
+                    <a href="{{ url_for('crm.crm_page', tab='payments') }}" class="menu-item menu-child {% if request.args.get('tab') == 'payments' %}active{% endif %}">
+                        <i data-feather="credit-card"></i><span>Paiements</span>
+                    </a>
+                    <a href="{{ url_for('crm.crm_page', tab='pnl') }}" class="menu-item menu-child {% if request.args.get('tab') == 'pnl' %}active{% endif %}">
+                        <i data-feather="pie-chart"></i><span>P&L & Budget</span>
+                    </a>
+                </div>
+            </div>
+            <div class="menu-group {% if request.path.startswith('/generators') or request.path.startswith('/pod') or request.path.startswith('/hp') %}open{% endif %}">
+                <a href="{{ url_for('generators.generators_page') }}" class="menu-item menu-parent {% if request.path.startswith('/generators') %}active{% endif %}" onclick="toggleMenuGroup(event, this)">
+                    <i data-feather="printer"></i>
+                    <span>Générateurs</span>
+                    <i data-feather="chevron-down" class="menu-arrow"></i>
+                </a>
+                <div class="menu-children">
+                    <a href="{{ url_for('generators.generators_page') }}" class="menu-item menu-child {% if request.path.startswith('/generators') and not request.path.startswith('/pod') and not request.path.startswith('/hp') %}active{% endif %}">
+                        <i data-feather="file-text"></i><span>Documents</span>
+                    </a>
+                    <a href="{{ url_for('pod.pod_page') }}" class="menu-item menu-child {% if request.path.startswith('/pod') %}active{% endif %}">
+                        <i data-feather="dollar-sign"></i><span>Pourboires</span>
+                    </a>
+                    <a href="{{ url_for('hp.hp_page') }}" class="menu-item menu-child {% if request.path.startswith('/hp') %}active{% endif %}">
+                        <i data-feather="gift"></i><span>HP / Admin</span>
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {# ═══ ADMIN: liens Direction ═══ #}
+            {% if is_admin %}
+            <div class="sidebar-divider"></div>
+            <div class="sidebar-section-title">Direction</div>
+            <a href="{{ url_for('manager.manager_page') }}" class="menu-item {% if request.path.startswith('/manager') %}active{% endif %}">
+                <i data-feather="activity"></i>
+                <span>Analytics</span>
+            </a>
+            <a href="{{ url_for('direction.direction_page') }}" class="menu-item {% if request.path.startswith('/direction') %}active{% endif %}">
                 <i data-feather="bar-chart-2"></i>
-                <span>Rapports</span>
-                <span class="badge">Soon</span>
+                <span>Portail Direction</span>
             </a>
-            <a href="#" class="menu-item disabled" title="Bientôt disponible">
-                <i data-feather="calculator"></i>
-                <span>Balances</span>
-                <span class="badge">Soon</span>
-            </a>
+            {% endif %}
 
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-title">Support</div>
@@ -65,25 +191,22 @@
                 <i data-feather="help-circle"></i>
                 <span>FAQ</span>
             </a>
-            <a href="{{ url_for('checklist.documentation') }}" class="menu-item {% if request.path.startswith('/documentation') %}active{% endif %}">
-                <i data-feather="file-text"></i>
-                <span>Guides</span>
-            </a>
         </div>
 
         <div class="sidebar-footer">
-            <div class="user-profile">
-                <div class="user-avatar">NA</div>
+            <a href="{{ url_for('auth_v2.profile') }}" class="user-profile" style="text-decoration: none; color: inherit;">
+                <div class="user-avatar">{{ (session.get('user_name', 'U')[0] or 'U')|upper }}</div>
                 <div class="user-info">
-                    <div class="user-name">Night Auditor</div>
-                    <div class="user-role">{{ session.get('user_role', 'Auditor')|capitalize }}</div>
+                    <div class="user-name">{{ session.get('user_name', 'Utilisateur') }}</div>
+                    <div class="user-role">{{ user_role_label }}</div>
                 </div>
-            </div>
-            <a href="#" onclick="changeRole()" class="menu-item" style="color: #6c757d;">
-                <i data-feather="users"></i>
-                <span>Changer Poste</span>
             </a>
-            <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
+            <a href="javascript:void(0)" class="menu-item theme-toggle-btn" onclick="toggleTheme()" title="Changer le theme">
+                <i data-feather="sun" class="theme-icon-sun" style="display:none"></i>
+                <i data-feather="moon" class="theme-icon-moon"></i>
+                <span class="theme-label">Mode sombre</span>
+            </a>
+            <a href="{{ url_for('auth_v2.logout') }}" class="menu-item logout">
                 <i data-feather="log-out"></i>
                 <span>Déconnexion</span>
             </a>
@@ -99,9 +222,57 @@
         // Initialize Feather Icons
         feather.replace();
 
-        function changeRole() {
-            fetch('/api/clear-role', { method: 'POST' })
-                .then(() => window.location.href = '/');
+        // ─── Theme Toggle (light=default, dark=opt-in) ───
+        function isDarkMode() {
+            return document.documentElement.getAttribute('data-theme') === 'dark';
+        }
+
+        function updateThemeToggle() {
+            var dark = isDarkMode();
+            var suns = document.querySelectorAll('.theme-icon-sun');
+            var moons = document.querySelectorAll('.theme-icon-moon');
+            var labels = document.querySelectorAll('.theme-label');
+
+            suns.forEach(function(el) {
+                var svg = el.closest ? el.closest('svg') || el : el;
+                if (svg.style) svg.style.display = dark ? '' : 'none';
+            });
+            moons.forEach(function(el) {
+                var svg = el.closest ? el.closest('svg') || el : el;
+                if (svg.style) svg.style.display = dark ? 'none' : '';
+            });
+            labels.forEach(function(el) {
+                el.textContent = dark ? 'Mode clair' : 'Mode sombre';
+            });
+        }
+
+        function toggleTheme() {
+            if (isDarkMode()) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            feather.replace();
+            setTimeout(updateThemeToggle, 20);
+        }
+
+        setTimeout(updateThemeToggle, 20);
+
+        // ─── Expandable sidebar menu groups ───
+        function toggleMenuGroup(e, el) {
+            // If clicking the arrow or parent text, toggle expand
+            const group = el.closest('.menu-group');
+            if (!group) return;
+            // If the group is already open and we're on a CRM page, just toggle
+            if (group.classList.contains('open')) {
+                // Navigate to the href (CRM main page)
+                return; // let default <a> behavior happen
+            }
+            // Open the group
+            e.preventDefault();
+            group.classList.add('open');
         }
     </script>
     {% block scripts %}{% endblock %}

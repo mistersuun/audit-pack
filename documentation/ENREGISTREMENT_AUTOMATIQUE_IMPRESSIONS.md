@@ -247,3 +247,4 @@ def list_prints():
 - ⚠️ Sur macOS, il peut être nécessaire d'activer l'option "PDF" dans les préférences d'impression
 - ⚠️ Les impressions depuis des applications spécifiques (Lightspeed, etc.) peuvent nécessiter une configuration spéciale
 
+

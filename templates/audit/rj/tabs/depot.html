@@ -1,0 +1,167 @@
+<!-- Depot Tab Fragment - Loaded via AJAX lazy-loading -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+        <div class="rj-card">
+          <div class="forms">
+            <div class="form-tile">
+          <h4>Dépôt - Comptes Canadiens</h4>
+          <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1rem;">
+            Enregistrez les montants déposés dans le coffre. Les totaux sont calculés automatiquement.
+          </p>
+
+          <!-- AUTO-FILL FROM SD SECTION -->
+          <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeeba 100%); padding: 1.25rem; border-radius: 8px; border: 2px solid #ffc107; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+              <div style="flex: 1; min-width: 250px;">
+                <h5 style="margin: 0 0 0.5rem 0; color: #856404; display: flex; align-items: center; gap: 0.5rem;">
+                  <i data-feather="zap" style="width: 20px; height: 20px;"></i>
+                  Auto-remplir depuis SD
+                </h5>
+                <p style="margin: 0; font-size: 0.875rem; color: #856404;">
+                  Copie automatiquement le <strong>Montant Vérifié Total</strong> du SD vers le Dépôt.
+                </p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <div style="text-align: center;">
+                  <div style="font-size: 0.75rem; color: #856404; font-weight: 600;">SD Total Vérifié</div>
+                  <div id="depot-sd-preview" style="font-size: 1.5rem; font-weight: 700; color: #856404;">$0.00</div>
+                </div>
+                <button onclick="fillDepotFromSD()" class="rj-btn" style="background: #ffc107; color: #212529; border: 2px solid #e0a800; padding: 0.75rem 1.5rem; font-weight: 700;">
+                  <i data-feather="download"></i> Importer du SD
+                </button>
+              </div>
+            </div>
+            <!-- Validation indicator -->
+            <div id="depot-sd-validation" style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed #e0a800; display: none;">
+              <span style="font-size: 0.875rem; font-weight: 600;"></span>
+            </div>
+          </div>
+
+          <div style="background:#d1ecf1; padding:1rem; border-radius:6px; border-left:4px solid #0c5460; margin-bottom:1.5rem;">
+            <strong style="color:#0c5460;">ℹ️ Note importante:</strong>
+            <p style="margin:0.5rem 0 0 0; font-size:0.875rem; color:#0c5460;">
+              CLIENT 6 et CLIENT 8 sont simplement deux espaces parallèles pour maximiser l'espace de log.
+              Utilisez l'un ou l'autre selon l'espace disponible. <strong>Gardez seulement les 7 derniers jours.</strong>
+            </p>
+          </div>
+
+          <!-- COMPTE CLIENT 6 -->
+          <div style="margin-bottom: 2rem;">
+            <h5 style="font-weight:600; color:var(--text); margin-bottom:1rem; padding-bottom:0.5rem; border-bottom: 2px solid var(--border);">
+              CLIENT 6 - COMPTE #1844-22
+            </h5>
+
+            <!-- DATE Field -->
+            <div style="margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff;">
+              <label style="font-weight: 600; font-size: 0.875rem; color: var(--text); margin-bottom: 0.5rem; display: block;">
+                DATE (ex: 23 DECEMBRE):
+              </label>
+              <input type="text" id="depot-client6-date" class="excel-input" placeholder="23 DECEMBRE"
+                     style="width: 300px; padding: 0.5rem; font-size: 0.95rem; font-weight: 500;">
+            </div>
+
+            <div style="overflow-x: auto; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+              <table id="depot-client6-table" class="excel-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th class="excel-header" style="width: 50px;">#</th>
+                    <th class="excel-header" style="width: 200px;">Montant</th>
+                    <th class="excel-header" style="width: 80px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="depot-client6-body">
+                  <!-- Rows added dynamically -->
+                </tbody>
+                <tfoot>
+                  <tr style="background:#f8f9fa; font-weight:600;">
+                    <td class="excel-label" colspan="1" style="text-align:right; padding:0.75rem;">SIGNATURE (TOTAL):</td>
+                    <td class="excel-cell">
+                      <input type="number" step="0.01" class="excel-input" id="depot-client6-total" readonly style="background:#e9ecef; font-weight:600; font-size:1rem;">
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <button class="rj-btn" onclick="addDepotRow('client6')" style="background:#28a745; padding:0.5rem 1rem; font-size:0.875rem;">
+              <i data-feather="plus"></i> Ajouter un montant
+            </button>
+          </div>
+
+          <!-- COMPTE CLIENT 8 -->
+          <div style="margin-bottom: 2rem;">
+            <h5 style="font-weight:600; color:var(--text); margin-bottom:1rem; padding-bottom:0.5rem; border-bottom: 2px solid var(--border);">
+              CLIENT 8 - COMPTE #4743-66
+            </h5>
+
+            <!-- DATE Field -->
+            <div style="margin-bottom: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 6px; border-left: 4px solid #007bff;">
+              <label style="font-weight: 600; font-size: 0.875rem; color: var(--text); margin-bottom: 0.5rem; display: block;">
+                DATE (ex: 23 DECEMBRE):
+              </label>
+              <input type="text" id="depot-client8-date" class="excel-input" placeholder="23 DECEMBRE"
+                     style="width: 300px; padding: 0.5rem; font-size: 0.95rem; font-weight: 500;">
+            </div>
+
+            <div style="overflow-x: auto; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px;">
+              <table id="depot-client8-table" class="excel-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                  <tr>
+                    <th class="excel-header" style="width: 50px;">#</th>
+                    <th class="excel-header" style="width: 200px;">Montant</th>
+                    <th class="excel-header" style="width: 80px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="depot-client8-body">
+                  <!-- Rows added dynamically -->
+                </tbody>
+                <tfoot>
+                  <tr style="background:#f8f9fa; font-weight:600;">
+                    <td class="excel-label" colspan="1" style="text-align:right; padding:0.75rem;">SIGNATURE (TOTAL):</td>
+                    <td class="excel-cell">
+                      <input type="number" step="0.01" class="excel-input" id="depot-client8-total" readonly style="background:#e9ecef; font-weight:600; font-size:1rem;">
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <button class="rj-btn" onclick="addDepotRow('client8')" style="background:#28a745; padding:0.5rem 1rem; font-size:0.875rem;">
+              <i data-feather="plus"></i> Ajouter un montant
+            </button>
+          </div>
+
+          <!-- TOTAL GÉNÉRAL -->
+          <div style="padding: 1.5rem; background: #e7f3ff; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight:600; font-size:1.1rem; color:var(--text);">TOTAL GÉNÉRAL DES DÉPÔTS:</span>
+              <input type="number" step="0.01" id="depot-total-general" readonly
+                     style="width: 200px; font-size: 1.25rem; font-weight: 700; text-align: right; padding: 0.75rem; border: 2px solid #007bff; border-radius: 6px; background: white;">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="rj-btn" onclick="saveDepot(event)">
+              <i data-feather="save"></i> Enregistrer Dépôt
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Preview Section -->
+        <div class="excel-preview-container" style="margin-top: 2rem;">
+          <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <i data-feather="eye"></i> Aperçu Excel - Dépôt
+          </h4>
+          <div id="depot-preview-wrapper" style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+            <table id="depot-preview-table" class="excel-preview" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+              <tr><td style="text-align: center; padding: 2rem; color: #999;">Chargement de l'aperçu...</td></tr>
+            </table>
+          </div>
+        </div>
+          </div>
+        </div>
+{% endif %}

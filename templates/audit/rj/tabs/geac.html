@@ -1,0 +1,170 @@
+<!-- GEAC Tab Content -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+{% if not rj_loaded and requires_rj %}
+{{ no_rj_placeholder() }}
+{% else %}
+<div class="rj-card">
+  <div class="forms">
+    <div class="form-tile">
+  <h4>GEAC / UX - Réconciliation finale CC</h4>
+  <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1.5rem;">
+    VARIANCE doit être = 0 (🟢 vert = OK, 🔴 rouge = erreur). Si les montants ne sont pas égaux, vérifier Bank Interface Exceptions Report.
+  </p>
+
+  <!-- SECTION 1: DAILY CASH OUT VS DAILY REVENUE -->
+  <h5 style="margin-top:2rem; margin-bottom:1rem; font-weight:600; color:var(--text);">Section 1: Daily Cash Out vs Daily Revenue</h5>
+
+  <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+    <table id="geac-reconciliation-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 900px;">
+      <thead>
+        <tr>
+          <th class="excel-header excel-row-header"></th>
+          <th class="excel-header">Description</th>
+          <th class="excel-header">AMEX<br>B</th>
+          <th class="excel-header">DINERS<br>E</th>
+          <th class="excel-header">MASTER<br>G</th>
+          <th class="excel-header">VISA<br>J</th>
+          <th class="excel-header">DISCOVER<br>K</th>
+        </tr>
+      </thead>
+      <tbody id="geac-reconciliation-body">
+        <!-- Row 6: Daily Cash Out -->
+        <tr>
+          <td class="excel-row-header">6</td>
+          <td class="excel-label">Daily Cash Out</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-cash-out" data-cell="B6" data-card="amex" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-cash-out" data-cell="E6" data-card="diners" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-cash-out" data-cell="G6" data-card="master" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-cash-out" data-cell="J6" data-card="visa" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-cash-out" data-cell="K6" data-card="discover" placeholder="0.00"></td>
+        </tr>
+
+        <!-- Row 10: TOTAL -->
+        <tr style="font-weight:600; background:#f8f9fa;">
+          <td class="excel-row-header">10</td>
+          <td class="excel-label">TOTAL</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-total" data-cell="B10" data-card="amex" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-total" data-cell="E10" data-card="diners" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-total" data-cell="G10" data-card="master" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-total" data-cell="J10" data-card="visa" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-total" data-cell="K10" data-card="discover" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+        </tr>
+
+        <!-- Row 12: Daily Revenue -->
+        <tr>
+          <td class="excel-row-header">12</td>
+          <td class="excel-label">Daily Revenue</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-daily-rev" data-cell="B12" data-card="amex" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-daily-rev" data-cell="E12" data-card="diners" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-daily-rev" data-cell="G12" data-card="master" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-daily-rev" data-cell="J12" data-card="visa" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-daily-rev" data-cell="K12" data-card="discover" placeholder="0.00"></td>
+        </tr>
+
+        <!-- Row 13: VARIANCE (CRITIQUE!) -->
+        <tr style="background:#fff3cd;">
+          <td class="excel-row-header">13</td>
+          <td class="excel-label" style="font-weight:600;">VARIANCE</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-variance" data-cell="B13" data-card="amex" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-variance" data-cell="E13" data-card="diners" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-variance" data-cell="G13" data-card="master" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-variance" data-cell="J13" data-card="visa" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-variance" data-cell="K13" data-card="discover" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="padding: 1rem; background: #fff3cd; border-radius: 8px; margin-bottom: 2rem; border-left: 4px solid #ffc107;">
+    <p style="margin: 0; font-size: 0.875rem; color: #856404;">
+      ⚠️ <strong>Important:</strong> Si les montants ne sont pas égaux, vérifier Bank Interface Exceptions Report et Bank Night Audit Status Report.
+      Vérifier les settlement folios contre le Bank Transaction (BLT) Report.
+    </p>
+  </div>
+
+  <!-- SECTION 2: GEAC/UX SYSTEM BALANCE SHEET -->
+  <h5 style="margin-top:2rem; margin-bottom:1rem; font-weight:600; color:var(--text);">Section 2: GEAC/UX System Balance Sheet</h5>
+
+  <div style="overflow-x: auto; margin-bottom: 1.5rem; border: 1px solid var(--border); border-radius: 8px;">
+    <table id="geac-balance-table" class="excel-table" style="width: 100%; border-collapse: collapse; min-width: 700px;">
+      <thead>
+        <tr>
+          <th class="excel-header excel-row-header"></th>
+          <th class="excel-header">Description</th>
+          <th class="excel-header">Daily Revenue<br>(p.7)</th>
+          <th class="excel-header">Guest Ledger</th>
+          <th class="excel-header">VARIANCE</th>
+        </tr>
+      </thead>
+      <tbody id="geac-balance-body">
+        <!-- Row 32: Balance Previous Day -->
+        <tr>
+          <td class="excel-row-header">32</td>
+          <td class="excel-label">Balance Previous Day</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-bal-prev-daily" data-cell="B32" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-bal-prev-ledger" data-cell="E32" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-bal-prev-variance" data-cell="F32" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+
+        <!-- Row 37: Balance Today -->
+        <tr>
+          <td class="excel-row-header">37</td>
+          <td class="excel-label">Balance Today (Debit/Credit Activities)</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-bal-today-daily" data-cell="B37" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-bal-today-ledger" data-cell="E37" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-bal-today-variance" data-cell="F37" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+
+        <!-- Row 41: Facture Direct / Front Office Transfers -->
+        <tr>
+          <td class="excel-row-header">41</td>
+          <td class="excel-label">Facture Direct / FO Transfers (p.6)</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-facture-daily" data-cell="B41" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-facture-ledger" data-cell="G41" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-facture-variance" data-cell="H41" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+
+        <!-- Row 44: Adv Deposit Applied -->
+        <tr>
+          <td class="excel-row-header">44</td>
+          <td class="excel-label">Adv Deposit Applied (p.7)</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-adv-daily" data-cell="B44" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-adv-applied" data-cell="J44" placeholder="0.00"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-adv-variance" data-cell="K44" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+
+        <!-- Row 53: New Balance -->
+        <tr style="font-weight:600; background:#f8f9fa;">
+          <td class="excel-row-header">53</td>
+          <td class="excel-label">New Balance (p.7)</td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-new-bal-daily" data-cell="B53" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-new-bal-ledger" data-cell="E53" placeholder="0.00" readonly style="background:#e9ecef; font-weight:600;"></td>
+          <td class="excel-cell"><input type="number" step="0.01" class="excel-input geac-new-bal-variance" data-cell="F53" placeholder="0.00" readonly style="background:#f0f0f0; font-weight:600;"></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-actions">
+    <button class="rj-btn" onclick="saveGeac(event)">
+      <i data-feather="save"></i> Enregistrer GEAC
+    </button>
+  </div>
+</div>
+
+<!-- Live Preview Section -->
+<div class="excel-preview-container" style="margin-top: 2rem;">
+  <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+    <i data-feather="eye"></i> Aperçu Excel - GEAC/UX
+  </h4>
+  <div id="geac-preview-wrapper" style="overflow-x: auto; max-height: 400px; overflow-y: auto;">
+    <table id="geac-preview-table" class="excel-preview" style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+      <tr><td style="text-align: center; padding: 2rem; color: #999;">Chargement de l'aperçu...</td></tr>
+    </table>
+  </div>
+</div>
+  </div>
+</div>
+
+<script src="/static/js/audit/geac_calc.js"></script>
+{% endif %}

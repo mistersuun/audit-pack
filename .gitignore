@@ -14,6 +14,8 @@ venv/
 .vscode/
 .idea/
 Thumbs.db
+*.swp
+*~
 
 # Dependencies & builds
 node_modules/
@@ -22,12 +24,12 @@ dist/
 /out/
 target/
 
-# Logs & swaps
+# Logs & temp
 *.log
 *.bak
-*.swp
+*.tmp
 
-# Databases & app data
+# Databases (auto-created, don't track)
 *.sqlite3
 database/*.db
 
@@ -39,3 +41,16 @@ database/*.db
 .ruff_cache/
 htmlcov/
 .ipynb_checkpoints/
+instance/
+
+# Dev scripts (not part of running app)
+scripts/dev/
+
+# Large data files (Excel RJ archives — 1.6 GB)
+RJ 2024-2025/
+
+# Test data (sample PDFs/Excel for parser testing)
+test_data/
+
+# Claude session data
+.claude/
