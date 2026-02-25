@@ -1,0 +1,804 @@
+/* ========================================
+   RESPONSIVE DESIGN - Mobile First
+   Breakpoints: 1024px (tablet), 768px (mobile), 480px (small mobile)
+   ======================================== */
+
+/* ========== HAMBURGER BUTTON ========== */
+.hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    width: 48px;
+    height: 48px;
+    z-index: 1001;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+    padding: 0;
+    gap: 6px;
+}
+
+.hamburger-btn:hover {
+    background: var(--bg);
+    box-shadow: var(--shadow-md);
+}
+
+.hamburger-btn:active {
+    transform: scale(0.95);
+}
+
+.hamburger-line {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 1px;
+    transition: var(--transition);
+}
+
+/* Animated hamburger (optional) */
+.sidebar.open ~ .hamburger-btn .hamburger-line:first-child {
+    transform: rotate(45deg) translateY(10px);
+}
+
+.sidebar.open ~ .hamburger-btn .hamburger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.sidebar.open ~ .hamburger-btn .hamburger-line:last-child {
+    transform: rotate(-45deg) translateY(-10px);
+}
+
+/* ========== TABLET (1024px and below) ========== */
+@media (max-width: 1024px) {
+    :root {
+        --sidebar-width: 240px;
+    }
+
+    main {
+        padding: 1.5rem 2rem;
+    }
+
+    .card-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+    }
+
+    .form-grid-3col {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .notification {
+        min-width: 220px;
+        max-width: 300px;
+        font-size: 0.85em;
+    }
+}
+
+/* ========== MOBILE (768px and below) ========== */
+@media (max-width: 768px) {
+    :root {
+        --sidebar-width: 0;
+    }
+
+    /* ─── Sidebar: Off-canvas on mobile ─── */
+    .sidebar {
+        width: 280px;
+        position: fixed;
+        left: -280px;
+        top: 0;
+        height: 100vh;
+        transition: left 300ms ease;
+        z-index: 1000;
+        box-shadow: var(--shadow-lg);
+        overflow-y: auto;
+    }
+
+    .sidebar.open {
+        left: 0;
+    }
+
+    /* Mobile overlay for sidebar */
+    body.sidebar-open::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+    }
+
+    /* ─── Main content: Full width ─── */
+    main {
+        margin-left: 0;
+        padding: 1rem 1rem;
+    }
+
+    main.with-sidebar {
+        margin-left: 0;
+    }
+
+    /* ─── Hamburger button visibility ─── */
+    .hamburger-btn {
+        display: flex;
+    }
+
+    /* ─── Header top bar adjustments ─── */
+    .page-header {
+        margin-bottom: 1rem;
+        padding: 0;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .page-header p {
+        font-size: 0.85rem;
+    }
+
+    /* ─── Cards: Stack vertically ─── */
+    .card-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .card {
+        border-radius: 10px;
+    }
+
+    .card-header {
+        padding: 0.875rem 1rem;
+    }
+
+    .card-header h3 {
+        font-size: 1rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+        gap: 12px;
+    }
+
+    /* ─── Forms: Full width, stacked ─── */
+    .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group label {
+        font-size: 0.8125rem;
+        margin-bottom: 4px;
+    }
+
+    .form-control {
+        padding: 0.65rem 0.875rem;
+        font-size: 0.9rem;
+    }
+
+    .form-grid-2col,
+    .form-grid-3col {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* ─── Buttons: Full width on mobile ─── */
+    .btn {
+        width: 100%;
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-group .btn {
+        width: 100%;
+    }
+
+    /* ─── Tables: Horizontal scroll wrapper ─── */
+    .table-responsive {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .preview-table,
+    table {
+        width: 100%;
+        min-width: 300px;
+        font-size: 0.8rem;
+    }
+
+    .preview-table th,
+    .preview-table td,
+    table th,
+    table td {
+        padding: 6px 8px;
+    }
+
+    /* ─── Notifications: Smaller on mobile ─── */
+    #notification-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+
+    .notification {
+        min-width: unset;
+        max-width: none;
+        font-size: 0.8rem;
+        padding: 10px 12px;
+    }
+
+    /* ─── Text sizes: Reduced on mobile ─── */
+    h1 {
+        font-size: 1.75rem;
+    }
+
+    h2 {
+        font-size: 1.25rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    h4, h5, h6 {
+        font-size: 1rem;
+    }
+
+    /* ─── Spacing: Reduced margins/padding ─── */
+    .container {
+        padding: 0 1rem;
+    }
+
+    .section {
+        margin-bottom: 1.5rem;
+    }
+
+    .divider {
+        margin: 1rem 0;
+    }
+
+    /* ─── Tabs: Horizontal scroll on mobile ─── */
+    .nav-tabs {
+        display: flex;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 1rem;
+    }
+
+    .nav-tabs .nav-link {
+        flex-shrink: 0;
+        padding: 0.75rem 1rem;
+        white-space: nowrap;
+        font-size: 0.875rem;
+    }
+
+    .rj-native .tabs-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rj-native .tab-buttons {
+        display: flex;
+        gap: 8px;
+        padding-bottom: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .rj-native .tab-btn {
+        flex-shrink: 0;
+        padding: 0.65rem 1rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+    }
+
+    /* ─── Charts: Responsive sizing ─── */
+    canvas {
+        max-width: 100%;
+        height: auto !important;
+    }
+
+    .chart-container {
+        position: relative;
+        width: 100%;
+        height: 250px;
+    }
+
+    .chart-container canvas {
+        max-height: 250px;
+    }
+
+    /* ─── Logo text: Hide subtitle on mobile ─── */
+    .logo-subtitle {
+        display: none;
+    }
+
+    .logo-title {
+        font-size: 0.95rem;
+    }
+
+    /* ─── User menu: Compact on mobile ─── */
+    .sidebar-footer {
+        padding: 0.75rem;
+    }
+
+    .user-profile {
+        padding: 0.35rem;
+    }
+
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+
+    .user-name {
+        font-size: 0.8rem;
+    }
+
+    .user-role {
+        font-size: 0.7rem;
+    }
+
+    /* ─── Menu items: Smaller font ─── */
+    .menu-item {
+        padding: 0.65rem 0.875rem;
+        font-size: 0.8rem;
+        gap: 0.65rem;
+    }
+
+    .menu-item svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .menu-child {
+        padding: 0.45rem 0.65rem 0.45rem 2.25rem;
+        font-size: 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .menu-child svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    /* ─── Sidebar header: Compact ─── */
+    .sidebar-header {
+        padding: 1.25rem 1rem;
+    }
+
+    .logo {
+        gap: 0.6rem;
+    }
+
+    .logo-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .logo-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* ─── Menu group spacing ─── */
+    .sidebar-menu {
+        padding: 0.75rem;
+        gap: 0.2rem;
+    }
+
+    .sidebar-divider {
+        margin: 0.5rem 0;
+    }
+
+    .sidebar-section-title {
+        font-size: 0.625rem;
+        padding: 0.4rem 0.75rem;
+        margin-top: 0.4rem;
+    }
+
+    /* ─── KPI cards: Single column ─── */
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .kpi-card {
+        padding: 1rem;
+    }
+
+    /* ─── Modal adjustments ─── */
+    .modal {
+        padding: 0.5rem;
+    }
+
+    .modal-content {
+        border-radius: 12px;
+        max-width: 95vw;
+    }
+
+    .modal-header {
+        padding: 1rem;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        gap: 8px;
+    }
+
+    /* ─── Alert boxes ─── */
+    .alert {
+        padding: 0.875rem 1rem;
+        font-size: 0.875rem;
+        margin-bottom: 1rem;
+    }
+
+    /* ─── Flex utilities ─── */
+    .flex-between {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    /* ─── Step boxes (for checklists) ─── */
+    .step-card {
+        padding: 1rem;
+    }
+
+    .step-header {
+        flex-direction: column;
+    }
+
+    /* ─── Expandable sections ─── */
+    .collapsible-section {
+        margin-bottom: 0.75rem;
+    }
+
+    .collapsible-section header {
+        padding: 0.75rem 1rem;
+    }
+
+    .collapsible-content {
+        padding: 1rem;
+    }
+}
+
+/* ========== SMALL MOBILE (480px and below) ========== */
+@media (max-width: 480px) {
+    :root {
+        --sidebar-width: 0;
+    }
+
+    main {
+        padding: 0.75rem 0.75rem;
+    }
+
+    .sidebar {
+        width: 100%;
+        left: -100%;
+    }
+
+    /* ─── Text sizes: Extra small on tiny screens ─── */
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.1rem;
+    }
+
+    h3 {
+        font-size: 0.95rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem;
+    }
+
+    /* ─── Compact buttons and inputs ─── */
+    .btn {
+        padding: 0.6rem 0.875rem;
+        font-size: 0.8rem;
+    }
+
+    .form-control {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    /* ─── Menu items: Tight spacing ─── */
+    .menu-item {
+        padding: 0.6rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* ─── Card spacing ─── */
+    .card {
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-header {
+        padding: 0.75rem 0.875rem;
+    }
+
+    .card-header h3 {
+        font-size: 0.9rem;
+    }
+
+    .card-body {
+        padding: 0.875rem;
+    }
+
+    /* ─── Table: Font shrink more ─── */
+    .preview-table,
+    table {
+        font-size: 0.75rem;
+    }
+
+    .preview-table th,
+    .preview-table td,
+    table th,
+    table td {
+        padding: 4px 6px;
+    }
+
+    /* ─── Notifications: Full width ─── */
+    #notification-container {
+        top: 5px;
+        right: 5px;
+        left: 5px;
+    }
+
+    .notification {
+        padding: 8px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* ─── Logo: Icon only on very small screens ─── */
+    .logo {
+        gap: 0.5rem;
+    }
+
+    .logo-icon {
+        width: 32px;
+        height: 32px;
+    }
+
+    .logo-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .logo-title {
+        font-size: 0.85rem;
+    }
+
+    /* ─── Form grids: Single column always ─── */
+    .form-grid-2col,
+    .form-grid-3col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    /* ─── Modal: Full screen experience ─── */
+    .modal-content {
+        max-width: 100vw;
+        max-height: 90vh;
+        border-radius: 8px;
+    }
+
+    /* ─── Tabs: More compact ─── */
+    .nav-tabs .nav-link {
+        padding: 0.6rem 0.875rem;
+        font-size: 0.75rem;
+    }
+
+    .rj-native .tab-btn {
+        padding: 0.6rem 0.875rem;
+        font-size: 0.75rem;
+    }
+
+    /* ─── Alert boxes ─── */
+    .alert {
+        padding: 0.75rem 0.875rem;
+        font-size: 0.8rem;
+    }
+
+    /* ─── Divider spacing ─── */
+    .divider {
+        margin: 0.75rem 0;
+    }
+
+    /* ─── Sidebar footer: Compact ─── */
+    .sidebar-footer {
+        padding: 0.65rem;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 0.65rem;
+    }
+
+    .user-name {
+        font-size: 0.75rem;
+    }
+
+    .user-role {
+        font-size: 0.65rem;
+        display: none; /* Hide role on ultra-small screens */
+    }
+
+    /* ─── Sidebar menu ─── */
+    .sidebar-menu {
+        padding: 0.65rem;
+    }
+
+    .sidebar-section-title {
+        font-size: 0.6rem;
+        padding: 0.35rem 0.65rem;
+    }
+
+    /* ─── Flex utilities for ultra-mobile ─── */
+    .flex-between {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    /* ─── KPI cards: Extra compact ─── */
+    .kpi-card {
+        padding: 0.875rem;
+    }
+
+    /* ─── Hide unnecessary icons on ultra-small ─── */
+    .menu-item svg,
+    .logo-icon svg {
+        display: none;
+    }
+
+    .menu-item {
+        padding-left: 1rem;
+    }
+}
+
+/* ========== LANDSCAPE MODE (Height constraint) ========== */
+@media (max-height: 600px) and (orientation: landscape) {
+    .sidebar-menu {
+        max-height: 60vh;
+    }
+
+    .card-body {
+        padding: 0.875rem;
+        gap: 10px;
+    }
+
+    .form-group label {
+        margin-bottom: 2px;
+    }
+
+    .btn {
+        padding: 0.6rem 0.875rem;
+    }
+
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* ========== PRINT STYLES ========== */
+@media print {
+    .sidebar,
+    .hamburger-btn,
+    .nav-tabs,
+    .btn-group,
+    .notification,
+    #notification-container {
+        display: none !important;
+    }
+
+    main {
+        margin-left: 0;
+        padding: 0;
+    }
+
+    .card {
+        page-break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #000;
+    }
+
+    .table-responsive {
+        overflow: visible;
+    }
+
+    table {
+        width: 100%;
+    }
+}
+
+/* ========== TOUCH-FRIENDLY ADJUSTMENTS ========== */
+@media (hover: none) and (pointer: coarse) {
+    /* Increase touch target sizes */
+    .btn,
+    .menu-item,
+    .form-control,
+    a.card,
+    .nav-link {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .btn {
+        padding: 0.75rem 1.25rem;
+    }
+
+    /* Remove hover effects on touch devices */
+    .menu-item:hover {
+        background: inherit;
+    }
+
+    .card:hover {
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* Disable text selection on buttons */
+    .btn,
+    .menu-item {
+        -webkit-user-select: none;
+        user-select: none;
+    }
+}
+
+/* ========== ACCESSIBILITY IMPROVEMENTS ========== */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    .sidebar {
+        transition: none;
+    }
+
+    .menu-children {
+        transition: none;
+    }
+}
+
+@media (prefers-contrast: more) {
+    .card {
+        border-width: 2px;
+    }
+
+    .btn {
+        border-width: 2px;
+    }
+
+    .form-control {
+        border-width: 2px;
+    }
+}

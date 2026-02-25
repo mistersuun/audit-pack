@@ -1,0 +1,748 @@
+{% extends "base.html" %}
+
+{% block title %}Préférences de notifications{% endblock %}
+
+{% block head %}
+<style>
+    .notifications-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .preferences-section {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        width: 24px;
+        height: 24px;
+        color: var(--primary-color);
+    }
+
+    .preference-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2rem;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        align-items: start;
+    }
+
+    .preference-item:last-child {
+        margin-bottom: 0;
+    }
+
+    .preference-info h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .preference-info p {
+        margin: 0.25rem 0;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .preference-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-width: 250px;
+    }
+
+    .toggle-switch {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toggle-switch label {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 0;
+    }
+
+    .toggle-switch input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .threshold-input {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .threshold-input input {
+        width: 100px;
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+
+    .threshold-input label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .delivery-select {
+        padding: 0.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        font-size: 0.9rem;
+        background: var(--surface-color);
+        color: var(--text-primary);
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .history-table thead {
+        background: var(--hover-color);
+    }
+
+    .history-table th,
+    .history-table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+
+    .history-table th {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .history-table tr:hover {
+        background: var(--hover-color);
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+
+    .badge-info {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .badge-warning {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .badge-critical {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-sent {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .badge-failed {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .badge-logged {
+        background: #f3e8ff;
+        color: #6b21a8;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+
+    .btn-secondary {
+        background: var(--hover-color);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: var(--border-color);
+    }
+
+    .btn-small {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.85rem;
+    }
+
+    .btn i {
+        width: 18px;
+        height: 18px;
+    }
+
+    .alert-box {
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        align-items: start;
+    }
+
+    .alert-info {
+        background: #dbeafe;
+        color: #1e40af;
+        border: 1px solid #93c5fd;
+    }
+
+    .alert-warning {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+
+    .alert-success {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+
+    .alert-box i {
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 0.125rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    @media (max-width: 768px) {
+        .preference-item {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .preference-controls {
+            min-width: auto;
+        }
+
+        .history-table {
+            font-size: 0.85rem;
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="notifications-container">
+    <!-- Page Header -->
+    <div style="margin-bottom: 2rem;">
+        <h1 style="margin: 0 0 0.5rem 0; font-size: 2rem; color: var(--text-primary);">
+            <i data-feather="bell" style="width: 32px; height: 32px; vertical-align: middle; margin-right: 0.5rem;"></i>
+            Préférences de notifications
+        </h1>
+        <p style="margin: 0; color: var(--text-secondary);">
+            Gérez vos préférences d'alertes et votre historique de notifications
+        </p>
+    </div>
+
+    <!-- Email Configuration Status -->
+    {% if not email_configured %}
+    <div class="alert-box alert-warning">
+        <i data-feather="alert-triangle"></i>
+        <div>
+            <strong>Email non configuré</strong>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">
+                Le système de courrier électronique n'est pas actuellement configuré. Les alertes seront enregistrées dans la base de données mais pas envoyées par email.
+                Contactez un administrateur pour configurer SMTP.
+            </p>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert-box alert-info">
+        <i data-feather="check-circle"></i>
+        <div>
+            <strong>Email configuré</strong>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">
+                Les alertes seront envoyées par email à {{ current_user.email or 'votre adresse email' }}.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Preferences Section -->
+    <div class="preferences-section">
+        <div class="section-title">
+            <i data-feather="settings"></i>
+            Événements et seuils d'alerte
+        </div>
+
+        <!-- RJ Submitted -->
+        <div class="preference-item">
+            <div class="preference-info">
+                <h4>Rapport Journalier soumis</h4>
+                <p>Notification quand un RJ est soumis par un auditeur de nuit</p>
+            </div>
+            <div class="preference-controls">
+                <div class="toggle-switch">
+                    <label>
+                        <input type="checkbox" class="pref-toggle" data-event="rj_submitted"
+                            {% if 'rj_submitted' in preferences and preferences['rj_submitted']['is_enabled'] %}checked{% endif %}>
+                        <span>Activé</span>
+                    </label>
+                </div>
+                <select class="delivery-select pref-delivery" data-event="rj_submitted">
+                    <option value="email" {% if 'rj_submitted' in preferences and preferences['rj_submitted']['delivery_method'] == 'email' %}selected{% endif %}>
+                        Email uniquement
+                    </option>
+                    <option value="in_app" {% if 'rj_submitted' in preferences and preferences['rj_submitted']['delivery_method'] == 'in_app' %}selected{% endif %}>
+                        Dans l'app uniquement
+                    </option>
+                    <option value="both" {% if 'rj_submitted' in preferences and preferences['rj_submitted']['delivery_method'] == 'both' %}selected{% endif %}>
+                        Email + app
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- RJ Late -->
+        <div class="preference-item">
+            <div class="preference-info">
+                <h4>RJ non soumis avant deadline</h4>
+                <p>Alerte si le RJ n'est pas soumis avant 6h00</p>
+            </div>
+            <div class="preference-controls">
+                <div class="toggle-switch">
+                    <label>
+                        <input type="checkbox" class="pref-toggle" data-event="rj_late"
+                            {% if 'rj_late' in preferences and preferences['rj_late']['is_enabled'] %}checked{% endif %}>
+                        <span>Activé</span>
+                    </label>
+                </div>
+                <select class="delivery-select pref-delivery" data-event="rj_late">
+                    <option value="email" {% if 'rj_late' in preferences and preferences['rj_late']['delivery_method'] == 'email' %}selected{% endif %}>
+                        Email uniquement
+                    </option>
+                    <option value="in_app" {% if 'rj_late' in preferences and preferences['rj_late']['delivery_method'] == 'in_app' %}selected{% endif %}>
+                        Dans l'app uniquement
+                    </option>
+                    <option value="both" {% if 'rj_late' in preferences and preferences['rj_late']['delivery_method'] == 'both' %}selected{% endif %}>
+                        Email + app
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Variance Alert -->
+        <div class="preference-item">
+            <div class="preference-info">
+                <h4>Alerte de variance (Quasimodo)</h4>
+                <p>Alerte quand la variance dépasse le seuil défini</p>
+            </div>
+            <div class="preference-controls">
+                <div class="toggle-switch">
+                    <label>
+                        <input type="checkbox" class="pref-toggle" data-event="variance_alert"
+                            {% if 'variance_alert' in preferences and preferences['variance_alert']['is_enabled'] %}checked{% endif %}>
+                        <span>Activé</span>
+                    </label>
+                </div>
+                <div class="threshold-input">
+                    <input type="number" step="0.01" min="0" class="pref-threshold" data-event="variance_alert"
+                        value="{% if 'variance_alert' in preferences and preferences['variance_alert']['threshold_value'] %}{{ preferences['variance_alert']['threshold_value'] }}{% else %}5.00{% endif %}">
+                    <label>$ (variance)</label>
+                </div>
+                <select class="delivery-select pref-delivery" data-event="variance_alert">
+                    <option value="email" {% if 'variance_alert' in preferences and preferences['variance_alert']['delivery_method'] == 'email' %}selected{% endif %}>
+                        Email uniquement
+                    </option>
+                    <option value="in_app" {% if 'variance_alert' in preferences and preferences['variance_alert']['delivery_method'] == 'in_app' %}selected{% endif %}>
+                        Dans l'app uniquement
+                    </option>
+                    <option value="both" {% if 'variance_alert' in preferences and preferences['variance_alert']['delivery_method'] == 'both' %}selected{% endif %}>
+                        Email + app
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Occupation Low -->
+        <div class="preference-item">
+            <div class="preference-info">
+                <h4>Faible taux d'occupation</h4>
+                <p>Alerte quand l'occupation tombe sous un pourcentage défini</p>
+            </div>
+            <div class="preference-controls">
+                <div class="toggle-switch">
+                    <label>
+                        <input type="checkbox" class="pref-toggle" data-event="occupation_low"
+                            {% if 'occupation_low' in preferences and preferences['occupation_low']['is_enabled'] %}checked{% endif %}>
+                        <span>Activé</span>
+                    </label>
+                </div>
+                <div class="threshold-input">
+                    <input type="number" step="0.1" min="0" max="100" class="pref-threshold" data-event="occupation_low"
+                        value="{% if 'occupation_low' in preferences and preferences['occupation_low']['threshold_value'] %}{{ preferences['occupation_low']['threshold_value'] }}{% else %}60.0{% endif %}">
+                    <label>% (occupation)</label>
+                </div>
+                <select class="delivery-select pref-delivery" data-event="occupation_low">
+                    <option value="email" {% if 'occupation_low' in preferences and preferences['occupation_low']['delivery_method'] == 'email' %}selected{% endif %}>
+                        Email uniquement
+                    </option>
+                    <option value="in_app" {% if 'occupation_low' in preferences and preferences['occupation_low']['delivery_method'] == 'in_app' %}selected{% endif %}>
+                        Dans l'app uniquement
+                    </option>
+                    <option value="both" {% if 'occupation_low' in preferences and preferences['occupation_low']['delivery_method'] == 'both' %}selected{% endif %}>
+                        Email + app
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Revenue Drop -->
+        <div class="preference-item">
+            <div class="preference-info">
+                <h4>Baisse significative du revenu</h4>
+                <p>Alerte quand le revenu baisse de plus de 10% par rapport à l'année précédente</p>
+            </div>
+            <div class="preference-controls">
+                <div class="toggle-switch">
+                    <label>
+                        <input type="checkbox" class="pref-toggle" data-event="revenue_drop"
+                            {% if 'revenue_drop' in preferences and preferences['revenue_drop']['is_enabled'] %}checked{% endif %}>
+                        <span>Activé</span>
+                    </label>
+                </div>
+                <select class="delivery-select pref-delivery" data-event="revenue_drop">
+                    <option value="email" {% if 'revenue_drop' in preferences and preferences['revenue_drop']['delivery_method'] == 'email' %}selected{% endif %}>
+                        Email uniquement
+                    </option>
+                    <option value="in_app" {% if 'revenue_drop' in preferences and preferences['revenue_drop']['delivery_method'] == 'in_app' %}selected{% endif %}>
+                        Dans l'app uniquement
+                    </option>
+                    <option value="both" {% if 'revenue_drop' in preferences and preferences['revenue_drop']['delivery_method'] == 'both' %}selected{% endif %}>
+                        Email + app
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Daily Summary -->
+        <div class="preference-item">
+            <div class="preference-info">
+                <h4>Résumé quotidien (7h00)</h4>
+                <p>Email récapitulatif chaque matin à 7h00 avec tous les KPIs</p>
+            </div>
+            <div class="preference-controls">
+                <div class="toggle-switch">
+                    <label>
+                        <input type="checkbox" class="pref-toggle" data-event="daily_summary"
+                            {% if 'daily_summary' in preferences and preferences['daily_summary']['is_enabled'] %}checked{% endif %}>
+                        <span>Activé</span>
+                    </label>
+                </div>
+                <select class="delivery-select pref-delivery" data-event="daily_summary">
+                    <option value="email" {% if 'daily_summary' in preferences and preferences['daily_summary']['delivery_method'] == 'email' %}selected{% endif %}>
+                        Email uniquement
+                    </option>
+                    <option value="in_app" {% if 'daily_summary' in preferences and preferences['daily_summary']['delivery_method'] == 'in_app' %}selected{% endif %}>
+                        Dans l'app uniquement
+                    </option>
+                    <option value="both" {% if 'daily_summary' in preferences and preferences['daily_summary']['delivery_method'] == 'both' %}selected{% endif %}>
+                        Email + app
+                    </option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Email Section -->
+    <div class="preferences-section">
+        <div class="section-title">
+            <i data-feather="send"></i>
+            Test
+        </div>
+        <p style="margin: 0 0 1rem 0; color: var(--text-secondary);">
+            Envoyez un email de test pour vérifier que votre configuration fonctionne correctement.
+        </p>
+        <button id="testEmailBtn" class="btn btn-primary">
+            <i data-feather="mail"></i>
+            Envoyer un email de test
+        </button>
+        <div id="testResult" style="margin-top: 1rem; display: none;"></div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+        <button id="saveBtn" class="btn btn-primary">
+            <i data-feather="save"></i>
+            Sauvegarder les modifications
+        </button>
+        <button id="resetBtn" class="btn btn-secondary">
+            <i data-feather="x-circle"></i>
+            Réinitialiser
+        </button>
+    </div>
+
+    <!-- Notification History Section -->
+    <div class="preferences-section">
+        <div class="section-title">
+            <i data-feather="history"></i>
+            Historique des notifications
+        </div>
+
+        {% if recent_logs %}
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date/Heure</th>
+                    <th>Événement</th>
+                    <th>Sévérité</th>
+                    <th>Sujet</th>
+                    <th>Statut</th>
+                </tr>
+            </thead>
+            <tbody id="historyBody">
+                {% for log in recent_logs %}
+                <tr>
+                    <td>{{ log.sent_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ log.event_type }}</td>
+                    <td>
+                        <span class="badge badge-{{ log.severity }}">
+                            {{ log.severity }}
+                        </span>
+                    </td>
+                    <td>{{ log.subject }}</td>
+                    <td>
+                        <span class="badge badge-{{ log.delivery_status }}">
+                            {{ log.delivery_status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">
+            <i data-feather="inbox"></i>
+            <p>Aucune notification enregistrée</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    feather.replace();
+
+    // Load preferences
+    async function loadPreferences() {
+        try {
+            const response = await fetch('/notifications/api/preferences');
+            const data = await response.json();
+            console.log('Preferences loaded:', data);
+        } catch (error) {
+            console.error('Error loading preferences:', error);
+        }
+    }
+
+    // Save preferences
+    async function savePreferences() {
+        const preferences = {};
+
+        // Collect all preferences from form
+        document.querySelectorAll('.pref-toggle').forEach(toggle => {
+            const event = toggle.dataset.event;
+            if (!preferences[event]) {
+                preferences[event] = {};
+            }
+            preferences[event].is_enabled = toggle.checked;
+        });
+
+        document.querySelectorAll('.pref-threshold').forEach(input => {
+            const event = input.dataset.event;
+            if (!preferences[event]) {
+                preferences[event] = {};
+            }
+            preferences[event].threshold_value = parseFloat(input.value) || null;
+        });
+
+        document.querySelectorAll('.pref-delivery').forEach(select => {
+            const event = select.dataset.event;
+            if (!preferences[event]) {
+                preferences[event] = {};
+            }
+            preferences[event].delivery_method = select.value;
+        });
+
+        try {
+            const response = await fetch('/notifications/api/preferences', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(preferences)
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Show success message
+                const alert = document.createElement('div');
+                alert.className = 'alert-box alert-success';
+                alert.innerHTML = `
+                    <i data-feather="check-circle"></i>
+                    <div>
+                        <strong>Succès</strong>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">${data.message}</p>
+                    </div>
+                `;
+                document.querySelector('.preferences-section').insertBefore(
+                    alert,
+                    document.querySelector('.preferences-section').firstChild
+                );
+                feather.replace();
+
+                setTimeout(() => alert.remove(), 5000);
+            } else {
+                alert('Erreur: ' + (data.error || 'Erreur inconnue'));
+            }
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            alert('Erreur lors de la sauvegarde: ' + error.message);
+        }
+    }
+
+    // Send test email
+    document.getElementById('testEmailBtn').addEventListener('click', async () => {
+        try {
+            document.getElementById('testResult').innerHTML = 'Envoi en cours...';
+            document.getElementById('testResult').style.display = 'block';
+
+            const response = await fetch('/notifications/api/test', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+
+            const data = await response.json();
+
+            let resultHTML;
+            if (data.success) {
+                resultHTML = `
+                    <div class="alert-box alert-success">
+                        <i data-feather="check-circle"></i>
+                        <div>
+                            <strong>Email envoyé</strong>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">Email de test envoyé avec succès</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                resultHTML = `
+                    <div class="alert-box alert-warning">
+                        <i data-feather="alert-triangle"></i>
+                        <div>
+                            <strong>Erreur</strong>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">${data.error || data.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('testResult').innerHTML = resultHTML;
+            feather.replace();
+        } catch (error) {
+            console.error('Error sending test email:', error);
+            document.getElementById('testResult').innerHTML = `
+                <div class="alert-box alert-warning">
+                    <i data-feather="alert-triangle"></i>
+                    <div>
+                        <strong>Erreur</strong>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem;">Erreur: ${error.message}</p>
+                    </div>
+                </div>
+            `;
+        }
+    });
+
+    // Save button
+    document.getElementById('saveBtn').addEventListener('click', savePreferences);
+
+    // Reset button
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if (confirm('Êtes-vous sûr de vouloir réinitialiser les modifications?')) {
+            location.reload();
+        }
+    });
+
+    // Load on page load
+    loadPreferences();
+</script>
+{% endblock %}

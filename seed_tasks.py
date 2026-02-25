@@ -619,7 +619,7 @@ TASKS_BACK = [
     }
 ]
 
-from seed_tasks_front import TASKS_DETAILED as TASKS_FRONT_DATA
+from scripts.seed_tasks_front import TASKS_DETAILED as TASKS_FRONT_DATA
 
 def _upsert_task(task_data, role):
     """Update existing task or create new one. Matches by (order, role) to preserve IDs."""

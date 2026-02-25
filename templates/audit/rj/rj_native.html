@@ -239,6 +239,9 @@
       <span class="rjn-autosave" id="autosave-ind"></span>
     </div>
     <div class="rjn-actions">
+      <button class="rjn-btn" onclick="exportPDF()" id="btn-export-pdf" disabled>
+        <i data-feather="file-text" style="width:14px;height:14px"></i> Exporter PDF
+      </button>
       <button class="rjn-btn" onclick="exportExcel()" id="btn-export" disabled>
         <i data-feather="download" style="width:14px;height:14px"></i> Exporter Excel
       </button>
@@ -1737,6 +1740,7 @@ function loadSessionToForm(s) {
 
   // Enable buttons
   $('#btn-export').disabled = false;
+  $('#btn-export-pdf').disabled = false;
   $('#btn-sync').disabled = s.status === 'locked';
   $('#btn-submit').disabled = s.status === 'locked';
   $('#btn-submit2').disabled = s.status === 'locked';
@@ -3435,6 +3439,11 @@ async function runMacro(macroName) {
 function exportExcel() {
   if(!SESSION) return;
   window.open(`/api/rj/native/export/excel/${SESSION.audit_date}`, '_blank');
+}
+
+function exportPDF() {
+  if(!SESSION) return;
+  window.open(`/api/rj/export/pdf/preview/${SESSION.audit_date}`, '_blank');
 }
 
 // ═══════════════════════════════════════

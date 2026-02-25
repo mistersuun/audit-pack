@@ -1,0 +1,80 @@
+{% extends "emails/base_email.html" %}
+
+{% block body %}
+<h2 style="margin-top: 0; color: #1e40af;">Rapport Journalier soumis</h2>
+
+<div class="alert alert-info">
+    <strong>✅ Confirmation de soumission</strong>
+    <p style="margin: 0.5rem 0 0 0;">Un Rapport Journalier (RJ) a été soumis avec succès.</p>
+</div>
+
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Informations de soumission</h3>
+
+    {% if alert.date %}
+    <p><strong>Date d'audit:</strong> {{ alert.date }}</p>
+    {% endif %}
+
+    {% if alert.auditor %}
+    <p><strong>Auditeur:</strong> {{ alert.auditor }}</p>
+    {% endif %}
+
+    {% if alert.submitted_at %}
+    <p><strong>Soumis à:</strong> {{ alert.submitted_at }}</p>
+    {% endif %}
+
+    {% if alert.status %}
+    <p>
+        <strong>Statut:</strong>
+        {% if alert.status == 'submitted' %}
+        <span class="badge badge-info">Soumis</span>
+        {% elif alert.status == 'locked' %}
+        <span class="badge badge-info">Verrouillé</span>
+        {% endif %}
+    </p>
+    {% endif %}
+</div>
+
+{% if alert.summary %}
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Résumé rapide</h3>
+    <div class="kpi-grid">
+        {% if alert.summary.revenue %}
+        <div class="kpi-item">
+            <div class="kpi-label">Revenu total</div>
+            <div class="kpi-value">${{ "%.2f"|format(alert.summary.revenue) }}</div>
+        </div>
+        {% endif %}
+
+        {% if alert.summary.occupancy_rate %}
+        <div class="kpi-item">
+            <div class="kpi-label">Taux d'occupation</div>
+            <div class="kpi-value">{{ "%.1f"|format(alert.summary.occupancy_rate) }}%</div>
+        </div>
+        {% endif %}
+
+        {% if alert.summary.adr %}
+        <div class="kpi-item">
+            <div class="kpi-label">ADR (Tarif moyen)</div>
+            <div class="kpi-value">${{ "%.2f"|format(alert.summary.adr) }}</div>
+        </div>
+        {% endif %}
+
+        {% if alert.summary.variance %}
+        <div class="kpi-item">
+            <div class="kpi-label">Variance Quasimodo</div>
+            <div class="kpi-value" style="color: {% if alert.summary.variance|abs > 5 %}#dc2626{% else %}#16a34a{% endif %};">
+                ${{ "%.2f"|format(alert.summary.variance) }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<p style="margin-top: 2rem; color: #666; font-size: 0.9rem;">
+    Accédez au <a href="{{ url_for('direction.direction_page', _external=True) }}" style="color: #1e40af; text-decoration: none;">
+        tableau de bord
+    </a> pour consulter les détails complets du RJ.
+</p>
+{% endblock %}

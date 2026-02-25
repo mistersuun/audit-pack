@@ -1,0 +1,663 @@
+{% extends "base.html" %}
+
+{% block title %}Intégration Lightspeed Galaxy PMS{% endblock %}
+
+{% block content %}
+<div class="container-lg py-4">
+  <div class="row">
+    <div class="col-md-12">
+      <h1 class="mb-4">Intégration Lightspeed Galaxy PMS</h1>
+      <p class="text-muted">
+        Connectez votre système PMS Lightspeed Galaxy pour synchroniser automatiquement les données du rapport journalier (RJ).
+      </p>
+    </div>
+  </div>
+
+  <!-- SECTION 1: État de la Connexion -->
+  <div class="row mt-4">
+    <div class="col-md-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">État de la Connexion</h5>
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+              <div id="connection-indicator" class="display-4 mb-2">
+                {% if is_connected %}
+                  <span class="text-success">●</span>
+                {% else %}
+                  <span class="text-danger">●</span>
+                {% endif %}
+              </div>
+              <p id="connection-text" class="fw-bold">
+                {% if is_connected %}
+                  Connecté
+                {% else %}
+                  Déconnecté
+                {% endif %}
+              </p>
+            </div>
+            <div class="col-md-9">
+              <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                  <tbody>
+                    <tr>
+                      <td><strong>Configuration:</strong></td>
+                      <td>
+                        {% if is_configured %}
+                          <span class="badge bg-success">Configurée</span>
+                        {% else %}
+                          <span class="badge bg-warning">Non configurée</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Propriété:</strong></td>
+                      <td id="property-name">
+                        {% if connection_status.property_name %}
+                          {{ connection_status.property_name }}
+                        {% else %}
+                          Non définie
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>ID Propriété:</strong></td>
+                      <td id="property-id">
+                        {% if connection_status.property_id %}
+                          <code>{{ connection_status.property_id }}</code>
+                        {% else %}
+                          Non défini
+                        {% endif %}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><strong>Dernière synchronisation:</strong></td>
+                      <td id="last-sync">
+                        {% if connection_status.last_sync %}
+                          {{ connection_status.last_sync }}
+                        {% else %}
+                          Jamais
+                        {% endif %}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-header bg-secondary text-white">
+          <h5 class="mb-0">Actions Rapides</h5>
+        </div>
+        <div class="card-body">
+          <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-2" data-bs-toggle="modal" data-bs-target="#configModal">
+            <i class="feather" data-feather="settings"></i> Configurer
+          </button>
+          <button type="button" class="btn btn-outline-success btn-sm w-100 mb-2" id="test-connection-btn" onclick="testConnection()">
+            <i class="feather" data-feather="activity"></i> Tester la Connexion
+          </button>
+          <button type="button" class="btn btn-outline-danger btn-sm w-100" id="disconnect-btn" onclick="disconnectAPI()">
+            <i class="feather" data-feather="power"></i> Déconnecter
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Configuration -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Configuration des Identifiants</h5>
+        </div>
+        <div class="card-body">
+          <form id="config-form" onsubmit="saveConfiguration(event)">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="client-id" class="form-label">ID Client OAuth2</label>
+                  <input type="text" class="form-control" id="client-id" placeholder="Client ID" required>
+                  <small class="form-text text-muted">Disponible dans le portail développeur Lightspeed</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="client-secret" class="form-label">Secret Client OAuth2</label>
+                  <input type="password" class="form-control" id="client-secret" placeholder="Client Secret" required>
+                  <small class="form-text text-muted">Ne partager jamais ce secret</small>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="property-id-input" class="form-label">ID Propriété Lightspeed</label>
+                  <input type="text" class="form-control" id="property-id-input" placeholder="Property ID" required>
+                  <small class="form-text text-muted">ID unique de votre propriété dans Lightspeed</small>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="base-url" class="form-label">URL de Base API (optionnel)</label>
+                  <input type="url" class="form-control" id="base-url" placeholder="https://api.lsk.lightspeed.app">
+                  <small class="form-text text-muted">URL de base du portail API Lightspeed</small>
+                </div>
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="auto-sync-check" checked>
+                <label class="form-check-label" for="auto-sync-check">
+                  Synchronisation automatique lors de la création de session RJ
+                </label>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">
+                  <i class="feather" data-feather="save"></i> Sauvegarder Configuration
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="testConnection()">
+                  <i class="feather" data-feather="activity"></i> Tester Connexion
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3: Synchronisation -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Synchronisation des Données</h5>
+        </div>
+        <div class="card-body">
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <label for="sync-date-input" class="form-label">Date à Synchroniser</label>
+              <div class="input-group">
+                <input type="date" class="form-control" id="sync-date-input">
+                <button type="button" class="btn btn-primary" onclick="syncDate()">
+                  <i class="feather" data-feather="refresh-cw"></i> Synchroniser
+                </button>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label d-block">Synchronisation Automatique</label>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="auto-sync-toggle" checked>
+                <label class="form-check-label" for="auto-sync-toggle">
+                  Synchroniser automatiquement à la création de session
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sync Status Indicator -->
+          <div id="sync-status-container" class="alert alert-info d-none" role="alert">
+            <div class="row">
+              <div class="col-md-8">
+                <h6 class="alert-heading">État de Synchronisation</h6>
+                <p id="sync-status-message" class="mb-0"></p>
+              </div>
+              <div class="col-md-4">
+                <div class="progress">
+                  <div id="sync-progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                </div>
+                <small id="sync-completeness" class="form-text text-muted">0% complète</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Synced Tabs Indicator -->
+          <div class="table-responsive mt-3">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Onglet</th>
+                  <th>État</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>1. Contrôle</strong></td>
+                  <td><span class="badge bg-info">Manuel</span></td>
+                  <td>Date, auditeur, météo, chambres à refaire</td>
+                </tr>
+                <tr>
+                  <td><strong>2. DueBack</strong></td>
+                  <td><span class="badge bg-info">Manuel</span></td>
+                  <td>Entrées réceptionnistes (manuel)</td>
+                </tr>
+                <tr>
+                  <td><strong>3. Récapitulatif</strong></td>
+                  <td><span class="badge bg-success">Synced</span></td>
+                  <td>Caisse, chèques, dépôts</td>
+                </tr>
+                <tr>
+                  <td><strong>4. Transelect</strong></td>
+                  <td><span class="badge bg-success">Synced</span></td>
+                  <td>Règlements cartes</td>
+                </tr>
+                <tr>
+                  <td><strong>5. GEAC</strong></td>
+                  <td><span class="badge bg-success">Synced</span></td>
+                  <td>Solde AR, revenus quotidiens</td>
+                </tr>
+                <tr>
+                  <td><strong>6. SD/Dépôt</strong></td>
+                  <td><span class="badge bg-info">Manuel</span></td>
+                  <td>Dépenses, enveloppes</td>
+                </tr>
+                <tr>
+                  <td><strong>7. SetD</strong></td>
+                  <td><span class="badge bg-info">Manuel</span></td>
+                  <td>Personnel set-déjeuner</td>
+                </tr>
+                <tr>
+                  <td><strong>8. HP/Admin</strong></td>
+                  <td><span class="badge bg-info">Manuel</span></td>
+                  <td>Promotion & Administration F&B</td>
+                </tr>
+                <tr>
+                  <td><strong>9. Internet</strong></td>
+                  <td><span class="badge bg-warning">Prochainement</span></td>
+                  <td>CD 36.1 vs 36.5</td>
+                </tr>
+                <tr>
+                  <td><strong>10. Sonifi</strong></td>
+                  <td><span class="badge bg-warning">Prochainement</span></td>
+                  <td>CD 35.2 vs email</td>
+                </tr>
+                <tr>
+                  <td><strong>11. Jour</strong></td>
+                  <td><span class="badge bg-success">Synced</span></td>
+                  <td>Revenus F&B, hébergement, taxes, occupation</td>
+                </tr>
+                <tr>
+                  <td><strong>12. Quasimodo</strong></td>
+                  <td><span class="badge bg-secondary">Auto</span></td>
+                  <td>Réconciliation globale (calculée)</td>
+                </tr>
+                <tr>
+                  <td><strong>13. DBRS</strong></td>
+                  <td><span class="badge bg-success">Synced</span></td>
+                  <td>Segments marché, no-shows</td>
+                </tr>
+                <tr>
+                  <td><strong>14. Sommaire</strong></td>
+                  <td><span class="badge bg-secondary">Auto</span></td>
+                  <td>Validation (calculée)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: Historique -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h5 class="mb-0">Historique des Synchronisations</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Auditeur</th>
+                  <th>État Session</th>
+                  <th>Onglets Synchés</th>
+                  <th>Complétude</th>
+                  <th>Dernière MAJ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if sync_statuses %}
+                  {% for sync in sync_statuses[:10] %}
+                  <tr>
+                    <td>
+                      <a href="/audit/rj/native/{{ sync.date }}" class="text-decoration-none">
+                        {{ sync.date }}
+                      </a>
+                    </td>
+                    <td>{{ sync.auditor }}</td>
+                    <td>
+                      {% if sync.status == 'draft' %}
+                        <span class="badge bg-secondary">Brouillon</span>
+                      {% elif sync.status == 'in_progress' %}
+                        <span class="badge bg-info">En cours</span>
+                      {% elif sync.status == 'submitted' %}
+                        <span class="badge bg-warning">Soumis</span>
+                      {% elif sync.status == 'locked' %}
+                        <span class="badge bg-success">Verrouillé</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <span class="badge bg-info">
+                        {{ sync.sync_info.synced_tabs|length }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="progress" style="height: 20px;">
+                        {% set completeness = (sync.sync_info.sync_completeness * 100)|int %}
+                        <div class="progress-bar" role="progressbar"
+                             style="width: {{ completeness }}%;"
+                             aria-valuenow="{{ completeness }}" aria-valuemin="0" aria-valuemax="100">
+                          {{ completeness }}%
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      {% if sync.sync_info.last_sync %}
+                        <small>{{ sync.sync_info.last_sync }}</small>
+                      {% else %}
+                        <small class="text-muted">-</small>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td colspan="6" class="text-center text-muted">Aucune session trouvée</td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Configuration Modal -->
+<div class="modal fade" id="configModal" tabindex="-1" aria-labelledby="configModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="configModalLabel">Configurer Lightspeed</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="modal-config-form">
+          <div class="mb-3">
+            <label for="modal-client-id" class="form-label">ID Client</label>
+            <input type="text" class="form-control" id="modal-client-id" required>
+          </div>
+          <div class="mb-3">
+            <label for="modal-client-secret" class="form-label">Secret Client</label>
+            <input type="password" class="form-control" id="modal-client-secret" required>
+          </div>
+          <div class="mb-3">
+            <label for="modal-property-id" class="form-label">ID Propriété</label>
+            <input type="text" class="form-control" id="modal-property-id" required>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+        <button type="button" class="btn btn-primary" onclick="saveConfigFromModal()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+feather.replace();
+
+// Set default date to today
+document.getElementById('sync-date-input').valueAsDate = new Date();
+
+async function saveConfiguration(event) {
+  event.preventDefault();
+
+  const clientId = document.getElementById('client-id').value;
+  const clientSecret = document.getElementById('client-secret').value;
+  const propertyId = document.getElementById('property-id-input').value;
+  const baseUrl = document.getElementById('base-url').value || 'https://api.lsk.lightspeed.app';
+
+  try {
+    const response = await fetch('/lightspeed/api/connect', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+      },
+      body: JSON.stringify({
+        client_id: clientId,
+        client_secret: clientSecret,
+        property_id: propertyId,
+        base_url: baseUrl
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showAlert('Succès', data.message, 'success');
+      updateConnectionStatus(data.connection_status);
+      document.getElementById('config-form').reset();
+    } else {
+      showAlert('Erreur', data.message, 'danger');
+    }
+  } catch (error) {
+    showAlert('Erreur', 'Impossible de sauvegarder la configuration: ' + error.message, 'danger');
+  }
+}
+
+async function testConnection() {
+  const btn = document.getElementById('test-connection-btn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="feather" data-feather="loader"></i> Test en cours...';
+
+  try {
+    const response = await fetch('/lightspeed/api/status');
+    const data = await response.json();
+
+    if (data.configured && data.connected) {
+      showAlert('Succès', 'Connexion établie avec Lightspeed Galaxy PMS', 'success');
+      updateConnectionStatus(data);
+    } else if (data.configured && !data.connected) {
+      showAlert('Info', 'Configuration trouvée mais non connectée. Authentifiez-vous d\'abord.', 'warning');
+    } else {
+      showAlert('Erreur', 'Lightspeed non configuré. Entrez les identifiants.', 'danger');
+    }
+  } catch (error) {
+    showAlert('Erreur', 'Impossible de tester la connexion: ' + error.message, 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    feather.replace();
+  }
+}
+
+async function syncDate() {
+  const dateInput = document.getElementById('sync-date-input').value;
+
+  if (!dateInput) {
+    showAlert('Erreur', 'Sélectionnez une date à synchroniser', 'danger');
+    return;
+  }
+
+  const container = document.getElementById('sync-status-container');
+  container.classList.remove('d-none');
+
+  try {
+    const response = await fetch(`/lightspeed/api/sync/${dateInput}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+      }
+    });
+
+    const data = await response.json();
+    const message = document.getElementById('sync-status-message');
+
+    if (data.success) {
+      message.innerHTML = `✓ ${data.message}<br><strong>Onglets synchronisés:</strong> ${data.synced_tabs.join(', ')}`;
+      container.className = 'alert alert-success';
+      showAlert('Succès', data.message, 'success');
+    } else {
+      message.innerHTML = `✗ ${data.message}`;
+      container.className = 'alert alert-warning';
+      if (data.errors.length > 0) {
+        message.innerHTML += `<br><strong>Erreurs:</strong> ${data.errors.join(', ')}`;
+      }
+      showAlert('Attention', data.message, 'warning');
+    }
+
+    // Update progress
+    if (data.synced_tabs) {
+      const completeness = (data.synced_tabs.length / 14) * 100;
+      document.getElementById('sync-progress-bar').style.width = completeness + '%';
+      document.getElementById('sync-completeness').textContent = Math.round(completeness) + '% complète';
+    }
+
+    // Refresh sync status for this date
+    await updateSyncStatus(dateInput);
+  } catch (error) {
+    const message = document.getElementById('sync-status-message');
+    message.textContent = 'Erreur: ' + error.message;
+    container.className = 'alert alert-danger';
+    showAlert('Erreur', 'Sync échouée: ' + error.message, 'danger');
+  }
+}
+
+async function updateSyncStatus(dateStr) {
+  try {
+    const response = await fetch(`/lightspeed/api/sync/status/${dateStr}`);
+    const data = await response.json();
+
+    if (data.synced_tabs) {
+      const completeness = (data.synced_tabs.length / 14) * 100;
+      document.getElementById('sync-progress-bar').style.width = completeness + '%';
+      document.getElementById('sync-completeness').textContent = Math.round(completeness) + '% complète';
+    }
+  } catch (error) {
+    console.error('Failed to update sync status:', error);
+  }
+}
+
+async function disconnectAPI() {
+  if (!confirm('Êtes-vous sûr de vouloir vous déconnecter de Lightspeed?')) {
+    return;
+  }
+
+  try {
+    const response = await fetch('/lightspeed/api/disconnect', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showAlert('Succès', data.message, 'success');
+      location.reload();
+    } else {
+      showAlert('Erreur', data.message, 'danger');
+    }
+  } catch (error) {
+    showAlert('Erreur', 'Impossible de se déconnecter: ' + error.message, 'danger');
+  }
+}
+
+function updateConnectionStatus(status) {
+  const indicator = document.getElementById('connection-indicator');
+  const text = document.getElementById('connection-text');
+  const propertyName = document.getElementById('property-name');
+  const propertyId = document.getElementById('property-id');
+  const lastSync = document.getElementById('last-sync');
+
+  if (status.connected) {
+    indicator.innerHTML = '<span class="text-success">●</span>';
+    text.textContent = 'Connecté';
+  } else {
+    indicator.innerHTML = '<span class="text-danger">●</span>';
+    text.textContent = 'Déconnecté';
+  }
+
+  if (status.property_name) {
+    propertyName.textContent = status.property_name;
+  }
+
+  if (status.property_id) {
+    propertyId.innerHTML = '<code>' + status.property_id + '</code>';
+  }
+
+  if (status.last_sync) {
+    lastSync.textContent = new Date(status.last_sync).toLocaleString('fr-CA');
+  }
+}
+
+function saveConfigFromModal() {
+  const clientId = document.getElementById('modal-client-id').value;
+  const clientSecret = document.getElementById('modal-client-secret').value;
+  const propertyId = document.getElementById('modal-property-id').value;
+
+  document.getElementById('client-id').value = clientId;
+  document.getElementById('client-secret').value = clientSecret;
+  document.getElementById('property-id-input').value = propertyId;
+
+  const modal = bootstrap.Modal.getInstance(document.getElementById('configModal'));
+  modal.hide();
+
+  // Auto-submit form
+  saveConfiguration({ preventDefault: () => {} });
+}
+
+function showAlert(title, message, type) {
+  const alertHtml = `
+    <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+      <strong>${title}:</strong> ${message}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  `;
+
+  const container = document.createElement('div');
+  container.innerHTML = alertHtml;
+
+  const firstChild = document.querySelector('.container-lg');
+  firstChild.parentNode.insertBefore(container.firstElementChild, firstChild);
+}
+</script>
+
+<style>
+  .progress-bar {
+    font-size: 0.75rem;
+    line-height: 20px;
+  }
+
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+
+  .badge {
+    font-size: 0.75rem;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,1151 @@
+{% extends "base.html" %}
+
+{% block title %}STR & OTB{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<style>
+    .tabs-container {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 2rem;
+        margin-top: -1rem;
+    }
+
+    .tab-btn {
+        padding: 1rem 1.5rem;
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        font-weight: 600;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all var(--transition);
+        font-size: 0.95rem;
+    }
+
+    .tab-btn:hover {
+        color: var(--text);
+        background: var(--primary-bg);
+    }
+
+    .tab-btn.active {
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+        animation: fadeIn 200ms ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* KPI Cards */
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+
+    .kpi-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.75rem;
+    }
+
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .kpi-value.positive {
+        color: var(--success);
+    }
+
+    .kpi-value.negative {
+        color: #ef4444;
+    }
+
+    .kpi-subtext {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    /* Gauge/Ring visualization */
+    .kpi-gauge {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: conic-gradient(var(--primary) 0deg, var(--primary) calc(3.6deg * var(--value)), var(--border) calc(3.6deg * var(--value)), var(--border) 360deg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0 auto 1rem;
+    }
+
+    /* Charts */
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+    }
+
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 1rem;
+    }
+
+    /* Tables */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        font-size: 0.9rem;
+    }
+
+    .data-table thead {
+        background: var(--primary-bg);
+        border-bottom: 2px solid var(--border);
+    }
+
+    .data-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .data-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text);
+    }
+
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--primary-bg);
+    }
+
+    /* Form sections */
+    .form-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow);
+    }
+
+    .form-section h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 0.4rem;
+    }
+
+    .form-group input,
+    .form-group select {
+        padding: 0.6rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: 0.9rem;
+        transition: all var(--transition);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px var(--primary-bg);
+        outline: none;
+    }
+
+    /* Buttons */
+    .btn {
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 4px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all var(--transition);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+        background: var(--primary-bg);
+        color: var(--primary);
+        border: 1px solid var(--primary-border);
+    }
+
+    .btn-secondary:hover {
+        background: var(--border-light);
+    }
+
+    .btn-small {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state p {
+        font-size: 0.95rem;
+    }
+
+    /* Controls */
+    .controls-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .controls-row input[type="date"] {
+        padding: 0.6rem 0.8rem;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: var(--card-bg);
+        color: var(--text);
+    }
+
+    /* Alert/Message */
+    .alert {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid var(--success);
+        color: var(--success);
+    }
+
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid #ef4444;
+        color: #ef4444;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .data-table {
+            font-size: 0.8rem;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="page-header">
+        <div class="page-title-section">
+            <i data-feather="target" class="page-icon"></i>
+            <h1>Positionnement Concurrentiel</h1>
+            <p>STR et OTB — Benchmarking vs concurrents et prévisions de réservations</p>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('str', this)">
+            <i data-feather="bar-chart-2" style="width: 18px; height: 18px; margin-right: 8px;"></i>
+            STR — Positionnement Concurrentiel
+        </button>
+        <button class="tab-btn" onclick="switchTab('otb', this)">
+            <i data-feather="calendar" style="width: 18px; height: 18px; margin-right: 8px;"></i>
+            OTB — Réservations Futures
+        </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- STR TAB -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="str" class="tab-content active">
+        <div id="strMessage"></div>
+
+        <!-- Controls -->
+        <div class="controls-row">
+            <input type="date" id="strStartDate" onchange="loadSTRData()">
+            <input type="date" id="strEndDate" onchange="loadSTRData()">
+            <button class="btn btn-secondary" onclick="loadSTRData()">
+                <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i> Charger
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('strFileInput').click()">
+                <i data-feather="upload" style="width: 16px; height: 16px;"></i> Importer CSV
+            </button>
+            <input type="file" id="strFileInput" accept=".csv" onchange="importSTRFile()" style="display: none;">
+            <button class="btn btn-secondary" onclick="seedSTRData()">
+                <i data-feather="database" style="width: 16px; height: 16px;"></i> Données démo
+            </button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Index d'Occupation</div>
+                <div class="kpi-gauge" style="--value: 0;" id="strOccGauge">—</div>
+                <div class="kpi-value" id="strOccValue">—</div>
+                <div class="kpi-subtext" id="strOccRank">—</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">Index de Tarif (ADR)</div>
+                <div class="kpi-gauge" style="--value: 0;" id="strAdrGauge">—</div>
+                <div class="kpi-value" id="strAdrValue">—</div>
+                <div class="kpi-subtext" id="strAdrRank">—</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">Index RevPAR (RGI)</div>
+                <div class="kpi-gauge" style="--value: 0;" id="strRevparGauge">—</div>
+                <div class="kpi-value" id="strRevparValue">—</div>
+                <div class="kpi-subtext" id="strRevparRank">—</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-container">
+            <div class="chart-title">RevPAR — Évolution historique</div>
+            <canvas id="strRevparChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Comparaison — Occupation & ADR</div>
+            <canvas id="strComparisonChart"></canvas>
+        </div>
+
+        <!-- Data Table -->
+        <div style="margin-top: 2rem;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text);">Historique détaillé</h3>
+            <div id="strTableContainer">
+                <div class="empty-state">
+                    <i data-feather="inbox"></i>
+                    <p>Aucune donnée STR. Chargez ou importez des données.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- OTB TAB -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="otb" class="tab-content">
+        <div id="otbMessage"></div>
+
+        <!-- Controls -->
+        <div class="controls-row">
+            <input type="date" id="otbSnapshotDate" onchange="loadOTBData()">
+            <button class="btn btn-secondary" onclick="loadOTBData()">
+                <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i> Charger
+            </button>
+            <button class="btn btn-secondary" onclick="document.getElementById('otbFileInput').click()">
+                <i data-feather="upload" style="width: 16px; height: 16px;"></i> Importer CSV
+            </button>
+            <input type="file" id="otbFileInput" accept=".csv" onchange="importOTBFile()" style="display: none;">
+            <button class="btn btn-secondary" onclick="createOTBSnapshot()">
+                <i data-feather="camera" style="width: 16px; height: 16px;"></i> Snapshot aujourd'hui
+            </button>
+            <button class="btn btn-secondary" onclick="seedOTBData()">
+                <i data-feather="database" style="width: 16px; height: 16px;"></i> Données démo
+            </button>
+        </div>
+
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">Chambres OTB (30j)</div>
+                <div class="kpi-value" id="otbRoomsValue">—</div>
+                <div class="kpi-subtext" id="otbRoomsSubtext">—</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">ADR OTB Moyen</div>
+                <div class="kpi-value" id="otbAdrValue">—</div>
+                <div class="kpi-subtext" id="otbAdrSubtext">—</div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="kpi-label">Revenu OTB Projeté (90j)</div>
+                <div class="kpi-value" id="otbRevenueValue">—</div>
+                <div class="kpi-subtext" id="otbRevenueSubtext">—</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="chart-container">
+            <div class="chart-title">Occupation OTB — 90 jours</div>
+            <canvas id="otbOccupancyChart"></canvas>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-title">Chambres — Groupe vs Individuels</div>
+            <canvas id="otbMixChart"></canvas>
+        </div>
+
+        <!-- Manual Entry Form -->
+        <div class="form-section">
+            <h3>Entrée manuelle — OTB</h3>
+            <form onsubmit="saveOTBManual(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Date snapshot</label>
+                        <input type="date" id="otbFormSnapshotDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date cible</label>
+                        <input type="date" id="otbFormTargetDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Chambres OTB</label>
+                        <input type="number" id="otbFormRooms" min="0" max="252" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Occupation (%)</label>
+                        <input type="number" id="otbFormOcc" min="0" max="100" step="0.1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>ADR</label>
+                        <input type="number" id="otbFormAdr" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Revenu</label>
+                        <input type="number" id="otbFormRevenue" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label>Chambres groupe</label>
+                        <input type="number" id="otbFormGroupRooms" min="0" max="252">
+                    </div>
+                    <div class="form-group">
+                        <label>Chambres individuels</label>
+                        <input type="number" id="otbFormTransientRooms" min="0" max="252">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="save" style="width: 16px; height: 16px;"></i> Enregistrer
+                </button>
+            </form>
+        </div>
+
+        <!-- Data Table -->
+        <div style="margin-top: 2rem;">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 1rem; color: var(--text);">Prévisions détaillées</h3>
+            <div id="otbTableContainer">
+                <div class="empty-state">
+                    <i data-feather="inbox"></i>
+                    <p>Aucune donnée OTB. Chargez ou importez des données.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+<script>
+    feather.replace();
+
+    let strChart, strCompChart, otbOccChart, otbMixChart;
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // TAB SWITCHING
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function switchTab(tabName, btn) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+        // Show selected tab
+        document.getElementById(tabName).classList.add('active');
+        btn.classList.add('active');
+
+        // Trigger chart redraw
+        setTimeout(() => {
+            if (tabName === 'str') {
+                if (strChart) strChart.resize();
+                if (strCompChart) strCompChart.resize();
+            } else {
+                if (otbOccChart) otbOccChart.resize();
+                if (otbMixChart) otbMixChart.resize();
+            }
+        }, 100);
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // STR FUNCTIONS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function initDateInputs() {
+        const today = new Date();
+        const startDate = new Date(today);
+        startDate.setDate(today.getDate() - 90);
+
+        const formatDate = (d) => d.toISOString().split('T')[0];
+
+        if (!document.getElementById('strStartDate').value) {
+            document.getElementById('strStartDate').value = formatDate(startDate);
+        }
+        if (!document.getElementById('strEndDate').value) {
+            document.getElementById('strEndDate').value = formatDate(today);
+        }
+        if (!document.getElementById('otbSnapshotDate').value) {
+            document.getElementById('otbSnapshotDate').value = formatDate(today);
+        }
+        if (!document.getElementById('otbFormSnapshotDate').value) {
+            document.getElementById('otbFormSnapshotDate').value = formatDate(today);
+        }
+    }
+
+    function loadSTRData() {
+        const startDate = document.getElementById('strStartDate').value;
+        const endDate = document.getElementById('strEndDate').value;
+
+        if (!startDate || !endDate) return;
+
+        showMessage('strMessage', 'Chargement...', 'info');
+
+        fetch(`/compset/api/str?start_date=${startDate}&end_date=${endDate}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage('strMessage', data.error, 'error');
+                    return;
+                }
+
+                hideMessage('strMessage');
+                renderSTRData(data.data);
+            })
+            .catch(e => showMessage('strMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    function renderSTRData(records) {
+        if (records.length === 0) {
+            document.getElementById('strTableContainer').innerHTML = `
+                <div class="empty-state">
+                    <i data-feather="inbox"></i>
+                    <p>Aucune donnée STR pour cette période.</p>
+                </div>
+            `;
+            feather.replace();
+            updateSTRKPIs(null);
+            return;
+        }
+
+        // Update KPIs with latest record
+        const latest = records[records.length - 1];
+        updateSTRKPIs(latest);
+
+        // Build table
+        let html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Mon Occ (%)</th>
+                        <th>Comp Occ (%)</th>
+                        <th>Index Occ</th>
+                        <th>Mon ADR</th>
+                        <th>Comp ADR</th>
+                        <th>Index ADR</th>
+                        <th>Mon RevPAR</th>
+                        <th>Comp RevPAR</th>
+                        <th>RGI</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        records.forEach(r => {
+            html += `
+                <tr>
+                    <td>${r.report_date}</td>
+                    <td>${(r.my_occ || 0).toFixed(1)}</td>
+                    <td>${(r.comp_occ || 0).toFixed(1)}</td>
+                    <td>${(r.occ_index || 0).toFixed(1)}</td>
+                    <td>$${(r.my_adr || 0).toFixed(2)}</td>
+                    <td>$${(r.comp_adr || 0).toFixed(2)}</td>
+                    <td>${(r.adr_index || 0).toFixed(1)}</td>
+                    <td>$${(r.my_revpar || 0).toFixed(2)}</td>
+                    <td>$${(r.comp_revpar || 0).toFixed(2)}</td>
+                    <td>${(r.revpar_index || 0).toFixed(1)}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('strTableContainer').innerHTML = html;
+
+        // Render charts
+        renderSTRCharts(records);
+    }
+
+    function updateSTRKPIs(record) {
+        if (!record) {
+            document.getElementById('strOccValue').textContent = '—';
+            document.getElementById('strAdrValue').textContent = '—';
+            document.getElementById('strRevparValue').textContent = '—';
+            document.getElementById('strOccRank').textContent = '—';
+            document.getElementById('strAdrRank').textContent = '—';
+            document.getElementById('strRevparRank').textContent = '—';
+            return;
+        }
+
+        const occ_idx = record.occ_index || 0;
+        const adr_idx = record.adr_index || 0;
+        const revpar_idx = record.revpar_index || 0;
+
+        // Update values
+        const occVal = document.getElementById('strOccValue');
+        occVal.textContent = occ_idx.toFixed(1);
+        occVal.className = 'kpi-value ' + (occ_idx >= 100 ? 'positive' : 'negative');
+
+        const adrVal = document.getElementById('strAdrValue');
+        adrVal.textContent = adr_idx.toFixed(1);
+        adrVal.className = 'kpi-value ' + (adr_idx >= 100 ? 'positive' : 'negative');
+
+        const revparVal = document.getElementById('strRevparValue');
+        revparVal.textContent = revpar_idx.toFixed(1);
+        revparVal.className = 'kpi-value ' + (revpar_idx >= 100 ? 'positive' : 'negative');
+
+        // Update gauges
+        document.getElementById('strOccGauge').style.setProperty('--value', Math.min(100, occ_idx));
+        document.getElementById('strAdrGauge').style.setProperty('--value', Math.min(100, adr_idx));
+        document.getElementById('strRevparGauge').style.setProperty('--value', Math.min(100, revpar_idx));
+
+        // Update ranks
+        const rank_suffix = (rank, size) => rank ? `${rank}ème sur ${size || 6}` : '—';
+        document.getElementById('strOccRank').textContent = rank_suffix(record.occ_rank, record.comp_set_size);
+        document.getElementById('strAdrRank').textContent = rank_suffix(record.adr_rank, record.comp_set_size);
+        document.getElementById('strRevparRank').textContent = rank_suffix(record.revpar_rank, record.comp_set_size);
+    }
+
+    function renderSTRCharts(records) {
+        const dates = records.map(r => r.report_date);
+        const myRevpar = records.map(r => r.my_revpar || 0);
+        const compRevpar = records.map(r => r.comp_revpar || 0);
+        const myOcc = records.map(r => r.my_occ || 0);
+        const compOcc = records.map(r => r.comp_occ || 0);
+        const myAdr = records.map(r => r.my_adr || 0);
+        const compAdr = records.map(r => r.comp_adr || 0);
+
+        // RevPAR chart
+        const revparCtx = document.getElementById('strRevparChart').getContext('2d');
+        if (strChart) strChart.destroy();
+        strChart = new Chart(revparCtx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Mon RevPAR',
+                        data: myRevpar,
+                        borderColor: 'var(--primary)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                    },
+                    {
+                        label: 'Comp Set RevPAR',
+                        data: compRevpar,
+                        borderColor: 'var(--text-secondary)',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        borderDash: [5, 5],
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                scales: {
+                    y: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
+                    x: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                }
+            }
+        });
+
+        // Comparison chart
+        const compCtx = document.getElementById('strComparisonChart').getContext('2d');
+        if (strCompChart) strCompChart.destroy();
+        strCompChart = new Chart(compCtx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Mon Occ (%)',
+                        data: myOcc,
+                        backgroundColor: 'var(--primary)',
+                    },
+                    {
+                        label: 'Comp Occ (%)',
+                        data: compOcc,
+                        backgroundColor: 'rgba(99, 102, 241, 0.3)',
+                    },
+                    {
+                        label: 'Mon ADR',
+                        data: myAdr,
+                        backgroundColor: 'var(--success)',
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'Comp ADR',
+                        data: compAdr,
+                        backgroundColor: 'rgba(16, 185, 129, 0.3)',
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                scales: {
+                    y: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
+                    y1: { type: 'linear', position: 'right', ticks: { color: 'var(--text-secondary)' }, grid: { drawOnChartArea: false } },
+                    x: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                }
+            }
+        });
+    }
+
+    function importSTRFile() {
+        const file = document.getElementById('strFileInput').files[0];
+        if (!file) return;
+
+        const form = new FormData();
+        form.append('file', file);
+
+        showMessage('strMessage', 'Import en cours...', 'info');
+
+        fetch('/compset/api/str/import', { method: 'POST', body: form })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('strMessage', data.message, 'success');
+                    document.getElementById('strFileInput').value = '';
+                    loadSTRData();
+                } else {
+                    showMessage('strMessage', data.error || 'Erreur lors de l\'import', 'error');
+                }
+            })
+            .catch(e => showMessage('strMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    function seedSTRData() {
+        showMessage('strMessage', 'Création de données démo...', 'info');
+
+        fetch('/compset/api/str/seed')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('strMessage', data.message, 'success');
+                    loadSTRData();
+                } else {
+                    showMessage('strMessage', data.error || 'Erreur', 'error');
+                }
+            })
+            .catch(e => showMessage('strMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // OTB FUNCTIONS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function loadOTBData() {
+        const snapshotDate = document.getElementById('otbSnapshotDate').value;
+
+        if (!snapshotDate) return;
+
+        showMessage('otbMessage', 'Chargement...', 'info');
+
+        fetch(`/compset/api/otb?snapshot_date=${snapshotDate}&days=90`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage('otbMessage', data.error, 'error');
+                    return;
+                }
+
+                hideMessage('otbMessage');
+                renderOTBData(data.data);
+            })
+            .catch(e => showMessage('otbMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    function renderOTBData(records) {
+        if (records.length === 0) {
+            document.getElementById('otbTableContainer').innerHTML = `
+                <div class="empty-state">
+                    <i data-feather="inbox"></i>
+                    <p>Aucune donnée OTB pour cette période.</p>
+                </div>
+            `;
+            feather.replace();
+            updateOTBKPIs([]);
+            return;
+        }
+
+        updateOTBKPIs(records);
+
+        // Build table
+        let html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Chambres OTB</th>
+                        <th>Occupation (%)</th>
+                        <th>ADR</th>
+                        <th>Revenu</th>
+                        <th>Groupe</th>
+                        <th>Individuels</th>
+                        <th>Var LY</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        records.forEach(r => {
+            const ly_var = r.ly_rooms ? `${(r.rooms_otb - r.ly_rooms >= 0 ? '+' : '')}${r.rooms_otb - r.ly_rooms}` : '—';
+            html += `
+                <tr>
+                    <td>${r.target_date}</td>
+                    <td>${r.rooms_otb}</td>
+                    <td>${(r.occ_otb || 0).toFixed(1)}</td>
+                    <td>$${(r.adr_otb || 0).toFixed(2)}</td>
+                    <td>$${(r.revenue_otb || 0).toFixed(2)}</td>
+                    <td>${r.group_rooms}</td>
+                    <td>${r.transient_rooms}</td>
+                    <td>${ly_var}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('otbTableContainer').innerHTML = html;
+
+        renderOTBCharts(records);
+    }
+
+    function updateOTBKPIs(records) {
+        if (records.length === 0) {
+            document.getElementById('otbRoomsValue').textContent = '—';
+            document.getElementById('otbAdrValue').textContent = '—';
+            document.getElementById('otbRevenueValue').textContent = '—';
+            return;
+        }
+
+        // 30-day avg
+        const first30 = records.slice(0, 30);
+        const avg30rooms = first30.reduce((s, r) => s + (r.rooms_otb || 0), 0) / Math.max(1, first30.length);
+        const avg30adr = first30.reduce((s, r) => s + (r.adr_otb || 0), 0) / Math.max(1, first30.length);
+
+        // 90-day total revenue
+        const total90rev = records.reduce((s, r) => s + (r.revenue_otb || 0), 0);
+
+        document.getElementById('otbRoomsValue').textContent = Math.round(avg30rooms);
+        document.getElementById('otbRoomsSubtext').textContent = `Moyenne 30j`;
+
+        document.getElementById('otbAdrValue').textContent = `$${avg30adr.toFixed(2)}`;
+        document.getElementById('otbAdrSubtext').textContent = `Moyenne 30j`;
+
+        document.getElementById('otbRevenueValue').textContent = `$${(total90rev / 1000).toFixed(1)}k`;
+        document.getElementById('otbRevenueSubtext').textContent = `Projeté 90j`;
+    }
+
+    function renderOTBCharts(records) {
+        const dates = records.map(r => r.target_date);
+        const occ = records.map(r => r.occ_otb || 0);
+        const lyOcc = records.map(r => r.ly_occ || null);
+        const group = records.map(r => r.group_rooms || 0);
+        const transient = records.map(r => r.transient_rooms || 0);
+
+        // Occupancy chart
+        const occCtx = document.getElementById('otbOccupancyChart').getContext('2d');
+        if (otbOccChart) otbOccChart.destroy();
+        otbOccChart = new Chart(occCtx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'OTB Occupation',
+                        data: occ,
+                        borderColor: 'var(--primary)',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.3,
+                        fill: true,
+                    },
+                    {
+                        label: 'LY Occupation',
+                        data: lyOcc,
+                        borderColor: 'var(--text-secondary)',
+                        backgroundColor: 'transparent',
+                        tension: 0.3,
+                        borderDash: [5, 5],
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                scales: {
+                    y: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
+                    x: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                }
+            }
+        });
+
+        // Mix chart
+        const mixCtx = document.getElementById('otbMixChart').getContext('2d');
+        if (otbMixChart) otbMixChart.destroy();
+        otbMixChart = new Chart(mixCtx, {
+            type: 'bar',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'Groupe',
+                        data: group,
+                        backgroundColor: 'var(--primary)',
+                    },
+                    {
+                        label: 'Individuels',
+                        data: transient,
+                        backgroundColor: 'var(--success)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                scales: {
+                    x: { stacked: true, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
+                    y: { stacked: true, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                }
+            }
+        });
+    }
+
+    function importOTBFile() {
+        const file = document.getElementById('otbFileInput').files[0];
+        if (!file) return;
+
+        const form = new FormData();
+        form.append('file', file);
+
+        showMessage('otbMessage', 'Import en cours...', 'info');
+
+        fetch('/compset/api/otb/import', { method: 'POST', body: form })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('otbMessage', data.message, 'success');
+                    document.getElementById('otbFileInput').value = '';
+                    loadOTBData();
+                } else {
+                    showMessage('otbMessage', data.error || 'Erreur lors de l\'import', 'error');
+                }
+            })
+            .catch(e => showMessage('otbMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    function createOTBSnapshot() {
+        showMessage('otbMessage', 'Création du snapshot...', 'info');
+
+        fetch('/compset/api/otb/snapshot', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('otbMessage', data.message, 'success');
+                    loadOTBData();
+                } else {
+                    showMessage('otbMessage', data.error || 'Erreur', 'error');
+                }
+            })
+            .catch(e => showMessage('otbMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    function seedOTBData() {
+        showMessage('otbMessage', 'Création de données démo...', 'info');
+
+        fetch('/compset/api/otb/seed')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('otbMessage', data.message, 'success');
+                    loadOTBData();
+                } else {
+                    showMessage('otbMessage', data.error || 'Erreur', 'error');
+                }
+            })
+            .catch(e => showMessage('otbMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    function saveOTBManual(event) {
+        event.preventDefault();
+
+        const data = {
+            snapshot_date: document.getElementById('otbFormSnapshotDate').value,
+            target_date: document.getElementById('otbFormTargetDate').value,
+            rooms_otb: parseInt(document.getElementById('otbFormRooms').value) || 0,
+            occ_otb: parseFloat(document.getElementById('otbFormOcc').value) || 0,
+            adr_otb: parseFloat(document.getElementById('otbFormAdr').value) || 0,
+            revenue_otb: parseFloat(document.getElementById('otbFormRevenue').value) || 0,
+            group_rooms: parseInt(document.getElementById('otbFormGroupRooms').value) || 0,
+            transient_rooms: parseInt(document.getElementById('otbFormTransientRooms').value) || 0,
+        };
+
+        fetch('/compset/api/otb/manual', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('otbMessage', data.message, 'success');
+                    event.target.reset();
+                    initDateInputs();
+                    loadOTBData();
+                } else {
+                    showMessage('otbMessage', data.error || 'Erreur', 'error');
+                }
+            })
+            .catch(e => showMessage('otbMessage', `Erreur: ${e.message}`, 'error'));
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // UTILITIES
+    // ═════════════════════════════════════════════════════════════════════════
+
+    function showMessage(elementId, text, type) {
+        const el = document.getElementById(elementId);
+        el.innerHTML = `<div class="alert alert-${type}">${text}</div>`;
+        el.classList.remove('hidden');
+    }
+
+    function hideMessage(elementId) {
+        const el = document.getElementById(elementId);
+        el.innerHTML = '';
+        el.classList.add('hidden');
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+        initDateInputs();
+        loadSTRData();
+        loadOTBData();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "emails/base_email.html" %}
+
+{% block body %}
+<h2 style="margin-top: 0; color: #1e40af;">Résumé quotidien de l'audit de nuit</h2>
+
+<p style="color: #666; margin-top: 0;">
+    Rapport automatisé du <strong>{{ alert.date }}</strong> généré à 7h00
+</p>
+
+{% if alert.available %}
+
+<!-- Status -->
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Statut de soumission</h3>
+    <p>
+        <strong>Auditeur:</strong> {{ alert.auditor or 'Non défini' }}<br>
+        <strong>Statut RJ:</strong>
+        {% if alert.status == 'submitted' %}
+        <span class="badge badge-info">✅ Soumis</span>
+        {% elif alert.status == 'locked' %}
+        <span class="badge badge-info">🔒 Verrouillé</span>
+        {% else %}
+        <span class="badge badge-warning">⏳ En cours</span>
+        {% endif %}
+    </p>
+</div>
+
+<!-- Key Performance Indicators -->
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Indicateurs clés de performance</h3>
+    <div class="kpi-grid">
+        {% if alert.revenue %}
+        <div class="kpi-item">
+            <div class="kpi-label">Revenu hébergement</div>
+            <div class="kpi-value">${{ "%.0f"|format(alert.revenue.room) }}</div>
+        </div>
+        <div class="kpi-item">
+            <div class="kpi-label">Revenu F&B</div>
+            <div class="kpi-value">${{ "%.0f"|format(alert.revenue.fb) }}</div>
+        </div>
+        <div class="kpi-item">
+            <div class="kpi-label">Revenu total</div>
+            <div class="kpi-value" style="color: #16a34a;">${{ "%.0f"|format(alert.revenue.total) }}</div>
+        </div>
+        {% endif %}
+
+        {% if alert.occupancy %}
+        <div class="kpi-item">
+            <div class="kpi-label">Taux d'occupation</div>
+            <div class="kpi-value">{{ "%.1f"|format(alert.occupancy.rate) }}%</div>
+        </div>
+        <div class="kpi-item">
+            <div class="kpi-label">Chambres louées</div>
+            <div class="kpi-value">{{ alert.occupancy.rooms_sold }}</div>
+        </div>
+        {% endif %}
+
+        {% if alert.kpis %}
+        {% if alert.kpis.adr %}
+        <div class="kpi-item">
+            <div class="kpi-label">ADR (Tarif moyen)</div>
+            <div class="kpi-value">${{ "%.2f"|format(alert.kpis.adr) }}</div>
+        </div>
+        {% endif %}
+
+        {% if alert.kpis.revpar %}
+        <div class="kpi-item">
+            <div class="kpi-label">RevPAR</div>
+            <div class="kpi-value">${{ "%.2f"|format(alert.kpis.revpar) }}</div>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Payments Summary -->
+{% if alert.payments %}
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Résumé des paiements</h3>
+    <table>
+        <tr>
+            <th>Méthode de paiement</th>
+            <th style="text-align: right;">Montant</th>
+        </tr>
+        <tr>
+            <td>Espèces</td>
+            <td style="text-align: right; font-weight: 600;">${{ "%.2f"|format(alert.payments.cash) }}</td>
+        </tr>
+        <tr>
+            <td>Cartes</td>
+            <td style="text-align: right; font-weight: 600;">${{ "%.2f"|format(alert.payments.cards) }}</td>
+        </tr>
+        <tr style="background-color: #f0f9ff;">
+            <td><strong>Total</strong></td>
+            <td style="text-align: right; font-weight: 700; color: #1e40af;">${{ "%.2f"|format(alert.payments.total) }}</td>
+        </tr>
+    </table>
+</div>
+{% endif %}
+
+<!-- Reconciliation -->
+{% if alert.reconciliation %}
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Rapprochement</h3>
+    <p>
+        <strong>Variance Quasimodo:</strong>
+        <span style="font-weight: 600; color: {% if alert.reconciliation.quasimodo_variance|abs > 5 %}#dc2626{% else %}#16a34a{% endif %};">
+            ${{ "%.2f"|format(alert.reconciliation.quasimodo_variance) }}
+        </span>
+    </p>
+    <p>
+        <strong>DueBack total:</strong>
+        <span style="font-weight: 600;">${{ "%.2f"|format(alert.reconciliation.dueback_total) }}</span>
+    </p>
+</div>
+{% endif %}
+
+<!-- Alerts -->
+{% if alert.alerts and alert.alerts|length > 0 %}
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">⚠️ Alertes actives</h3>
+    {% for alert_item in alert.alerts %}
+    <div style="padding: 0.75rem; background-color: #fef3c7; border-left: 4px solid #f59e0b; margin-bottom: 0.75rem; border-radius: 4px;">
+        <strong style="color: #78350f;">{{ alert_item.alert_type }}</strong><br>
+        <span style="color: #78350f;">{{ alert_item.message }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info" style="margin: 1.5rem 0;">
+    <strong>✅ Pas d'alertes</strong>
+    <p style="margin: 0.5rem 0 0 0;">Tous les contrôles de qualité ont réussi.</p>
+</div>
+{% endif %}
+
+{% else %}
+<div class="alert alert-warning">
+    <strong>⚠️ Données non disponibles</strong>
+    <p style="margin: 0.5rem 0 0 0;">{{ alert.message }}</p>
+</div>
+{% endif %}
+
+<p style="margin-top: 2rem; color: #666; font-size: 0.9rem;">
+    Pour plus de détails, visitez le <a href="{{ url_for('direction.direction_page', _external=True) }}" style="color: #1e40af; text-decoration: none;">
+        tableau de bord direction
+    </a>.
+</p>
+{% endblock %}

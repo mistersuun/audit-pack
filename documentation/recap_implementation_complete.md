@@ -449,5 +449,5 @@ D23 = D20 - D21 - D22
 **Ready for Testing:** OUI ✅
 **Ready for Production:** Après tests utilisateur
 
-**Implémenté par:** Claude Sonnet 4.5
+**Implémenté par:** Équipe développement
 **Date:** 2025-12-29

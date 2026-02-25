@@ -8,6 +8,37 @@ TOTAL_ROOMS = 252  # Sheraton Laval property capacity
 
 
 # ==============================================================================
+# PROPERTY MANAGEMENT — Multi-property support
+# ==============================================================================
+
+class Property(db.Model):
+    """Hotel property for multi-property support."""
+    __tablename__ = 'properties'
+
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(10), unique=True, nullable=False)  # e.g., 'SHRLVL'
+    name = db.Column(db.String(200), nullable=False)  # e.g., 'Sheraton Laval'
+    brand = db.Column(db.String(100), default='Marriott')
+    total_rooms = db.Column(db.Integer, nullable=False)
+    address = db.Column(db.String(500))
+    city = db.Column(db.String(100))
+    province = db.Column(db.String(100))
+    country = db.Column(db.String(50), default='Canada')
+    timezone = db.Column(db.String(50), default='America/Montreal')
+    currency = db.Column(db.String(3), default='CAD')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Lightspeed config per property
+    pms_type = db.Column(db.String(50), default='Galaxy Lightspeed')
+    pms_property_id = db.Column(db.String(100))
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns
+                if c.name != 'created_at'}
+
+
+# ==============================================================================
 # USER AUTHENTICATION MODELS
 # ==============================================================================
 
@@ -24,6 +55,7 @@ class User(db.Model):
     must_change_password = db.Column(db.Boolean, default=True)
     last_login = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    default_property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
 
     def set_password(self, password):
         from werkzeug.security import generate_password_hash
@@ -67,6 +99,7 @@ class DailyReport(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, unique=True, nullable=False, index=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
 
     # Revenus
     revenue_comptant = db.Column(db.Float, default=0)
@@ -220,6 +253,7 @@ class DailyJourMetrics(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, unique=True, nullable=False, index=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
     year = db.Column(db.Integer, nullable=False, index=True)
     month = db.Column(db.Integer, nullable=False)
     day_of_month = db.Column(db.Integer, nullable=False)
@@ -525,6 +559,7 @@ class MonthlyBudget(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     year = db.Column(db.Integer, nullable=False)
     month = db.Column(db.Integer, nullable=False)  # 1-12
+    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
 
     # Revenue targets
     rooms_target = db.Column(db.Integer, default=0)       # Target rooms sold
@@ -978,11 +1013,12 @@ class DailyTipMetrics(db.Model):
 
 
 # ==============================================================================
-# MONTHLY BUDGET — Budget data from 'Budget' sheet
+# MONTHLY BUDGET (Legacy) — Simplified budget from 'Budget' sheet
 # ==============================================================================
 
-class MonthlyBudget(db.Model):
-    """Monthly budget targets from RJ 'Budget' sheet."""
+class MonthlyBudgetLegacy(db.Model):
+    """Legacy simplified monthly budget targets from RJ 'Budget' sheet.
+    Use MonthlyBudget (line 521) for the detailed version."""
     __tablename__ = 'monthly_budgets'
     id = db.Column(db.Integer, primary_key=True)
     year = db.Column(db.Integer, nullable=False)
@@ -1074,6 +1110,7 @@ class NightAuditSession(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     audit_date = db.Column(db.Date, unique=True, nullable=False, index=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
     auditor_name = db.Column(db.String(100))
     status = db.Column(db.String(20), default='draft')  # draft|in_progress|submitted|locked
     started_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1815,4 +1852,163 @@ class RJSheetData(db.Model):
             'row_count': self.row_count,
             'col_count': self.col_count,
             'headers': _json.loads(self.headers_json) if self.headers_json else [],
+        }
+
+
+# ==============================================================================
+# NOTIFICATION MODELS
+# ==============================================================================
+
+class NotificationPreference(db.Model):
+    """User notification preferences for each event type."""
+    __tablename__ = 'notification_preferences'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    event_type = db.Column(db.String(50), nullable=False)
+    # event_type: 'rj_submitted', 'rj_late', 'variance_alert', 'occupation_low', 'revenue_drop', 'daily_summary'
+    is_enabled = db.Column(db.Boolean, default=True)
+    threshold_value = db.Column(db.Float, nullable=True)  # e.g., variance > 5.00
+    delivery_method = db.Column(db.String(20), default='email')  # 'email', 'in_app', 'both'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationship
+    user = db.relationship('User', backref='notification_preferences')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'event_type': self.event_type,
+            'is_enabled': self.is_enabled,
+            'threshold_value': self.threshold_value,
+            'delivery_method': self.delivery_method,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+
+class NotificationLog(db.Model):
+    """Log of all notifications sent or attempted."""
+    __tablename__ = 'notification_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    event_type = db.Column(db.String(50), nullable=False)
+    severity = db.Column(db.String(20), default='info')  # 'info', 'warning', 'critical'
+    recipient_email = db.Column(db.String(120))
+    recipient_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    subject = db.Column(db.String(255))
+    message = db.Column(db.Text)
+    data_json = db.Column(db.Text)  # JSON payload
+    sent_at = db.Column(db.DateTime, default=datetime.utcnow)
+    delivery_status = db.Column(db.String(20), default='pending')  # 'pending', 'sent', 'failed', 'logged'
+    error_message = db.Column(db.Text, nullable=True)
+
+    # Relationship
+    recipient_user = db.relationship('User', backref='notification_logs')
+
+    def to_dict(self):
+        import json as _json
+        return {
+            'id': self.id,
+            'event_type': self.event_type,
+            'severity': self.severity,
+            'recipient_email': self.recipient_email,
+            'subject': self.subject,
+            'message': self.message,
+            'data': _json.loads(self.data_json) if self.data_json else {},
+            'sent_at': self.sent_at.isoformat() if self.sent_at else None,
+            'delivery_status': self.delivery_status,
+            'error_message': self.error_message,
+        }
+
+
+# ==============================================================================
+# STR COMPETITIVE SET & OTB MODELS
+# ==============================================================================
+
+class STRCompSet(db.Model):
+    """STR Competitive Set data — weekly import from STR reports."""
+    __tablename__ = 'str_comp_set'
+
+    id = db.Column(db.Integer, primary_key=True)
+    report_date = db.Column(db.Date, nullable=False, index=True)
+    period_type = db.Column(db.String(20), default='daily')  # daily, wtd, mtd, ytd
+
+    # My Hotel
+    my_occ = db.Column(db.Float, default=0)
+    my_adr = db.Column(db.Float, default=0)
+    my_revpar = db.Column(db.Float, default=0)
+
+    # Comp Set (average of competitors)
+    comp_occ = db.Column(db.Float, default=0)
+    comp_adr = db.Column(db.Float, default=0)
+    comp_revpar = db.Column(db.Float, default=0)
+
+    # Index (my / comp × 100)
+    occ_index = db.Column(db.Float, default=0)
+    adr_index = db.Column(db.Float, default=0)
+    revpar_index = db.Column(db.Float, default=0)  # RGI - Revenue Generation Index
+
+    # Rank (1 = best in comp set)
+    occ_rank = db.Column(db.Integer)
+    adr_rank = db.Column(db.Integer)
+    revpar_rank = db.Column(db.Integer)
+
+    # Comp set size
+    comp_set_size = db.Column(db.Integer, default=5)
+
+    source = db.Column(db.String(50), default='manual')  # manual, api, import
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns
+                if c.name != 'created_at'}
+
+
+class OTBForecast(db.Model):
+    """On-The-Books forecast data — future reservations snapshot."""
+    __tablename__ = 'otb_forecasts'
+
+    id = db.Column(db.Integer, primary_key=True)
+    snapshot_date = db.Column(db.Date, nullable=False, index=True)  # When this data was captured
+    target_date = db.Column(db.Date, nullable=False, index=True)    # The future date being forecasted
+
+    rooms_otb = db.Column(db.Integer, default=0)        # Rooms on the books
+    rooms_available = db.Column(db.Integer, default=252) # Total rooms available
+    occ_otb = db.Column(db.Float, default=0)             # OTB occupancy %
+    adr_otb = db.Column(db.Float, default=0)             # OTB ADR
+    revenue_otb = db.Column(db.Float, default=0)         # OTB room revenue
+
+    group_rooms = db.Column(db.Integer, default=0)       # Group block rooms
+    transient_rooms = db.Column(db.Integer, default=0)   # Individual reservations
+
+    # Comparison to same day last year
+    ly_rooms = db.Column(db.Integer)
+    ly_occ = db.Column(db.Float)
+    ly_adr = db.Column(db.Float)
+    ly_revenue = db.Column(db.Float)
+
+    source = db.Column(db.String(50), default='manual')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('snapshot_date', 'target_date', name='uq_otb_snapshot_target'),
+    )
+
+    def to_dict(self):
+        return {
+            'snapshot_date': self.snapshot_date.isoformat() if self.snapshot_date else None,
+            'target_date': self.target_date.isoformat() if self.target_date else None,
+            'rooms_otb': self.rooms_otb,
+            'occ_otb': round(self.occ_otb, 1) if self.occ_otb else 0,
+            'adr_otb': round(self.adr_otb, 2) if self.adr_otb else 0,
+            'revenue_otb': round(self.revenue_otb, 2) if self.revenue_otb else 0,
+            'group_rooms': self.group_rooms,
+            'transient_rooms': self.transient_rooms,
+            'ly_rooms': self.ly_rooms,
+            'ly_occ': self.ly_occ,
+            'ly_adr': self.ly_adr,
+            'ly_revenue': self.ly_revenue,
         }

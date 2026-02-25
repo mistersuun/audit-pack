@@ -1,0 +1,1361 @@
+{% extends "base.html" %}
+{% block title %}Budget & Écarts — Gestion Budgétaire{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+<style>
+/* ════════════════════════════════════════════════════════════
+   BUDGET & VARIANCE ANALYSIS
+   ════════════════════════════════════════════════════════════ */
+
+.budget-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.budget-header {
+  margin-bottom: 32px;
+}
+
+.budget-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text, #e2e8f0);
+}
+
+.budget-header p {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.95rem;
+}
+
+/* Tabs */
+.budget-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+  overflow-x: auto;
+}
+
+.budget-tab {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  white-space: nowrap;
+}
+
+.budget-tab:hover {
+  color: var(--text, #e2e8f0);
+}
+
+.budget-tab.active {
+  color: #818cf8;
+}
+
+.budget-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #818cf8;
+}
+
+/* Tab content */
+.budget-tab-content {
+  display: none;
+}
+
+.budget-tab-content.active {
+  display: block;
+}
+
+/* Tab 1: Saisie Budget */
+.budget-form-section {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.budget-form-header {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.budget-form-header svg {
+  width: 20px;
+  height: 20px;
+  color: #818cf8;
+}
+
+.budget-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  background: var(--bg, #0f1117);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 6px;
+  color: var(--text, #e2e8f0);
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+}
+
+.budget-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary, .btn-danger {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(129, 140, 248, 0.3);
+}
+
+.btn-secondary {
+  background: var(--border, #2a2d3a);
+  color: var(--text, #e2e8f0);
+}
+
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.btn-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-danger:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* Import section */
+.import-section {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%);
+  border: 2px dashed #818cf8;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 24px;
+}
+
+.import-section:hover {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(99, 102, 241, 0.1) 100%);
+}
+
+.import-section svg {
+  width: 32px;
+  height: 32px;
+  color: #818cf8;
+  margin-bottom: 12px;
+}
+
+.import-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+  margin-bottom: 4px;
+}
+
+.import-section p {
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 16px;
+}
+
+.import-section input[type="file"] {
+  display: none;
+}
+
+/* Tab 2: Analyse des Écarts */
+.variance-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.summary-card-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.summary-card-values {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.summary-value {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 4px;
+}
+
+.summary-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text, #e2e8f0);
+}
+
+.summary-variance {
+  padding-top: 12px;
+  border-top: 1px solid var(--border, #2a2d3a);
+}
+
+.variance-amount {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.variance-pct {
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+.favorable {
+  color: #22c55e;
+}
+
+.unfavorable {
+  color: #ef4444;
+}
+
+/* Variance table */
+.variance-table {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.variance-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.variance-table thead {
+  background: rgba(255,255,255,0.03);
+}
+
+.variance-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+}
+
+.variance-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+  font-size: 0.95rem;
+  color: var(--text, #e2e8f0);
+}
+
+.variance-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.variance-table tr.total {
+  background: rgba(129, 140, 248, 0.05);
+  font-weight: 600;
+}
+
+.amount-right {
+  text-align: right;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.chart-container {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-container h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+  margin-bottom: 16px;
+}
+
+/* Tab 3: YTD */
+.ytd-table {
+  background: var(--card-bg, #1a1d27);
+  border: 1px solid var(--border, #2a2d3a);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ytd-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ytd-table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border, #2a2d3a);
+}
+
+.ytd-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #2a2d3a);
+  font-size: 0.95rem;
+  color: var(--text, #e2e8f0);
+}
+
+.ytd-table tbody tr:hover {
+  background: rgba(255,255,255,0.02);
+}
+
+.ytd-table tr.ytd-total {
+  background: rgba(129, 140, 248, 0.05);
+  font-weight: 600;
+  border-top: 2px solid #818cf8;
+}
+
+/* Alerts */
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+.alert-info {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.alert-success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #22c55e;
+}
+
+/* Month selector */
+.month-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  align-items: flex-end;
+}
+
+.month-selector .form-group {
+  flex: 1;
+  max-width: 300px;
+}
+
+/* Loading & empty states */
+.loading {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.loading svg {
+  width: 32px;
+  height: 32px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.empty-state svg {
+  width: 48px;
+  height: 48px;
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text, #e2e8f0);
+  margin-bottom: 8px;
+}
+
+.empty-state p {
+  color: var(--text-muted, #94a3b8);
+  margin-bottom: 16px;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-favorable {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.status-unfavorable {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .budget-container {
+    padding: 16px;
+  }
+
+  .budget-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .budget-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .variance-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .budget-tabs {
+    flex-wrap: wrap;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="budget-container">
+  <!-- Header -->
+  <div class="budget-header">
+    <h1><i data-feather="trending-up" style="display:inline; width:28px; height:28px; margin-right:12px; vertical-align:middle;"></i>Budget & Écarts</h1>
+    <p>Gestion budgétaire, import de données, et analyse des variances</p>
+  </div>
+
+  <!-- Tabs -->
+  <div class="budget-tabs">
+    <button class="budget-tab active" onclick="switchBudgetTab('saisie', this)">
+      <i data-feather="edit-3" style="display:inline; width:16px; height:16px; margin-right:8px; vertical-align:text-bottom;"></i>
+      Saisie Budget
+    </button>
+    <button class="budget-tab" onclick="switchBudgetTab('variance', this)">
+      <i data-feather="bar-chart-2" style="display:inline; width:16px; height:16px; margin-right:8px; vertical-align:text-bottom;"></i>
+      Analyse des Écarts
+    </button>
+    <button class="budget-tab" onclick="switchBudgetTab('ytd', this)">
+      <i data-feather="calendar" style="display:inline; width:16px; height:16px; margin-right:8px; vertical-align:text-bottom;"></i>
+      Cumul Annuel
+    </button>
+  </div>
+
+  <!-- TAB 1: SAISIE BUDGET -->
+  <div id="tab-saisie" class="budget-tab-content active">
+    <div class="budget-form-section">
+      <div class="budget-form-header">
+        <i data-feather="calendar"></i>
+        Sélection Mois
+      </div>
+      <div class="budget-form-row">
+        <div class="form-group">
+          <label for="saisie-year">Année</label>
+          <select id="saisie-year">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+            <option value="2027">2027</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="saisie-month">Mois</label>
+          <select id="saisie-month">
+            <option value="1">Janvier</option>
+            <option value="2" selected>Février</option>
+            <option value="3">Mars</option>
+            <option value="4">Avril</option>
+            <option value="5">Mai</option>
+            <option value="6">Juin</option>
+            <option value="7">Juillet</option>
+            <option value="8">Août</option>
+            <option value="9">Septembre</option>
+            <option value="10">Octobre</option>
+            <option value="11">Novembre</option>
+            <option value="12">Décembre</option>
+          </select>
+        </div>
+        <div style="display: flex; align-items: flex-end;">
+          <button class="btn-secondary" onclick="loadBudgetForm()" style="width: 100%;">Charger</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Budget form -->
+    <form id="budget-form" onsubmit="saveBudget(event)">
+      <!-- Revenus -->
+      <div class="budget-form-section">
+        <div class="budget-form-header">
+          <i data-feather="dollar-sign"></i>
+          Revenus
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="rooms_target">Chambres Vendues (Target)</label>
+            <input type="number" id="rooms_target" name="rooms_target" min="0">
+          </div>
+          <div class="form-group">
+            <label for="adr_target">Tarif Moyen (ADR)</label>
+            <input type="number" id="adr_target" name="adr_target" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="room_revenue">Revenu Chambres</label>
+            <input type="number" id="room_revenue" name="room_revenue" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="piazza">Piazza</label>
+            <input type="number" id="piazza" name="piazza" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="cupola">Cupola</label>
+            <input type="number" id="cupola" name="cupola" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="banquet">Banquet</label>
+            <input type="number" id="banquet" name="banquet" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="spesa">Spesa</label>
+            <input type="number" id="spesa" name="spesa" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="giotto">Giotto</label>
+            <input type="number" id="giotto" name="giotto" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="location_salle">Location Salle</label>
+            <input type="number" id="location_salle" name="location_salle" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="total_revenue">Revenu Total</label>
+            <input type="number" id="total_revenue" name="total_revenue" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <!-- Main-d'œuvre (Labour) -->
+      <div class="budget-form-section">
+        <div class="budget-form-header">
+          <i data-feather="users"></i>
+          Main-d'œuvre par Département
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="labor_reception">Réception</label>
+            <input type="number" id="labor_reception" name="labor_reception" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_femme_chambre">Femme de Chambre</label>
+            <input type="number" id="labor_femme_chambre" name="labor_femme_chambre" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_equipier">Équipier</label>
+            <input type="number" id="labor_equipier" name="labor_equipier" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="labor_gouvernante">Gouvernante</label>
+            <input type="number" id="labor_gouvernante" name="labor_gouvernante" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_buanderie">Buanderie</label>
+            <input type="number" id="labor_buanderie" name="labor_buanderie" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_cuisine">Cuisine</label>
+            <input type="number" id="labor_cuisine" name="labor_cuisine" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="labor_piazza">Piazza</label>
+            <input type="number" id="labor_piazza" name="labor_piazza" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_cupola">Cupola</label>
+            <input type="number" id="labor_cupola" name="labor_cupola" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_banquet">Banquet</label>
+            <input type="number" id="labor_banquet" name="labor_banquet" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="labor_banquet_ii">Banquet II</label>
+            <input type="number" id="labor_banquet_ii" name="labor_banquet_ii" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_adm">Administration</label>
+            <input type="number" id="labor_adm" name="labor_adm" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="labor_marketing">Marketing</label>
+            <input type="number" id="labor_marketing" name="labor_marketing" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="labor_entretien">Entretien</label>
+            <input type="number" id="labor_entretien" name="labor_entretien" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <!-- Frais Fixes (Fixed Costs) -->
+      <div class="budget-form-section">
+        <div class="budget-form-header">
+          <i data-feather="briefcase"></i>
+          Frais Fixes
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="marketing">Marketing</label>
+            <input type="number" id="marketing" name="marketing" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="admin">Administration</label>
+            <input type="number" id="admin" name="admin" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="entretien">Entretien</label>
+            <input type="number" id="entretien" name="entretien" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="energie">Énergie</label>
+            <input type="number" id="energie" name="energie" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="taxes_assurances">Taxes & Assurances</label>
+            <input type="number" id="taxes_assurances" name="taxes_assurances" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="amortissement">Amortissement</label>
+            <input type="number" id="amortissement" name="amortissement" min="0" step="0.01">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="interet">Intérêt</label>
+            <input type="number" id="interet" name="interet" min="0" step="0.01">
+          </div>
+          <div class="form-group">
+            <label for="loyer">Loyer</label>
+            <input type="number" id="loyer" name="loyer" min="0" step="0.01">
+          </div>
+        </div>
+      </div>
+
+      <!-- Cost Ratios -->
+      <div class="budget-form-section">
+        <div class="budget-form-header">
+          <i data-feather="percent"></i>
+          Ratios de Coûts
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="cost_variable_chambres">Coût Variable Chambres (%)</label>
+            <input type="number" id="cost_variable_chambres" name="cost_variable_chambres" min="0" max="100" step="0.01" value="11.2">
+          </div>
+          <div class="form-group">
+            <label for="cost_variable_banquet">Coût Variable Banquet (%)</label>
+            <input type="number" id="cost_variable_banquet" name="cost_variable_banquet" min="0" max="100" step="0.01" value="6.1">
+          </div>
+          <div class="form-group">
+            <label for="cost_variable_resto">Coût Variable Resto (%)</label>
+            <input type="number" id="cost_variable_resto" name="cost_variable_resto" min="0" max="100" step="0.01" value="35.4">
+          </div>
+        </div>
+        <div class="budget-form-row">
+          <div class="form-group">
+            <label for="benefits_hebergement">Bénéfices Hébergement (%)</label>
+            <input type="number" id="benefits_hebergement" name="benefits_hebergement" min="0" max="100" step="0.01" value="43">
+          </div>
+          <div class="form-group">
+            <label for="benefits_restauration">Bénéfices Restauration (%)</label>
+            <input type="number" id="benefits_restauration" name="benefits_restauration" min="0" max="100" step="0.01" value="44.5">
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="budget-actions">
+        <button type="submit" class="btn-primary">
+          <i data-feather="save" style="display:inline; width:16px; height:16px; margin-right:8px; vertical-align:text-bottom;"></i>
+          Enregistrer le Budget
+        </button>
+        <button type="button" class="btn-secondary" onclick="resetBudgetForm()">
+          <i data-feather="refresh-cw" style="display:inline; width:16px; height:16px; margin-right:8px; vertical-align:text-bottom;"></i>
+          Réinitialiser
+        </button>
+      </div>
+    </form>
+
+    <!-- Import section -->
+    <div class="import-section" onclick="document.getElementById('file-input').click()">
+      <i data-feather="upload-cloud"></i>
+      <h3>Importer Budget</h3>
+      <p>Glissez un fichier CSV ou Excel ou cliquez pour sélectionner</p>
+      <div style="font-size: 0.8rem; color: var(--text-muted, #94a3b8);">
+        Format attendu: première colonne = noms de champs, colonnes suivantes = mois (Jan-Déc)
+      </div>
+      <input type="file" id="file-input" accept=".csv,.xlsx,.xls" onchange="handleFileUpload(event)">
+    </div>
+  </div>
+
+  <!-- TAB 2: ANALYSE DES ÉCARTS -->
+  <div id="tab-variance" class="budget-tab-content">
+    <div class="month-selector">
+      <div class="form-group" style="flex: 0 0 auto;">
+        <label for="variance-year">Année</label>
+        <select id="variance-year">
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+        </select>
+      </div>
+      <div class="form-group" style="flex: 0 0 auto;">
+        <label for="variance-month">Mois</label>
+        <select id="variance-month">
+          <option value="1">Janvier</option>
+          <option value="2" selected>Février</option>
+          <option value="3">Mars</option>
+          <option value="4">Avril</option>
+          <option value="5">Mai</option>
+          <option value="6">Juin</option>
+          <option value="7">Juillet</option>
+          <option value="8">Août</option>
+          <option value="9">Septembre</option>
+          <option value="10">Octobre</option>
+          <option value="11">Novembre</option>
+          <option value="12">Décembre</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="loadVarianceReport()" style="flex: 0 0 auto;">Charger</button>
+    </div>
+
+    <div id="variance-content"></div>
+  </div>
+
+  <!-- TAB 3: CUMUL ANNUEL -->
+  <div id="tab-ytd" class="budget-tab-content">
+    <div class="month-selector">
+      <div class="form-group" style="flex: 0 0 auto;">
+        <label for="ytd-year">Année</label>
+        <select id="ytd-year">
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="loadYTDSummary()" style="flex: 0 0 auto;">Charger</button>
+    </div>
+
+    <div id="ytd-content"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ════════════════════════════════════════════════════════════
+
+function switchBudgetTab(tabName, btn) {
+  // Hide all tabs
+  document.querySelectorAll('.budget-tab-content').forEach(t => t.classList.remove('active'));
+
+  // Remove active from all buttons
+  document.querySelectorAll('.budget-tab').forEach(b => b.classList.remove('active'));
+
+  // Show selected tab
+  document.getElementById('tab-' + tabName).classList.add('active');
+  btn.classList.add('active');
+
+  // Load data when switching
+  if (tabName === 'variance') {
+    loadVarianceReport();
+  } else if (tabName === 'ytd') {
+    loadYTDSummary();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 1: SAISIE BUDGET
+// ════════════════════════════════════════════════════════════
+
+function loadBudgetForm() {
+  const year = document.getElementById('saisie-year').value;
+  const month = document.getElementById('saisie-month').value;
+
+  fetch(`/budget/api/budget/${year}/${month}`)
+    .then(r => r.json())
+    .then(json => {
+      if (json.data) {
+        // Populate form
+        Object.keys(json.data).forEach(key => {
+          const field = document.getElementById(key);
+          if (field) field.value = json.data[key] || '';
+        });
+        showAlert('Budget chargé', 'success');
+      } else {
+        // Clear form
+        document.getElementById('budget-form').reset();
+        showAlert(json.message || 'Aucun budget pour ce mois', 'info');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      showAlert('Erreur de chargement', 'error');
+    });
+}
+
+function saveBudget(e) {
+  e.preventDefault();
+
+  const year = parseInt(document.getElementById('saisie-year').value);
+  const month = parseInt(document.getElementById('saisie-month').value);
+
+  const data = { year, month };
+
+  // Collect form fields
+  const form = document.getElementById('budget-form');
+  const inputs = form.querySelectorAll('input');
+  inputs.forEach(input => {
+    const value = input.name && input.value ? parseFloat(input.value) || 0 : 0;
+    data[input.name] = value;
+  });
+
+  fetch('/budget/api/budget/save', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+    },
+    body: JSON.stringify(data),
+  })
+    .then(r => r.json())
+    .then(json => {
+      if (json.error) {
+        showAlert(json.error, 'error');
+      } else {
+        showAlert(json.message, 'success');
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      showAlert('Erreur lors de l\'enregistrement', 'error');
+    });
+}
+
+function resetBudgetForm() {
+  document.getElementById('budget-form').reset();
+}
+
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const year = document.getElementById('saisie-year').value;
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('year', year);
+
+  fetch('/budget/api/budget/import', {
+    method: 'POST',
+    headers: {
+      'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+    },
+    body: formData,
+  })
+    .then(r => r.json())
+    .then(json => {
+      if (json.error) {
+        showAlert(json.error, 'error');
+      } else {
+        showAlert(json.message, 'success');
+      }
+      document.getElementById('file-input').value = '';
+    })
+    .catch(err => {
+      console.error(err);
+      showAlert('Erreur lors de l\'import', 'error');
+    });
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 2: ANALYSE DES ÉCARTS
+// ════════════════════════════════════════════════════════════
+
+function loadVarianceReport() {
+  const year = document.getElementById('variance-year').value;
+  const month = document.getElementById('variance-month').value;
+  const content = document.getElementById('variance-content');
+
+  content.innerHTML = '<div class="loading"><svg data-feather="loader"></svg><p>Chargement...</p></div>';
+  feather.replace();
+
+  fetch(`/budget/api/budget/variance/${year}/${month}`)
+    .then(r => r.json())
+    .then(json => {
+      if (json.error || !json.has_budget) {
+        content.innerHTML = `<div class="alert alert-warning">${json.error || 'Aucun budget saisi pour ce mois'}</div>`;
+        return;
+      }
+
+      if (!json.has_actuals) {
+        content.innerHTML = `<div class="alert alert-info">Budget trouvé mais aucune donnée réelle pour ce mois</div>`;
+        return;
+      }
+
+      renderVarianceReport(json);
+      feather.replace();
+    })
+    .catch(err => {
+      console.error(err);
+      content.innerHTML = `<div class="alert alert-error">Erreur: ${err.message}</div>`;
+    });
+}
+
+function renderVarianceReport(data) {
+  const content = document.getElementById('variance-content');
+  let html = '';
+
+  // Summary cards
+  html += '<div class="variance-summary">';
+
+  // Revenue card
+  const revItem = data.variance_items.find(v => v.total);
+  if (revItem) {
+    html += `<div class="summary-card">
+      <div class="summary-card-title">Revenu Total</div>
+      <div class="summary-card-values">
+        <div class="summary-value">
+          <div class="summary-label">Budget</div>
+          <div class="summary-amount">$${revItem.budget.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</div>
+        </div>
+        <div class="summary-value">
+          <div class="summary-label">Réel</div>
+          <div class="summary-amount">$${revItem.actual.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</div>
+        </div>
+      </div>
+      <div class="summary-variance">
+        <div class="variance-amount ${revItem.favorable ? 'favorable' : 'unfavorable'}">
+          ${revItem.favorable ? '+' : ''}$${revItem.variance.toLocaleString('fr-CA', {minimumFractionDigits: 2})}
+        </div>
+        <div class="variance-pct">${revItem.favorable ? '✓ ' : '✗ '}${Math.abs(revItem.variance_pct)}%</div>
+      </div>
+    </div>`;
+  }
+
+  // Rooms card
+  const roomsItem = data.variance_items.find(v => v.category === 'Chambres Vendues');
+  if (roomsItem) {
+    html += `<div class="summary-card">
+      <div class="summary-card-title">Chambres Vendues</div>
+      <div class="summary-card-values">
+        <div class="summary-value">
+          <div class="summary-label">Budget</div>
+          <div class="summary-amount">${roomsItem.budget}</div>
+        </div>
+        <div class="summary-value">
+          <div class="summary-label">Réel</div>
+          <div class="summary-amount">${roomsItem.actual}</div>
+        </div>
+      </div>
+      <div class="summary-variance">
+        <div class="variance-amount ${roomsItem.favorable ? 'favorable' : 'unfavorable'}">
+          ${roomsItem.favorable ? '+' : ''}${roomsItem.variance}
+        </div>
+        <div class="variance-pct">${roomsItem.favorable ? '✓ ' : '✗ '}${Math.abs(roomsItem.variance_pct)}%</div>
+      </div>
+    </div>`;
+  }
+
+  // ADR card
+  const adrItem = data.variance_items.find(v => v.category === 'Tarif Moyen (ADR)');
+  if (adrItem) {
+    html += `<div class="summary-card">
+      <div class="summary-card-title">Tarif Moyen (ADR)</div>
+      <div class="summary-card-values">
+        <div class="summary-value">
+          <div class="summary-label">Budget</div>
+          <div class="summary-amount">$${adrItem.budget.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</div>
+        </div>
+        <div class="summary-value">
+          <div class="summary-label">Réel</div>
+          <div class="summary-amount">$${adrItem.actual.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</div>
+        </div>
+      </div>
+      <div class="summary-variance">
+        <div class="variance-amount ${adrItem.favorable ? 'favorable' : 'unfavorable'}">
+          ${adrItem.favorable ? '+' : ''}$${adrItem.variance.toLocaleString('fr-CA', {minimumFractionDigits: 2})}
+        </div>
+        <div class="variance-pct">${adrItem.favorable ? '✓ ' : '✗ '}${Math.abs(adrItem.variance_pct)}%</div>
+      </div>
+    </div>`;
+  }
+
+  html += '</div>';
+
+  // Variance table
+  html += '<div class="variance-table"><table><thead><tr>';
+  html += '<th>Catégorie</th>';
+  html += '<th class="amount-right">Budget</th>';
+  html += '<th class="amount-right">Réel</th>';
+  html += '<th class="amount-right">Écart ($)</th>';
+  html += '<th class="amount-right">Écart (%)</th>';
+  html += '<th>Statut</th>';
+  html += '</tr></thead><tbody>';
+
+  data.variance_items.forEach(item => {
+    const rowClass = item.total ? 'total' : '';
+    const statusClass = item.favorable ? 'status-favorable' : 'status-unfavorable';
+    const statusText = item.favorable ? 'Favorable' : 'Défavorable';
+
+    html += `<tr class="${rowClass}">
+      <td>${item.category}</td>
+      <td class="amount-right">$${item.budget.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+      <td class="amount-right">$${item.actual.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+      <td class="amount-right">${item.variance >= 0 ? '+' : ''}$${item.variance.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+      <td class="amount-right">${item.variance_pct >= 0 ? '+' : ''}${item.variance_pct}%</td>
+      <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div>';
+
+  // Chart
+  html += '<div class="chart-container">';
+  html += '<h3>Budget vs Réel par Catégorie</h3>';
+  html += '<canvas id="variance-chart"></canvas>';
+  html += '</div>';
+
+  content.innerHTML = html;
+
+  // Render chart
+  setTimeout(() => {
+    const chartItems = data.variance_items.filter(v => !v.total && v.category !== 'Chambres Vendues' && v.category !== 'Tarif Moyen (ADR)');
+    const ctx = document.getElementById('variance-chart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartItems.map(v => v.category),
+          datasets: [
+            {
+              label: 'Budget',
+              data: chartItems.map(v => v.budget),
+              backgroundColor: 'rgba(129, 140, 248, 0.7)',
+              borderColor: '#818cf8',
+              borderWidth: 1,
+            },
+            {
+              label: 'Réel',
+              data: chartItems.map(v => v.actual),
+              backgroundColor: 'rgba(34, 197, 94, 0.7)',
+              borderColor: '#22c55e',
+              borderWidth: 1,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { beginAtZero: true },
+          },
+        },
+      });
+    }
+  }, 100);
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 3: YTD SUMMARY
+// ════════════════════════════════════════════════════════════
+
+function loadYTDSummary() {
+  const year = document.getElementById('ytd-year').value;
+  const content = document.getElementById('ytd-content');
+
+  content.innerHTML = '<div class="loading"><svg data-feather="loader"></svg><p>Chargement...</p></div>';
+  feather.replace();
+
+  fetch(`/budget/api/budget/ytd/${year}`)
+    .then(r => r.json())
+    .then(json => {
+      renderYTDSummary(json);
+      feather.replace();
+    })
+    .catch(err => {
+      console.error(err);
+      content.innerHTML = `<div class="alert alert-error">Erreur: ${err.message}</div>`;
+    });
+}
+
+function renderYTDSummary(data) {
+  const content = document.getElementById('ytd-content');
+  let html = '';
+
+  // Summary card for YTD totals
+  html += `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="summary-card">
+      <div class="summary-card-title">YTD Budget Total</div>
+      <div class="summary-amount">$${data.ytd_budget.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-title">YTD Réel Total</div>
+      <div class="summary-amount">$${data.ytd_actual.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-title">YTD Écart Total</div>
+      <div class="summary-amount ${data.ytd_variance >= 0 ? 'favorable' : 'unfavorable'}">
+        ${data.ytd_variance >= 0 ? '+' : ''}$${data.ytd_variance.toLocaleString('fr-CA', {minimumFractionDigits: 2})}
+      </div>
+      <div style="font-size: 0.9rem; margin-top: 8px; color: var(--text-muted, #94a3b8);">${data.ytd_variance_pct}%</div>
+    </div>
+  </div>`;
+
+  // Monthly table
+  html += '<div class="ytd-table"><table><thead><tr>';
+  html += '<th>Mois</th>';
+  html += '<th class="amount-right">Budget</th>';
+  html += '<th class="amount-right">Réel</th>';
+  html += '<th class="amount-right">Écart</th>';
+  html += '<th class="amount-right">%</th>';
+  html += '</tr></thead><tbody>';
+
+  data.monthly.forEach(m => {
+    html += `<tr>
+      <td>${m.month_label}</td>
+      <td class="amount-right">$${m.budget.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+      <td class="amount-right">$${m.actual.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+      <td class="amount-right">${m.variance >= 0 ? '+' : ''}$${m.variance.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+      <td class="amount-right">${m.variance_pct >= 0 ? '+' : ''}${m.variance_pct}%</td>
+    </tr>`;
+  });
+
+  html += `<tr class="ytd-total">
+    <td>YTD Total</td>
+    <td class="amount-right">$${data.ytd_budget.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+    <td class="amount-right">$${data.ytd_actual.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+    <td class="amount-right">${data.ytd_variance >= 0 ? '+' : ''}$${data.ytd_variance.toLocaleString('fr-CA', {minimumFractionDigits: 2})}</td>
+    <td class="amount-right">${data.ytd_variance_pct >= 0 ? '+' : ''}${data.ytd_variance_pct}%</td>
+  </tr>`;
+
+  html += '</tbody></table></div>';
+
+  // Trend chart
+  html += '<div class="chart-container" style="margin-top: 24px;">';
+  html += '<h3>Tendance Budget vs Réel</h3>';
+  html += '<canvas id="ytd-chart"></canvas>';
+  html += '</div>';
+
+  content.innerHTML = html;
+
+  // Render chart
+  setTimeout(() => {
+    const ctx = document.getElementById('ytd-chart');
+    if (ctx) {
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.monthly.map(m => m.month_label),
+          datasets: [
+            {
+              label: 'Budget',
+              data: data.monthly.map(m => m.budget),
+              borderColor: '#818cf8',
+              backgroundColor: 'rgba(129, 140, 248, 0.1)',
+              tension: 0.4,
+              fill: true,
+            },
+            {
+              label: 'Réel',
+              data: data.monthly.map(m => m.actual),
+              borderColor: '#22c55e',
+              backgroundColor: 'rgba(34, 197, 94, 0.1)',
+              tension: 0.4,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: true } },
+          scales: {
+            y: { beginAtZero: true },
+          },
+        },
+      });
+    }
+  }, 100);
+}
+
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+
+function showAlert(message, type = 'info') {
+  const alertClass = `alert alert-${type}`;
+  const alertEl = document.createElement('div');
+  alertEl.className = alertClass;
+  alertEl.textContent = message;
+  alertEl.style.position = 'fixed';
+  alertEl.style.top = '20px';
+  alertEl.style.right = '20px';
+  alertEl.style.zIndex = '10000';
+  alertEl.style.maxWidth = '400px';
+
+  document.body.appendChild(alertEl);
+
+  setTimeout(() => {
+    alertEl.remove();
+  }, 5000);
+}
+
+// Auto-load on page load
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+});
+</script>
+{% endblock %}

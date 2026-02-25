@@ -11,9 +11,31 @@ from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta, date as date_type
 from copy import copy as copy_style
-import json, io, os, re
+import json, io, os, re, ast, operator
 
 pod_bp = Blueprint('pod', __name__)
+
+# ── Safe arithmetic evaluator (replaces eval) ────────────────
+_SAFE_OPS = {
+    ast.Add: operator.add, ast.Sub: operator.sub,
+    ast.Mult: operator.mul, ast.Div: operator.truediv,
+    ast.USub: operator.neg, ast.UAdd: operator.pos,
+}
+
+def _safe_arithmetic(expr):
+    """Evaluate simple arithmetic expressions without eval()."""
+    tree = ast.parse(expr.strip(), mode='eval')
+    def _eval(node):
+        if isinstance(node, ast.Expression):
+            return _eval(node.body)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
+            return node.value
+        elif isinstance(node, ast.BinOp) and type(node.op) in _SAFE_OPS:
+            return _SAFE_OPS[type(node.op)](_eval(node.left), _eval(node.right))
+        elif isinstance(node, ast.UnaryOp) and type(node.op) in _SAFE_OPS:
+            return _SAFE_OPS[type(node.op)](_eval(node.operand))
+        raise ValueError(f'Unsafe node: {type(node).__name__}')
+    return _eval(tree)
 
 # ── Storage dir for uploaded POD files ──────────────────────────
 POD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'database', 'pod_files')
@@ -53,11 +75,11 @@ def _eval_cell(val):
         return 0
     if s.startswith('='):
         expr = s[1:]
-        # Only eval simple arithmetic (numbers + - * /)
+        # Safe arithmetic: only allow digits, operators, parens
         if re.match(r'^[\d\.\+\-\*\/\(\)\s]+$', expr):
             try:
-                return float(eval(expr))
-            except:
+                return float(_safe_arithmetic(expr))
+            except Exception:
                 return 0
         return 0
     try:
@@ -253,8 +275,15 @@ def upload_pod():
         return jsonify({'error': 'Aucun fichier fourni'}), 400
 
     f = request.files['file']
-    if not f.filename.endswith(('.xlsx', '.xls')):
+    if not f.filename or not f.filename.lower().endswith(('.xlsx', '.xls')):
         return jsonify({'error': 'Format invalide. Utilisez un fichier .xlsx'}), 400
+
+    # Size check (max 10 MB)
+    f.seek(0, 2)
+    size = f.tell()
+    f.seek(0)
+    if size > 10 * 1024 * 1024:
+        return jsonify({'error': 'Fichier trop volumineux (max 10 Mo)'}), 400
 
     filename = f'POD_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     filepath = os.path.join(POD_DIR, filename)

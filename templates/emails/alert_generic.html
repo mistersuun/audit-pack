@@ -1,0 +1,47 @@
+{% extends "emails/base_email.html" %}
+
+{% block body %}
+<h2 style="margin-top: 0; color: #1e40af;">Alerte du système</h2>
+
+{% if alert.severity == 'critical' %}
+<div class="alert alert-critical">
+    <strong>🚨 Alerte critique</strong>
+    <p style="margin: 0.5rem 0 0 0;">{{ alert.message }}</p>
+</div>
+{% elif alert.severity == 'warning' %}
+<div class="alert alert-warning">
+    <strong>⚠️ Attention</strong>
+    <p style="margin: 0.5rem 0 0 0;">{{ alert.message }}</p>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <strong>ℹ️ Information</strong>
+    <p style="margin: 0.5rem 0 0 0;">{{ alert.message }}</p>
+</div>
+{% endif %}
+
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Détails de l'alerte</h3>
+    {% if alert.date %}
+    <p><strong>Date:</strong> {{ alert.date }}</p>
+    {% endif %}
+    {% if alert.severity %}
+    <p>
+        <strong>Sévérité:</strong>
+        {% if alert.severity == 'info' %}
+        <span class="badge badge-info">Information</span>
+        {% elif alert.severity == 'warning' %}
+        <span class="badge badge-warning">Attention</span>
+        {% elif alert.severity == 'critical' %}
+        <span class="badge badge-critical">Critique</span>
+        {% endif %}
+    </p>
+    {% endif %}
+</div>
+
+<p style="margin-top: 2rem; color: #666; font-size: 0.9rem;">
+    Consultez le <a href="{{ url_for('notifications.preferences_page', _external=True) }}" style="color: #1e40af; text-decoration: none;">
+        système de notification
+    </a> pour gérer vos préférences d'alertes.
+</p>
+{% endblock %}

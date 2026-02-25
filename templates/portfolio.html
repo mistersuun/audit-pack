@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio Multi-Propriétés{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<style>
+    .portfolio-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .kpi-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .kpi-card h3 {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin: 0 0 0.75rem 0;
+        letter-spacing: 0.5px;
+    }
+
+    .kpi-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin: 0.5rem 0;
+    }
+
+    .kpi-unit {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .section {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title svg {
+        width: 24px;
+        height: 24px;
+        color: var(--accent-color);
+    }
+
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin: 1.5rem 0;
+    }
+
+    .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .comparison-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .comparison-card h4 {
+        margin: 0 0 1rem 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .metric-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        font-size: 0.9rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .metric-row:last-child {
+        border-bottom: none;
+    }
+
+    .metric-label {
+        color: var(--text-secondary);
+    }
+
+    .metric-value {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .metric-value.highlight {
+        color: var(--accent-color);
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .no-data svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 768px) {
+        .kpi-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .comparison-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .kpi-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="portfolio-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Portfolio Multi-Propriétés</h1>
+        <p>Vue consolidée et analyse comparative de toutes les propriétés</p>
+    </div>
+
+    <!-- KPI Summary Cards -->
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <h3>Chambres Totales</h3>
+            <div class="kpi-value" id="totalRooms">0</div>
+            <div class="kpi-unit">à travers toutes les propriétés</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Occupancy Moyenne</h3>
+            <div class="kpi-value" id="avgOccupancy">0%</div>
+            <div class="kpi-unit">derniers 30 jours</div>
+        </div>
+        <div class="kpi-card">
+            <h3>ADR Moyen</h3>
+            <div class="kpi-value" id="avgAdr">$0</div>
+            <div class="kpi-unit">derniers 30 jours</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Revenue Totale</h3>
+            <div class="kpi-value" id="totalRevenue">$0</div>
+            <div class="kpi-unit">derniers 30 jours</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Propriétés Actives</h3>
+            <div class="kpi-value" id="propertyCount">0</div>
+            <div class="kpi-unit">en portefeuille</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Audits Récents</h3>
+            <div class="kpi-value" id="recentAudits">0</div>
+            <div class="kpi-unit">derniers 30 jours</div>
+        </div>
+    </div>
+
+    <!-- Section: Comparaison par Propriété -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="trending-up"></i>
+            Occupancy par Propriété (30 jours)
+        </div>
+        <div class="chart-container">
+            <canvas id="occupancyChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Section: ADR Comparison -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="dollar-sign"></i>
+            ADR par Propriété (30 jours)
+        </div>
+        <div class="chart-container">
+            <canvas id="adrChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Section: RevPAR Comparison -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="bar-chart-2"></i>
+            RevPAR par Propriété (30 jours)
+        </div>
+        <div class="chart-container">
+            <canvas id="revparChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Section: Detailed Comparison Cards -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="grid"></i>
+            Détails par Propriété
+        </div>
+        <div class="comparison-grid" id="comparisonGrid">
+            <div class="no-data">
+                <div class="loading">Chargement des données...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const formatCurrency = (num) => {
+        return new Intl.NumberFormat('fr-CA', {
+            style: 'currency',
+            currency: 'CAD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0,
+        }).format(num);
+    };
+
+    const formatNumber = (num) => {
+        return new Intl.NumberFormat('fr-CA', {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1,
+        }).format(num);
+    };
+
+    let occupancyChart, adrChart, revparChart;
+
+    const loadPortfolioSummary = async () => {
+        try {
+            const res = await fetch('/portfolio/api/portfolio/summary');
+            const data = await res.json();
+
+            document.getElementById('totalRooms').textContent = data.total_rooms.toLocaleString('fr-CA');
+            document.getElementById('avgOccupancy').textContent = formatNumber(data.avg_occupancy) + '%';
+            document.getElementById('avgAdr').textContent = formatCurrency(data.avg_adr_30d);
+            document.getElementById('totalRevenue').textContent = formatCurrency(data.total_revenue_30d);
+            document.getElementById('propertyCount').textContent = data.property_count;
+            document.getElementById('recentAudits').textContent = data.recent_audits;
+        } catch (e) {
+            console.error('Erreur lors du chargement du résumé:', e);
+        }
+    };
+
+    const loadComparison = async () => {
+        try {
+            const res = await fetch('/portfolio/api/portfolio/comparison');
+            const properties = await res.json();
+
+            if (!properties || properties.length === 0) {
+                document.getElementById('comparisonGrid').innerHTML = `
+                    <div class="no-data">
+                        <i data-feather="inbox"></i>
+                        <p>Aucune donnée disponible pour le moment.</p>
+                    </div>
+                `;
+                feather.replace();
+                return;
+            }
+
+            // Prepare data for charts
+            const propertyNames = properties.map(p => p.property_name);
+            const occupancyData = properties.map(p => p.avg_occupancy);
+            const adrData = properties.map(p => p.avg_adr);
+            const revparData = properties.map(p => p.avg_revpar);
+            const revenueData = properties.map(p => p.total_revenue / 1000); // In thousands
+
+            const chartConfig = {
+                type: 'bar',
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'var(--text-secondary)',
+                            },
+                            grid: {
+                                color: 'var(--border-color)',
+                            },
+                        },
+                        x: {
+                            ticks: {
+                                color: 'var(--text-secondary)',
+                            },
+                            grid: {
+                                display: false,
+                            },
+                        },
+                    },
+                },
+            };
+
+            // Occupancy Chart
+            const occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+            if (occupancyChart) occupancyChart.destroy();
+            occupancyChart = new Chart(occupancyCtx, {
+                ...chartConfig,
+                data: {
+                    labels: propertyNames,
+                    datasets: [{
+                        label: 'Occupancy %',
+                        data: occupancyData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    }],
+                },
+                options: {
+                    ...chartConfig.options,
+                    scales: {
+                        ...chartConfig.options.scales,
+                        y: {
+                            ...chartConfig.options.scales.y,
+                            max: 100,
+                        },
+                    },
+                },
+            });
+
+            // ADR Chart
+            const adrCtx = document.getElementById('adrChart').getContext('2d');
+            if (adrChart) adrChart.destroy();
+            adrChart = new Chart(adrCtx, {
+                ...chartConfig,
+                data: {
+                    labels: propertyNames,
+                    datasets: [{
+                        label: 'ADR ($)',
+                        data: adrData,
+                        backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    }],
+                },
+            });
+
+            // RevPAR Chart
+            const revparCtx = document.getElementById('revparChart').getContext('2d');
+            if (revparChart) revparChart.destroy();
+            revparChart = new Chart(revparCtx, {
+                ...chartConfig,
+                data: {
+                    labels: propertyNames,
+                    datasets: [{
+                        label: 'RevPAR ($)',
+                        data: revparData,
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                    }],
+                },
+            });
+
+            // Build comparison cards
+            const grid = document.getElementById('comparisonGrid');
+            grid.innerHTML = properties.map(p => `
+                <div class="comparison-card">
+                    <h4>${p.property_name}</h4>
+                    <div class="metric-row">
+                        <span class="metric-label">Code:</span>
+                        <span class="metric-value">${p.property_code}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Chambres:</span>
+                        <span class="metric-value">${p.total_rooms}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Occupancy Moy (30j):</span>
+                        <span class="metric-value highlight">${formatNumber(p.avg_occupancy)}%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">ADR Moy (30j):</span>
+                        <span class="metric-value">${formatCurrency(p.avg_adr)}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">RevPAR Moy (30j):</span>
+                        <span class="metric-value highlight">${formatCurrency(p.avg_revpar)}</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Revenue Totale (30j):</span>
+                        <span class="metric-value">${formatCurrency(p.total_revenue)}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            feather.replace();
+        } catch (e) {
+            console.error('Erreur lors du chargement de la comparaison:', e);
+        }
+    };
+
+    // Load data on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        loadPortfolioSummary();
+        loadComparison();
+    });
+</script>
+{% endblock %}

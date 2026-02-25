@@ -1,0 +1,646 @@
+{% extends "base.html" %}
+
+{% block title %}Gestion des Propriétés{% endblock %}
+
+{% block head %}
+<style>
+    .properties-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.875rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .section {
+        background: var(--bg-secondary);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title svg {
+        width: 24px;
+        height: 24px;
+        color: var(--accent-color);
+    }
+
+    .properties-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .property-card {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: all 0.2s ease;
+    }
+
+    .property-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: var(--accent-color);
+    }
+
+    .property-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .property-header h3 {
+        margin: 0;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .property-status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .property-status.active {
+        background: rgba(34, 197, 94, 0.15);
+        color: rgb(34, 197, 94);
+    }
+
+    .property-status.inactive {
+        background: rgba(107, 114, 128, 0.15);
+        color: rgb(107, 114, 128);
+    }
+
+    .property-info {
+        margin: 1rem 0;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    .property-info-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 0.5rem 0;
+    }
+
+    .property-info-label {
+        font-weight: 500;
+    }
+
+    .property-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: none;
+        font-size: 0.875rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        text-align: center;
+        flex: 1;
+    }
+
+    .btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    .btn-primary {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+    }
+
+    .btn-secondary {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: var(--border-color);
+    }
+
+    .form-section {
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: border-color 0.2s ease;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .form-actions button {
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        border: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .form-actions .btn-primary {
+        background: var(--accent-color);
+        color: white;
+        flex: 1;
+    }
+
+    .form-actions .btn-primary:hover {
+        opacity: 0.9;
+    }
+
+    .form-actions .btn-secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        flex: 1;
+    }
+
+    .form-actions .btn-secondary:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    table thead {
+        background: var(--bg-tertiary);
+    }
+
+    table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+        color: var(--text-secondary);
+    }
+
+    table tbody tr:hover {
+        background: var(--bg-tertiary);
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        display: none;
+    }
+
+    .alert.show {
+        display: block;
+    }
+
+    .alert.success {
+        background: rgba(34, 197, 94, 0.15);
+        color: rgb(34, 197, 94);
+        border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    .alert.error {
+        background: rgba(239, 68, 68, 0.15);
+        color: rgb(239, 68, 68);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .no-properties {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .no-properties svg {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="properties-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Gestion des Propriétés</h1>
+        <p>Gérez les hôtels et propriétés multisite</p>
+    </div>
+
+    <!-- Alert Messages -->
+    <div id="successAlert" class="alert success"></div>
+    <div id="errorAlert" class="alert error"></div>
+
+    <!-- Section 1: Propriétés Actives -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="map-pin"></i>
+            Propriétés Actives
+        </div>
+
+        <div id="propertiesGrid" class="properties-grid">
+            <div class="no-properties">
+                <i data-feather="inbox" style="width: 48px; height: 48px; opacity: 0.5;"></i>
+                <p>Aucune propriété trouvée. Veuillez en ajouter une.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Ajouter une Propriété -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="plus-circle"></i>
+            Ajouter une Propriété
+        </div>
+
+        <div class="form-section">
+            <form id="addPropertyForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="code">Code *</label>
+                        <input type="text" id="code" name="code" required maxlength="10"
+                               placeholder="ex: SHRLVL">
+                    </div>
+                    <div class="form-group">
+                        <label for="name">Nom *</label>
+                        <input type="text" id="name" name="name" required
+                               placeholder="ex: Sheraton Laval">
+                    </div>
+                    <div class="form-group">
+                        <label for="brand">Marque</label>
+                        <input type="text" id="brand" name="brand" value="Marriott"
+                               placeholder="ex: Marriott">
+                    </div>
+                    <div class="form-group">
+                        <label for="total_rooms">Nombre de Chambres *</label>
+                        <input type="number" id="total_rooms" name="total_rooms" required
+                               placeholder="ex: 252" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Adresse</label>
+                        <input type="text" id="address" name="address"
+                               placeholder="ex: 2440 Autoroute des Laurentides">
+                    </div>
+                    <div class="form-group">
+                        <label for="city">Ville</label>
+                        <input type="text" id="city" name="city"
+                               placeholder="ex: Laval">
+                    </div>
+                    <div class="form-group">
+                        <label for="province">Province</label>
+                        <input type="text" id="province" name="province"
+                               placeholder="ex: Québec">
+                    </div>
+                    <div class="form-group">
+                        <label for="country">Pays</label>
+                        <input type="text" id="country" name="country" value="Canada"
+                               placeholder="ex: Canada">
+                    </div>
+                    <div class="form-group">
+                        <label for="timezone">Fuseau Horaire</label>
+                        <select id="timezone" name="timezone">
+                            <option value="America/Montreal" selected>America/Montreal</option>
+                            <option value="America/Toronto">America/Toronto</option>
+                            <option value="America/Vancouver">America/Vancouver</option>
+                            <option value="America/New_York">America/New_York</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="currency">Devise</label>
+                        <select id="currency" name="currency">
+                            <option value="CAD" selected>CAD</option>
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="pms_type">Type de PMS</label>
+                        <input type="text" id="pms_type" name="pms_type" value="Galaxy Lightspeed"
+                               placeholder="ex: Galaxy Lightspeed">
+                    </div>
+                    <div class="form-group">
+                        <label for="pms_property_id">ID Propriété PMS</label>
+                        <input type="text" id="pms_property_id" name="pms_property_id"
+                               placeholder="ex: LS-12345">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="plus"></i>
+                        Ajouter Propriété
+                    </button>
+                    <button type="reset" class="btn btn-secondary">
+                        <i data-feather="x"></i>
+                        Réinitialiser
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Section 3: Vue Portfolio (Table) -->
+    <div class="section">
+        <div class="section-title">
+            <i data-feather="globe"></i>
+            Vue Portfolio
+        </div>
+
+        <div class="table-container">
+            <table id="portfolioTable">
+                <thead>
+                    <tr>
+                        <th>Propriété</th>
+                        <th>Code</th>
+                        <th>Chambres</th>
+                        <th>Ville</th>
+                        <th>Marque</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="portfolioBody">
+                    <!-- Populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const showAlert = (type, message) => {
+        const alertEl = document.getElementById(type === 'error' ? 'errorAlert' : 'successAlert');
+        alertEl.textContent = message;
+        alertEl.classList.add('show');
+        setTimeout(() => alertEl.classList.remove('show'), 5000);
+    };
+
+    const loadProperties = () => {
+        fetch('/properties/api/properties')
+            .then(r => r.json())
+            .then(properties => {
+                const grid = document.getElementById('propertiesGrid');
+                const tbody = document.getElementById('portfolioBody');
+
+                if (!properties || properties.length === 0) {
+                    grid.innerHTML = `
+                        <div class="no-properties">
+                            <i data-feather="inbox"></i>
+                            <p>Aucune propriété trouvée. Veuillez en ajouter une.</p>
+                        </div>
+                    `;
+                    tbody.innerHTML = '';
+                    feather.replace();
+                    return;
+                }
+
+                // Build grid cards
+                grid.innerHTML = properties.map(p => `
+                    <div class="property-card">
+                        <div class="property-header">
+                            <h3>${p.name}</h3>
+                            <span class="property-status ${p.is_active ? 'active' : 'inactive'}">
+                                ${p.is_active ? 'Actif' : 'Inactif'}
+                            </span>
+                        </div>
+                        <div class="property-info">
+                            <div class="property-info-row">
+                                <span class="property-info-label">Code:</span>
+                                <span>${p.code}</span>
+                            </div>
+                            <div class="property-info-row">
+                                <span class="property-info-label">Chambres:</span>
+                                <span>${p.total_rooms}</span>
+                            </div>
+                            <div class="property-info-row">
+                                <span class="property-info-label">Ville:</span>
+                                <span>${p.city || '-'}</span>
+                            </div>
+                            <div class="property-info-row">
+                                <span class="property-info-label">Marque:</span>
+                                <span>${p.brand || '-'}</span>
+                            </div>
+                        </div>
+                        <div class="property-actions">
+                            <button class="btn btn-secondary" onclick="editProperty(${p.id})">
+                                <i data-feather="edit"></i>
+                                Modifier
+                            </button>
+                            ${!p.is_active ? `
+                                <button class="btn btn-primary" onclick="reactivateProperty(${p.id})">
+                                    <i data-feather="check"></i>
+                                    Réactiver
+                                </button>
+                            ` : `
+                                <button class="btn btn-secondary" onclick="deactivateProperty(${p.id})">
+                                    <i data-feather="slash"></i>
+                                    Désactiver
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Build table rows
+                tbody.innerHTML = properties.map(p => `
+                    <tr>
+                        <td><strong>${p.name}</strong></td>
+                        <td>${p.code}</td>
+                        <td>${p.total_rooms}</td>
+                        <td>${p.city || '-'}</td>
+                        <td>${p.brand || '-'}</td>
+                        <td>
+                            <span class="property-status ${p.is_active ? 'active' : 'inactive'}">
+                                ${p.is_active ? 'Actif' : 'Inactif'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary" style="width: auto; padding: 0.5rem;"
+                                    onclick="editProperty(${p.id})">
+                                Modifier
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+
+                feather.replace();
+            })
+            .catch(e => showAlert('error', 'Erreur lors du chargement des propriétés.'));
+    };
+
+    document.getElementById('addPropertyForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const formData = {
+            code: document.getElementById('code').value,
+            name: document.getElementById('name').value,
+            brand: document.getElementById('brand').value,
+            total_rooms: parseInt(document.getElementById('total_rooms').value),
+            address: document.getElementById('address').value,
+            city: document.getElementById('city').value,
+            province: document.getElementById('province').value,
+            country: document.getElementById('country').value,
+            timezone: document.getElementById('timezone').value,
+            currency: document.getElementById('currency').value,
+            pms_type: document.getElementById('pms_type').value,
+            pms_property_id: document.getElementById('pms_property_id').value,
+        };
+
+        fetch('/properties/api/properties', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData),
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showAlert('error', data.error);
+                } else {
+                    showAlert('success', 'Propriété ajoutée avec succès!');
+                    document.getElementById('addPropertyForm').reset();
+                    loadProperties();
+                }
+            })
+            .catch(e => showAlert('error', 'Erreur lors de l\'ajout de la propriété.'));
+    });
+
+    const deactivateProperty = (id) => {
+        if (confirm('Êtes-vous sûr de vouloir désactiver cette propriété?')) {
+            fetch(`/properties/api/properties/${id}`, { method: 'DELETE' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.error) {
+                        showAlert('error', data.error);
+                    } else {
+                        showAlert('success', 'Propriété désactivée.');
+                        loadProperties();
+                    }
+                });
+        }
+    };
+
+    const reactivateProperty = (id) => {
+        fetch(`/properties/api/properties/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ is_active: true }),
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showAlert('error', data.error);
+                } else {
+                    showAlert('success', 'Propriété réactivée.');
+                    loadProperties();
+                }
+            });
+    };
+
+    const editProperty = (id) => {
+        alert('Édition de propriété - À implémenter');
+    };
+
+    // Load on page load
+    loadProperties();
+</script>
+{% endblock %}

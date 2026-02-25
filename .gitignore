@@ -32,6 +32,12 @@ target/
 # Databases (auto-created, don't track)
 *.sqlite3
 database/*.db
+database/*.db.backup
+database/rj_cache/
+database/pod_files/
+
+# Backup files
+*.backup
 
 # Tests / tooling
 .coverage
@@ -54,3 +60,4 @@ test_data/
 
 # Claude session data
 .claude/
+CLAUDE.md

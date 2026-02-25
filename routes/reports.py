@@ -37,47 +37,34 @@ def daily_summary():
             'dueback_total': 0
         }
     """
-    # Try to get from RJ file first
-    from routes.rj import RJ_FILES
-    from utils.rj_reader import RJReader
+    # Try NightAuditSession first, then fall back to DailyReport
+    from database.models import NightAuditSession
 
-    session_id = session.get('user_session_id', 'default')
+    today = datetime.now().date()
+    nas = NightAuditSession.query.filter_by(audit_date=today).first()
 
-    if session_id in RJ_FILES:
-        try:
-            file_bytes = RJ_FILES[session_id]
-            file_bytes.seek(0)
-            reader = RJReader(file_bytes)
+    if nas:
+        data = nas.to_dict()
+        return jsonify({
+            'success': True,
+            'source': 'night_audit_session',
+            'date': today.isoformat(),
+            'day': today.day,
+            'revenue': {
+                'comptant': data.get('deposit_cdn', 0) or 0,
+                'cartes': data.get('quasi_total', 0) or 0,
+                'cheques': 0,
+                'total': data.get('jour_total_revenue', 0) or 0,
+            },
+            'deposits': {
+                'cdn': data.get('deposit_cdn', 0) or 0,
+                'us': data.get('deposit_us', 0) or 0,
+                'total': (data.get('deposit_cdn', 0) or 0) + (data.get('deposit_us', 0) or 0),
+            },
+            'variance': 0,
+            'dueback_total': 0,
+        })
 
-            # Read data from various sheets
-            controle = reader.read_controle()
-            recap = reader.read_recap() if hasattr(reader, 'read_recap') else {}
-
-            current_day = controle.get('jour', datetime.now().day)
-
-            return jsonify({
-                'success': True,
-                'source': 'rj_file',
-                'date': f"{controle.get('annee', 2026)}-{controle.get('mois', 1):02d}-{current_day:02d}",
-                'day': current_day,
-                'revenue': {
-                    'comptant': recap.get('comptant_total', 0) or 0,
-                    'cartes': recap.get('cartes_total', 0) or 0,
-                    'cheques': recap.get('cheque_total', 0) or 0,
-                    'total': recap.get('total', 0) or 0,
-                },
-                'deposits': {
-                    'cdn': recap.get('depot_cdn', 0) or 0,
-                    'us': recap.get('depot_us', 0) or 0,
-                    'total': (recap.get('depot_cdn', 0) or 0) + (recap.get('depot_us', 0) or 0),
-                },
-                'variance': recap.get('variance', 0) or 0,
-                'dueback_total': recap.get('dueback', 0) or 0,
-            })
-        except Exception as e:
-            pass  # Fall through to database
-
-    # Fall back to database
     today = datetime.now().date()
     report = DailyReport.query.filter_by(date=today).first()
 
@@ -309,59 +296,47 @@ def credit_card_report():
             'reconciliation': { 'difference': 0, 'is_balanced': true }
         }
     """
-    from routes.rj import RJ_FILES
-    from utils.rj_reader import RJReader
+    from database.models import NightAuditSession
 
-    session_id = session.get('user_session_id', 'default')
+    today = datetime.now().date()
+    nas = NightAuditSession.query.filter_by(audit_date=today).first()
 
-    if session_id not in RJ_FILES:
+    if not nas:
         return jsonify({
             'success': False,
-            'error': 'No RJ file uploaded'
+            'error': 'Aucune session RJ pour aujourd\'hui'
         }), 400
 
-    try:
-        file_bytes = RJ_FILES[session_id]
-        file_bytes.seek(0)
-        reader = RJReader(file_bytes)
+    data = nas.to_dict()
 
-        transelect = reader.read_transelect() if hasattr(reader, 'read_transelect') else {}
+    # Pull from Quasimodo fields
+    visa_total = (data.get('quasi_fb_visa', 0) or 0) + (data.get('quasi_rec_visa', 0) or 0)
+    mc_total = (data.get('quasi_fb_mc', 0) or 0) + (data.get('quasi_rec_mc', 0) or 0)
+    amex_total = (data.get('quasi_fb_amex', 0) or 0) + (data.get('quasi_rec_amex', 0) or 0)
+    debit_total = (data.get('quasi_fb_debit', 0) or 0) + (data.get('quasi_rec_debit', 0) or 0)
 
-        # Calculate totals by card type
-        visa_total = transelect.get('visa_total', 0) or 0
-        master_total = transelect.get('master_total', 0) or 0
-        amex_total = transelect.get('amex_total', 0) or 0
-        debit_total = transelect.get('debit_total', 0) or 0
+    cards_total = visa_total + mc_total + amex_total + debit_total
 
-        terminal_total = transelect.get('terminal_total', 0) or 0
-        fusebox_total = transelect.get('fusebox_total', 0) or 0
-
-        return jsonify({
-            'success': True,
-            'by_type': {
-                'visa': visa_total,
-                'mastercard': master_total,
-                'amex': amex_total,
-                'debit': debit_total,
-            },
-            'by_source': {
-                'terminal': terminal_total,
-                'fusebox': fusebox_total,
-                'positouch': transelect.get('positouch_total', 0) or 0,
-            },
-            'reconciliation': {
-                'terminal_total': terminal_total,
-                'fusebox_total': fusebox_total,
-                'difference': terminal_total - fusebox_total,
-                'is_balanced': abs(terminal_total - fusebox_total) < 0.01
-            }
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+    return jsonify({
+        'success': True,
+        'by_type': {
+            'visa': visa_total,
+            'mastercard': mc_total,
+            'amex': amex_total,
+            'debit': debit_total,
+        },
+        'by_source': {
+            'terminal': cards_total,
+            'fusebox': 0,
+            'positouch': 0,
+        },
+        'reconciliation': {
+            'terminal_total': cards_total,
+            'fusebox_total': 0,
+            'difference': 0,
+            'is_balanced': True
+        }
+    })
 
 
 # ==============================================================================

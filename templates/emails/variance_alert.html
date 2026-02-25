@@ -1,0 +1,63 @@
+{% extends "emails/base_email.html" %}
+
+{% block body %}
+<h2 style="margin-top: 0; color: #1e40af;">Alerte: Variance Quasimodo élevée</h2>
+
+{% if alert.exceeded_by and alert.exceeded_by > alert.threshold * 2 %}
+<div class="alert alert-critical">
+    <strong>🚨 ALERTE CRITIQUE</strong>
+    <p style="margin: 0.5rem 0 0 0;">La variance Quasimodo dépasse significativement le seuil d'alerte.</p>
+</div>
+{% else %}
+<div class="alert alert-warning">
+    <strong>⚠️ ATTENTION</strong>
+    <p style="margin: 0.5rem 0 0 0;">Une variance Quasimodo anormale a été détectée.</p>
+</div>
+{% endif %}
+
+<div class="kpi-section">
+    <h3 style="margin-top: 0; font-size: 1rem; color: #333;">Détails de la variance</h3>
+
+    {% if alert.date %}
+    <p><strong>Date d'audit:</strong> {{ alert.date }}</p>
+    {% endif %}
+
+    {% if alert.variance %}
+    <p>
+        <strong>Variance détectée:</strong>
+        <span style="font-size: 1.2rem; font-weight: 600; color: #dc2626;">
+            ${{ "%.2f"|format(alert.variance) }}
+        </span>
+    </p>
+    {% endif %}
+
+    {% if alert.threshold %}
+    <p><strong>Seuil d'alerte:</strong> ${{ "%.2f"|format(alert.threshold) }}</p>
+    {% endif %}
+
+    {% if alert.exceeded_by %}
+    <p>
+        <strong>Dépasse le seuil de:</strong>
+        <span style="color: #dc2626; font-weight: 600;">${{ "%.2f"|format(alert.exceeded_by) }}</span>
+    </p>
+    {% endif %}
+</div>
+
+<div style="background-color: #f0f9ff; padding: 1rem; border-radius: 6px; margin: 1.5rem 0;">
+    <h4 style="margin-top: 0; color: #0c4a6e;">Points à vérifier:</h4>
+    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; color: #0c4a6e;">
+        <li>Vérifiez tous les entrées de terminal Transelect</li>
+        <li>Confirmez les montants en espèces dans Recap</li>
+        <li>Vérifiez les entrées de dépôt (client 6 et 8)</li>
+        <li>Confirmez les montants en cartes par type</li>
+        <li>Passez en revue les entrées de remboursement</li>
+        <li>Vérifiez les ajustements manuels effectués</li>
+    </ul>
+</div>
+
+<p style="margin-top: 2rem; color: #666; font-size: 0.9rem;">
+    Accédez à l'onglet <a href="{{ url_for('audit.rj_native_page', _external=True) }}#quasimodo" style="color: #1e40af; text-decoration: none;">
+        Quasimodo
+    </a> pour réconcilier les montants.
+</p>
+{% endblock %}

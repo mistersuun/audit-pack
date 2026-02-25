@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHERATON LAVAL — Tableau de Bord Opérationnel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #1E2761;
+            --dark: #0F1535;
+            --gold: #C9A84C;
+            --white: #FFFFFF;
+            --ice-blue: #CADCFC;
+            --light-gray: #F5F5F5;
+            --border-gray: #E0E0E0;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--light-gray);
+            color: var(--navy);
+            line-height: 1.6;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: linear-gradient(135deg, var(--navy) 0%, var(--dark) 100%);
+            color: var(--white);
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            border-bottom: 3px solid var(--gold);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .filter-group label {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--gold);
+            border-radius: 4px;
+            background: var(--white);
+            color: var(--navy);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select:hover,
+        .filter-group input:hover {
+            border-color: var(--ice-blue);
+            box-shadow: 0 0 8px rgba(202, 220, 252, 0.3);
+        }
+
+        .filter-group input[type="date"] {
+            cursor: text;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .container {
+            max-width: 1600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* ===== GRID LAYOUTS ===== */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        /* ===== CARD STYLES ===== */
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            border-top: 4px solid var(--gold);
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .card h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        /* ===== KPI CARDS ===== */
+        .kpi-card {
+            padding: 2rem 1.5rem;
+        }
+
+        .kpi-card .value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin: 1rem 0;
+        }
+
+        .kpi-card .subtext {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+
+        .kpi-card .trend {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--light-gray);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .kpi-card .trend.positive {
+            color: var(--success);
+        }
+
+        .kpi-card .trend.negative {
+            color: var(--danger);
+        }
+
+        .trend-arrow {
+            font-size: 1.2rem;
+        }
+
+        /* ===== CHART CONTAINERS ===== */
+        .chart-container {
+            position: relative;
+            height: 350px;
+            margin-bottom: 1rem;
+        }
+
+        .chart-wrapper {
+            padding: 1rem 0;
+        }
+
+        /* ===== TABLE STYLES ===== */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        thead {
+            background: linear-gradient(135deg, var(--navy), var(--dark));
+            color: var(--white);
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            white-space: nowrap;
+        }
+
+        th:hover {
+            background: var(--gold);
+        }
+
+        th::after {
+            content: '';
+            margin-left: 0.5rem;
+            display: inline-block;
+            opacity: 0.5;
+        }
+
+        th.sorted-asc::after {
+            content: '▲';
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: '▼';
+            opacity: 1;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-gray);
+        }
+
+        tbody tr:hover {
+            background: var(--light-gray);
+        }
+
+        .occ-green { background: rgba(16, 185, 129, 0.1); font-weight: 600; color: var(--success); }
+        .occ-yellow { background: rgba(245, 158, 11, 0.1); font-weight: 600; color: var(--warning); }
+        .occ-red { background: rgba(239, 68, 68, 0.1); font-weight: 600; color: var(--danger); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .grid-2, .grid-3, .grid-4 {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .header-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .filter-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+
+        /* ===== PRINT STYLES ===== */
+        @media print {
+            .header-controls {
+                display: none;
+            }
+            .container {
+                max-width: 100%;
+            }
+            body {
+                background: white;
+            }
+            .card {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid var(--border-gray);
+            }
+        }
+
+        /* ===== SECTION TITLE ===== */
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin: 2rem 0 1.5rem 0;
+            border-bottom: 2px solid var(--gold);
+            padding-bottom: 0.5rem;
+        }
+
+        /* ===== CASH HIGHLIGHT ===== */
+        .cash-highlight {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* ===== LOADING & ANIMATION ===== */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* ===== HORIZONTAL BAR LAYOUT ===== */
+        .bar-group {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+
+        .bar-label {
+            min-width: 120px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 24px;
+            background: var(--light-gray);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold), #E8B85C);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.5rem;
+            color: var(--navy);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .bar-value {
+            margin-left: 1rem;
+            min-width: 80px;
+            text-align: right;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== HEADER ===== -->
+    <div class="header">
+        <div class="header-content">
+            <h1>SHERATON LAVAL — Tableau de Bord Opérationnel</h1>
+            <div class="header-controls">
+                <div class="filter-group">
+                    <label for="dateRange">Période :</label>
+                    <select id="dateRange">
+                        <option value="30">Derniers 30 jours</option>
+                        <option value="60">Derniers 60 jours</option>
+                        <option value="90" selected>Derniers 90 jours</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="yearCompare">Comparaison annuelle :</label>
+                    <select id="yearCompare">
+                        <option value="2026" selected>2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="all">Tous les ans</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN CONTAINER ===== -->
+    <div class="container">
+        <!-- ===== ROW 1: KPI CARDS ===== -->
+        <div class="grid-4">
+            <div class="card kpi-card">
+                <h3>Revenus Totaux</h3>
+                <div class="value" id="kpiRevenue">0 $</div>
+                <div class="subtext">Tous les revenus confondus</div>
+                <div class="trend" id="revenueTrend"></div>
+            </div>
+
+            <div class="card kpi-card">
+                <h3>Taux d'Occupation</h3>
+                <div class="value" id="kpiOccupancy">0%</div>
+                <div style="width: 100%; height: 8px; background: var(--light-gray); border-radius: 4px; margin: 0.5rem 0;">
+                    <div id="occupancyBar" style="height: 100%; background: var(--success); border-radius: 4px; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                <div class="subtext">Chambre occupées sur 340 disponibles</div>
+            </div>
+
+            <div class="card kpi-card">
+                <h3>ADR Moyen</h3>
+                <div class="value" id="kpiADR">0 $</div>
+                <div class="subtext">Prix moyen par chambre</div>
+                <div class="trend" id="adrTrend"></div>
+            </div>
+
+            <div class="card kpi-card">
+                <h3>RevPAR</h3>
+                <div class="value" id="kpiRevPAR">0 $</div>
+                <div class="subtext">Revenu par chambre disponible</div>
+                <div class="subtext" style="margin-top: 1rem; opacity: 0.7;">Calcul: ADR × Occ%</div>
+            </div>
+        </div>
+
+        <!-- ===== ROW 2: MAIN CHARTS ===== -->
+        <div class="grid-2">
+            <div class="card">
+                <h3>Tendance des Revenus</h3>
+                <div class="chart-container">
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Occupation & ADR</h3>
+                <div class="chart-container">
+                    <canvas id="occupancyADRChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ROW 3: DEPARTMENT ANALYSIS ===== -->
+        <div class="section-title">Analyse par Département</div>
+        <div class="grid-3">
+            <div class="card">
+                <h3>Revenus F&B par Département</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="fbRevenueChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Distribution des Coûts de Main-d'Œuvre</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="laborChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Paiements par Carte (Hebdo)</h3>
+                <div class="chart-container" style="height: 300px;">
+                    <canvas id="cardsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ROW 4: YOY & TRENDS ===== -->
+        <div class="section-title">Analyse Comparative</div>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Comparaison Revenus Annuels</h3>
+                <div class="chart-container">
+                    <canvas id="yoyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Ratio Coûts de Main-d'Œuvre / Revenus</h3>
+                <div class="chart-container">
+                    <canvas id="laborRatioChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ROW 5: OPERATIONAL DETAILS ===== -->
+        <div class="section-title">Détails Opérationnels</div>
+        <div class="grid-2">
+            <div class="card">
+                <h3>Suivi de la Réconciliation de Caisse</h3>
+                <div class="chart-container">
+                    <canvas id="cashChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Distribution des Pourboires</h3>
+                <div id="tipsContainer" style="padding: 1rem 0;"></div>
+            </div>
+        </div>
+
+        <!-- ===== ROW 6: DATA TABLE ===== -->
+        <div class="section-title">Données Détaillées - Derniers 30 Jours</div>
+        <div class="card">
+            <div class="table-wrapper">
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Revenus Totaux</th>
+                            <th>Revenus Chambres</th>
+                            <th>Revenus F&B</th>
+                            <th>Occupation</th>
+                            <th>ADR</th>
+                            <th>RevPAR</th>
+                            <th>Chambres Vendues</th>
+                            <th>Clients</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== DATA & SCRIPTS ===== -->
+    <script>
+        // Embedded data
+        const DATA = {"recent": [{"date": "2025-11-25", "total_revenue": 37880.98, "room_revenue": 28439.02, "fb_revenue": 7412.42, "occupancy_rate": 61.1, "adr": 184.67, "total_rooms_sold": 154, "nb_clients": 210, "cafe_link_total": 2099.17, "piazza_total": 1945.03, "spesa_total": 1384.0, "banquet_total": 1102.1, "room_svc_total": 882.13, "visa_total": 12995.05, "mastercard_total": 8078.5, "amex_elavon_total": 3062.75, "amex_global_total": 2041.84, "debit_total": 4788.93, "tps_total": 1836.19, "tvq_total": 3663.2, "tvh_total": 995.37}, {"date": "2025-11-26", "total_revenue": 38534.97, "room_revenue": 26822.55, "fb_revenue": 9498.36, "occupancy_rate": 63.7, "adr": 167.64, "total_rooms_sold": 160, "nb_clients": 226, "cafe_link_total": 2845.61, "piazza_total": 2781.21, "spesa_total": 1316.04, "banquet_total": 2039.3, "room_svc_total": 516.2, "visa_total": 14129.96, "mastercard_total": 7951.25, "amex_elavon_total": 2642.06, "amex_global_total": 1761.37, "debit_total": 4795.28, "tps_total": 1847.89, "tvq_total": 3686.55, "tvh_total": 938.79}, {"date": "2025-11-27", "total_revenue": 37860.64, "room_revenue": 29254.03, "fb_revenue": 6841.4, "occupancy_rate": 65.6, "adr": 178.38, "total_rooms_sold": 164, "nb_clients": 215, "cafe_link_total": 2378.83, "piazza_total": 2037.78, "spesa_total": 714.04, "banquet_total": 1007.7, "room_svc_total": 703.05, "visa_total": 12828.48, "mastercard_total": 6982.11, "amex_elavon_total": 2817.0, "amex_global_total": 1878.0, "debit_total": 4365.44, "tps_total": 1826.38, "tvq_total": 3643.63, "tvh_total": 1023.89}, {"date": "2025-11-28", "total_revenue": 45488.11, "room_revenue": 33893.1, "fb_revenue": 9110.91, "occupancy_rate": 71.9, "adr": 189.35, "total_rooms_sold": 179, "nb_clients": 238, "cafe_link_total": 2588.7, "piazza_total": 2581.36, "spesa_total": 1419.68, "banquet_total": 2031.84, "room_svc_total": 489.34, "visa_total": 17552.68, "mastercard_total": 10689.17, "amex_elavon_total": 4801.6, "amex_global_total": 3201.07, "debit_total": 5201.14, "tps_total": 2191.95, "tvq_total": 4372.95, "tvh_total": 1186.26}, {"date": "2025-11-29", "total_revenue": 46988.3, "room_revenue": 34503.01, "fb_revenue": 9823.44, "occupancy_rate": 69.4, "adr": 197.16, "total_rooms_sold": 175, "nb_clients": 241, "cafe_link_total": 3102.15, "piazza_total": 3030.26, "spesa_total": 721.49, "banquet_total": 2124.15, "room_svc_total": 845.39, "visa_total": 15817.74, "mastercard_total": 8460.64, "amex_elavon_total": 3663.4, "amex_global_total": 2442.27, "debit_total": 5014.09, "tps_total": 2253.76, "tvq_total": 4496.25, "tvh_total": 1207.61}, {"date": "2025-11-30", "total_revenue": 33912.74, "room_revenue": 25665.39, "fb_revenue": 6367.73, "occupancy_rate": 58.3, "adr": 178.23, "total_rooms_sold": 144, "nb_clients": 195, "cafe_link_total": 2234.42, "piazza_total": 1794.04, "spesa_total": 318.39, "banquet_total": 1462.79, "room_svc_total": 569.26, "visa_total": 13099.84, "mastercard_total": 7383.16, "amex_elavon_total": 3409.09, "amex_global_total": 2272.73, "debit_total": 2664.8, "tps_total": 1638.49, "tvq_total": 3268.78, "tvh_total": 898.29}, {"date": "2025-12-01", "total_revenue": 28333.33, "room_revenue": 19759.58, "fb_revenue": 6550.59, "occupancy_rate": 59.8, "adr": 132.61, "total_rooms_sold": 149, "nb_clients": 199, "cafe_link_total": 2204.15, "piazza_total": 1557.31, "spesa_total": 672.92, "banquet_total": 1569.21, "room_svc_total": 547.0, "visa_total": 10118.6, "mastercard_total": 6946.1, "amex_elavon_total": 2820.21, "amex_global_total": 1880.14, "debit_total": 3673.12, "tps_total": 1365.12, "tvq_total": 2723.42, "tvh_total": 691.59}, {"date": "2025-12-02", "total_revenue": 27691.67, "room_revenue": 20769.25, "fb_revenue": 5267.29, "occupancy_rate": 57.4, "adr": 144.23, "total_rooms_sold": 144, "nb_clients": 204, "cafe_link_total": 1985.85, "piazza_total": 1168.29, "spesa_total": 1125.3, "banquet_total": 602.47, "room_svc_total": 385.39, "visa_total": 10207.4, "mastercard_total": 6247.45, "amex_elavon_total": 2645.47, "amex_global_total": 1763.65, "debit_total": 3181.39, "tps_total": 1332.93, "tvq_total": 2659.2, "tvh_total": 726.92}, {"date": "2025-12-03", "total_revenue": 29034.32, "room_revenue": 20294.67, "fb_revenue": 6869.44, "occupancy_rate": 49.0, "adr": 165.0, "total_rooms_sold": 123, "nb_clients": 168, "cafe_link_total": 2266.99, "piazza_total": 1856.23, "spesa_total": 938.28, "banquet_total": 1210.31, "room_svc_total": 597.63, "visa_total": 11111.6, "mastercard_total": 5916.71, "amex_elavon_total": 2288.21, "amex_global_total": 1525.47, "debit_total": 2198.14, "tps_total": 1396.46, "tvq_total": 2785.94, "tvh_total": 710.31}, {"date": "2025-12-04", "total_revenue": 36918.36, "room_revenue": 25843.04, "fb_revenue": 9081.48, "occupancy_rate": 64.7, "adr": 158.55, "total_rooms_sold": 163, "nb_clients": 229, "cafe_link_total": 2660.27, "piazza_total": 2654.03, "spesa_total": 2049.53, "banquet_total": 1086.61, "room_svc_total": 631.05, "visa_total": 11930.75, "mastercard_total": 7189.66, "amex_elavon_total": 3436.28, "amex_global_total": 2290.85, "debit_total": 4135.72, "tps_total": 1766.97, "tvq_total": 3525.11, "tvh_total": 904.51}, {"date": "2025-12-05", "total_revenue": 38534.18, "room_revenue": 29629.77, "fb_revenue": 6848.62, "occupancy_rate": 65.1, "adr": 182.9, "total_rooms_sold": 162, "nb_clients": 216, "cafe_link_total": 2088.82, "piazza_total": 1777.67, "spesa_total": 931.44, "banquet_total": 1435.11, "room_svc_total": 615.59, "visa_total": 13438.31, "mastercard_total": 8546.77, "amex_elavon_total": 3107.25, "amex_global_total": 2071.5, "debit_total": 3746.51, "tps_total": 1871.54, "tvq_total": 3733.72, "tvh_total": 1037.04}, {"date": "2025-12-06", "total_revenue": 37783.61, "room_revenue": 27717.63, "fb_revenue": 7766.45, "occupancy_rate": 65.3, "adr": 169.01, "total_rooms_sold": 164, "nb_clients": 226, "cafe_link_total": 2833.52, "piazza_total": 2272.0, "spesa_total": 759.62, "banquet_total": 1182.38, "room_svc_total": 718.93, "visa_total": 14140.18, "mastercard_total": 8401.94, "amex_elavon_total": 3647.1, "amex_global_total": 2431.4, "debit_total": 3695.81, "tps_total": 1823.62, "tvq_total": 3638.13, "tvh_total": 970.12}, {"date": "2025-12-07", "total_revenue": 35242.01, "room_revenue": 24922.95, "fb_revenue": 8226.55, "occupancy_rate": 63.5, "adr": 157.74, "total_rooms_sold": 158, "nb_clients": 223, "cafe_link_total": 2640.48, "piazza_total": 1869.3, "spesa_total": 1264.53, "banquet_total": 1838.46, "room_svc_total": 613.78, "visa_total": 13180.64, "mastercard_total": 7921.79, "amex_elavon_total": 3008.42, "amex_global_total": 2005.62, "debit_total": 3859.91, "tps_total": 1690.61, "tvq_total": 3372.76, "tvh_total": 872.3}, {"date": "2025-12-08", "total_revenue": 28749.54, "room_revenue": 19748.71, "fb_revenue": 7065.14, "occupancy_rate": 53.8, "adr": 146.29, "total_rooms_sold": 135, "nb_clients": 186, "cafe_link_total": 2683.86, "piazza_total": 1871.7, "spesa_total": 686.49, "banquet_total": 1071.62, "room_svc_total": 751.47, "visa_total": 10309.89, "mastercard_total": 5128.2, "amex_elavon_total": 1790.79, "amex_global_total": 1193.86, "debit_total": 2294.5, "tps_total": 1378.87, "tvq_total": 2750.84, "tvh_total": 691.2}, {"date": "2025-12-09", "total_revenue": 34413.5, "room_revenue": 25589.26, "fb_revenue": 6806.09, "occupancy_rate": 61.8, "adr": 165.09, "total_rooms_sold": 155, "nb_clients": 205, "cafe_link_total": 2520.53, "piazza_total": 2017.04, "spesa_total": 967.88, "banquet_total": 869.03, "room_svc_total": 431.61, "visa_total": 10788.52, "mastercard_total": 8071.85, "amex_elavon_total": 3558.69, "amex_global_total": 2372.46, "debit_total": 4465.94, "tps_total": 1663.45, "tvq_total": 3318.58, "tvh_total": 895.62}, {"date": "2025-12-10", "total_revenue": 29146.64, "room_revenue": 21148.87, "fb_revenue": 6096.19, "occupancy_rate": 52.4, "adr": 160.22, "total_rooms_sold": 132, "nb_clients": 186, "cafe_link_total": 1782.42, "piazza_total": 1441.32, "spesa_total": 1056.34, "banquet_total": 1209.4, "room_svc_total": 606.72, "visa_total": 10954.43, "mastercard_total": 6676.65, "amex_elavon_total": 2409.11, "amex_global_total": 1606.08, "debit_total": 2943.25, "tps_total": 1393.99, "tvq_total": 2781.02, "tvh_total": 740.21}, {"date": "2025-12-11", "total_revenue": 27682.39, "room_revenue": 21553.71, "fb_revenue": 4881.73, "occupancy_rate": 52.2, "adr": 165.8, "total_rooms_sold": 130, "nb_clients": 170, "cafe_link_total": 1377.72, "piazza_total": 1405.18, "spesa_total": 782.04, "banquet_total": 872.71, "room_svc_total": 444.08, "visa_total": 10564.26, "mastercard_total": 5157.86, "amex_elavon_total": 2515.62, "amex_global_total": 1677.08, "debit_total": 3672.14, "tps_total": 1348.0, "tvq_total": 2689.25, "tvh_total": 754.38}, {"date": "2025-12-12", "total_revenue": 32377.23, "room_revenue": 24695.72, "fb_revenue": 5901.6, "occupancy_rate": 56.2, "adr": 175.15, "total_rooms_sold": 141, "nb_clients": 189, "cafe_link_total": 1967.78, "piazza_total": 1808.24, "spesa_total": 901.55, "banquet_total": 901.72, "room_svc_total": 322.31, "visa_total": 10589.06, "mastercard_total": 6418.9, "amex_elavon_total": 3076.93, "amex_global_total": 2051.29, "debit_total": 3538.81, "tps_total": 1565.69, "tvq_total": 3123.54, "tvh_total": 864.35}, {"date": "2025-12-13", "total_revenue": 35193.11, "room_revenue": 25331.6, "fb_revenue": 7726.59, "occupancy_rate": 61.8, "adr": 163.43, "total_rooms_sold": 155, "nb_clients": 214, "cafe_link_total": 2417.02, "piazza_total": 1899.62, "spesa_total": 1312.13, "banquet_total": 1677.49, "room_svc_total": 420.32, "visa_total": 12495.71, "mastercard_total": 8073.25, "amex_elavon_total": 2456.99, "amex_global_total": 1637.99, "debit_total": 3266.49, "tps_total": 1702.69, "tvq_total": 3396.86, "tvh_total": 886.61}, {"date": "2025-12-14", "total_revenue": 32424.7, "room_revenue": 23461.21, "fb_revenue": 7126.36, "occupancy_rate": 56.7, "adr": 164.06, "total_rooms_sold": 143, "nb_clients": 198, "cafe_link_total": 2363.89, "piazza_total": 1619.62, "spesa_total": 1043.22, "banquet_total": 1704.08, "room_svc_total": 395.55, "visa_total": 10396.99, "mastercard_total": 5748.61, "amex_elavon_total": 2212.1, "amex_global_total": 1474.74, "debit_total": 3593.94, "tps_total": 1558.67, "tvq_total": 3109.55, "tvh_total": 821.14}, {"date": "2025-12-15", "total_revenue": 25199.65, "room_revenue": 19473.77, "fb_revenue": 4525.69, "occupancy_rate": 50.8, "adr": 153.34, "total_rooms_sold": 127, "nb_clients": 173, "cafe_link_total": 1386.51, "piazza_total": 1156.68, "spesa_total": 758.02, "banquet_total": 801.69, "room_svc_total": 422.79, "visa_total": 8043.88, "mastercard_total": 4450.93, "amex_elavon_total": 2077.47, "amex_global_total": 1384.98, "debit_total": 1914.51, "tps_total": 1219.31, "tvq_total": 2432.52, "tvh_total": 681.58}, {"date": "2025-12-16", "total_revenue": 26590.46, "room_revenue": 18044.28, "fb_revenue": 6566.14, "occupancy_rate": 47.6, "adr": 150.37, "total_rooms_sold": 120, "nb_clients": 169, "cafe_link_total": 2480.18, "piazza_total": 1518.39, "spesa_total": 1009.03, "banquet_total": 1175.38, "room_svc_total": 383.16, "visa_total": 9145.99, "mastercard_total": 5592.58, "amex_elavon_total": 1610.28, "amex_global_total": 1073.52, "debit_total": 2245.89, "tps_total": 1283.45, "tvq_total": 2560.48, "tvh_total": 631.55}, {"date": "2025-12-17", "total_revenue": 25551.92, "room_revenue": 18167.93, "fb_revenue": 5778.66, "occupancy_rate": 48.2, "adr": 150.15, "total_rooms_sold": 121, "nb_clients": 173, "cafe_link_total": 2115.69, "piazza_total": 1463.01, "spesa_total": 473.56, "banquet_total": 1423.75, "room_svc_total": 302.65, "visa_total": 7634.3, "mastercard_total": 5456.29, "amex_elavon_total": 2356.18, "amex_global_total": 1570.78, "debit_total": 1850.66, "tps_total": 1226.32, "tvq_total": 2446.51, "tvh_total": 635.88}, {"date": "2025-12-18", "total_revenue": 32866.79, "room_revenue": 22027.28, "fb_revenue": 8618.87, "occupancy_rate": 59.0, "adr": 148.83, "total_rooms_sold": 148, "nb_clients": 210, "cafe_link_total": 2938.23, "piazza_total": 2582.58, "spesa_total": 1050.34, "banquet_total": 1594.8, "room_svc_total": 452.92, "visa_total": 9754.89, "mastercard_total": 6056.94, "amex_elavon_total": 2245.41, "amex_global_total": 1496.94, "debit_total": 3928.13, "tps_total": 1557.0, "tvq_total": 3106.22, "tvh_total": 770.95}, {"date": "2025-12-19", "total_revenue": 37942.32, "room_revenue": 27303.43, "fb_revenue": 8315.21, "occupancy_rate": 61.5, "adr": 176.15, "total_rooms_sold": 155, "nb_clients": 211, "cafe_link_total": 2727.0, "piazza_total": 1972.76, "spesa_total": 1417.93, "banquet_total": 1565.2, "room_svc_total": 632.32, "visa_total": 14529.61, "mastercard_total": 9163.33, "amex_elavon_total": 3377.53, "amex_global_total": 2251.69, "debit_total": 3868.69, "tps_total": 1816.25, "tvq_total": 3623.41, "tvh_total": 955.62}, {"date": "2025-12-20", "total_revenue": 39196.98, "room_revenue": 28681.55, "fb_revenue": 8164.84, "occupancy_rate": 64.1, "adr": 178.15, "total_rooms_sold": 161, "nb_clients": 211, "cafe_link_total": 2519.03, "piazza_total": 2106.0, "spesa_total": 1803.9, "banquet_total": 1081.57, "room_svc_total": 654.35, "visa_total": 14739.01, "mastercard_total": 7564.54, "amex_elavon_total": 2761.33, "amex_global_total": 1840.88, "debit_total": 4796.35, "tps_total": 1891.38, "tvq_total": 3773.31, "tvh_total": 1003.85}, {"date": "2025-12-21", "total_revenue": 25102.34, "room_revenue": 18355.33, "fb_revenue": 5000.95, "occupancy_rate": 52.0, "adr": 140.12, "total_rooms_sold": 131, "nb_clients": 171, "cafe_link_total": 1643.85, "piazza_total": 1333.95, "spesa_total": 1055.25, "banquet_total": 562.78, "room_svc_total": 405.12, "visa_total": 9234.44, "mastercard_total": 5613.24, "amex_elavon_total": 1980.57, "amex_global_total": 1320.38, "debit_total": 2505.69, "tps_total": 1217.83, "tvq_total": 2429.57, "tvh_total": 642.44}, {"date": "2025-12-22", "total_revenue": 30845.92, "room_revenue": 20721.32, "fb_revenue": 8004.82, "occupancy_rate": 62.3, "adr": 134.55, "total_rooms_sold": 154, "nb_clients": 216, "cafe_link_total": 2703.12, "piazza_total": 2207.37, "spesa_total": 1248.23, "banquet_total": 1188.76, "room_svc_total": 657.34, "visa_total": 10093.44, "mastercard_total": 6259.78, "amex_elavon_total": 2058.43, "amex_global_total": 1372.29, "debit_total": 2780.78, "tps_total": 1478.29, "tvq_total": 2949.19, "tvh_total": 725.25}, {"date": "2025-12-23", "total_revenue": 28102.17, "room_revenue": 22271.7, "fb_revenue": 4303.54, "occupancy_rate": 59.5, "adr": 151.51, "total_rooms_sold": 147, "nb_clients": 191, "cafe_link_total": 1449.82, "piazza_total": 1151.1, "spesa_total": 375.81, "banquet_total": 992.36, "room_svc_total": 334.46, "visa_total": 11342.54, "mastercard_total": 5795.3, "amex_elavon_total": 2488.01, "amex_global_total": 1658.67, "debit_total": 2138.02, "tps_total": 1366.95, "tvq_total": 2727.07, "tvh_total": 779.51}, {"date": "2025-12-24", "total_revenue": 32790.4, "room_revenue": 24064.87, "fb_revenue": 7012.24, "occupancy_rate": 54.8, "adr": 174.38, "total_rooms_sold": 138, "nb_clients": 198, "cafe_link_total": 2472.49, "piazza_total": 1770.52, "spesa_total": 1192.13, "banquet_total": 1173.45, "room_svc_total": 403.65, "visa_total": 10429.2, "mastercard_total": 6292.4, "amex_elavon_total": 3240.22, "amex_global_total": 2160.15, "debit_total": 2293.21, "tps_total": 1592.95, "tvq_total": 3177.94, "tvh_total": 842.27}, {"date": "2025-12-25", "total_revenue": 32555.32, "room_revenue": 22392.09, "fb_revenue": 8388.21, "occupancy_rate": 58.7, "adr": 151.3, "total_rooms_sold": 148, "nb_clients": 209, "cafe_link_total": 2566.86, "piazza_total": 1860.61, "spesa_total": 1594.08, "banquet_total": 1364.36, "room_svc_total": 1002.3, "visa_total": 12128.85, "mastercard_total": 6863.84, "amex_elavon_total": 2870.98, "amex_global_total": 1913.99, "debit_total": 3265.62, "tps_total": 1565.81, "tvq_total": 3123.79, "tvh_total": 783.72}, {"date": "2025-12-26", "total_revenue": 37002.7, "room_revenue": 25431.89, "fb_revenue": 8991.87, "occupancy_rate": 57.1, "adr": 176.61, "total_rooms_sold": 144, "nb_clients": 196, "cafe_link_total": 3044.12, "piazza_total": 2116.76, "spesa_total": 2373.45, "banquet_total": 910.07, "room_svc_total": 547.48, "visa_total": 12211.86, "mastercard_total": 7135.07, "amex_elavon_total": 2465.33, "amex_global_total": 1643.56, "debit_total": 4545.19, "tps_total": 1775.8, "tvq_total": 3542.72, "tvh_total": 890.12}, {"date": "2025-12-27", "total_revenue": 37412.41, "room_revenue": 25280.63, "fb_revenue": 9613.44, "occupancy_rate": 58.3, "adr": 171.98, "total_rooms_sold": 147, "nb_clients": 212, "cafe_link_total": 3133.28, "piazza_total": 2731.46, "spesa_total": 1023.97, "banquet_total": 1757.26, "room_svc_total": 967.47, "visa_total": 13169.52, "mastercard_total": 8381.93, "amex_elavon_total": 2990.12, "amex_global_total": 1993.42, "debit_total": 4450.72, "tps_total": 1779.84, "tvq_total": 3550.79, "tvh_total": 884.82}, {"date": "2025-12-28", "total_revenue": 32442.42, "room_revenue": 22363.28, "fb_revenue": 8493.95, "occupancy_rate": 58.2, "adr": 153.17, "total_rooms_sold": 146, "nb_clients": 204, "cafe_link_total": 2829.55, "piazza_total": 2309.3, "spesa_total": 1925.0, "banquet_total": 914.67, "room_svc_total": 515.43, "visa_total": 10455.4, "mastercard_total": 6821.41, "amex_elavon_total": 3113.19, "amex_global_total": 2075.46, "debit_total": 3369.04, "tps_total": 1565.27, "tvq_total": 3122.7, "tvh_total": 782.71}, {"date": "2025-12-29", "total_revenue": 34464.31, "room_revenue": 23846.06, "fb_revenue": 8167.94, "occupancy_rate": 60.7, "adr": 158.97, "total_rooms_sold": 150, "nb_clients": 206, "cafe_link_total": 2930.09, "piazza_total": 1921.79, "spesa_total": 1071.2, "banquet_total": 1695.98, "room_svc_total": 548.88, "visa_total": 11507.67, "mastercard_total": 8828.66, "amex_elavon_total": 2750.2, "amex_global_total": 1833.47, "debit_total": 4502.97, "tps_total": 1641.28, "tvq_total": 3274.34, "tvh_total": 834.61}, {"date": "2025-12-30", "total_revenue": 25886.8, "room_revenue": 19598.54, "fb_revenue": 4707.6, "occupancy_rate": 52.8, "adr": 147.36, "total_rooms_sold": 133, "nb_clients": 175, "cafe_link_total": 1385.49, "piazza_total": 1262.74, "spesa_total": 887.89, "banquet_total": 713.94, "room_svc_total": 457.53, "visa_total": 8522.3, "mastercard_total": 4787.78, "amex_elavon_total": 1782.87, "amex_global_total": 1188.58, "debit_total": 3040.34, "tps_total": 1251.83, "tvq_total": 2497.4, "tvh_total": 685.95}, {"date": "2025-12-31", "total_revenue": 26618.4, "room_revenue": 19538.78, "fb_revenue": 5255.12, "occupancy_rate": 49.0, "adr": 161.48, "total_rooms_sold": 121, "nb_clients": 165, "cafe_link_total": 1674.28, "piazza_total": 1636.22, "spesa_total": 262.76, "banquet_total": 1171.65, "room_svc_total": 540.24, "visa_total": 10203.41, "mastercard_total": 6021.1, "amex_elavon_total": 1889.58, "amex_global_total": 1259.72, "debit_total": 2462.72, "tps_total": 1272.25, "tvq_total": 2538.14, "tvh_total": 683.86}, {"date": "2026-01-01", "total_revenue": 30556.84, "room_revenue": 21469.48, "fb_revenue": 7341.55, "occupancy_rate": 52.2, "adr": 165.15, "total_rooms_sold": 130, "nb_clients": 174, "cafe_link_total": 2266.32, "piazza_total": 1977.04, "spesa_total": 935.12, "banquet_total": 1472.9, "room_svc_total": 690.17, "visa_total": 10922.12, "mastercard_total": 7374.11, "amex_elavon_total": 1932.99, "amex_global_total": 1288.66, "debit_total": 2742.26, "tps_total": 1473.14, "tvq_total": 2938.91, "tvh_total": 751.43}, {"date": "2026-01-02", "total_revenue": 37076.79, "room_revenue": 25334.22, "fb_revenue": 9880.25, "occupancy_rate": 60.6, "adr": 166.67, "total_rooms_sold": 152, "nb_clients": 198, "cafe_link_total": 2883.06, "piazza_total": 2468.29, "spesa_total": 2154.51, "banquet_total": 1573.87, "room_svc_total": 800.51, "visa_total": 13409.61, "mastercard_total": 8837.36, "amex_elavon_total": 3159.22, "amex_global_total": 2106.15, "debit_total": 4251.5, "tps_total": 1784.71, "tvq_total": 3560.49, "tvh_total": 886.7}, {"date": "2026-01-03", "total_revenue": 40254.69, "room_revenue": 27643.2, "fb_revenue": 9817.15, "occupancy_rate": 62.7, "adr": 174.96, "total_rooms_sold": 158, "nb_clients": 217, "cafe_link_total": 3289.98, "piazza_total": 2415.2, "spesa_total": 819.87, "banquet_total": 2390.57, "room_svc_total": 901.54, "visa_total": 14287.11, "mastercard_total": 7874.51, "amex_elavon_total": 3630.74, "amex_global_total": 2420.49, "debit_total": 4748.7, "tps_total": 1919.66, "tvq_total": 3829.73, "tvh_total": 967.51}, {"date": "2026-01-04", "total_revenue": 31265.46, "room_revenue": 22555.75, "fb_revenue": 6840.16, "occupancy_rate": 56.3, "adr": 158.84, "total_rooms_sold": 142, "nb_clients": 195, "cafe_link_total": 2064.18, "piazza_total": 1971.4, "spesa_total": 703.08, "banquet_total": 1329.42, "room_svc_total": 772.08, "visa_total": 11523.86, "mastercard_total": 6919.13, "amex_elavon_total": 2563.17, "amex_global_total": 1708.78, "debit_total": 3445.11, "tps_total": 1511.27, "tvq_total": 3014.98, "tvh_total": 789.45}, {"date": "2026-01-05", "total_revenue": 27663.64, "room_revenue": 19954.77, "fb_revenue": 5639.06, "occupancy_rate": 55.6, "adr": 142.53, "total_rooms_sold": 140, "nb_clients": 192, "cafe_link_total": 2010.5, "piazza_total": 1600.8, "spesa_total": 1003.12, "banquet_total": 585.98, "room_svc_total": 438.66, "visa_total": 8810.31, "mastercard_total": 5271.51, "amex_elavon_total": 1753.67, "amex_global_total": 1169.11, "debit_total": 3384.77, "tps_total": 1324.95, "tvq_total": 2643.28, "tvh_total": 698.42}, {"date": "2026-01-06", "total_revenue": 23852.89, "room_revenue": 17041.37, "fb_revenue": 5311.07, "occupancy_rate": 45.7, "adr": 150.81, "total_rooms_sold": 113, "nb_clients": 142, "cafe_link_total": 1666.26, "piazza_total": 1260.54, "spesa_total": 886.28, "banquet_total": 1138.16, "room_svc_total": 359.83, "visa_total": 7804.64, "mastercard_total": 6003.39, "amex_elavon_total": 1627.99, "amex_global_total": 1085.32, "debit_total": 1999.78, "tps_total": 1154.75, "tvq_total": 2303.72, "tvh_total": 596.45}, {"date": "2026-01-07", "total_revenue": 29859.85, "room_revenue": 22165.53, "fb_revenue": 6166.77, "occupancy_rate": 63.1, "adr": 141.18, "total_rooms_sold": 157, "nb_clients": 202, "cafe_link_total": 1816.39, "piazza_total": 1970.22, "spesa_total": 606.47, "banquet_total": 1241.2, "room_svc_total": 532.49, "visa_total": 10836.43, "mastercard_total": 5855.51, "amex_elavon_total": 2323.18, "amex_global_total": 1548.79, "debit_total": 3293.26, "tps_total": 1440.71, "tvq_total": 2874.22, "tvh_total": 775.79}, {"date": "2026-01-08", "total_revenue": 35404.25, "room_revenue": 24049.01, "fb_revenue": 8791.75, "occupancy_rate": 61.5, "adr": 155.15, "total_rooms_sold": 155, "nb_clients": 202, "cafe_link_total": 2521.11, "piazza_total": 2578.48, "spesa_total": 756.98, "banquet_total": 1958.64, "room_svc_total": 976.54, "visa_total": 12633.75, "mastercard_total": 6745.28, "amex_elavon_total": 3768.07, "amex_global_total": 2512.05, "debit_total": 3462.4, "tps_total": 1688.26, "tvq_total": 3368.09, "tvh_total": 841.72}, {"date": "2026-01-09", "total_revenue": 35920.68, "room_revenue": 24932.06, "fb_revenue": 8974.8, "occupancy_rate": 62.9, "adr": 157.8, "total_rooms_sold": 158, "nb_clients": 221, "cafe_link_total": 2982.95, "piazza_total": 1994.64, "spesa_total": 2236.83, "banquet_total": 905.42, "room_svc_total": 854.96, "visa_total": 12886.99, "mastercard_total": 7169.1, "amex_elavon_total": 2453.92, "amex_global_total": 1635.94, "debit_total": 3087.48, "tps_total": 1732.77, "tvq_total": 3456.87, "tvh_total": 872.62}, {"date": "2026-01-10", "total_revenue": 39928.99, "room_revenue": 29000.16, "fb_revenue": 8788.26, "occupancy_rate": 61.4, "adr": 188.31, "total_rooms_sold": 154, "nb_clients": 201, "cafe_link_total": 2576.68, "piazza_total": 2674.76, "spesa_total": 1680.68, "banquet_total": 880.35, "room_svc_total": 975.78, "visa_total": 15965.32, "mastercard_total": 8116.66, "amex_elavon_total": 2903.73, "amex_global_total": 1935.82, "debit_total": 4838.77, "tps_total": 1938.24, "tvq_total": 3866.79, "tvh_total": 1015.01}, {"date": "2026-01-11", "total_revenue": 29509.79, "room_revenue": 22965.73, "fb_revenue": 4980.03, "occupancy_rate": 58.0, "adr": 158.38, "total_rooms_sold": 145, "nb_clients": 202, "cafe_link_total": 1464.18, "piazza_total": 1427.92, "spesa_total": 649.91, "banquet_total": 1114.17, "room_svc_total": 323.85, "visa_total": 10221.35, "mastercard_total": 5611.13, "amex_elavon_total": 2878.42, "amex_global_total": 1918.94, "debit_total": 2504.12, "tps_total": 1430.79, "tvq_total": 2854.43, "tvh_total": 803.8}, {"date": "2026-01-12", "total_revenue": 23583.19, "room_revenue": 16061.24, "fb_revenue": 5722.73, "occupancy_rate": 45.3, "adr": 143.4, "total_rooms_sold": 112, "nb_clients": 158, "cafe_link_total": 1731.08, "piazza_total": 1622.59, "spesa_total": 1033.24, "banquet_total": 784.79, "room_svc_total": 551.02, "visa_total": 7875.39, "mastercard_total": 4261.09, "amex_elavon_total": 2280.07, "amex_global_total": 1520.05, "debit_total": 2962.36, "tps_total": 1124.97, "tvq_total": 2244.31, "tvh_total": 562.14}, {"date": "2026-01-13", "total_revenue": 28514.54, "room_revenue": 19228.07, "fb_revenue": 7138.92, "occupancy_rate": 49.8, "adr": 156.33, "total_rooms_sold": 123, "nb_clients": 171, "cafe_link_total": 2154.6, "piazza_total": 1861.57, "spesa_total": 1904.33, "banquet_total": 746.53, "room_svc_total": 471.89, "visa_total": 9212.04, "mastercard_total": 5279.11, "amex_elavon_total": 2504.01, "amex_global_total": 1669.34, "debit_total": 2530.63, "tps_total": 1365.07, "tvq_total": 2723.31, "tvh_total": 672.98}, {"date": "2026-01-14", "total_revenue": 33271.48, "room_revenue": 24704.83, "fb_revenue": 6600.05, "occupancy_rate": 55.6, "adr": 176.46, "total_rooms_sold": 140, "nb_clients": 195, "cafe_link_total": 2025.97, "piazza_total": 1798.18, "spesa_total": 1639.92, "banquet_total": 681.29, "room_svc_total": 454.69, "visa_total": 12790.48, "mastercard_total": 6883.48, "amex_elavon_total": 2972.36, "amex_global_total": 1981.57, "debit_total": 3082.24, "tps_total": 1616.61, "tvq_total": 3225.13, "tvh_total": 864.67}, {"date": "2026-01-15", "total_revenue": 33006.4, "room_revenue": 23995.24, "fb_revenue": 6911.79, "occupancy_rate": 54.6, "adr": 175.15, "total_rooms_sold": 137, "nb_clients": 190, "cafe_link_total": 2469.92, "piazza_total": 1898.05, "spesa_total": 751.59, "banquet_total": 1352.31, "room_svc_total": 439.91, "visa_total": 13087.04, "mastercard_total": 7131.85, "amex_elavon_total": 2305.0, "amex_global_total": 1536.67, "debit_total": 3369.7, "tps_total": 1595.48, "tvq_total": 3182.98, "tvh_total": 839.83}, {"date": "2026-01-16", "total_revenue": 40774.31, "room_revenue": 29620.82, "fb_revenue": 8942.36, "occupancy_rate": 65.1, "adr": 182.84, "total_rooms_sold": 162, "nb_clients": 229, "cafe_link_total": 3285.06, "piazza_total": 2068.71, "spesa_total": 1407.74, "banquet_total": 1217.96, "room_svc_total": 962.89, "visa_total": 14449.89, "mastercard_total": 10024.85, "amex_elavon_total": 4320.22, "amex_global_total": 2880.15, "debit_total": 3148.75, "tps_total": 1969.52, "tvq_total": 3929.18, "tvh_total": 1036.73}, {"date": "2026-01-17", "total_revenue": 35296.09, "room_revenue": 26683.06, "fb_revenue": 6854.02, "occupancy_rate": 56.3, "adr": 187.91, "total_rooms_sold": 142, "nb_clients": 189, "cafe_link_total": 2022.86, "piazza_total": 1668.79, "spesa_total": 1463.55, "banquet_total": 982.36, "room_svc_total": 716.46, "visa_total": 11040.28, "mastercard_total": 7812.86, "amex_elavon_total": 2763.15, "amex_global_total": 1842.1, "debit_total": 3250.24, "tps_total": 1699.82, "tvq_total": 3391.15, "tvh_total": 933.91}, {"date": "2026-01-18", "total_revenue": 33177.59, "room_revenue": 23877.0, "fb_revenue": 7053.71, "occupancy_rate": 57.5, "adr": 168.15, "total_rooms_sold": 142, "nb_clients": 195, "cafe_link_total": 2527.65, "piazza_total": 1747.71, "spesa_total": 352.69, "banquet_total": 1660.87, "room_svc_total": 774.68, "visa_total": 12036.21, "mastercard_total": 7357.06, "amex_elavon_total": 2391.3, "amex_global_total": 1594.2, "debit_total": 2807.54, "tps_total": 1591.13, "tvq_total": 3174.31, "tvh_total": 835.7}, {"date": "2026-01-19", "total_revenue": 26505.94, "room_revenue": 18632.39, "fb_revenue": 6373.1, "occupancy_rate": 52.4, "adr": 141.15, "total_rooms_sold": 132, "nb_clients": 172, "cafe_link_total": 2257.05, "piazza_total": 1630.07, "spesa_total": 846.03, "banquet_total": 1203.58, "room_svc_total": 436.38, "visa_total": 8812.68, "mastercard_total": 5442.64, "amex_elavon_total": 2382.75, "amex_global_total": 1588.5, "debit_total": 2831.5, "tps_total": 1278.2, "tvq_total": 2550.0, "tvh_total": 652.13}, {"date": "2026-01-20", "total_revenue": 22925.86, "room_revenue": 16097.1, "fb_revenue": 5026.91, "occupancy_rate": 44.4, "adr": 143.72, "total_rooms_sold": 112, "nb_clients": 153, "cafe_link_total": 1599.47, "piazza_total": 1601.19, "spesa_total": 741.79, "banquet_total": 608.94, "room_svc_total": 475.51, "visa_total": 7960.71, "mastercard_total": 4337.58, "amex_elavon_total": 1888.21, "amex_global_total": 1258.8, "debit_total": 3096.87, "tps_total": 1103.42, "tvq_total": 2201.32, "tvh_total": 563.4}, {"date": "2026-01-21", "total_revenue": 27811.71, "room_revenue": 19971.91, "fb_revenue": 6225.19, "occupancy_rate": 48.0, "adr": 165.06, "total_rooms_sold": 121, "nb_clients": 162, "cafe_link_total": 2101.89, "piazza_total": 1455.93, "spesa_total": 1180.74, "banquet_total": 949.91, "room_svc_total": 536.72, "visa_total": 8936.03, "mastercard_total": 5222.92, "amex_elavon_total": 2158.59, "amex_global_total": 1439.06, "debit_total": 2224.61, "tps_total": 1336.83, "tvq_total": 2666.97, "tvh_total": 699.02}, {"date": "2026-01-22", "total_revenue": 30263.09, "room_revenue": 20626.18, "fb_revenue": 7321.19, "occupancy_rate": 50.0, "adr": 163.7, "total_rooms_sold": 126, "nb_clients": 169, "cafe_link_total": 2076.79, "piazza_total": 2226.96, "spesa_total": 947.94, "banquet_total": 1240.35, "room_svc_total": 829.15, "visa_total": 11923.83, "mastercard_total": 6629.42, "amex_elavon_total": 2974.81, "amex_global_total": 1983.21, "debit_total": 3580.51, "tps_total": 1449.41, "tvq_total": 2891.57, "tvh_total": 721.92}, {"date": "2026-01-23", "total_revenue": 30999.45, "room_revenue": 23938.3, "fb_revenue": 5134.75, "occupancy_rate": 51.6, "adr": 184.14, "total_rooms_sold": 130, "nb_clients": 183, "cafe_link_total": 1449.49, "piazza_total": 1380.19, "spesa_total": 1330.97, "banquet_total": 660.18, "room_svc_total": 313.92, "visa_total": 9955.32, "mastercard_total": 7116.26, "amex_elavon_total": 3245.18, "amex_global_total": 2163.46, "debit_total": 2924.28, "tps_total": 1500.3, "tvq_total": 2993.11, "tvh_total": 837.84}, {"date": "2026-01-24", "total_revenue": 39074.45, "room_revenue": 28013.47, "fb_revenue": 8747.57, "occupancy_rate": 62.8, "adr": 180.73, "total_rooms_sold": 155, "nb_clients": 214, "cafe_link_total": 2748.48, "piazza_total": 2094.11, "spesa_total": 1307.1, "banquet_total": 1697.14, "room_svc_total": 900.74, "visa_total": 13467.05, "mastercard_total": 8546.86, "amex_elavon_total": 4057.11, "amex_global_total": 2704.74, "debit_total": 2938.17, "tps_total": 1893.08, "tvq_total": 3776.7, "tvh_total": 980.47}, {"date": "2026-01-25", "total_revenue": 31685.56, "room_revenue": 22077.6, "fb_revenue": 7655.78, "occupancy_rate": 52.8, "adr": 166.0, "total_rooms_sold": 133, "nb_clients": 181, "cafe_link_total": 2863.34, "piazza_total": 2010.06, "spesa_total": 1451.66, "banquet_total": 769.68, "room_svc_total": 561.04, "visa_total": 9854.94, "mastercard_total": 5853.15, "amex_elavon_total": 2284.04, "amex_global_total": 1522.69, "debit_total": 3642.0, "tps_total": 1515.0, "tvq_total": 3022.43, "tvh_total": 772.72}, {"date": "2026-01-26", "total_revenue": 26118.53, "room_revenue": 18608.94, "fb_revenue": 5584.48, "occupancy_rate": 50.0, "adr": 147.69, "total_rooms_sold": 126, "nb_clients": 166, "cafe_link_total": 1673.63, "piazza_total": 1652.49, "spesa_total": 935.52, "banquet_total": 742.3, "room_svc_total": 580.54, "visa_total": 8930.85, "mastercard_total": 4725.17, "amex_elavon_total": 1833.66, "amex_global_total": 1222.44, "debit_total": 2700.59, "tps_total": 1263.71, "tvq_total": 2521.1, "tvh_total": 651.31}, {"date": "2026-01-27", "total_revenue": 26108.64, "room_revenue": 19177.8, "fb_revenue": 5530.23, "occupancy_rate": 49.4, "adr": 157.2, "total_rooms_sold": 122, "nb_clients": 163, "cafe_link_total": 1815.46, "piazza_total": 1476.35, "spesa_total": 1049.44, "banquet_total": 720.99, "room_svc_total": 468.0, "visa_total": 9923.52, "mastercard_total": 5493.52, "amex_elavon_total": 1880.72, "amex_global_total": 1253.81, "debit_total": 2440.7, "tps_total": 1257.71, "tvq_total": 2509.13, "tvh_total": 671.22}, {"date": "2026-01-28", "total_revenue": 35492.59, "room_revenue": 23834.94, "fb_revenue": 8888.4, "occupancy_rate": 60.6, "adr": 156.81, "total_rooms_sold": 152, "nb_clients": 210, "cafe_link_total": 2660.64, "piazza_total": 2308.66, "spesa_total": 1987.83, "banquet_total": 1464.25, "room_svc_total": 467.01, "visa_total": 13998.6, "mastercard_total": 8015.07, "amex_elavon_total": 3308.65, "amex_global_total": 2205.77, "debit_total": 4708.43, "tps_total": 1686.68, "tvq_total": 3364.92, "tvh_total": 834.22}, {"date": "2026-01-29", "total_revenue": 31329.24, "room_revenue": 22437.98, "fb_revenue": 6845.91, "occupancy_rate": 56.0, "adr": 159.13, "total_rooms_sold": 141, "nb_clients": 192, "cafe_link_total": 2484.18, "piazza_total": 1614.97, "spesa_total": 1527.61, "banquet_total": 830.78, "room_svc_total": 388.38, "visa_total": 10720.43, "mastercard_total": 5737.7, "amex_elavon_total": 2523.63, "amex_global_total": 1682.42, "debit_total": 4112.45, "tps_total": 1505.94, "tvq_total": 3004.35, "tvh_total": 785.33}, {"date": "2026-01-30", "total_revenue": 34148.42, "room_revenue": 25522.5, "fb_revenue": 7100.9, "occupancy_rate": 58.3, "adr": 173.62, "total_rooms_sold": 147, "nb_clients": 210, "cafe_link_total": 1991.04, "piazza_total": 2151.78, "spesa_total": 646.24, "banquet_total": 1461.7, "room_svc_total": 850.14, "visa_total": 10207.14, "mastercard_total": 5875.43, "amex_elavon_total": 3142.35, "amex_global_total": 2094.9, "debit_total": 3676.18, "tps_total": 1654.28, "tvq_total": 3300.28, "tvh_total": 893.29}, {"date": "2026-01-31", "total_revenue": 33951.52, "room_revenue": 23813.97, "fb_revenue": 8225.76, "occupancy_rate": 59.2, "adr": 160.91, "total_rooms_sold": 148, "nb_clients": 200, "cafe_link_total": 2362.88, "piazza_total": 2486.8, "spesa_total": 1311.42, "banquet_total": 1177.15, "room_svc_total": 887.51, "visa_total": 12442.5, "mastercard_total": 8025.55, "amex_elavon_total": 2276.69, "amex_global_total": 1517.79, "debit_total": 3651.68, "tps_total": 1635.82, "tvq_total": 3263.47, "tvh_total": 833.49}, {"date": "2026-02-01", "total_revenue": 35736.07, "room_revenue": 25102.36, "fb_revenue": 8253.29, "occupancy_rate": 59.5, "adr": 167.35, "total_rooms_sold": 150, "nb_clients": 205, "cafe_link_total": 2829.31, "piazza_total": 1822.37, "spesa_total": 976.22, "banquet_total": 1953.66, "room_svc_total": 671.74, "visa_total": 11800.59, "mastercard_total": 7215.31, "amex_elavon_total": 3475.06, "amex_global_total": 2316.71, "debit_total": 3466.41, "tps_total": 1720.31, "tvq_total": 3432.02, "tvh_total": 878.58}, {"date": "2026-02-02", "total_revenue": 25150.06, "room_revenue": 19224.4, "fb_revenue": 4631.36, "occupancy_rate": 53.8, "adr": 144.54, "total_rooms_sold": 133, "nb_clients": 179, "cafe_link_total": 1684.82, "piazza_total": 1357.83, "spesa_total": 248.83, "banquet_total": 962.82, "room_svc_total": 377.05, "visa_total": 7702.38, "mastercard_total": 5456.31, "amex_elavon_total": 1793.09, "amex_global_total": 1195.39, "debit_total": 2703.25, "tps_total": 1220.35, "tvq_total": 2434.6, "tvh_total": 672.85}, {"date": "2026-02-03", "total_revenue": 28868.32, "room_revenue": 20116.89, "fb_revenue": 6861.47, "occupancy_rate": 50.4, "adr": 158.4, "total_rooms_sold": 127, "nb_clients": 178, "cafe_link_total": 2476.87, "piazza_total": 1871.87, "spesa_total": 484.24, "banquet_total": 1303.02, "room_svc_total": 725.46, "visa_total": 11056.51, "mastercard_total": 5997.91, "amex_elavon_total": 2837.55, "amex_global_total": 1891.7, "debit_total": 3070.72, "tps_total": 1383.86, "tvq_total": 2760.81, "tvh_total": 704.09}, {"date": "2026-02-04", "total_revenue": 32171.11, "room_revenue": 24062.53, "fb_revenue": 6509.77, "occupancy_rate": 56.0, "adr": 170.66, "total_rooms_sold": 141, "nb_clients": 187, "cafe_link_total": 1988.1, "piazza_total": 1748.39, "spesa_total": 1044.46, "banquet_total": 1107.88, "room_svc_total": 620.94, "visa_total": 12210.55, "mastercard_total": 6622.94, "amex_elavon_total": 2005.87, "amex_global_total": 1337.25, "debit_total": 2872.7, "tps_total": 1565.12, "tvq_total": 3122.41, "tvh_total": 842.19}, {"date": "2026-02-05", "total_revenue": 28916.16, "room_revenue": 22916.2, "fb_revenue": 4485.11, "occupancy_rate": 54.2, "adr": 168.5, "total_rooms_sold": 136, "nb_clients": 195, "cafe_link_total": 1625.25, "piazza_total": 1302.61, "spesa_total": 518.72, "banquet_total": 540.8, "room_svc_total": 497.73, "visa_total": 8686.4, "mastercard_total": 5635.26, "amex_elavon_total": 2584.53, "amex_global_total": 1723.02, "debit_total": 2767.44, "tps_total": 1401.9, "tvq_total": 2796.79, "tvh_total": 802.07}, {"date": "2026-02-06", "total_revenue": 43353.42, "room_revenue": 33142.21, "fb_revenue": 8276.95, "occupancy_rate": 68.4, "adr": 193.81, "total_rooms_sold": 171, "nb_clients": 231, "cafe_link_total": 2510.27, "piazza_total": 2389.0, "spesa_total": 1285.06, "banquet_total": 1559.2, "room_svc_total": 533.43, "visa_total": 15547.19, "mastercard_total": 8043.43, "amex_elavon_total": 4431.41, "amex_global_total": 2954.27, "debit_total": 4064.22, "tps_total": 2103.28, "tvq_total": 4196.05, "tvh_total": 1159.98}, {"date": "2026-02-07", "total_revenue": 42385.35, "room_revenue": 29281.55, "fb_revenue": 10603.63, "occupancy_rate": 65.9, "adr": 176.39, "total_rooms_sold": 166, "nb_clients": 239, "cafe_link_total": 3214.19, "piazza_total": 2849.86, "spesa_total": 1384.36, "banquet_total": 2009.3, "room_svc_total": 1145.91, "visa_total": 14379.75, "mastercard_total": 10018.17, "amex_elavon_total": 4252.01, "amex_global_total": 2834.67, "debit_total": 3375.11, "tps_total": 2034.69, "tvq_total": 4059.2, "tvh_total": 1024.85}, {"date": "2026-02-08", "total_revenue": 29194.72, "room_revenue": 21929.57, "fb_revenue": 5593.86, "occupancy_rate": 49.0, "adr": 181.24, "total_rooms_sold": 121, "nb_clients": 168, "cafe_link_total": 1777.03, "piazza_total": 1335.33, "spesa_total": 1207.83, "banquet_total": 768.1, "room_svc_total": 505.57, "visa_total": 10850.53, "mastercard_total": 6621.27, "amex_elavon_total": 2104.64, "amex_global_total": 1403.09, "debit_total": 2488.26, "tps_total": 1416.26, "tvq_total": 2825.43, "tvh_total": 767.53}, {"date": "2026-02-09", "total_revenue": 31656.08, "room_revenue": 21155.41, "fb_revenue": 8217.79, "occupancy_rate": 54.6, "adr": 154.42, "total_rooms_sold": 137, "nb_clients": 193, "cafe_link_total": 2750.91, "piazza_total": 2355.06, "spesa_total": 1562.86, "banquet_total": 867.69, "room_svc_total": 681.28, "visa_total": 11841.15, "mastercard_total": 7544.78, "amex_elavon_total": 2744.36, "amex_global_total": 1829.57, "debit_total": 2818.46, "tps_total": 1520.19, "tvq_total": 3032.77, "tvh_total": 740.44}, {"date": "2026-02-10", "total_revenue": 28644.48, "room_revenue": 22564.38, "fb_revenue": 4799.97, "occupancy_rate": 55.6, "adr": 161.17, "total_rooms_sold": 140, "nb_clients": 191, "cafe_link_total": 1523.6, "piazza_total": 1338.32, "spesa_total": 519.16, "banquet_total": 972.67, "room_svc_total": 446.22, "visa_total": 10560.11, "mastercard_total": 5684.3, "amex_elavon_total": 2116.63, "amex_global_total": 1411.09, "debit_total": 2201.8, "tps_total": 1389.01, "tvq_total": 2771.08, "tvh_total": 789.75}, {"date": "2026-02-11", "total_revenue": 37216.17, "room_revenue": 26024.96, "fb_revenue": 8820.33, "occupancy_rate": 61.1, "adr": 168.99, "total_rooms_sold": 154, "nb_clients": 213, "cafe_link_total": 2702.98, "piazza_total": 2081.65, "spesa_total": 1241.31, "banquet_total": 2033.08, "room_svc_total": 761.31, "visa_total": 11720.37, "mastercard_total": 6653.14, "amex_elavon_total": 3179.23, "amex_global_total": 2119.48, "debit_total": 3187.75, "tps_total": 1785.68, "tvq_total": 3562.42, "tvh_total": 910.87}, {"date": "2026-02-12", "total_revenue": 29881.34, "room_revenue": 21987.33, "fb_revenue": 5958.9, "occupancy_rate": 55.6, "adr": 157.05, "total_rooms_sold": 140, "nb_clients": 194, "cafe_link_total": 1964.43, "piazza_total": 1368.77, "spesa_total": 1004.17, "banquet_total": 1201.21, "room_svc_total": 420.32, "visa_total": 11353.77, "mastercard_total": 5971.05, "amex_elavon_total": 2112.36, "amex_global_total": 1408.24, "debit_total": 3250.38, "tps_total": 1437.04, "tvq_total": 2866.89, "tvh_total": 769.56}, {"date": "2026-02-13", "total_revenue": 40516.57, "room_revenue": 30300.33, "fb_revenue": 8511.02, "occupancy_rate": 71.7, "adr": 168.34, "total_rooms_sold": 180, "nb_clients": 245, "cafe_link_total": 2422.88, "piazza_total": 1929.49, "spesa_total": 2100.44, "banquet_total": 1097.35, "room_svc_total": 960.86, "visa_total": 13131.18, "mastercard_total": 7735.43, "amex_elavon_total": 3018.29, "amex_global_total": 2012.2, "debit_total": 4410.2, "tps_total": 1970.8, "tvq_total": 3931.75, "tvh_total": 1060.51}, {"date": "2026-02-14", "total_revenue": 33333.17, "room_revenue": 26152.19, "fb_revenue": 5323.54, "occupancy_rate": 56.3, "adr": 184.17, "total_rooms_sold": 142, "nb_clients": 189, "cafe_link_total": 1810.89, "piazza_total": 1686.78, "spesa_total": 266.18, "banquet_total": 1252.78, "room_svc_total": 327.9, "visa_total": 10677.65, "mastercard_total": 7057.69, "amex_elavon_total": 3555.66, "amex_global_total": 2370.44, "debit_total": 4227.91, "tps_total": 1616.5, "tvq_total": 3224.91, "tvh_total": 915.33}, {"date": "2026-02-15", "total_revenue": 30516.1, "room_revenue": 23142.8, "fb_revenue": 5435.2, "occupancy_rate": 56.7, "adr": 161.84, "total_rooms_sold": 143, "nb_clients": 197, "cafe_link_total": 1741.43, "piazza_total": 1373.28, "spesa_total": 758.46, "banquet_total": 1208.59, "room_svc_total": 353.44, "visa_total": 9599.82, "mastercard_total": 6307.84, "amex_elavon_total": 2742.01, "amex_global_total": 1828.0, "debit_total": 3738.34, "tps_total": 1476.83, "tvq_total": 2946.28, "tvh_total": 810.0}, {"date": "2026-02-16", "total_revenue": 38650.0, "room_revenue": 28500.0, "fb_revenue": 2800.0, "occupancy_rate": 88.4, "adr": 129.55, "total_rooms_sold": 220, "nb_clients": 280, "cafe_link_total": 1650.0, "piazza_total": 1150.0, "spesa_total": 0.0, "banquet_total": 0.0, "room_svc_total": 0.0, "visa_total": 0.0, "mastercard_total": 0.0, "amex_elavon_total": 0.0, "amex_global_total": 0.0, "debit_total": 0.0, "tps_total": 2100.0, "tvq_total": 4200.0, "tvh_total": 1050.0}, {"date": "2026-02-17", "total_revenue": 22160.47, "room_revenue": 16212.73, "fb_revenue": 4368.79, "occupancy_rate": 46.0, "adr": 139.76, "total_rooms_sold": 116, "nb_clients": 152, "cafe_link_total": 1603.85, "piazza_total": 971.85, "spesa_total": 593.68, "banquet_total": 911.53, "room_svc_total": 287.89, "visa_total": 7094.88, "mastercard_total": 3797.8, "amex_elavon_total": 2000.25, "amex_global_total": 1333.5, "debit_total": 2707.93, "tps_total": 1067.76, "tvq_total": 2130.18, "tvh_total": 567.45}, {"date": "2026-02-18", "total_revenue": 29478.17, "room_revenue": 23405.28, "fb_revenue": 4501.15, "occupancy_rate": 54.8, "adr": 169.6, "total_rooms_sold": 138, "nb_clients": 190, "cafe_link_total": 1440.35, "piazza_total": 1195.15, "spesa_total": 488.43, "banquet_total": 929.88, "room_svc_total": 447.34, "visa_total": 10018.74, "mastercard_total": 5096.35, "amex_elavon_total": 2836.61, "amex_global_total": 1891.07, "debit_total": 2456.72, "tps_total": 1428.31, "tvq_total": 2849.49, "tvh_total": 819.18}, {"date": "2026-02-19", "total_revenue": 37157.42, "room_revenue": 26341.56, "fb_revenue": 8765.11, "occupancy_rate": 61.0, "adr": 172.17, "total_rooms_sold": 153, "nb_clients": 204, "cafe_link_total": 3314.26, "piazza_total": 1944.02, "spesa_total": 438.26, "banquet_total": 2182.4, "room_svc_total": 924.65, "visa_total": 14881.56, "mastercard_total": 7660.11, "amex_elavon_total": 2571.36, "amex_global_total": 1714.24, "debit_total": 2876.02, "tps_total": 1788.52, "tvq_total": 3568.09, "tvh_total": 921.95}, {"date": "2026-02-20", "total_revenue": 38326.9, "room_revenue": 27873.75, "fb_revenue": 8388.6, "occupancy_rate": 65.1, "adr": 169.96, "total_rooms_sold": 164, "nb_clients": 233, "cafe_link_total": 2608.69, "piazza_total": 2111.58, "spesa_total": 1484.81, "banquet_total": 1631.68, "room_svc_total": 551.84, "visa_total": 13888.93, "mastercard_total": 7022.22, "amex_elavon_total": 2972.35, "amex_global_total": 1981.56, "debit_total": 2684.79, "tps_total": 1850.4, "tvq_total": 3691.55, "tvh_total": 975.58}, {"date": "2026-02-21", "total_revenue": 43427.23, "room_revenue": 30539.8, "fb_revenue": 10198.37, "occupancy_rate": 68.5, "adr": 177.56, "total_rooms_sold": 172, "nb_clients": 229, "cafe_link_total": 3711.68, "piazza_total": 2323.02, "spesa_total": 2005.95, "banquet_total": 1250.19, "room_svc_total": 907.53, "visa_total": 17192.73, "mastercard_total": 8674.74, "amex_elavon_total": 3037.32, "amex_global_total": 2024.88, "debit_total": 3755.89, "tps_total": 2083.92, "tvq_total": 4157.43, "tvh_total": 1068.89}, {"date": "2026-02-22", "total_revenue": 30528.78, "room_revenue": 21912.47, "fb_revenue": 6439.7, "occupancy_rate": 57.5, "adr": 154.31, "total_rooms_sold": 142, "nb_clients": 189, "cafe_link_total": 2224.37, "piazza_total": 1479.37, "spesa_total": 1031.75, "banquet_total": 1091.65, "room_svc_total": 612.56, "visa_total": 11106.93, "mastercard_total": 6423.71, "amex_elavon_total": 2659.65, "amex_global_total": 1773.1, "debit_total": 3141.37, "tps_total": 1461.74, "tvq_total": 2916.18, "tvh_total": 766.94}], "monthly": [{"month": "2021-01", "days": 31, "total_rev": 625903.5000000001, "room_rev": 452209.93, "fb_rev": 126983.29000000001, "avg_occ": 44.08709677419356, "avg_adr": 131.86709677419356, "rooms_sold": 3422, "clients": 4671, "cafe": 42735.33999999999, "piazza": 33425.689999999995, "spesa": 17244.979999999996, "banquet": 22894.13, "room_svc": 10814.660000000002}, {"month": "2021-02", "days": 28, "total_rev": 600105.84, "room_rev": 432027.41, "fb_rev": 125813.23999999998, "avg_occ": 46.41785714285714, "avg_adr": 132.35750000000002, "rooms_sold": 3247, "clients": 4411, "cafe": 41678.79000000001, "piazza": 34808.69999999999, "spesa": 17981.35, "banquet": 21122.010000000002, "room_svc": 10395.51}, {"month": "2021-03", "days": 31, "total_rev": 766736.9199999997, "room_rev": 561195.4700000001, "fb_rev": 156017.53, "avg_occ": 50.441935483870964, "avg_adr": 142.70483870967743, "rooms_sold": 3918, "clients": 5333, "cafe": 51408.16000000001, "piazza": 41200.279999999984, "spesa": 23259.37, "banquet": 27285.510000000002, "room_svc": 12972.429999999998}, {"month": "2021-04", "days": 30, "total_rev": 859254.3999999998, "room_rev": 635426.95, "fb_rev": 171197.93, "avg_occ": 57.78, "avg_adr": 145.4283333333333, "rooms_sold": 4351, "clients": 5990, "cafe": 56513.79000000001, "piazza": 44307.159999999996, "spesa": 25100.86, "banquet": 31501.829999999998, "room_svc": 14312.639999999996}, {"month": "2021-05", "days": 31, "total_rev": 951285.0400000002, "room_rev": 710341.34, "fb_rev": 185633.84999999998, "avg_occ": 63.996774193548376, "avg_adr": 142.3712903225806, "rooms_sold": 4976, "clients": 6798, "cafe": 61801.71, "piazza": 49092.080000000016, "spesa": 25415.600000000002, "banquet": 33251.2, "room_svc": 16135.96}, {"month": "2021-06", "days": 30, "total_rev": 1159620.9600000002, "room_rev": 885889.3300000001, "fb_rev": 214884.05, "avg_occ": 73.46333333333334, "avg_adr": 159.729, "rooms_sold": 5527, "clients": 7559, "cafe": 70141.18000000002, "piazza": 59608.05000000002, "spesa": 31352.390000000003, "banquet": 36723.590000000004, "room_svc": 17502.85}, {"month": "2021-07", "days": 31, "total_rev": 1354412.15, "room_rev": 1033427.3099999998, "fb_rev": 255190.00000000003, "avg_occ": 79.39354838709679, "avg_adr": 166.81516129032258, "rooms_sold": 6161, "clients": 8402, "cafe": 83683.79000000001, "piazza": 69959.06000000001, "spesa": 35858.78, "banquet": 46013.99999999999, "room_svc": 20296.570000000003}, {"month": "2021-08", "days": 31, "total_rev": 1369919.7700000003, "room_rev": 1034542.2500000001, "fb_rev": 270554.15, "avg_occ": 82.51935483870966, "avg_adr": 160.8080645161291, "rooms_sold": 6410, "clients": 8609, "cafe": 89493.51, "piazza": 74844.76, "spesa": 34928.2, "banquet": 49313.380000000005, "room_svc": 22782.42}, {"month": "2021-09", "days": 30, "total_rev": 1005352.4000000001, "room_rev": 749078.32, "fb_rev": 198932.48999999996, "avg_occ": 68.86, "avg_adr": 144.05166666666665, "rooms_sold": 5174, "clients": 7050, "cafe": 65890.76, "piazza": 56231.28999999999, "spesa": 26796.83, "banquet": 33642.44, "room_svc": 16539.71}, {"month": "2021-10", "days": 31, "total_rev": 964112.45, "room_rev": 727570.5900000001, "fb_rev": 181724.45999999996, "avg_occ": 63.86129032258063, "avg_adr": 145.90612903225804, "rooms_sold": 4965, "clients": 6789, "cafe": 58900.599999999984, "piazza": 50685.380000000005, "spesa": 26577.27, "banquet": 29181.879999999997, "room_svc": 16379.390000000005}, {"month": "2021-11", "days": 30, "total_rev": 788514.1599999999, "room_rev": 583265.39, "fb_rev": 153604.04000000004, "avg_occ": 54.429999999999986, "avg_adr": 141.6823333333333, "rooms_sold": 4091, "clients": 5599, "cafe": 51726.72000000001, "piazza": 41097.33999999999, "spesa": 20106.370000000003, "banquet": 28619.34, "room_svc": 12833.019999999999}, {"month": "2021-12", "days": 31, "total_rev": 683512.7400000001, "room_rev": 489394.18000000005, "fb_rev": 144684.13999999998, "avg_occ": 47.34516129032258, "avg_adr": 132.7009677419355, "rooms_sold": 3675, "clients": 5054, "cafe": 47485.170000000006, "piazza": 39458.56, "spesa": 20959.59, "banquet": 25720.179999999993, "room_svc": 11060.600000000002}, {"month": "2022-01", "days": 31, "total_rev": 755138.1099999999, "room_rev": 550455.8099999999, "fb_rev": 153463.88, "avg_occ": 49.0, "avg_adr": 143.7596774193548, "rooms_sold": 3805, "clients": 5225, "cafe": 51472.460000000014, "piazza": 42617.399999999994, "spesa": 19338.870000000006, "banquet": 26927.320000000003, "room_svc": 13484.67}, {"month": "2022-02", "days": 28, "total_rev": 715334.45, "room_rev": 521795.89, "fb_rev": 145290.71000000002, "avg_occ": 52.39999999999999, "avg_adr": 140.87714285714284, "rooms_sold": 3681, "clients": 5040, "cafe": 46710.17, "piazza": 39701.49000000001, "spesa": 20631.029999999995, "banquet": 26129.8, "room_svc": 12423.29}, {"month": "2022-03", "days": 31, "total_rev": 907609.5599999999, "room_rev": 678444.2999999997, "fb_rev": 174785.33, "avg_occ": 56.874193548387105, "avg_adr": 153.21741935483874, "rooms_sold": 4406, "clients": 6012, "cafe": 57492.030000000006, "piazza": 47838.29000000001, "spesa": 22508.28, "banquet": 31384.79, "room_svc": 15699.98}, {"month": "2022-04", "days": 30, "total_rev": 977357.6399999999, "room_rev": 728289.1599999998, "fb_rev": 192835.87, "avg_occ": 62.14666666666666, "avg_adr": 155.05633333333333, "rooms_sold": 4677, "clients": 6347, "cafe": 63044.16, "piazza": 51166.39000000001, "spesa": 29693.320000000003, "banquet": 32711.6, "room_svc": 16614.149999999998}, {"month": "2022-05", "days": 31, "total_rev": 1097310.0899999999, "room_rev": 814150.8, "fb_rev": 220274.65, "avg_occ": 67.42258064516129, "avg_adr": 154.6948387096774, "rooms_sold": 5238, "clients": 7136, "cafe": 72533.12000000001, "piazza": 57461.180000000015, "spesa": 34754.67999999999, "banquet": 36587.37, "room_svc": 19218.79}, {"month": "2022-06", "days": 30, "total_rev": 1361932.8800000001, "room_rev": 1032500.5400000003, "fb_rev": 263842.02, "avg_occ": 78.21000000000001, "avg_adr": 174.893, "rooms_sold": 5883, "clients": 7963, "cafe": 86494.79999999999, "piazza": 74898.16, "spesa": 35159.18000000001, "banquet": 45536.30000000001, "room_svc": 22043.660000000003}, {"month": "2022-07", "days": 31, "total_rev": 1532073.5699999998, "room_rev": 1167976.0799999998, "fb_rev": 292714.42, "avg_occ": 85.12903225806448, "avg_adr": 176.0483870967742, "rooms_sold": 6594, "clients": 8922, "cafe": 94951.12000000001, "piazza": 79323.47000000002, "spesa": 40044.25000000001, "banquet": 53789.84000000001, "room_svc": 24605.759999999995}, {"month": "2022-08", "days": 31, "total_rev": 1582201.1600000001, "room_rev": 1195296.76, "fb_rev": 312651.75, "avg_occ": 86.7258064516129, "avg_adr": 176.4325806451613, "rooms_sold": 6740, "clients": 9026, "cafe": 102631.01000000001, "piazza": 82429.1, "spesa": 40801.1, "banquet": 60635.579999999994, "room_svc": 26497.799999999996}, {"month": "2022-09", "days": 30, "total_rev": 1159449.86, "room_rev": 871460.17, "fb_rev": 228437.87, "avg_occ": 75.3, "avg_adr": 153.294, "rooms_sold": 5662, "clients": 7644, "cafe": 76490.89000000001, "piazza": 61098.290000000015, "spesa": 33504.03999999999, "banquet": 38277.81, "room_svc": 19715.230000000007}, {"month": "2022-10", "days": 31, "total_rev": 1109066.9499999997, "room_rev": 823595.05, "fb_rev": 223305.58, "avg_occ": 68.69677419354839, "avg_adr": 154.0393548387097, "rooms_sold": 5329, "clients": 7287, "cafe": 71831.9, "piazza": 61589.95, "spesa": 35065.89, "banquet": 36271.45, "room_svc": 18726.899999999994}, {"month": "2022-11", "days": 30, "total_rev": 904350.09, "room_rev": 665181.3300000001, "fb_rev": 183500.28, "avg_occ": 57.82666666666666, "avg_adr": 152.12166666666664, "rooms_sold": 4350, "clients": 5964, "cafe": 61110.33000000001, "piazza": 48623.63, "spesa": 28259.910000000003, "banquet": 30776.149999999994, "room_svc": 15042.160000000002}, {"month": "2022-12", "days": 31, "total_rev": 823160.1700000003, "room_rev": 600131.2, "fb_rev": 171712.35999999996, "avg_occ": 54.01935483870969, "avg_adr": 142.61612903225807, "rooms_sold": 4191, "clients": 5795, "cafe": 57013.47000000001, "piazza": 46212.27000000001, "spesa": 23269.500000000004, "banquet": 31658.149999999998, "room_svc": 14101.480000000001}, {"month": "2023-01", "days": 31, "total_rev": 820009.51, "room_rev": 600043.23, "fb_rev": 167513.67, "avg_occ": 51.429032258064524, "avg_adr": 149.65354838709678, "rooms_sold": 3987, "clients": 5457, "cafe": 55561.38, "piazza": 44331.139999999985, "spesa": 23267.819999999996, "banquet": 29289.91, "room_svc": 15128.040000000005}, {"month": "2023-02", "days": 28, "total_rev": 790757.4, "room_rev": 576450.2799999999, "fb_rev": 165152.9, "avg_occ": 54.903571428571425, "avg_adr": 149.29285714285717, "rooms_sold": 3849, "clients": 5225, "cafe": 55521.68, "piazza": 44415.11, "spesa": 24074.099999999995, "banquet": 27544.63, "room_svc": 13597.3}, {"month": "2023-03", "days": 31, "total_rev": 1033176.38, "room_rev": 770279.54, "fb_rev": 204144.96000000005, "avg_occ": 61.07741935483871, "avg_adr": 161.965806451613, "rooms_sold": 4745, "clients": 6474, "cafe": 67629.35, "piazza": 55202.31999999999, "spesa": 27438.12, "banquet": 37413.86, "room_svc": 16983.390000000003}, {"month": "2023-04", "days": 30, "total_rev": 1081764.81, "room_rev": 807291.72, "fb_rev": 216651.62000000005, "avg_occ": 64.51333333333334, "avg_adr": 165.28999999999996, "rooms_sold": 4851, "clients": 6576, "cafe": 72113.70999999999, "piazza": 58305.62999999998, "spesa": 31113.069999999992, "banquet": 38043.98999999999, "room_svc": 17550.13}, {"month": "2023-05", "days": 31, "total_rev": 1217518.57, "room_rev": 898940.2299999999, "fb_rev": 252930.50999999998, "avg_occ": 71.6483870967742, "avg_adr": 160.99677419354836, "rooms_sold": 5565, "clients": 7565, "cafe": 83353.00000000001, "piazza": 65703.19000000002, "spesa": 41142.71, "banquet": 41743.10000000001, "room_svc": 20988.550000000003}, {"month": "2023-06", "days": 30, "total_rev": 1531468.2700000003, "room_rev": 1160839.32, "fb_rev": 297231.6, "avg_occ": 81.54666666666665, "avg_adr": 188.23533333333333, "rooms_sold": 6132, "clients": 8382, "cafe": 101449.79999999999, "piazza": 81668.22, "spesa": 36513.14, "banquet": 53826.270000000004, "room_svc": 24639.539999999997}, {"month": "2023-07", "days": 31, "total_rev": 1674444.0699999998, "room_rev": 1271218.05, "fb_rev": 327052.5399999999, "avg_occ": 88.85806451612905, "avg_adr": 183.7783870967742, "rooms_sold": 6895, "clients": 9424, "cafe": 110826.01000000004, "piazza": 86194.17, "spesa": 44351.87000000002, "banquet": 61219.70999999999, "room_svc": 24908.949999999997}, {"month": "2023-08", "days": 31, "total_rev": 1683959.0099999998, "room_rev": 1276927.66, "fb_rev": 328223.70000000007, "avg_occ": 89.02903225806452, "avg_adr": 183.9422580645161, "rooms_sold": 6915, "clients": 9318, "cafe": 108950.90000000002, "piazza": 88585.01999999999, "spesa": 42310.84, "banquet": 62336.92000000001, "room_svc": 26627.230000000003}, {"month": "2023-09", "days": 30, "total_rev": 1283216.6099999996, "room_rev": 978458.4099999998, "fb_rev": 242189.06, "avg_occ": 78.75, "avg_adr": 165.04766666666671, "rooms_sold": 5910, "clients": 8005, "cafe": 79834.57, "piazza": 64491.20999999999, "spesa": 35136.659999999996, "banquet": 42266.92, "room_svc": 20629.85}, {"month": "2023-10", "days": 31, "total_rev": 1228713.9900000002, "room_rev": 918689.2700000001, "fb_rev": 248070.94, "avg_occ": 71.27741935483873, "avg_adr": 165.2464516129032, "rooms_sold": 5536, "clients": 7611, "cafe": 85411.0, "piazza": 65363.17000000002, "spesa": 32606.220000000005, "banquet": 42652.479999999996, "room_svc": 22785.019999999993}, {"month": "2023-11", "days": 30, "total_rev": 993623.2399999999, "room_rev": 756291.1900000001, "fb_rev": 181773.87999999995, "avg_occ": 60.72000000000001, "avg_adr": 165.07533333333336, "rooms_sold": 4563, "clients": 6182, "cafe": 60071.329999999994, "piazza": 48698.34999999999, "spesa": 25330.000000000004, "banquet": 31584.589999999997, "room_svc": 16089.6}, {"month": "2023-12", "days": 31, "total_rev": 905304.32, "room_rev": 659249.2799999998, "fb_rev": 190060.18, "avg_occ": 55.14193548387097, "avg_adr": 153.49193548387098, "rooms_sold": 4283, "clients": 5825, "cafe": 61518.600000000006, "piazza": 50561.34, "spesa": 30852.780000000002, "banquet": 32828.35, "room_svc": 14461.140000000001}, {"month": "2024-01", "days": 31, "total_rev": 881415.1400000001, "room_rev": 632816.0499999999, "fb_rev": 191484.68, "avg_occ": 53.42580645161291, "avg_adr": 151.43774193548387, "rooms_sold": 4151, "clients": 5637, "cafe": 63186.990000000005, "piazza": 51961.29000000001, "spesa": 26491.949999999993, "banquet": 34399.17, "room_svc": 15666.93}, {"month": "2024-02", "days": 29, "total_rev": 900815.8800000001, "room_rev": 651959.2300000001, "fb_rev": 193769.76, "avg_occ": 57.389655172413796, "avg_adr": 155.69931034482755, "rooms_sold": 4172, "clients": 5714, "cafe": 64000.1, "piazza": 52174.990000000005, "spesa": 28950.480000000003, "banquet": 33175.48, "room_svc": 15623.429999999997}, {"month": "2024-03", "days": 31, "total_rev": 1089117.9399999997, "room_rev": 804863.74, "fb_rev": 223263.10000000003, "avg_occ": 61.06774193548387, "avg_adr": 168.8716129032258, "rooms_sold": 4740, "clients": 6443, "cafe": 72727.7, "piazza": 62250.62000000001, "spesa": 31536.56, "banquet": 38928.12, "room_svc": 18084.04}, {"month": "2024-04", "days": 30, "total_rev": 1155637.34, "room_rev": 859556.2499999999, "fb_rev": 234197.25, "avg_occ": 67.85999999999999, "avg_adr": 168.23899999999998, "rooms_sold": 5099, "clients": 6906, "cafe": 77368.24, "piazza": 60582.289999999986, "spesa": 36719.229999999996, "banquet": 40784.07, "room_svc": 18804.149999999994}, {"month": "2024-05", "days": 31, "total_rev": 1287347.2900000003, "room_rev": 968561.4499999998, "fb_rev": 252569.14, "avg_occ": 72.69677419354839, "avg_adr": 170.57193548387102, "rooms_sold": 5657, "clients": 7672, "cafe": 83475.26, "piazza": 69419.39, "spesa": 35923.05999999998, "banquet": 44583.93000000001, "room_svc": 19754.539999999997}, {"month": "2024-06", "days": 30, "total_rev": 1606429.0300000003, "room_rev": 1233362.96, "fb_rev": 301190.00999999995, "avg_occ": 84.50666666666665, "avg_adr": 193.37699999999998, "rooms_sold": 6350, "clients": 8574, "cafe": 100588.64, "piazza": 84202.04999999999, "spesa": 35353.66, "banquet": 54330.950000000004, "room_svc": 27759.699999999997}, {"month": "2024-07", "days": 31, "total_rev": 1724749.2499999998, "room_rev": 1295935.84, "fb_rev": 347337.47000000003, "avg_occ": 88.841935483871, "avg_adr": 187.26387096774192, "rooms_sold": 6898, "clients": 9332, "cafe": 115333.12999999999, "piazza": 91375.10999999999, "spesa": 51130.24000000001, "banquet": 60463.32, "room_svc": 29107.61}, {"month": "2024-08", "days": 31, "total_rev": 1837851.2899999998, "room_rev": 1370045.06, "fb_rev": 383448.13, "avg_occ": 91.29032258064518, "avg_adr": 192.33935483870965, "rooms_sold": 7096, "clients": 9630, "cafe": 128550.06, "piazza": 106333.76000000002, "spesa": 56232.74, "banquet": 62513.02999999999, "room_svc": 31291.99}, {"month": "2024-09", "days": 30, "total_rev": 1368044.0399999996, "room_rev": 1042423.8699999999, "fb_rev": 259308.65, "avg_occ": 80.48666666666668, "avg_adr": 171.072, "rooms_sold": 6062, "clients": 8187, "cafe": 85830.58, "piazza": 70276.09000000001, "spesa": 30777.730000000007, "banquet": 49391.26999999999, "room_svc": 23627.1}, {"month": "2024-10", "days": 31, "total_rev": 1268210.3299999998, "room_rev": 956224.5000000001, "fb_rev": 246608.45999999993, "avg_occ": 73.20645161290322, "avg_adr": 167.34258064516126, "rooms_sold": 5688, "clients": 7720, "cafe": 81447.17, "piazza": 67096.21, "spesa": 36592.8, "banquet": 42268.979999999996, "room_svc": 19977.519999999997}, {"month": "2024-11", "days": 30, "total_rev": 1100033.5699999998, "room_rev": 830174.3800000001, "fb_rev": 210983.54, "avg_occ": 64.80333333333334, "avg_adr": 169.87766666666664, "rooms_sold": 4865, "clients": 6625, "cafe": 69180.33, "piazza": 56977.54, "spesa": 29298.82, "banquet": 38323.530000000006, "room_svc": 17340.469999999998}, {"month": "2024-12", "days": 31, "total_rev": 923571.08, "room_rev": 672890.4100000001, "fb_rev": 192710.56, "avg_occ": 56.038709677419355, "avg_adr": 154.0590322580645, "rooms_sold": 4338, "clients": 5882, "cafe": 63647.86, "piazza": 52113.20999999999, "spesa": 27738.43999999999, "banquet": 33706.67, "room_svc": 15837.840000000002}, {"month": "2025-01", "days": 31, "total_rev": 945632.7200000002, "room_rev": 684737.9700000001, "fb_rev": 202657.31, "avg_occ": 55.19354838709677, "avg_adr": 159.29419354838706, "rooms_sold": 4280, "clients": 5870, "cafe": 65869.32, "piazza": 53823.31, "spesa": 27353.230000000007, "banquet": 39210.590000000004, "room_svc": 16665.23}, {"month": "2025-02", "days": 28, "total_rev": 909322.8499999997, "room_rev": 660647.83, "fb_rev": 194888.63000000003, "avg_occ": 58.12499999999999, "avg_adr": 161.27214285714288, "rooms_sold": 4081, "clients": 5607, "cafe": 64662.38999999999, "piazza": 54669.82, "spesa": 28223.24, "banquet": 32569.759999999995, "room_svc": 15330.75}, {"month": "2025-03", "days": 31, "total_rev": 1188065.2299999997, "room_rev": 873419.39, "fb_rev": 248656.40000000002, "avg_occ": 64.64516129032258, "avg_adr": 172.89096774193544, "rooms_sold": 5018, "clients": 6868, "cafe": 83171.21000000002, "piazza": 66614.68000000001, "spesa": 35545.380000000005, "banquet": 42768.090000000004, "room_svc": 20904.149999999998}, {"month": "2025-04", "days": 30, "total_rev": 1177818.7399999998, "room_rev": 885858.4899999999, "fb_rev": 231719.25000000003, "avg_occ": 67.63333333333334, "avg_adr": 173.51299999999995, "rooms_sold": 5079, "clients": 6953, "cafe": 77418.84000000001, "piazza": 63590.21, "spesa": 31798.749999999993, "banquet": 40802.29, "room_svc": 18952.71}, {"month": "2025-05", "days": 31, "total_rev": 1384365.8699999999, "room_rev": 1040392.1199999999, "fb_rev": 274608.2799999999, "avg_occ": 75.45161290322582, "avg_adr": 176.22064516129032, "rooms_sold": 5863, "clients": 7958, "cafe": 90478.13999999997, "piazza": 75514.1, "spesa": 40453.509999999995, "banquet": 46682.719999999994, "room_svc": 21994.78}, {"month": "2025-06", "days": 30, "total_rev": 1692933.0300000005, "room_rev": 1300342.2100000004, "fb_rev": 317999.39, "avg_occ": 85.60333333333332, "avg_adr": 201.179, "rooms_sold": 6429, "clients": 8682, "cafe": 103709.59, "piazza": 85979.33, "spesa": 42394.44999999999, "banquet": 59341.35000000002, "room_svc": 26984.43}, {"month": "2025-07", "days": 31, "total_rev": 1831232.5199999996, "room_rev": 1393998.8899999997, "fb_rev": 357206.98999999993, "avg_occ": 90.13870967741934, "avg_adr": 198.44387096774196, "rooms_sold": 6998, "clients": 9445, "cafe": 117920.26999999999, "piazza": 95768.62999999998, "spesa": 46799.35, "banquet": 66259.75, "room_svc": 30521.830000000005}, {"month": "2025-08", "days": 31, "total_rev": 1860924.14, "room_rev": 1451451.6800000002, "fb_rev": 330671.45000000007, "avg_occ": 92.06451612903226, "avg_adr": 202.64032258064515, "rooms_sold": 7142, "clients": 9596, "cafe": 106184.37999999999, "piazza": 87447.68999999999, "spesa": 48357.78, "banquet": 61105.169999999984, "room_svc": 27933.64}, {"month": "2025-09", "days": 30, "total_rev": 1388782.6199999999, "room_rev": 1060709.1600000001, "fb_rev": 261690.51, "avg_occ": 80.76666666666668, "avg_adr": 173.88333333333333, "rooms_sold": 6070, "clients": 8201, "cafe": 85339.56999999998, "piazza": 69945.75, "spesa": 37282.21, "banquet": 46855.73, "room_svc": 22328.439999999995}, {"month": "2025-10", "days": 31, "total_rev": 1347569.0999999999, "room_rev": 1021604.21, "fb_rev": 257469.15999999995, "avg_occ": 74.23870967741935, "avg_adr": 176.52999999999994, "rooms_sold": 5771, "clients": 7763, "cafe": 86921.66, "piazza": 69437.15, "spesa": 35042.14000000001, "banquet": 44985.02999999999, "room_svc": 21654.67}, {"month": "2025-11", "days": 30, "total_rev": 1157254.0800000003, "room_rev": 880898.6800000002, "fb_rev": 218300.80999999997, "avg_occ": 65.54333333333335, "avg_adr": 178.175, "rooms_sold": 4921, "clients": 6658, "cafe": 71785.76, "piazza": 58536.619999999995, "spesa": 29339.780000000006, "banquet": 40373.539999999986, "room_svc": 18276.309999999994}, {"month": "2025-12", "days": 31, "total_rev": 984095.9000000003, "room_rev": 708028.7000000001, "fb_rev": 216123.21000000002, "avg_occ": 57.23548387096774, "avg_adr": 158.9838709677419, "rooms_sold": 4445, "clients": 6103, "cafe": 71792.89, "piazza": 56318.79, "spesa": 34013.82000000001, "banquet": 37318.270000000004, "room_svc": 16709.52}, {"month": "2026-01", "days": 31, "total_rev": 985332.4699999999, "room_rev": 704034.6199999999, "fb_rev": 220414.60000000003, "avg_occ": 55.47419354838709, "avg_adr": 162.89935483870968, "rooms_sold": 4307, "clients": 5848, "cafe": 69843.09000000001, "piazza": 59094.45, "spesa": 36250.2, "banquet": 35543.74, "room_svc": 19692.989999999998}, {"month": "2026-02", "days": 22, "total_rev": 737268.0900000001, "room_rev": 541888.7, "fb_rev": 147743.90999999997, "avg_occ": 59.550000000000004, "avg_adr": 164.99, "rooms_sold": 3286, "clients": 4481, "cafe": 49576.16, "piazza": 37985.6, "spesa": 20645.18, "banquet": 26835.480000000003, "room_svc": 12760.97}], "cards": [{"week": "2025-W47", "card_type": "AMEX", "pos": 40078.049999999996, "bank": 38875.71000000001, "avg_rate": 0.03, "disc": 1202.34, "txns": 364}, {"week": "2025-W47", "card_type": "DEBIT", "pos": 31861.940000000002, "bank": 31861.940000000002, "avg_rate": 0.0, "disc": 0.0, "txns": 291}, {"week": "2025-W47", "card_type": "DISCOVER", "pos": 8489.65, "bank": 8234.95, "avg_rate": 0.03, "disc": 254.70000000000002, "txns": 76}, {"week": "2025-W47", "card_type": "MC", "pos": 59555.39, "bank": 58959.83, "avg_rate": 0.01, "disc": 595.56, "txns": 547}, {"week": "2025-W47", "card_type": "VISA", "pos": 94097.16, "bank": 92215.20999999999, "avg_rate": 0.02, "disc": 1881.9400000000003, "txns": 873}, {"week": "2025-W48", "card_type": "AMEX", "pos": 34220.29, "bank": 33193.68000000001, "avg_rate": 0.03, "disc": 1026.6100000000001, "txns": 308}, {"week": "2025-W48", "card_type": "DEBIT", "pos": 26252.269999999997, "bank": 26252.269999999997, "avg_rate": 0.0, "disc": 0.0, "txns": 231}, {"week": "2025-W48", "card_type": "DISCOVER", "pos": 7850.79, "bank": 7615.259999999999, "avg_rate": 0.03, "disc": 235.53, "txns": 66}, {"week": "2025-W48", "card_type": "MC", "pos": 53735.06, "bank": 53197.71, "avg_rate": 0.01, "disc": 537.35, "txns": 484}, {"week": "2025-W48", "card_type": "VISA", "pos": 85052.72, "bank": 83351.68000000001, "avg_rate": 0.02, "disc": 1701.04, "txns": 768}, {"week": "2025-W49", "card_type": "AMEX", "pos": 34133.87, "bank": 33109.86, "avg_rate": 0.03, "disc": 1024.01, "txns": 296}, {"week": "2025-W49", "card_type": "DEBIT", "pos": 22633.61, "bank": 22633.61, "avg_rate": 0.0, "disc": 0.0, "txns": 195}, {"week": "2025-W49", "card_type": "DISCOVER", "pos": 6363.22, "bank": 6172.35, "avg_rate": 0.03, "disc": 190.87, "txns": 52}, {"week": "2025-W49", "card_type": "MC", "pos": 46851.54, "bank": 46383.04, "avg_rate": 0.01, "disc": 468.5, "txns": 412}, {"week": "2025-W49", "card_type": "VISA", "pos": 80050.59, "bank": 78449.58, "avg_rate": 0.02, "disc": 1601.02, "txns": 705}, {"week": "2025-W50", "card_type": "AMEX", "pos": 33074.6, "bank": 32082.37, "avg_rate": 0.03, "disc": 992.23, "txns": 292}, {"week": "2025-W50", "card_type": "DEBIT", "pos": 21426.7, "bank": 21426.7, "avg_rate": 0.0, "disc": 0.0, "txns": 188}, {"week": "2025-W50", "card_type": "DISCOVER", "pos": 6435.02, "bank": 6241.960000000001, "avg_rate": 0.03, "disc": 193.06, "txns": 53}, {"week": "2025-W50", "card_type": "MC", "pos": 46908.880000000005, "bank": 46439.8, "avg_rate": 0.01, "disc": 469.08, "txns": 415}, {"week": "2025-W50", "card_type": "VISA", "pos": 72900.84, "bank": 71442.81999999999, "avg_rate": 0.02, "disc": 1458.02, "txns": 645}, {"week": "2025-W51", "card_type": "AMEX", "pos": 36966.28, "bank": 35857.3, "avg_rate": 0.03, "disc": 1108.98, "txns": 355}, {"week": "2025-W51", "card_type": "DEBIT", "pos": 25354.929999999997, "bank": 25354.929999999997, "avg_rate": 0.0, "disc": 0.0, "txns": 244}, {"week": "2025-W51", "card_type": "DISCOVER", "pos": 6604.33, "bank": 6406.21, "avg_rate": 0.03, "disc": 198.12, "txns": 61}, {"week": "2025-W51", "card_type": "MC", "pos": 50722.380000000005, "bank": 50215.16, "avg_rate": 0.01, "disc": 507.22, "txns": 491}, {"week": "2025-W51", "card_type": "VISA", "pos": 82730.48999999999, "bank": 81075.87, "avg_rate": 0.02, "disc": 1654.62, "txns": 797}, {"week": "2025-W52", "card_type": "AMEX", "pos": 12751.39, "bank": 12368.85, "avg_rate": 0.03, "disc": 382.54, "txns": 124}, {"week": "2025-W52", "card_type": "DEBIT", "pos": 10295.720000000001, "bank": 10295.720000000001, "avg_rate": 0.0, "disc": 0.0, "txns": 98}, {"week": "2025-W52", "card_type": "DISCOVER", "pos": 3570.46, "bank": 3463.35, "avg_rate": 0.03, "disc": 107.11000000000001, "txns": 32}, {"week": "2025-W52", "card_type": "MC", "pos": 19300.5, "bank": 19107.489999999998, "avg_rate": 0.01, "disc": 193.01, "txns": 184}, {"week": "2025-W52", "card_type": "VISA", "pos": 31813.83, "bank": 31177.56, "avg_rate": 0.02, "disc": 636.27, "txns": 308}, {"week": "2026-W00", "card_type": "AMEX", "pos": 20876.86, "bank": 20250.56, "avg_rate": 0.03, "disc": 626.3000000000001, "txns": 168}, {"week": "2026-W00", "card_type": "DEBIT", "pos": 16084.57, "bank": 16084.57, "avg_rate": 0.0, "disc": 0.0, "txns": 130}, {"week": "2026-W00", "card_type": "DISCOVER", "pos": 3129.99, "bank": 3036.1, "avg_rate": 0.03, "disc": 93.88999999999999, "txns": 23}, {"week": "2026-W00", "card_type": "MC", "pos": 31950.37, "bank": 31630.86, "avg_rate": 0.01, "disc": 319.51, "txns": 257}, {"week": "2026-W00", "card_type": "VISA", "pos": 48833.83, "bank": 47857.149999999994, "avg_rate": 0.02, "disc": 976.6800000000001, "txns": 392}, {"week": "2026-W01", "card_type": "AMEX", "pos": 35872.869999999995, "bank": 34796.7, "avg_rate": 0.03, "disc": 1076.17, "txns": 331}, {"week": "2026-W01", "card_type": "DEBIT", "pos": 26143.31, "bank": 26143.31, "avg_rate": 0.0, "disc": 0.0, "txns": 241}, {"week": "2026-W01", "card_type": "DISCOVER", "pos": 6558.26, "bank": 6361.51, "avg_rate": 0.03, "disc": 196.74, "txns": 57}, {"week": "2026-W01", "card_type": "MC", "pos": 48375.89000000001, "bank": 47892.14, "avg_rate": 0.01, "disc": 483.74999999999994, "txns": 441}, {"week": "2026-W01", "card_type": "VISA", "pos": 80061.26, "bank": 78460.01999999999, "avg_rate": 0.02, "disc": 1601.24, "txns": 746}, {"week": "2026-W02", "card_type": "AMEX", "pos": 34395.51, "bank": 33363.649999999994, "avg_rate": 0.03, "disc": 1031.86, "txns": 357}, {"week": "2026-W02", "card_type": "DEBIT", "pos": 25257.559999999998, "bank": 25257.559999999998, "avg_rate": 0.0, "disc": 0.0, "txns": 260}, {"week": "2026-W02", "card_type": "DISCOVER", "pos": 6180.019999999999, "bank": 5994.62, "avg_rate": 0.03, "disc": 185.39999999999998, "txns": 63}, {"week": "2026-W02", "card_type": "MC", "pos": 52197.600000000006, "bank": 51675.64, "avg_rate": 0.01, "disc": 521.96, "txns": 537}, {"week": "2026-W02", "card_type": "VISA", "pos": 80220.37, "bank": 78615.96, "avg_rate": 0.02, "disc": 1604.4099999999999, "txns": 831}, {"week": "2026-W03", "card_type": "AMEX", "pos": 30178.9, "bank": 29273.520000000004, "avg_rate": 0.03, "disc": 905.38, "txns": 296}, {"week": "2026-W03", "card_type": "DEBIT", "pos": 25429.34, "bank": 25429.34, "avg_rate": 0.0, "disc": 0.0, "txns": 252}, {"week": "2026-W03", "card_type": "DISCOVER", "pos": 5701.700000000001, "bank": 5530.65, "avg_rate": 0.03, "disc": 171.05, "txns": 55}, {"week": "2026-W03", "card_type": "MC", "pos": 46409.47, "bank": 45945.369999999995, "avg_rate": 0.01, "disc": 464.09999999999997, "txns": 462}, {"week": "2026-W03", "card_type": "VISA", "pos": 75273.86, "bank": 73768.38, "avg_rate": 0.02, "disc": 1505.48, "txns": 752}, {"week": "2026-W04", "card_type": "AMEX", "pos": 32669.940000000006, "bank": 31689.85, "avg_rate": 0.03, "disc": 980.0899999999999, "txns": 321}, {"week": "2026-W04", "card_type": "DEBIT", "pos": 24662.35, "bank": 24662.35, "avg_rate": 0.0, "disc": 0.0, "txns": 244}, {"week": "2026-W04", "card_type": "DISCOVER", "pos": 7260.500000000001, "bank": 7042.6900000000005, "avg_rate": 0.03, "disc": 217.81, "txns": 66}, {"week": "2026-W04", "card_type": "MC", "pos": 48408.880000000005, "bank": 47924.8, "avg_rate": 0.01, "disc": 484.08, "txns": 470}, {"week": "2026-W04", "card_type": "VISA", "pos": 79444.84000000001, "bank": 77855.94, "avg_rate": 0.02, "disc": 1588.9000000000003, "txns": 778}, {"week": "2026-W05", "card_type": "AMEX", "pos": 34936.07, "bank": 33887.99, "avg_rate": 0.03, "disc": 1048.08, "txns": 314}, {"week": "2026-W05", "card_type": "DEBIT", "pos": 26202.270000000004, "bank": 26202.270000000004, "avg_rate": 0.0, "disc": 0.0, "txns": 234}, {"week": "2026-W05", "card_type": "DISCOVER", "pos": 7123.26, "bank": 6909.549999999999, "avg_rate": 0.03, "disc": 213.70999999999998, "txns": 61}, {"week": "2026-W05", "card_type": "MC", "pos": 51792.149999999994, "bank": 51274.23999999999, "avg_rate": 0.01, "disc": 517.9200000000001, "txns": 459}, {"week": "2026-W05", "card_type": "VISA", "pos": 81512.82999999999, "bank": 79882.57999999999, "avg_rate": 0.02, "disc": 1630.25, "txns": 733}, {"week": "2026-W06", "card_type": "AMEX", "pos": 35932.409999999996, "bank": 34854.439999999995, "avg_rate": 0.03, "disc": 1077.97, "txns": 336}, {"week": "2026-W06", "card_type": "DEBIT", "pos": 25501.28, "bank": 25501.28, "avg_rate": 0.0, "disc": 0.0, "txns": 232}, {"week": "2026-W06", "card_type": "DISCOVER", "pos": 6749.38, "bank": 6546.91, "avg_rate": 0.03, "disc": 202.47, "txns": 60}, {"week": "2026-W06", "card_type": "MC", "pos": 51714.8, "bank": 51197.64, "avg_rate": 0.01, "disc": 517.1599999999999, "txns": 484}, {"week": "2026-W06", "card_type": "VISA", "pos": 81806.76, "bank": 80170.63, "avg_rate": 0.02, "disc": 1636.1299999999999, "txns": 765}, {"week": "2026-W07", "card_type": "AMEX", "pos": 29916.43, "bank": 29018.93, "avg_rate": 0.03, "disc": 897.5, "txns": 270}, {"week": "2026-W07", "card_type": "DEBIT", "pos": 22825.78, "bank": 22825.78, "avg_rate": 0.0, "disc": 0.0, "txns": 204}, {"week": "2026-W07", "card_type": "DISCOVER", "pos": 5641.279999999999, "bank": 5472.049999999999, "avg_rate": 0.03, "disc": 169.23000000000002, "txns": 48}, {"week": "2026-W07", "card_type": "MC", "pos": 45841.36, "bank": 45382.95, "avg_rate": 0.01, "disc": 458.41, "txns": 410}, {"week": "2026-W07", "card_type": "VISA", "pos": 69872.44, "bank": 68475.0, "avg_rate": 0.02, "disc": 1397.44, "txns": 628}], "labor": [{"department": "GOUVERNANTE", "reg_h": 1421.6000000000001, "ot_h": 75.16999999999999, "cost": 32105.759999999995, "avg_emp": 5.8}, {"department": "CUISINE", "reg_h": 944.99, "ot_h": 49.24, "cost": 26248.140000000003, "avg_emp": 3.6333333333333333}, {"department": "RECEPTION", "reg_h": 609.8599999999999, "ot_h": 25.150000000000002, "cost": 15715.99, "avg_emp": 2.2}, {"department": "ADMIN", "reg_h": 439.96000000000004, "ot_h": 11.09, "cost": 15482.19, "avg_emp": 1.0952380952380953}, {"department": "MAINTENANCE", "reg_h": 487.15, "ot_h": 24.24, "cost": 14064.779999999999, "avg_emp": 1.7}, {"department": "BANQUET", "reg_h": 550.4200000000001, "ot_h": 22.8, "cost": 12610.990000000002, "avg_emp": 4.4}, {"department": "VENTES", "reg_h": 276.0, "ot_h": 0.0, "cost": 10177.14, "avg_emp": 1.0}, {"department": "BAR", "reg_h": 398.03000000000003, "ot_h": 18.990000000000002, "cost": 10092.53, "avg_emp": 1.2333333333333334}, {"department": "ROOM_SERVICE", "reg_h": 385.47999999999996, "ot_h": 17.82, "cost": 8428.820000000002, "avg_emp": 1.1666666666666667}, {"department": "AUDIT", "reg_h": 297.00999999999993, "ot_h": 14.790000000000001, "cost": 7888.700000000001, "avg_emp": 1.0}, {"department": "RESERVATION", "reg_h": 293.76, "ot_h": 13.53, "cost": 7098.880000000002, "avg_emp": 1.0}, {"department": "PORTIER", "reg_h": 295.40999999999997, "ot_h": 14.650000000000002, "cost": 6820.68, "avg_emp": 1.0}, {"department": "CLUB_LOUNGE", "reg_h": 257.44, "ot_h": 12.639999999999999, "cost": 6386.410000000001, "avg_emp": 1.0}, {"department": "COMMIS", "reg_h": 260.65, "ot_h": 14.230000000000002, "cost": 5593.280000000001, "avg_emp": 1.0}, {"department": "CHAMBRE", "reg_h": 56.0, "ot_h": 0.0, "cost": 1954.44, "avg_emp": 1.0}, {"department": "PIAZZA", "reg_h": 8.0, "ot_h": 0.0, "cost": 260.0, "avg_emp": 1.0}], "labor_trend": [{"month": "2021-01", "cost": 931099.0799999983, "reg_h": 39091.20999999993, "ot_h": 1972.7299999999948}, {"month": "2021-02", "cost": 834372.6900000003, "reg_h": 34892.11000000002, "ot_h": 1644.609999999994}, {"month": "2021-03", "cost": 768049.5299999999, "reg_h": 32651.70000000001, "ot_h": 1594.440000000002}, {"month": "2021-04", "cost": 756897.2799999994, "reg_h": 32165.26999999994, "ot_h": 1613.9400000000003}, {"month": "2021-05", "cost": 794672.9100000015, "reg_h": 33832.97999999995, "ot_h": 1655.5299999999938}, {"month": "2021-06", "cost": 784922.8500000007, "reg_h": 33470.24000000003, "ot_h": 1677.4500000000016}, {"month": "2021-07", "cost": 794226.3099999999, "reg_h": 33810.49999999996, "ot_h": 1695.469999999996}, {"month": "2021-08", "cost": 795501.8800000009, "reg_h": 33881.369999999966, "ot_h": 1694.3799999999987}, {"month": "2021-09", "cost": 754618.92, "reg_h": 32039.340000000022, "ot_h": 1585.3199999999965}, {"month": "2021-10", "cost": 777270.6999999987, "reg_h": 33006.439999999995, "ot_h": 1662.9199999999973}, {"month": "2021-11", "cost": 757170.5099999993, "reg_h": 32169.31000000003, "ot_h": 1610.4799999999996}, {"month": "2021-12", "cost": 764664.4300000007, "reg_h": 32427.890000000007, "ot_h": 1646.0300000000004}], "cash": [{"date": "2026-01-23", "deposit_cdn": 2849.25, "deposit_usd": 1004.99, "diff_caisse": -4.91, "quasimodo_variance": 0.49}, {"date": "2026-01-24", "deposit_cdn": 2810.8, "deposit_usd": 1312.8, "diff_caisse": 11.73, "quasimodo_variance": -0.08}, {"date": "2026-01-25", "deposit_cdn": 1794.84, "deposit_usd": 962.08, "diff_caisse": 7.76, "quasimodo_variance": -4.31}, {"date": "2026-01-26", "deposit_cdn": 1791.26, "deposit_usd": 583.48, "diff_caisse": -37.6, "quasimodo_variance": -0.85}, {"date": "2026-01-27", "deposit_cdn": 2138.98, "deposit_usd": 976.93, "diff_caisse": 38.1, "quasimodo_variance": -0.88}, {"date": "2026-01-28", "deposit_cdn": 2503.84, "deposit_usd": 609.04, "diff_caisse": 22.18, "quasimodo_variance": -1.11}, {"date": "2026-01-29", "deposit_cdn": 2307.82, "deposit_usd": 1336.7, "diff_caisse": 8.4, "quasimodo_variance": -0.71}, {"date": "2026-01-30", "deposit_cdn": 3039.32, "deposit_usd": 1143.03, "diff_caisse": -22.75, "quasimodo_variance": 1.61}, {"date": "2026-01-31", "deposit_cdn": 2638.3, "deposit_usd": 635.22, "diff_caisse": 5.77, "quasimodo_variance": 2.44}, {"date": "2026-02-01", "deposit_cdn": 2785.24, "deposit_usd": 1301.42, "diff_caisse": -19.46, "quasimodo_variance": 2.72}, {"date": "2026-02-02", "deposit_cdn": 1915.32, "deposit_usd": 636.53, "diff_caisse": -16.34, "quasimodo_variance": 0.39}, {"date": "2026-02-03", "deposit_cdn": 2375.54, "deposit_usd": 730.72, "diff_caisse": -20.52, "quasimodo_variance": 0.29}, {"date": "2026-02-04", "deposit_cdn": 2120.46, "deposit_usd": 655.51, "diff_caisse": -6.57, "quasimodo_variance": 0.79}, {"date": "2026-02-05", "deposit_cdn": 1877.98, "deposit_usd": 852.29, "diff_caisse": 46.65, "quasimodo_variance": -0.14}, {"date": "2026-02-06", "deposit_cdn": 3705.17, "deposit_usd": 1773.89, "diff_caisse": 12.8, "quasimodo_variance": -0.37}, {"date": "2026-02-07", "deposit_cdn": 3433.36, "deposit_usd": 1543.79, "diff_caisse": 32.19, "quasimodo_variance": -1.19}, {"date": "2026-02-08", "deposit_cdn": 1828.67, "deposit_usd": 1212.28, "diff_caisse": 12.94, "quasimodo_variance": 0.03}, {"date": "2026-02-09", "deposit_cdn": 2484.21, "deposit_usd": 940.09, "diff_caisse": -18.1, "quasimodo_variance": 1.6}, {"date": "2026-02-10", "deposit_cdn": 2336.01, "deposit_usd": 458.13, "diff_caisse": 30.99, "quasimodo_variance": -0.1}, {"date": "2026-02-11", "deposit_cdn": 3096.09, "deposit_usd": 966.12, "diff_caisse": 23.06, "quasimodo_variance": 1.23}, {"date": "2026-02-12", "deposit_cdn": 2633.72, "deposit_usd": 884.0, "diff_caisse": 4.82, "quasimodo_variance": -2.97}, {"date": "2026-02-13", "deposit_cdn": 2851.21, "deposit_usd": 1630.9, "diff_caisse": -21.62, "quasimodo_variance": -1.12}, {"date": "2026-02-14", "deposit_cdn": 2277.43, "deposit_usd": 1007.73, "diff_caisse": -3.81, "quasimodo_variance": -0.5}, {"date": "2026-02-15", "deposit_cdn": 2342.04, "deposit_usd": 1200.44, "diff_caisse": 29.66, "quasimodo_variance": -0.12}, {"date": "2026-02-17", "deposit_cdn": 1643.36, "deposit_usd": 507.36, "diff_caisse": -20.7, "quasimodo_variance": -4.46}, {"date": "2026-02-18", "deposit_cdn": 2631.18, "deposit_usd": 837.48, "diff_caisse": 19.72, "quasimodo_variance": -2.45}, {"date": "2026-02-19", "deposit_cdn": 2833.45, "deposit_usd": 835.57, "diff_caisse": 23.14, "quasimodo_variance": 0.76}, {"date": "2026-02-20", "deposit_cdn": 3212.01, "deposit_usd": 851.7, "diff_caisse": -28.5, "quasimodo_variance": 3.8}, {"date": "2026-02-21", "deposit_cdn": 3445.56, "deposit_usd": 826.98, "diff_caisse": 13.9, "quasimodo_variance": 1.13}, {"date": "2026-02-22", "deposit_cdn": 2327.27, "deposit_usd": 1182.09, "diff_caisse": 16.7, "quasimodo_variance": -1.1}], "budgets": [{"id": 1, "year": 2021, "month": 1, "room_revenue_budget": 14282.89, "fb_revenue_budget": 4034.49, "other_revenue_budget": 793.62, "total_revenue_budget": 18990.27, "labor_cost_budget": 5692.29, "operating_expense_budget": 4948.18, "occupancy_budget": 44.5, "adr_budget": 135.6, "source": "demo_seed"}, {"id": 2, "year": 2021, "month": 2, "room_revenue_budget": 15817.23, "fb_revenue_budget": 4473.87, "other_revenue_budget": 705.16, "total_revenue_budget": 21349.32, "labor_cost_budget": 6245.51, "operating_expense_budget": 5245.15, "occupancy_budget": 46.5, "adr_budget": 130.06, "source": "demo_seed"}, {"id": 3, "year": 2021, "month": 3, "room_revenue_budget": 18589.29, "fb_revenue_budget": 4935.6, "other_revenue_budget": 739.81, "total_revenue_budget": 24793.19, "labor_cost_budget": 7474.17, "operating_expense_budget": 6155.78, "occupancy_budget": 49.9, "adr_budget": 146.69, "source": "demo_seed"}, {"id": 4, "year": 2021, "month": 4, "room_revenue_budget": 21497.13, "fb_revenue_budget": 5601.06, "other_revenue_budget": 729.88, "total_revenue_budget": 28306.63, "labor_cost_budget": 9399.06, "operating_expense_budget": 6929.03, "occupancy_budget": 58.2, "adr_budget": 147.73, "source": "demo_seed"}, {"id": 5, "year": 2021, "month": 5, "room_revenue_budget": 23814.36, "fb_revenue_budget": 6092.55, "other_revenue_budget": 740.74, "total_revenue_budget": 28784.23, "labor_cost_budget": 9041.56, "operating_expense_budget": 8746.71, "occupancy_budget": 64.0, "adr_budget": 140.95, "source": "demo_seed"}, {"id": 6, "year": 2021, "month": 6, "room_revenue_budget": 28901.34, "fb_revenue_budget": 7018.17, "other_revenue_budget": 775.72, "total_revenue_budget": 36390.87, "labor_cost_budget": 12163.38, "operating_expense_budget": 10953.16, "occupancy_budget": 72.8, "adr_budget": 163.02, "source": "demo_seed"}, {"id": 7, "year": 2021, "month": 7, "room_revenue_budget": 33731.44, "fb_revenue_budget": 8010.76, "other_revenue_budget": 737.25, "total_revenue_budget": 43836.18, "labor_cost_budget": 11831.81, "operating_expense_budget": 12075.49, "occupancy_budget": 78.5, "adr_budget": 169.22, "source": "demo_seed"}, {"id": 8, "year": 2021, "month": 8, "room_revenue_budget": 34428.25, "fb_revenue_budget": 8617.28, "other_revenue_budget": 662.36, "total_revenue_budget": 41676.47, "labor_cost_budget": 14119.14, "operating_expense_budget": 11695.99, "occupancy_budget": 81.8, "adr_budget": 156.03, "source": "demo_seed"}, {"id": 9, "year": 2021, "month": 9, "room_revenue_budget": 24896.11, "fb_revenue_budget": 6611.86, "other_revenue_budget": 712.59, "total_revenue_budget": 33538.83, "labor_cost_budget": 10161.24, "operating_expense_budget": 9253.97, "occupancy_budget": 67.5, "adr_budget": 140.4, "source": "demo_seed"}, {"id": 10, "year": 2021, "month": 10, "room_revenue_budget": 24172.6, "fb_revenue_budget": 5839.44, "other_revenue_budget": 762.18, "total_revenue_budget": 31018.62, "labor_cost_budget": 8676.36, "operating_expense_budget": 8788.55, "occupancy_budget": 64.9, "adr_budget": 145.52, "source": "demo_seed"}, {"id": 11, "year": 2021, "month": 11, "room_revenue_budget": 19857.15, "fb_revenue_budget": 5065.75, "other_revenue_budget": 794.3, "total_revenue_budget": 26265.79, "labor_cost_budget": 8190.36, "operating_expense_budget": 7149.61, "occupancy_budget": 54.9, "adr_budget": 144.56, "source": "demo_seed"}, {"id": 12, "year": 2021, "month": 12, "room_revenue_budget": 16393.99, "fb_revenue_budget": 4810.38, "other_revenue_budget": 770.15, "total_revenue_budget": 21915.74, "labor_cost_budget": 6328.26, "operating_expense_budget": 5821.75, "occupancy_budget": 47.4, "adr_budget": 130.96, "source": "demo_seed"}, {"id": 13, "year": 2022, "month": 1, "room_revenue_budget": 17998.88, "fb_revenue_budget": 4911.78, "other_revenue_budget": 743.79, "total_revenue_budget": 23900.93, "labor_cost_budget": 7806.33, "operating_expense_budget": 5755.24, "occupancy_budget": 49.4, "adr_budget": 140.47, "source": "demo_seed"}, {"id": 14, "year": 2022, "month": 2, "room_revenue_budget": 18599.96, "fb_revenue_budget": 5312.95, "other_revenue_budget": 800.05, "total_revenue_budget": 25122.17, "labor_cost_budget": 7871.77, "operating_expense_budget": 6275.51, "occupancy_budget": 52.4, "adr_budget": 143.52, "source": "demo_seed"}, {"id": 15, "year": 2022, "month": 3, "room_revenue_budget": 21325.5, "fb_revenue_budget": 5531.84, "other_revenue_budget": 716.33, "total_revenue_budget": 28425.38, "labor_cost_budget": 7821.09, "operating_expense_budget": 7531.3, "occupancy_budget": 58.0, "adr_budget": 149.31, "source": "demo_seed"}, {"id": 16, "year": 2022, "month": 4, "room_revenue_budget": 24546.65, "fb_revenue_budget": 6608.53, "other_revenue_budget": 756.96, "total_revenue_budget": 31431.64, "labor_cost_budget": 9465.44, "operating_expense_budget": 7997.4, "occupancy_budget": 61.2, "adr_budget": 151.29, "source": "demo_seed"}, {"id": 17, "year": 2022, "month": 5, "room_revenue_budget": 26921.49, "fb_revenue_budget": 7383.55, "other_revenue_budget": 840.23, "total_revenue_budget": 35382.51, "labor_cost_budget": 9491.14, "operating_expense_budget": 10150.54, "occupancy_budget": 67.2, "adr_budget": 151.55, "source": "demo_seed"}, {"id": 18, "year": 2022, "month": 6, "room_revenue_budget": 34095.86, "fb_revenue_budget": 8561.4, "other_revenue_budget": 714.04, "total_revenue_budget": 44308.54, "labor_cost_budget": 13134.11, "operating_expense_budget": 12206.98, "occupancy_budget": 79.7, "adr_budget": 170.89, "source": "demo_seed"}, {"id": 19, "year": 2022, "month": 7, "room_revenue_budget": 37395.43, "fb_revenue_budget": 9584.49, "other_revenue_budget": 731.09, "total_revenue_budget": 48861.27, "labor_cost_budget": 15708.01, "operating_expense_budget": 13007.51, "occupancy_budget": 86.6, "adr_budget": 180.71, "source": "demo_seed"}, {"id": 20, "year": 2022, "month": 8, "room_revenue_budget": 39927.12, "fb_revenue_budget": 10475.3, "other_revenue_budget": 711.78, "total_revenue_budget": 49086.97, "labor_cost_budget": 16919.9, "operating_expense_budget": 13421.0, "occupancy_budget": 85.2, "adr_budget": 179.3, "source": "demo_seed"}, {"id": 21, "year": 2022, "month": 9, "room_revenue_budget": 28225.36, "fb_revenue_budget": 7684.39, "other_revenue_budget": 693.82, "total_revenue_budget": 37645.44, "labor_cost_budget": 11564.12, "operating_expense_budget": 11267.81, "occupancy_budget": 75.3, "adr_budget": 153.12, "source": "demo_seed"}, {"id": 22, "year": 2022, "month": 10, "room_revenue_budget": 26154.34, "fb_revenue_budget": 7488.74, "other_revenue_budget": 815.92, "total_revenue_budget": 34997.85, "labor_cost_budget": 10635.51, "operating_expense_budget": 10022.12, "occupancy_budget": 67.7, "adr_budget": 152.64, "source": "demo_seed"}, {"id": 23, "year": 2022, "month": 11, "room_revenue_budget": 22481.59, "fb_revenue_budget": 5939.64, "other_revenue_budget": 720.96, "total_revenue_budget": 29498.81, "labor_cost_budget": 9012.01, "operating_expense_budget": 7672.71, "occupancy_budget": 58.2, "adr_budget": 147.7, "source": "demo_seed"}, {"id": 24, "year": 2022, "month": 12, "room_revenue_budget": 19919.85, "fb_revenue_budget": 5660.0, "other_revenue_budget": 703.89, "total_revenue_budget": 25013.72, "labor_cost_budget": 7261.46, "operating_expense_budget": 7181.39, "occupancy_budget": 53.1, "adr_budget": 141.06, "source": "demo_seed"}, {"id": 25, "year": 2023, "month": 1, "room_revenue_budget": 19536.93, "fb_revenue_budget": 5262.58, "other_revenue_budget": 763.76, "total_revenue_budget": 25001.71, "labor_cost_budget": 8285.87, "operating_expense_budget": 7714.09, "occupancy_budget": 52.0, "adr_budget": 145.58, "source": "demo_seed"}, {"id": 26, "year": 2023, "month": 2, "room_revenue_budget": 21158.39, "fb_revenue_budget": 5800.53, "other_revenue_budget": 704.83, "total_revenue_budget": 28057.64, "labor_cost_budget": 8484.75, "operating_expense_budget": 6893.7, "occupancy_budget": 55.7, "adr_budget": 152.21, "source": "demo_seed"}, {"id": 27, "year": 2023, "month": 3, "room_revenue_budget": 24625.75, "fb_revenue_budget": 6512.65, "other_revenue_budget": 714.11, "total_revenue_budget": 31205.06, "labor_cost_budget": 9519.8, "operating_expense_budget": 8470.19, "occupancy_budget": 60.5, "adr_budget": 160.27, "source": "demo_seed"}, {"id": 28, "year": 2023, "month": 4, "room_revenue_budget": 27521.85, "fb_revenue_budget": 7453.85, "other_revenue_budget": 694.7, "total_revenue_budget": 34872.56, "labor_cost_budget": 11052.95, "operating_expense_budget": 10229.03, "occupancy_budget": 65.3, "adr_budget": 166.43, "source": "demo_seed"}, {"id": 29, "year": 2023, "month": 5, "room_revenue_budget": 28502.63, "fb_revenue_budget": 8254.48, "other_revenue_budget": 764.34, "total_revenue_budget": 37193.55, "labor_cost_budget": 10867.97, "operating_expense_budget": 11686.7, "occupancy_budget": 73.0, "adr_budget": 157.59, "source": "demo_seed"}, {"id": 30, "year": 2023, "month": 6, "room_revenue_budget": 39418.24, "fb_revenue_budget": 9786.59, "other_revenue_budget": 798.51, "total_revenue_budget": 48334.59, "labor_cost_budget": 14513.68, "operating_expense_budget": 12438.26, "occupancy_budget": 81.1, "adr_budget": 183.01, "source": "demo_seed"}, {"id": 31, "year": 2023, "month": 7, "room_revenue_budget": 40268.04, "fb_revenue_budget": 10577.93, "other_revenue_budget": 702.36, "total_revenue_budget": 51490.66, "labor_cost_budget": 17673.12, "operating_expense_budget": 16208.3, "occupancy_budget": 88.0, "adr_budget": 180.38, "source": "demo_seed"}, {"id": 32, "year": 2023, "month": 8, "room_revenue_budget": 40007.15, "fb_revenue_budget": 10975.81, "other_revenue_budget": 776.61, "total_revenue_budget": 53337.74, "labor_cost_budget": 14544.91, "operating_expense_budget": 13535.46, "occupancy_budget": 87.6, "adr_budget": 185.67, "source": "demo_seed"}, {"id": 33, "year": 2023, "month": 9, "room_revenue_budget": 33914.64, "fb_revenue_budget": 8263.68, "other_revenue_budget": 760.35, "total_revenue_budget": 41873.29, "labor_cost_budget": 12089.02, "operating_expense_budget": 11559.18, "occupancy_budget": 79.7, "adr_budget": 162.87, "source": "demo_seed"}, {"id": 34, "year": 2023, "month": 10, "room_revenue_budget": 29039.71, "fb_revenue_budget": 8158.42, "other_revenue_budget": 726.72, "total_revenue_budget": 37817.1, "labor_cost_budget": 10636.66, "operating_expense_budget": 10859.14, "occupancy_budget": 71.8, "adr_budget": 164.81, "source": "demo_seed"}, {"id": 35, "year": 2023, "month": 11, "room_revenue_budget": 25104.05, "fb_revenue_budget": 5898.96, "other_revenue_budget": 743.87, "total_revenue_budget": 33138.24, "labor_cost_budget": 9562.7, "operating_expense_budget": 8855.86, "occupancy_budget": 61.7, "adr_budget": 170.59, "source": "demo_seed"}, {"id": 36, "year": 2023, "month": 12, "room_revenue_budget": 22105.83, "fb_revenue_budget": 5998.37, "other_revenue_budget": 717.09, "total_revenue_budget": 28387.52, "labor_cost_budget": 9033.38, "operating_expense_budget": 8715.3, "occupancy_budget": 55.6, "adr_budget": 150.05, "source": "demo_seed"}, {"id": 37, "year": 2024, "month": 1, "room_revenue_budget": 20035.9, "fb_revenue_budget": 6004.33, "other_revenue_budget": 767.75, "total_revenue_budget": 27016.23, "labor_cost_budget": 9108.37, "operating_expense_budget": 8260.62, "occupancy_budget": 53.6, "adr_budget": 147.35, "source": "demo_seed"}, {"id": 38, "year": 2024, "month": 2, "room_revenue_budget": 22018.69, "fb_revenue_budget": 6499.2, "other_revenue_budget": 722.35, "total_revenue_budget": 30998.76, "labor_cost_budget": 9547.44, "operating_expense_budget": 8160.22, "occupancy_budget": 57.8, "adr_budget": 155.83, "source": "demo_seed"}, {"id": 39, "year": 2024, "month": 3, "room_revenue_budget": 26744.89, "fb_revenue_budget": 7148.37, "other_revenue_budget": 751.49, "total_revenue_budget": 34372.65, "labor_cost_budget": 10649.6, "operating_expense_budget": 9521.01, "occupancy_budget": 61.0, "adr_budget": 175.21, "source": "demo_seed"}, {"id": 40, "year": 2024, "month": 4, "room_revenue_budget": 28679.44, "fb_revenue_budget": 7762.11, "other_revenue_budget": 776.09, "total_revenue_budget": 36412.56, "labor_cost_budget": 11789.21, "operating_expense_budget": 10505.37, "occupancy_budget": 66.7, "adr_budget": 165.54, "source": "demo_seed"}, {"id": 41, "year": 2024, "month": 5, "room_revenue_budget": 30518.19, "fb_revenue_budget": 8222.12, "other_revenue_budget": 714.67, "total_revenue_budget": 41036.16, "labor_cost_budget": 11295.48, "operating_expense_budget": 11684.09, "occupancy_budget": 74.0, "adr_budget": 173.93, "source": "demo_seed"}, {"id": 42, "year": 2024, "month": 6, "room_revenue_budget": 40737.4, "fb_revenue_budget": 10400.88, "other_revenue_budget": 782.88, "total_revenue_budget": 53964.16, "labor_cost_budget": 15844.0, "operating_expense_budget": 15913.1, "occupancy_budget": 82.9, "adr_budget": 197.86, "source": "demo_seed"}, {"id": 43, "year": 2024, "month": 7, "room_revenue_budget": 43000.31, "fb_revenue_budget": 11144.96, "other_revenue_budget": 717.66, "total_revenue_budget": 54551.23, "labor_cost_budget": 15340.67, "operating_expense_budget": 15221.12, "occupancy_budget": 88.4, "adr_budget": 193.36, "source": "demo_seed"}, {"id": 44, "year": 2024, "month": 8, "room_revenue_budget": 44978.26, "fb_revenue_budget": 12519.96, "other_revenue_budget": 734.82, "total_revenue_budget": 56123.88, "labor_cost_budget": 18252.42, "operating_expense_budget": 16429.97, "occupancy_budget": 90.2, "adr_budget": 186.85, "source": "demo_seed"}, {"id": 45, "year": 2024, "month": 9, "room_revenue_budget": 34468.99, "fb_revenue_budget": 8709.09, "other_revenue_budget": 769.04, "total_revenue_budget": 45857.04, "labor_cost_budget": 12466.94, "operating_expense_budget": 13692.36, "occupancy_budget": 81.1, "adr_budget": 167.86, "source": "demo_seed"}, {"id": 46, "year": 2024, "month": 10, "room_revenue_budget": 30403.53, "fb_revenue_budget": 7881.18, "other_revenue_budget": 749.39, "total_revenue_budget": 40495.4, "labor_cost_budget": 11293.47, "operating_expense_budget": 10150.23, "occupancy_budget": 71.9, "adr_budget": 165.58, "source": "demo_seed"}, {"id": 47, "year": 2024, "month": 11, "room_revenue_budget": 27428.13, "fb_revenue_budget": 6912.21, "other_revenue_budget": 715.48, "total_revenue_budget": 34423.73, "labor_cost_budget": 10895.98, "operating_expense_budget": 9022.63, "occupancy_budget": 65.1, "adr_budget": 165.13, "source": "demo_seed"}, {"id": 48, "year": 2024, "month": 12, "room_revenue_budget": 22472.18, "fb_revenue_budget": 6333.21, "other_revenue_budget": 762.44, "total_revenue_budget": 29060.76, "labor_cost_budget": 8312.37, "operating_expense_budget": 8014.96, "occupancy_budget": 55.8, "adr_budget": 159.43, "source": "demo_seed"}, {"id": 49, "year": 2025, "month": 1, "room_revenue_budget": 21682.5, "fb_revenue_budget": 6705.12, "other_revenue_budget": 802.09, "total_revenue_budget": 29673.32, "labor_cost_budget": 9626.93, "operating_expense_budget": 7375.62, "occupancy_budget": 55.5, "adr_budget": 160.59, "source": "demo_seed"}, {"id": 50, "year": 2025, "month": 2, "room_revenue_budget": 24029.43, "fb_revenue_budget": 6823.98, "other_revenue_budget": 752.97, "total_revenue_budget": 31968.96, "labor_cost_budget": 8688.47, "operating_expense_budget": 8323.71, "occupancy_budget": 57.3, "adr_budget": 157.43, "source": "demo_seed"}, {"id": 51, "year": 2025, "month": 3, "room_revenue_budget": 27714.38, "fb_revenue_budget": 7887.74, "other_revenue_budget": 761.74, "total_revenue_budget": 38152.83, "labor_cost_budget": 11727.7, "operating_expense_budget": 9575.57, "occupancy_budget": 64.5, "adr_budget": 173.98, "source": "demo_seed"}, {"id": 52, "year": 2025, "month": 4, "room_revenue_budget": 29834.01, "fb_revenue_budget": 7800.75, "other_revenue_budget": 678.21, "total_revenue_budget": 38475.7, "labor_cost_budget": 11941.03, "operating_expense_budget": 10960.94, "occupancy_budget": 68.8, "adr_budget": 178.66, "source": "demo_seed"}, {"id": 53, "year": 2025, "month": 5, "room_revenue_budget": 34831.5, "fb_revenue_budget": 8793.18, "other_revenue_budget": 746.57, "total_revenue_budget": 42971.35, "labor_cost_budget": 12285.56, "operating_expense_budget": 12802.64, "occupancy_budget": 76.5, "adr_budget": 173.3, "source": "demo_seed"}, {"id": 54, "year": 2025, "month": 6, "room_revenue_budget": 44622.39, "fb_revenue_budget": 10669.51, "other_revenue_budget": 757.09, "total_revenue_budget": 55914.91, "labor_cost_budget": 17337.86, "operating_expense_budget": 16398.1, "occupancy_budget": 86.1, "adr_budget": 203.3, "source": "demo_seed"}, {"id": 55, "year": 2025, "month": 7, "room_revenue_budget": 44416.95, "fb_revenue_budget": 11621.53, "other_revenue_budget": 723.75, "total_revenue_budget": 56268.6, "labor_cost_budget": 18519.41, "operating_expense_budget": 17383.78, "occupancy_budget": 91.6, "adr_budget": 197.22, "source": "demo_seed"}, {"id": 56, "year": 2025, "month": 8, "room_revenue_budget": 48151.61, "fb_revenue_budget": 11055.33, "other_revenue_budget": 745.58, "total_revenue_budget": 59362.64, "labor_cost_budget": 20086.85, "operating_expense_budget": 14553.24, "occupancy_budget": 92.0, "adr_budget": 209.34, "source": "demo_seed"}, {"id": 57, "year": 2025, "month": 9, "room_revenue_budget": 36641.97, "fb_revenue_budget": 8676.08, "other_revenue_budget": 827.62, "total_revenue_budget": 46455.63, "labor_cost_budget": 13314.41, "operating_expense_budget": 11521.49, "occupancy_budget": 80.8, "adr_budget": 171.66, "source": "demo_seed"}, {"id": 58, "year": 2025, "month": 10, "room_revenue_budget": 32195.53, "fb_revenue_budget": 8239.56, "other_revenue_budget": 791.07, "total_revenue_budget": 42957.25, "labor_cost_budget": 13063.17, "operating_expense_budget": 13159.57, "occupancy_budget": 73.4, "adr_budget": 178.23, "source": "demo_seed"}, {"id": 59, "year": 2025, "month": 11, "room_revenue_budget": 29093.38, "fb_revenue_budget": 7449.89, "other_revenue_budget": 750.31, "total_revenue_budget": 38231.96, "labor_cost_budget": 11237.77, "operating_expense_budget": 11545.0, "occupancy_budget": 64.6, "adr_budget": 184.86, "source": "demo_seed"}, {"id": 60, "year": 2025, "month": 12, "room_revenue_budget": 23375.0, "fb_revenue_budget": 7243.54, "other_revenue_budget": 706.99, "total_revenue_budget": 29667.03, "labor_cost_budget": 9456.31, "operating_expense_budget": 9291.35, "occupancy_budget": 56.1, "adr_budget": 164.06, "source": "demo_seed"}, {"id": 61, "year": 2026, "month": 1, "room_revenue_budget": 22913.8, "fb_revenue_budget": 7162.2, "other_revenue_budget": 791.84, "total_revenue_budget": 29925.37, "labor_cost_budget": 10069.66, "operating_expense_budget": 9232.97, "occupancy_budget": 56.4, "adr_budget": 164.7, "source": "demo_seed"}, {"id": 62, "year": 2026, "month": 2, "room_revenue_budget": 24281.26, "fb_revenue_budget": 6804.22, "other_revenue_budget": 803.58, "total_revenue_budget": 32732.76, "labor_cost_budget": 10077.11, "operating_expense_budget": 9239.15, "occupancy_budget": 58.0, "adr_budget": 168.53, "source": "demo_seed"}], "yoy": [{"yr": "2021", "mo": "01", "rev": 625903.5000000001, "occ": 44.08709677419356, "adr": 131.86709677419356, "fb": 126983.29000000001}, {"yr": "2021", "mo": "02", "rev": 600105.84, "occ": 46.41785714285714, "adr": 132.35750000000002, "fb": 125813.23999999998}, {"yr": "2021", "mo": "03", "rev": 766736.9199999997, "occ": 50.441935483870964, "adr": 142.70483870967743, "fb": 156017.53}, {"yr": "2021", "mo": "04", "rev": 859254.3999999998, "occ": 57.78, "adr": 145.4283333333333, "fb": 171197.93}, {"yr": "2021", "mo": "05", "rev": 951285.0400000002, "occ": 63.996774193548376, "adr": 142.3712903225806, "fb": 185633.84999999998}, {"yr": "2021", "mo": "06", "rev": 1159620.9600000002, "occ": 73.46333333333334, "adr": 159.729, "fb": 214884.05}, {"yr": "2021", "mo": "07", "rev": 1354412.15, "occ": 79.39354838709679, "adr": 166.81516129032258, "fb": 255190.00000000003}, {"yr": "2021", "mo": "08", "rev": 1369919.7700000003, "occ": 82.51935483870966, "adr": 160.8080645161291, "fb": 270554.15}, {"yr": "2021", "mo": "09", "rev": 1005352.4000000001, "occ": 68.86, "adr": 144.05166666666665, "fb": 198932.48999999996}, {"yr": "2021", "mo": "10", "rev": 964112.45, "occ": 63.86129032258063, "adr": 145.90612903225804, "fb": 181724.45999999996}, {"yr": "2021", "mo": "11", "rev": 788514.1599999999, "occ": 54.429999999999986, "adr": 141.6823333333333, "fb": 153604.04000000004}, {"yr": "2021", "mo": "12", "rev": 683512.7400000001, "occ": 47.34516129032258, "adr": 132.7009677419355, "fb": 144684.13999999998}, {"yr": "2022", "mo": "01", "rev": 755138.1099999999, "occ": 49.0, "adr": 143.7596774193548, "fb": 153463.88}, {"yr": "2022", "mo": "02", "rev": 715334.45, "occ": 52.39999999999999, "adr": 140.87714285714284, "fb": 145290.71000000002}, {"yr": "2022", "mo": "03", "rev": 907609.5599999999, "occ": 56.874193548387105, "adr": 153.21741935483874, "fb": 174785.33}, {"yr": "2022", "mo": "04", "rev": 977357.6399999999, "occ": 62.14666666666666, "adr": 155.05633333333333, "fb": 192835.87}, {"yr": "2022", "mo": "05", "rev": 1097310.0899999999, "occ": 67.42258064516129, "adr": 154.6948387096774, "fb": 220274.65}, {"yr": "2022", "mo": "06", "rev": 1361932.8800000001, "occ": 78.21000000000001, "adr": 174.893, "fb": 263842.02}, {"yr": "2022", "mo": "07", "rev": 1532073.5699999998, "occ": 85.12903225806448, "adr": 176.0483870967742, "fb": 292714.42}, {"yr": "2022", "mo": "08", "rev": 1582201.1600000001, "occ": 86.7258064516129, "adr": 176.4325806451613, "fb": 312651.75}, {"yr": "2022", "mo": "09", "rev": 1159449.86, "occ": 75.3, "adr": 153.294, "fb": 228437.87}, {"yr": "2022", "mo": "10", "rev": 1109066.9499999997, "occ": 68.69677419354839, "adr": 154.0393548387097, "fb": 223305.58}, {"yr": "2022", "mo": "11", "rev": 904350.09, "occ": 57.82666666666666, "adr": 152.12166666666664, "fb": 183500.28}, {"yr": "2022", "mo": "12", "rev": 823160.1700000003, "occ": 54.01935483870969, "adr": 142.61612903225807, "fb": 171712.35999999996}, {"yr": "2023", "mo": "01", "rev": 820009.51, "occ": 51.429032258064524, "adr": 149.65354838709678, "fb": 167513.67}, {"yr": "2023", "mo": "02", "rev": 790757.4, "occ": 54.903571428571425, "adr": 149.29285714285717, "fb": 165152.9}, {"yr": "2023", "mo": "03", "rev": 1033176.38, "occ": 61.07741935483871, "adr": 161.965806451613, "fb": 204144.96000000005}, {"yr": "2023", "mo": "04", "rev": 1081764.81, "occ": 64.51333333333334, "adr": 165.28999999999996, "fb": 216651.62000000005}, {"yr": "2023", "mo": "05", "rev": 1217518.57, "occ": 71.6483870967742, "adr": 160.99677419354836, "fb": 252930.50999999998}, {"yr": "2023", "mo": "06", "rev": 1531468.2700000003, "occ": 81.54666666666665, "adr": 188.23533333333333, "fb": 297231.6}, {"yr": "2023", "mo": "07", "rev": 1674444.0699999998, "occ": 88.85806451612905, "adr": 183.7783870967742, "fb": 327052.5399999999}, {"yr": "2023", "mo": "08", "rev": 1683959.0099999998, "occ": 89.02903225806452, "adr": 183.9422580645161, "fb": 328223.70000000007}, {"yr": "2023", "mo": "09", "rev": 1283216.6099999996, "occ": 78.75, "adr": 165.04766666666671, "fb": 242189.06}, {"yr": "2023", "mo": "10", "rev": 1228713.9900000002, "occ": 71.27741935483873, "adr": 165.2464516129032, "fb": 248070.94}, {"yr": "2023", "mo": "11", "rev": 993623.2399999999, "occ": 60.72000000000001, "adr": 165.07533333333336, "fb": 181773.87999999995}, {"yr": "2023", "mo": "12", "rev": 905304.32, "occ": 55.14193548387097, "adr": 153.49193548387098, "fb": 190060.18}, {"yr": "2024", "mo": "01", "rev": 881415.1400000001, "occ": 53.42580645161291, "adr": 151.43774193548387, "fb": 191484.68}, {"yr": "2024", "mo": "02", "rev": 900815.8800000001, "occ": 57.389655172413796, "adr": 155.69931034482755, "fb": 193769.76}, {"yr": "2024", "mo": "03", "rev": 1089117.9399999997, "occ": 61.06774193548387, "adr": 168.8716129032258, "fb": 223263.10000000003}, {"yr": "2024", "mo": "04", "rev": 1155637.34, "occ": 67.85999999999999, "adr": 168.23899999999998, "fb": 234197.25}, {"yr": "2024", "mo": "05", "rev": 1287347.2900000003, "occ": 72.69677419354839, "adr": 170.57193548387102, "fb": 252569.14}, {"yr": "2024", "mo": "06", "rev": 1606429.0300000003, "occ": 84.50666666666665, "adr": 193.37699999999998, "fb": 301190.00999999995}, {"yr": "2024", "mo": "07", "rev": 1724749.2499999998, "occ": 88.841935483871, "adr": 187.26387096774192, "fb": 347337.47000000003}, {"yr": "2024", "mo": "08", "rev": 1837851.2899999998, "occ": 91.29032258064518, "adr": 192.33935483870965, "fb": 383448.13}, {"yr": "2024", "mo": "09", "rev": 1368044.0399999996, "occ": 80.48666666666668, "adr": 171.072, "fb": 259308.65}, {"yr": "2024", "mo": "10", "rev": 1268210.3299999998, "occ": 73.20645161290322, "adr": 167.34258064516126, "fb": 246608.45999999993}, {"yr": "2024", "mo": "11", "rev": 1100033.5699999998, "occ": 64.80333333333334, "adr": 169.87766666666664, "fb": 210983.54}, {"yr": "2024", "mo": "12", "rev": 923571.08, "occ": 56.038709677419355, "adr": 154.0590322580645, "fb": 192710.56}, {"yr": "2025", "mo": "01", "rev": 945632.7200000002, "occ": 55.19354838709677, "adr": 159.29419354838706, "fb": 202657.31}, {"yr": "2025", "mo": "02", "rev": 909322.8499999997, "occ": 58.12499999999999, "adr": 161.27214285714288, "fb": 194888.63000000003}, {"yr": "2025", "mo": "03", "rev": 1188065.2299999997, "occ": 64.64516129032258, "adr": 172.89096774193544, "fb": 248656.40000000002}, {"yr": "2025", "mo": "04", "rev": 1177818.7399999998, "occ": 67.63333333333334, "adr": 173.51299999999995, "fb": 231719.25000000003}, {"yr": "2025", "mo": "05", "rev": 1384365.8699999999, "occ": 75.45161290322582, "adr": 176.22064516129032, "fb": 274608.2799999999}, {"yr": "2025", "mo": "06", "rev": 1692933.0300000005, "occ": 85.60333333333332, "adr": 201.179, "fb": 317999.39}, {"yr": "2025", "mo": "07", "rev": 1831232.5199999996, "occ": 90.13870967741934, "adr": 198.44387096774196, "fb": 357206.98999999993}, {"yr": "2025", "mo": "08", "rev": 1860924.14, "occ": 92.06451612903226, "adr": 202.64032258064515, "fb": 330671.45000000007}, {"yr": "2025", "mo": "09", "rev": 1388782.6199999999, "occ": 80.76666666666668, "adr": 173.88333333333333, "fb": 261690.51}, {"yr": "2025", "mo": "10", "rev": 1347569.0999999999, "occ": 74.23870967741935, "adr": 176.52999999999994, "fb": 257469.15999999995}, {"yr": "2025", "mo": "11", "rev": 1157254.0800000003, "occ": 65.54333333333335, "adr": 178.175, "fb": 218300.80999999997}, {"yr": "2025", "mo": "12", "rev": 984095.9000000003, "occ": 57.23548387096774, "adr": 158.9838709677419, "fb": 216123.21000000002}, {"yr": "2026", "mo": "01", "rev": 985332.4699999999, "occ": 55.47419354838709, "adr": 162.89935483870968, "fb": 220414.60000000003}, {"yr": "2026", "mo": "02", "rev": 737268.0900000001, "occ": 59.550000000000004, "adr": 164.99, "fb": 147743.90999999997}], "tips": [{"department": "PIAZZA", "brut": 8075.53, "net": 5249.099999999999, "ded": 2826.43, "avg_emp": 5.433333333333334}, {"department": "BAR", "brut": 4479.16, "net": 2911.47, "ded": 1567.6900000000003, "avg_emp": 2.6}, {"department": "BANQUET", "brut": 4440.68, "net": 2886.43, "ded": 1554.25, "avg_emp": 4.636363636363637}, {"department": "CHAMBRE", "brut": 4368.3099999999995, "net": 2839.3899999999994, "ded": 1528.92, "avg_emp": 5.266666666666667}, {"department": "ROOM_SERVICE", "brut": 2710.2799999999997, "net": 1761.7100000000003, "ded": 948.5699999999999, "avg_emp": 2.533333333333333}]};
+
+        // Global chart instances
+        let chartInstances = {};
+
+        // Utility functions
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(num);
+        }
+
+        function formatPercent(num) {
+            return (num).toFixed(1) + '%';
+        }
+
+        function formatNumber(num) {
+            return new Intl.NumberFormat('en-CA').format(Math.round(num));
+        }
+
+        function getColorScheme() {
+            return {
+                primary: '#C9A84C',
+                secondary: '#1E2761',
+                success: '#10B981',
+                warning: '#F59E0B',
+                danger: '#EF4444',
+                light: '#CADCFC',
+                gray: '#E0E0E0',
+            };
+        }
+
+        function destroyChart(chartId) {
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+                delete chartInstances[chartId];
+            }
+        }
+
+        // Filter data by days
+        function filterByDays(data, days) {
+            const now = new Date();
+            const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+            return data.filter(item => new Date(item.date) >= cutoff);
+        }
+
+        // Calculate statistics
+        function calculateStats(data) {
+            if (data.length === 0) return { avg: 0, total: 0, change: 0 };
+
+            const total = data.reduce((sum, item) => sum + item.total_revenue, 0);
+            const avg = total / data.length;
+
+            // Compare with previous period
+            const half = Math.floor(data.length / 2);
+            const recent = data.slice(half);
+            const previous = data.slice(0, half);
+
+            const recentAvg = recent.reduce((s, i) => s + i.total_revenue, 0) / recent.length;
+            const previousAvg = previous.reduce((s, i) => s + i.total_revenue, 0) / previous.length;
+            const change = ((recentAvg - previousAvg) / previousAvg) * 100;
+
+            return { avg, total, change };
+        }
+
+        // Initialize dashboard
+        function initDashboard() {
+            const days = parseInt(document.getElementById('dateRange').value);
+            const yearCompare = document.getElementById('yearCompare').value;
+
+            const filtered = filterByDays(DATA.recent, days);
+            const stats = calculateStats(filtered);
+
+            updateKPIs(filtered);
+            updateRevenueChart(filtered, DATA.budgets);
+            updateOccupancyADRChart(filtered);
+            updateFBRevenueChart();
+            updateLaborChart();
+            updateCardsChart();
+            updateYoYChart(yearCompare);
+            updateLaborRatioChart();
+            updateCashChart();
+            updateTipsTable();
+            updateDataTable(filtered);
+        }
+
+        // Update KPI Cards
+        function updateKPIs(data) {
+            const colors = getColorScheme();
+
+            // Total Revenue
+            const totalRev = data.reduce((s, i) => s + i.total_revenue, 0) / data.length;
+            const revTrend = calculateStats(data).change;
+            document.getElementById('kpiRevenue').textContent = formatCurrency(totalRev);
+            document.getElementById('revenueTrend').innerHTML =
+                `<span class="trend-arrow">${revTrend >= 0 ? '↑' : '↓'}</span>
+                 <span class="${revTrend >= 0 ? 'positive' : 'negative'}">
+                 ${Math.abs(revTrend).toFixed(1)}% vs période précédente
+                 </span>`;
+            document.getElementById('revenueTrend').className = `trend ${revTrend >= 0 ? 'positive' : 'negative'}`;
+
+            // Occupancy
+            const avgOcc = data.reduce((s, i) => s + i.occupancy_rate, 0) / data.length;
+            document.getElementById('kpiOccupancy').textContent = formatPercent(avgOcc);
+            document.getElementById('occupancyBar').style.width = avgOcc + '%';
+            document.getElementById('occupancyBar').style.background =
+                avgOcc > 80 ? colors.success : avgOcc > 60 ? colors.warning : colors.danger;
+
+            // ADR
+            const avgADR = data.reduce((s, i) => s + i.adr, 0) / data.length;
+            document.getElementById('kpiADR').textContent = formatCurrency(avgADR);
+            const adrBudget = 150; // approximate budget
+            const adrChange = ((avgADR - adrBudget) / adrBudget) * 100;
+            document.getElementById('adrTrend').innerHTML =
+                `<span class="trend-arrow">${adrChange >= 0 ? '↑' : '↓'}</span>
+                 <span class="${adrChange >= 0 ? 'positive' : 'negative'}">
+                 ${Math.abs(adrChange).toFixed(1)}% vs budget
+                 </span>`;
+            document.getElementById('adrTrend').className = `trend ${adrChange >= 0 ? 'positive' : 'negative'}`;
+
+            // RevPAR
+            const revPAR = (avgADR * avgOcc) / 100;
+            document.getElementById('kpiRevPAR').textContent = formatCurrency(revPAR);
+        }
+
+        // Revenue Chart
+        function updateRevenueChart(recentData, budgetData) {
+            destroyChart('revenueChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+
+            const labels = recentData.map(d => new Date(d.date).toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' }));
+            const roomRevenue = recentData.map(d => d.room_revenue);
+            const fbRevenue = recentData.map(d => d.fb_revenue);
+
+            // Get budget line (monthly average)
+            const budgetLineData = recentData.map(d => {
+                const month = d.date.substring(0, 7);
+                const budget = budgetData.find(b => `${b.year}-${String(b.month).padStart(2, '0')}` === month);
+                return budget ? budget.total_revenue_budget : null;
+            });
+
+            chartInstances['revenueChart'] = new Chart(ctx, {
+                type: 'chart',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Revenus Chambres',
+                            data: roomRevenue,
+                            fill: true,
+                            backgroundColor: 'rgba(202, 220, 252, 0.3)',
+                            borderColor: colors.light,
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointBackgroundColor: colors.light,
+                        },
+                        {
+                            label: 'Revenus F&B',
+                            data: fbRevenue,
+                            fill: true,
+                            backgroundColor: 'rgba(201, 168, 76, 0.2)',
+                            borderColor: colors.primary,
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 3,
+                            pointBackgroundColor: colors.primary,
+                        },
+                        {
+                            label: 'Budget',
+                            data: budgetLineData,
+                            borderColor: colors.warning,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                            tension: 0.4,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 12 }, padding: 15 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: v => formatCurrency(v) }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Occupancy & ADR Chart
+        function updateOccupancyADRChart(data) {
+            destroyChart('occupancyADRChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('occupancyADRChart').getContext('2d');
+
+            const labels = data.map(d => new Date(d.date).toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' }));
+            const occupancy = data.map(d => d.occupancy_rate);
+            const adr = data.map(d => d.adr);
+
+            chartInstances['occupancyADRChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Occupation %',
+                            data: occupancy,
+                            backgroundColor: data.map(d =>
+                                d.occupancy_rate > 80 ? colors.success :
+                                d.occupancy_rate > 60 ? colors.warning :
+                                colors.danger
+                            ),
+                            yAxisID: 'y',
+                            order: 2,
+                        },
+                        {
+                            label: 'ADR',
+                            data: adr,
+                            type: 'line',
+                            borderColor: colors.primary,
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            pointRadius: 4,
+                            pointBackgroundColor: colors.primary,
+                            tension: 0.4,
+                            order: 1,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 12 }, padding: 15 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: { callback: v => v + '%' },
+                            max: 100,
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: { callback: v => formatCurrency(v) },
+                            grid: { drawOnChartArea: false },
+                        }
+                    }
+                }
+            });
+        }
+
+        // F&B Revenue Chart
+        function updateFBRevenueChart() {
+            destroyChart('fbRevenueChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('fbRevenueChart').getContext('2d');
+
+            const departments = ['Café', 'Piazza', 'Spesa', 'Banquet', 'Service Chambre'];
+            const currentMonth = DATA.recent.slice(-30);
+            const cafe = currentMonth.reduce((s, i) => s + i.cafe_link_total, 0);
+            const piazza = currentMonth.reduce((s, i) => s + i.piazza_total, 0);
+            const spesa = currentMonth.reduce((s, i) => s + i.spesa_total, 0);
+            const banquet = currentMonth.reduce((s, i) => s + i.banquet_total, 0);
+            const roomSvc = currentMonth.reduce((s, i) => s + i.room_svc_total, 0);
+
+            chartInstances['fbRevenueChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: departments,
+                    datasets: [{
+                        label: 'Revenus (30 derniers jours)',
+                        data: [cafe, piazza, spesa, banquet, roomSvc],
+                        backgroundColor: [
+                            colors.primary,
+                            colors.light,
+                            colors.warning,
+                            colors.success,
+                            colors.secondary,
+                        ]
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { callback: v => formatCurrency(v) }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Labor Chart
+        function updateLaborChart() {
+            destroyChart('laborChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('laborChart').getContext('2d');
+
+            const labels = DATA.labor.map(l => l.department);
+            const costs = DATA.labor.map(l => l.cost);
+            const totalCost = costs.reduce((s, c) => s + c, 0);
+
+            const bgColors = [colors.primary, colors.light, colors.warning, colors.success, colors.secondary, colors.danger];
+
+            chartInstances['laborChart'] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: costs,
+                        backgroundColor: bgColors.slice(0, labels.length),
+                        borderColor: 'white',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { size: 11 }, padding: 10 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => `${ctx.label}: ${formatCurrency(ctx.parsed)} (${((ctx.parsed/totalCost)*100).toFixed(1)}%)`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Cards Chart
+        function updateCardsChart() {
+            destroyChart('cardsChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('cardsChart').getContext('2d');
+
+            const weeks = [...new Set(DATA.cards.map(c => c.week))];
+            const cardTypes = ['VISA', 'MASTERCARD', 'AMEX', 'DEBIT'];
+
+            const datasets = cardTypes.map((type, idx) => ({
+                label: type,
+                data: weeks.map(w => {
+                    const card = DATA.cards.find(c => c.week === w && c.card_type === type);
+                    return card ? card.pos : 0;
+                }),
+                backgroundColor: [colors.primary, colors.light, colors.warning, colors.success][idx],
+            }));
+
+            chartInstances['cardsChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weeks,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: {
+                            stacked: true,
+                            ticks: { callback: v => formatCurrency(v) }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 11 }, padding: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // YoY Chart
+        function updateYoYChart(yearFilter) {
+            destroyChart('yoyChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('yoyChart').getContext('2d');
+
+            const years = yearFilter === 'all' ? [...new Set(DATA.yoy.map(y => y.yr))] : [yearFilter];
+            const months = Array.from({length: 12}, (_, i) => (i + 1).toString().padStart(2, '0'));
+
+            const datasets = years.map((year, idx) => {
+                const data = months.map(mo => {
+                    const item = DATA.yoy.find(y => y.yr === year && y.mo === mo);
+                    return item ? item.rev : null;
+                });
+
+                const colors_list = ['#C9A84C', '#1E2761', '#10B981', '#F59E0B', '#EF4444', '#CADCFC'];
+
+                return {
+                    label: year,
+                    data: data,
+                    borderColor: colors_list[idx % colors_list.length],
+                    borderWidth: year === '2026' ? 3 : 2,
+                    fill: false,
+                    tension: 0.4,
+                    pointRadius: year === '2026' ? 5 : 3,
+                    pointBackgroundColor: colors_list[idx % colors_list.length],
+                };
+            });
+
+            const monthLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+            chartInstances['yoyChart'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 12 }, padding: 15 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { callback: v => formatCurrency(v) }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Labor Ratio Chart
+        function updateLaborRatioChart() {
+            destroyChart('laborRatioChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('laborRatioChart').getContext('2d');
+
+            const months = DATA.labor_trend.slice(-24).map(l => l.month);
+            const ratios = DATA.labor_trend.slice(-24).map(l => (l.cost / (l.cost * 2)) * 100); // Rough estimate
+
+            // More accurate: use monthly data
+            const accurateRatios = months.map((month, idx) => {
+                const monthData = DATA.monthly.find(m => m.month === month);
+                const laborData = DATA.labor_trend.find(l => l.month === month);
+                if (monthData && laborData) {
+                    return (laborData.cost / (monthData.total_rev || 1)) * 100;
+                }
+                return 0;
+            });
+
+            chartInstances['laborRatioChart'] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months.map(m => m.substring(5)),
+                    datasets: [
+                        {
+                            label: 'Ratio Coût/Revenu (%)',
+                            data: accurateRatios,
+                            borderColor: colors.secondary,
+                            borderWidth: 2,
+                            fill: false,
+                            pointRadius: 4,
+                            pointBackgroundColor: colors.secondary,
+                            tension: 0.4,
+                        },
+                        {
+                            label: 'Seuil Critique (35%)',
+                            data: Array(months.length).fill(35),
+                            borderColor: colors.danger,
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 12 }, padding: 15 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { callback: v => v.toFixed(1) + '%' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Cash Chart
+        function updateCashChart() {
+            destroyChart('cashChart');
+
+            const colors = getColorScheme();
+            const ctx = document.getElementById('cashChart').getContext('2d');
+
+            const last30 = DATA.cash.slice(-30);
+            const labels = last30.map(c => new Date(c.date).toLocaleDateString('fr-CA', { month: 'short', day: 'numeric' }));
+            const diffs = last30.map(c => c.diff_caisse);
+            const variances = last30.map(c => c.quasimodo_variance);
+
+            chartInstances['cashChart'] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Différence Caisse',
+                            data: diffs,
+                            backgroundColor: diffs.map(d => Math.abs(d) > 5 ? colors.danger : colors.success),
+                            yAxisID: 'y',
+                            order: 2,
+                        },
+                        {
+                            label: 'Variance Quasimodo',
+                            data: variances,
+                            type: 'line',
+                            borderColor: colors.primary,
+                            borderWidth: 2,
+                            fill: false,
+                            yAxisID: 'y1',
+                            pointRadius: 3,
+                            pointBackgroundColor: colors.primary,
+                            tension: 0.4,
+                            order: 1,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { font: { size: 12 }, padding: 15 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: { callback: v => formatCurrency(v) }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            ticks: { callback: v => formatCurrency(v) },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Tips Table
+        function updateTipsTable() {
+            const container = document.getElementById('tipsContainer');
+            container.innerHTML = '';
+
+            const total = DATA.tips.reduce((s, t) => s + t.brut, 0);
+
+            DATA.tips.forEach(tip => {
+                const percent = (tip.brut / total) * 100;
+                const html = `
+                    <div style="margin-bottom: 1rem;">
+                        <div class="bar-group">
+                            <div class="bar-label">${tip.department}</div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${percent}%">
+                                    ${percent.toFixed(0)}%
+                                </div>
+                            </div>
+                            <div class="bar-value">${formatCurrency(tip.brut)}</div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: #666; margin-left: 120px;">
+                            Net: ${formatCurrency(tip.net)} | Déductions: ${formatCurrency(tip.ded)} | Moy emp: ${tip.avg_emp.toFixed(1)}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+
+        // Data Table
+        function updateDataTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            data.slice().reverse().slice(0, 30).forEach(row => {
+                const revPAR = (row.adr * row.occupancy_rate) / 100;
+                const occClass =
+                    row.occupancy_rate > 80 ? 'occ-green' :
+                    row.occupancy_rate > 60 ? 'occ-yellow' :
+                    'occ-red';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.date}</td>
+                    <td>${formatCurrency(row.total_revenue)}</td>
+                    <td>${formatCurrency(row.room_revenue)}</td>
+                    <td>${formatCurrency(row.fb_revenue)}</td>
+                    <td class="${occClass}">${formatPercent(row.occupancy_rate)}</td>
+                    <td>${formatCurrency(row.adr)}</td>
+                    <td>${formatCurrency(revPAR)}</td>
+                    <td>${formatNumber(row.total_rooms_sold)}</td>
+                    <td>${formatNumber(row.nb_clients)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Add sorting
+            document.querySelectorAll('th').forEach((th, idx) => {
+                th.addEventListener('click', () => sortTable(idx));
+            });
+        }
+
+        // Table Sorting
+        function sortTable(colIdx) {
+            const table = document.getElementById('dataTable');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            const th = table.querySelectorAll('th')[colIdx];
+
+            const isAsc = !th.classList.contains('sorted-asc');
+
+            document.querySelectorAll('th').forEach(h => h.classList.remove('sorted-asc', 'sorted-desc'));
+            th.classList.add(isAsc ? 'sorted-asc' : 'sorted-desc');
+
+            rows.sort((a, b) => {
+                const aVal = a.children[colIdx].textContent;
+                const bVal = b.children[colIdx].textContent;
+
+                const aNum = parseFloat(aVal.replace(/[$,%]/g, '')) || aVal;
+                const bNum = parseFloat(bVal.replace(/[$,%]/g, '')) || bVal;
+
+                if (typeof aNum === 'number' && typeof bNum === 'number') {
+                    return isAsc ? aNum - bNum : bNum - aNum;
+                }
+                return isAsc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Event Listeners
+        document.getElementById('dateRange').addEventListener('change', initDashboard);
+        document.getElementById('yearCompare').addEventListener('change', initDashboard);
+
+        // Initial load
+        window.addEventListener('load', initDashboard);
+    </script>
+</body>
+</html>

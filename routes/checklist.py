@@ -585,11 +585,24 @@ def get_history():
     cutoff = date.today() - timedelta(days=days)
     shifts = Shift.query.filter(Shift.date >= cutoff).order_by(desc(Shift.date)).all()
 
+    # Pre-load all tasks into a lookup dict (eliminates N+1 queries)
+    all_tasks = {t.id: t for t in Task.query.filter_by(is_active=True).all()}
+    total_front = sum(1 for t in all_tasks.values() if t.role == 'front')
+    total_back = sum(1 for t in all_tasks.values() if t.role == 'back')
+
+    # Pre-load all completions for these shifts in one query
+    shift_ids = [s.id for s in shifts]
+    all_completions = TaskCompletion.query.filter(
+        TaskCompletion.shift_id.in_(shift_ids)
+    ).all() if shift_ids else []
+    completions_by_shift = {}
+    for c in all_completions:
+        completions_by_shift.setdefault(c.shift_id, []).append(c)
+
     history = []
     for s in shifts:
-        completions = TaskCompletion.query.filter_by(shift_id=s.id).all()
-        for c in completions:
-            task = Task.query.get(c.task_id)
+        for c in completions_by_shift.get(s.id, []):
+            task = all_tasks.get(c.task_id)
             if not task:
                 continue
             if role_filter and task.role != role_filter:
@@ -620,15 +633,12 @@ def get_history():
             'Content-Disposition': f'attachment; filename=checklist_history_{days}j.csv'
         }
 
-    # Résumé par date
+    # Résumé par date (uses pre-loaded data, no extra queries)
     summary_by_date = {}
     for s in shifts:
-        completions = TaskCompletion.query.filter_by(shift_id=s.id).all()
-        total_front = Task.query.filter_by(role='front', is_active=True).count()
-        total_back = Task.query.filter_by(role='back', is_active=True).count()
-
-        done_front = sum(1 for c in completions if Task.query.get(c.task_id) and Task.query.get(c.task_id).role == 'front')
-        done_back = sum(1 for c in completions if Task.query.get(c.task_id) and Task.query.get(c.task_id).role == 'back')
+        shift_comps = completions_by_shift.get(s.id, [])
+        done_front = sum(1 for c in shift_comps if all_tasks.get(c.task_id) and all_tasks[c.task_id].role == 'front')
+        done_back = sum(1 for c in shift_comps if all_tasks.get(c.task_id) and all_tasks[c.task_id].role == 'back')
 
         summary_by_date[s.date.isoformat()] = {
             'shift': s.to_dict(),
@@ -661,10 +671,17 @@ def export_history_csv():
     writer = csv.DictWriter(output, fieldnames=fields)
     writer.writeheader()
 
+    # Pre-load tasks and completions to avoid N+1 queries
+    all_tasks = {t.id: t for t in Task.query.all()}
+    shift_ids = [s.id for s in shifts]
+    all_comps = TaskCompletion.query.filter(TaskCompletion.shift_id.in_(shift_ids)).all() if shift_ids else []
+    comps_by_shift = {}
+    for c in all_comps:
+        comps_by_shift.setdefault(c.shift_id, []).append(c)
+
     for s in shifts:
-        completions = TaskCompletion.query.filter_by(shift_id=s.id).all()
-        for c in completions:
-            task = Task.query.get(c.task_id)
+        for c in comps_by_shift.get(s.id, []):
+            task = all_tasks.get(c.task_id)
             if not task:
                 continue
             writer.writerow({

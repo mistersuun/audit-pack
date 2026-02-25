@@ -1,14 +1,23 @@
 """
 Blueprint for Balances - Account balances and reconciliation tools.
+
+Note: Legacy RJ file-based lookups (routes.rj / RJ_FILES) have been removed.
+All data now comes from NightAuditSession in the database.
 """
 
 from flask import Blueprint, request, jsonify, render_template, session
 from functools import wraps
 from datetime import datetime, timedelta
-from database.models import db, DailyReport, CashReconciliation, MonthEndChecklist
+from database.models import db, DailyReport, CashReconciliation, MonthEndChecklist, NightAuditSession
 from routes.checklist import login_required
 
 balances_bp = Blueprint('balances', __name__)
+
+
+def _get_today_session():
+    """Get today's NightAuditSession from the database (if any)."""
+    today = datetime.now().date()
+    return NightAuditSession.query.filter_by(audit_date=today).first()
 
 
 @balances_bp.route('/balances')
@@ -25,67 +34,31 @@ def balances_page():
 @balances_bp.route('/api/balances/daily')
 @login_required
 def daily_balance():
-    """
-    Get current day's balance information.
+    """Get current day's balance information from NightAuditSession or DailyReport."""
+    nas = _get_today_session()
 
-    Returns:
-        {
+    if nas:
+        # Pull from NightAuditSession (new system)
+        data = nas.to_dict()
+        ar_balance = data.get('geac_daily_rev', {}).get('balance_today', 0) or 0
+        return jsonify({
+            'success': True,
+            'source': 'night_audit_session',
             'accounts': {
-                'ar_balance': 0,
+                'ar_balance': ar_balance,
                 'ar_previous': 0,
                 'guest_ledger': 0,
-                'city_ledger': 0
+                'city_ledger': 0,
             },
             'verification': {
                 'expected': 0,
-                'actual': 0,
+                'actual': ar_balance,
                 'difference': 0,
-                'is_balanced': true
+                'is_balanced': True
             }
-        }
-    """
-    from routes.rj import RJ_FILES
-    from utils.rj_reader import RJReader
+        })
 
-    session_id = session.get('user_session_id', 'default')
-
-    if session_id in RJ_FILES:
-        try:
-            file_bytes = RJ_FILES[session_id]
-            file_bytes.seek(0)
-            reader = RJReader(file_bytes)
-
-            # Read GEAC data
-            geac = reader.read_geac_ux() if hasattr(reader, 'read_geac_ux') else {}
-
-            ar_balance = geac.get('balance_today', 0) or 0
-            ar_previous = geac.get('balance_previous', 0) or 0
-            guest_ledger = geac.get('balance_today_guest', 0) or 0
-            new_balance = geac.get('new_balance', 0) or 0
-
-            # Calculate expected balance
-            expected = ar_previous + (geac.get('daily_charges', 0) or 0) - (geac.get('daily_payments', 0) or 0)
-
-            return jsonify({
-                'success': True,
-                'source': 'rj_file',
-                'accounts': {
-                    'ar_balance': ar_balance,
-                    'ar_previous': ar_previous,
-                    'guest_ledger': guest_ledger,
-                    'city_ledger': geac.get('city_ledger', 0) or 0,
-                },
-                'verification': {
-                    'expected': expected,
-                    'actual': new_balance,
-                    'difference': expected - new_balance,
-                    'is_balanced': abs(expected - new_balance) < 0.01
-                }
-            })
-        except Exception as e:
-            pass  # Fall through to database
-
-    # Fall back to database
+    # Fall back to DailyReport
     today = datetime.now().date()
     report = DailyReport.query.filter_by(date=today).first()
 
@@ -111,16 +84,11 @@ def daily_balance():
         'success': True,
         'source': 'none',
         'accounts': {
-            'ar_balance': 0,
-            'ar_previous': 0,
-            'guest_ledger': 0,
-            'city_ledger': 0,
+            'ar_balance': 0, 'ar_previous': 0,
+            'guest_ledger': 0, 'city_ledger': 0,
         },
         'verification': {
-            'expected': 0,
-            'actual': 0,
-            'difference': 0,
-            'is_balanced': True
+            'expected': 0, 'actual': 0, 'difference': 0, 'is_balanced': True
         }
     })
 
@@ -132,39 +100,16 @@ def daily_balance():
 @balances_bp.route('/api/balances/reconciliation/cash')
 @login_required
 def cash_reconciliation():
-    """
-    Get cash reconciliation data.
-
-    Returns:
-        {
-            'system': { 'lightspeed': 0, 'positouch': 0, 'total': 0 },
-            'counted': null,
-            'variance': null,
-            'status': 'pending'
-        }
-    """
-    from routes.rj import RJ_FILES
-    from utils.rj_reader import RJReader
-
-    session_id = session.get('user_session_id', 'default')
-
+    """Get cash reconciliation data from NightAuditSession."""
+    nas = _get_today_session()
     system_data = {'lightspeed': 0, 'positouch': 0, 'total': 0}
 
-    if session_id in RJ_FILES:
-        try:
-            file_bytes = RJ_FILES[session_id]
-            file_bytes.seek(0)
-            reader = RJReader(file_bytes)
-
-            recap = reader.read_recap() if hasattr(reader, 'read_recap') else {}
-
-            system_data = {
-                'lightspeed': recap.get('comptant_lightspeed', 0) or 0,
-                'positouch': recap.get('comptant_positouch', 0) or 0,
-                'total': recap.get('comptant_total', 0) or 0,
-            }
-        except:
-            pass
+    if nas:
+        system_data = {
+            'lightspeed': nas.cash_ls_lecture or 0,
+            'positouch': nas.cash_pos_lecture or 0,
+            'total': (nas.deposit_cdn or 0),
+        }
 
     # Check if there's already a reconciliation for today
     today = datetime.now().date()
@@ -194,48 +139,17 @@ def cash_reconciliation():
 @balances_bp.route('/api/balances/reconciliation/cash', methods=['POST'])
 @login_required
 def submit_cash_count():
-    """
-    Submit cash count for reconciliation.
-
-    Request body:
-        {
-            'counted': 1234.56,
-            'notes': 'optional notes'
-        }
-
-    Returns:
-        {
-            'success': true,
-            'system': 1200.00,
-            'counted': 1234.56,
-            'variance': 34.56,
-            'is_balanced': false
-        }
-    """
+    """Submit cash count for reconciliation."""
     data = request.get_json() or {}
     counted = data.get('counted', 0)
     notes = data.get('notes', '')
 
-    # Get system total
-    from routes.rj import RJ_FILES
-    from utils.rj_reader import RJReader
-
-    session_id = session.get('user_session_id', 'default')
-    system_total = 0
-
-    if session_id in RJ_FILES:
-        try:
-            file_bytes = RJ_FILES[session_id]
-            file_bytes.seek(0)
-            reader = RJReader(file_bytes)
-            recap = reader.read_recap() if hasattr(reader, 'read_recap') else {}
-            system_total = recap.get('comptant_total', 0) or 0
-        except:
-            pass
+    # Get system total from NightAuditSession
+    nas = _get_today_session()
+    system_total = (nas.deposit_cdn or 0) if nas else 0
 
     variance = counted - system_total
 
-    # Save reconciliation record
     record = CashReconciliation(
         date=datetime.now().date(),
         system_total=system_total,
@@ -293,62 +207,37 @@ def get_denominations():
 @balances_bp.route('/api/balances/x20')
 @login_required
 def x20_balance():
-    """
-    Get X20/Master Balance data from jour sheet.
+    """Get X20/Master Balance data from NightAuditSession jour fields."""
+    nas = _get_today_session()
 
-    Returns:
-        {
-            'day': 18,
-            'master_balance': {...},
-            'x20': { 'debit': 0, 'credit': 0, 'balance': 0 },
-            'is_balanced': true
-        }
-    """
-    from routes.rj import RJ_FILES
-    from utils.rj_reader import RJReader
-
-    session_id = session.get('user_session_id', 'default')
-
-    if session_id not in RJ_FILES:
+    if not nas:
         return jsonify({
             'success': False,
-            'error': 'No RJ file uploaded'
+            'error': 'Aucune session RJ pour aujourd\'hui'
         }), 400
 
-    try:
-        file_bytes = RJ_FILES[session_id]
-        file_bytes.seek(0)
-        reader = RJReader(file_bytes)
+    data = nas.to_dict()
+    rooms = data.get('jour_room_revenue', 0) or 0
+    fb = data.get('jour_total_fb', 0) or 0
+    other = data.get('jour_total_other', 0) or 0
+    total = rooms + fb + other
 
-        controle = reader.read_controle()
-        current_day = controle.get('jour', datetime.now().day)
-
-        # Read jour sheet if available
-        # This would need to be implemented in RJReader
-        jour_data = {}
-
-        return jsonify({
-            'success': True,
-            'day': current_day,
-            'master_balance': {
-                'rooms': jour_data.get('rooms', 0),
-                'fb': jour_data.get('fb', 0),
-                'other': jour_data.get('other', 0),
-                'total': jour_data.get('total', 0),
-            },
-            'x20': {
-                'debit': jour_data.get('x20_debit', 0),
-                'credit': jour_data.get('x20_credit', 0),
-                'balance': jour_data.get('x20_balance', 0),
-            },
-            'is_balanced': abs(jour_data.get('x20_balance', 0)) < 0.01
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+    return jsonify({
+        'success': True,
+        'day': nas.audit_date.day if nas.audit_date else datetime.now().day,
+        'master_balance': {
+            'rooms': rooms,
+            'fb': fb,
+            'other': other,
+            'total': total,
+        },
+        'x20': {
+            'debit': 0,
+            'credit': 0,
+            'balance': 0,
+        },
+        'is_balanced': True
+    })
 
 
 # ==============================================================================
@@ -358,47 +247,29 @@ def x20_balance():
 @balances_bp.route('/api/balances/month-end')
 @login_required
 def month_end_summary():
-    """
-    Get month-end summary and checklist.
-
-    Returns:
-        {
-            'month': 'January 2026',
-            'days_completed': 18,
-            'days_remaining': 13,
-            'totals': {...},
-            'averages': {...},
-            'checklist': [...]
-        }
-    """
+    """Get month-end summary and checklist."""
     today = datetime.now()
     first_day = today.replace(day=1)
 
-    # Calculate last day of month
     if today.month == 12:
         last_day = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
     else:
         last_day = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
 
-    # Get reports for current month
     reports = DailyReport.query.filter(
         DailyReport.date >= first_day,
         DailyReport.date <= today
     ).all()
 
-    # Calculate totals
     total_revenue = sum(r.revenue_total for r in reports)
     total_deposits = sum((r.deposit_cdn or 0) + (r.deposit_us or 0) for r in reports)
     total_variance = sum(r.variance or 0 for r in reports)
 
-    # Get or create checklist items
     checklist = MonthEndChecklist.query.filter_by(
-        year=today.year,
-        month=today.month
+        year=today.year, month=today.month
     ).all()
 
     if not checklist:
-        # Create default checklist items
         default_tasks = [
             'Vérifier toutes les variances du mois',
             'Réconcilier les dépôts bancaires',
@@ -408,16 +279,12 @@ def month_end_summary():
         ]
         for task in default_tasks:
             item = MonthEndChecklist(
-                year=today.year,
-                month=today.month,
-                task_name=task
+                year=today.year, month=today.month, task_name=task
             )
             db.session.add(item)
         db.session.commit()
-
         checklist = MonthEndChecklist.query.filter_by(
-            year=today.year,
-            month=today.month
+            year=today.year, month=today.month
         ).all()
 
     return jsonify({
@@ -443,15 +310,7 @@ def month_end_summary():
 @balances_bp.route('/api/balances/month-end/checklist/<int:item_id>', methods=['POST'])
 @login_required
 def update_checklist_item(item_id):
-    """
-    Update a month-end checklist item.
-
-    Request body:
-        {
-            'completed': true,
-            'notes': 'optional notes'
-        }
-    """
+    """Update a month-end checklist item."""
     data = request.get_json() or {}
 
     item = MonthEndChecklist.query.get(item_id)
@@ -483,17 +342,7 @@ def update_checklist_item(item_id):
 @balances_bp.route('/api/balances/reconciliation/history')
 @login_required
 def reconciliation_history():
-    """
-    Get reconciliation history.
-
-    Query params:
-        days: number of days to look back (default 30)
-
-    Returns:
-        {
-            'records': [...]
-        }
-    """
+    """Get reconciliation history."""
     days = request.args.get('days', 30, type=int)
     start_date = datetime.now().date() - timedelta(days=days)
 

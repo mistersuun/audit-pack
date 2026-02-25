@@ -1,12 +1,47 @@
+# ─── Core Framework ──────────────────────────────────────────────────────
 flask
 flask-sqlalchemy
 python-dotenv
-python-docx
+Werkzeug
+
+# ─── Database & ORM ──────────────────────────────────────────────────────
+SQLAlchemy
+
+# ─── Excel / Spreadsheet ─────────────────────────────────────────────────
 openpyxl
-Pillow
 xlrd==2.0.1
 xlwt==1.3.0
 xlutils==2.0.0
 oletools==0.60.2
+olefile
+
+# ─── Word / Document Generation ──────────────────────────────────────────
+python-docx
+lxml
+
+# ─── PDF ─────────────────────────────────────────────────────────────────
+reportlab
+pdfplumber
+PyPDF2
+
+# ─── Images & Charts ─────────────────────────────────────────────────────
+Pillow
+matplotlib
+
+# ─── Data Analysis & ML ──────────────────────────────────────────────────
+numpy
+scikit-learn
+
+# ─── HTTP & API ──────────────────────────────────────────────────────────
+requests
+
+# ─── Utilities ───────────────────────────────────────────────────────────
+python-dateutil
+MarkupSafe
+
+# ─── Testing ─────────────────────────────────────────────────────────────
+pytest
+
+# ─── Platform-specific ───────────────────────────────────────────────────
 pywin32; sys_platform == 'win32'
 pyautogui

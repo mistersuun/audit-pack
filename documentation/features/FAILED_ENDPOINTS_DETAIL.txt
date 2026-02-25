@@ -1,0 +1,153 @@
+================================================================================
+                    FAILED ENDPOINTS - DETAILED ANALYSIS
+================================================================================
+
+FAILED ENDPOINT #1: GET /api/balances/daily
+  HTTP Status: 500 Internal Server Error
+  Error Type: ModuleNotFoundError
+  Error Message: No module named 'routes.rj'
+  Location: routes/balances.py, line 47
+  Code: from routes.rj import RJ_FILES
+  Related Endpoints: /api/balances/reconciliation/cash, /api/balances/x20
+  Severity: MEDIUM (legacy endpoint, not critical to operations)
+  Fix: Create routes/rj.py OR remove this endpoint
+
+FAILED ENDPOINT #2: GET /api/balances/reconciliation/cash
+  HTTP Status: 500 Internal Server Error
+  Error Type: ModuleNotFoundError
+  Error Message: No module named 'routes.rj'
+  Location: routes/balances.py, line 146
+  Code: from routes.rj import RJ_FILES
+  Root Cause: Same as #1
+  Severity: MEDIUM
+
+FAILED ENDPOINT #3: GET /api/balances/x20
+  HTTP Status: 500 Internal Server Error
+  Error Type: ModuleNotFoundError
+  Error Message: No module named 'routes.rj'
+  Location: routes/balances.py, line 307
+  Code: from routes.rj import RJ_FILES
+  Root Cause: Same as #1
+  Severity: MEDIUM
+
+FAILED ENDPOINT #4: GET /api/reports/credit-cards
+  HTTP Status: 500 Internal Server Error
+  Error Type: ModuleNotFoundError
+  Error Message: No module named 'routes.rj'
+  Location: routes/reports.py, line 312
+  Code: from routes.rj import RJ_FILES
+  Root Cause: Same as #1
+  Severity: MEDIUM
+
+FAILED ENDPOINT #5: GET /api/reports/daily-summary
+  HTTP Status: 500 Internal Server Error
+  Error Type: ModuleNotFoundError
+  Error Message: No module named 'routes.rj'
+  Location: routes/reports.py, line 41
+  Code: from routes.rj import RJ_FILES
+  Root Cause: Same as #1
+  Severity: MEDIUM
+
+CLUSTER ANALYSIS - Missing Module Issue:
+  Total Affected: 5 endpoints
+  Common Cause: routes/rj.py does not exist in /sessions/laughing-sharp-johnson/mnt/audit-pack/
+  Severity: MEDIUM
+  User Impact: Users using legacy balance reports will see 500 errors
+  Workaround: Modern RJ Natif endpoints (/api/rj/native/*) work perfectly
+  Timeline to Fix: Within 1 month
+
+  Commands to diagnose:
+    ls -la /sessions/laughing-sharp-johnson/mnt/audit-pack/routes/rj.py
+    grep -r "from routes.rj import" /sessions/laughing-sharp-johnson/mnt/audit-pack/routes/
+
+================================================================================
+
+FAILED ENDPOINT #6: GET /api/rj/weather
+  HTTP Status: 500 Internal Server Error
+  Error Type: HTTPConnectionPoolError
+  Error Message: HTTPSConnectionPool(host='api.openweathermap.org', port=443): 
+                 Max retries exceeded with url: /data/2.5/weather?lat=45.58&lon=-73.76&...
+  Location: routes/audit/rj_native.py or utils/weather_api.py
+  Root Cause: External weather API (openweathermap.org) timeout or unavailable
+  Dependencies: Internet connectivity, openweathermap.org API availability
+  Severity: LOW (external service issue, not code defect)
+  User Impact: Weather display fails, but audit can continue
+  Fix Options:
+    1. Add retry logic with exponential backoff (3-5 retries)
+    2. Cache weather for 4 hours (reduce API calls)
+    3. Return cached/last-known weather on timeout
+    4. Gracefully degrade to UI fallback
+
+FAILED ENDPOINT #7: GET /api/generators/weather
+  HTTP Status: 503 Service Unavailable
+  Response Body: "Météo indisponible" (Weather unavailable)
+  Root Cause: External weather API timeout
+  Severity: LOW (gracefully degraded - user sees message instead of 500)
+  User Impact: Weather generator can't pull live data
+  Status: BETTER THAN #6 (returns 503 with message instead of 500)
+  Fix: Same as #6
+
+CLUSTER ANALYSIS - Weather API Issue:
+  Total Affected: 2 endpoints
+  Common Cause: External openweathermap.org API timeouts/unavailability
+  Severity: LOW
+  User Impact: Minor - weather is informational, audit continues
+  Workaround: Manual weather entry in UI
+  Timeline to Fix: Within 1 sprint (low priority)
+  
+  Notes:
+    - Endpoint #7 is already gracefully handled (returns 503 with message)
+    - Endpoint #6 needs the same treatment as #7
+    - Both would benefit from caching
+
+================================================================================
+                              FIX PRIORITY
+================================================================================
+
+PRIORITY 1 - CRITICAL (Do immediately):
+  Problem: Missing routes/rj.py
+  Impact: 5 endpoints broken
+  Effort: 1-2 hours
+  Action: 
+    1. Check if routes/rj.py ever existed in git history
+    2. If yes: Restore it from git
+    3. If no: Create minimal stub with RJ_FILES export OR remove endpoints
+    4. Test endpoints again
+
+PRIORITY 2 - IMPORTANT (Do within 1 sprint):
+  Problem: Weather API resilience
+  Impact: 2 endpoints unreliable
+  Effort: 2-3 hours
+  Action:
+    1. Add caching decorator (4-hour TTL)
+    2. Implement retry logic (3 retries, exponential backoff)
+    3. Return last-known weather on timeout
+    4. Apply to both /api/rj/weather and /api/generators/weather
+
+PRIORITY 3 - NICE TO HAVE (Future):
+  Problem: Cleanup 23 orphaned 404 endpoints
+  Problem: Complete properties/compset auth
+  Effort: 4-6 hours each
+  Impact: Code cleanliness, not critical to operations
+
+================================================================================
+                            ROOT CAUSE SUMMARY
+================================================================================
+
+Issue Type: Missing Dependency (5 endpoints)
+  Root Cause: Module routes.rj.py is missing or not in PYTHONPATH
+  Files Affected: 
+    - routes/balances.py (3 imports)
+    - routes/reports.py (2 imports)
+  Solution: Create module OR remove imports
+  
+Issue Type: External Service Unavailability (2 endpoints)
+  Root Cause: openweathermap.org API timeout
+  Dependencies: Network, external service availability
+  Solution: Add resilience (caching, retries, fallback)
+
+TOTAL FAILURES: 7 (2.5% of all endpoints tested)
+TOTAL CRITICAL: 5 (must fix)
+TOTAL IMPORTANT: 2 (should fix)
+
+================================================================================

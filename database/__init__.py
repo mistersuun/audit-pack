@@ -4,5 +4,7 @@ from .models import (
     DepartmentLabor, MonthlyExpense, DailyReconciliation, JournalEntry,
     DepositVariance, TipDistribution, HPDepartmentSales, DueBack,
     NightAuditSession, PODPeriod, PODEntry, HPPeriod, HPEntry,
-    RJArchive, RJSheetData
+    RJArchive, RJSheetData, NotificationPreference, NotificationLog,
+    Property, MonthlyBudget, DailyLaborMetrics, DailyTipMetrics,
+    DailyCashRecon, DailyCardMetrics, STRCompSet, OTBForecast
 )

@@ -15,6 +15,7 @@
     <script src="https://unpkg.com/feather-icons"></script>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
 
     <!-- Theme: light by default, apply dark if user chose it -->
     <script>
@@ -36,9 +37,18 @@
                 </div>
                 <div class="logo-text">
                     <span class="logo-title">Night Audit</span>
-                    <span class="logo-subtitle">Sheraton Laval</span>
+                    <span class="logo-subtitle">{{ session.get('property_name', 'Sheraton Laval') }}</span>
                 </div>
             </div>
+            {% if session.get('property_name') %}
+            <div style="padding: 0.75rem 1rem; background: var(--bg-tertiary); border-radius: 8px; margin: 0.75rem 0; font-size: 0.75rem; text-align: center; border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                    <i data-feather="map-pin" style="width: 12px; height: 12px;"></i>
+                    <span style="color: var(--text-secondary); font-weight: 500;">Propriété Actuelle</span>
+                </div>
+                <a href="{{ url_for('properties.properties_page') }}" style="color: var(--accent-color); text-decoration: none; font-weight: 600; cursor: pointer;">{{ session.get('property_name', 'Sheraton Laval') }}</a>
+            </div>
+            {% endif %}
         </div>
 
         <div class="sidebar-menu">
@@ -70,12 +80,27 @@
                 <span>Tendances</span>
             </a>
 
+            <a href="{{ url_for('budget.budget_page') }}" class="menu-item {% if request.path.startswith('/budget') %}active{% endif %}">
+                <i data-feather="trending-up"></i>
+                <span>Budget & Écarts</span>
+            </a>
+
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-title">Analyse</div>
+
+            <a href="{{ url_for('portfolio.portfolio_page') }}" class="menu-item {% if request.path.startswith('/portfolio') %}active{% endif %}">
+                <i data-feather="globe"></i>
+                <span>Portfolio</span>
+            </a>
 
             <a href="{{ url_for('manager.manager_page') }}" class="menu-item {% if request.path.startswith('/manager') %}active{% endif %}">
                 <i data-feather="activity"></i>
                 <span>Analytics</span>
+            </a>
+
+            <a href="{{ url_for('compset.compset_page') }}" class="menu-item {% if request.path.startswith('/compset') %}active{% endif %}">
+                <i data-feather="target"></i>
+                <span>STR & OTB</span>
             </a>
 
             <div class="sidebar-divider"></div>
@@ -150,6 +175,16 @@
                     </a>
                 </div>
             </div>
+            <a href="{{ url_for('forecasting.forecasting_page') }}" class="menu-item {% if request.path.startswith('/previsions') %}active{% endif %}">
+                <i data-feather="trending-up"></i>
+                <span>Prévisions</span>
+            </a>
+
+            <a href="{{ url_for('compset.compset_page') }}" class="menu-item {% if request.path.startswith('/compset') %}active{% endif %}">
+                <i data-feather="target"></i>
+                <span>STR & OTB</span>
+            </a>
+
             <div class="menu-group {% if request.path.startswith('/generators') or request.path.startswith('/pod') or request.path.startswith('/hp') %}open{% endif %}">
                 <a href="{{ url_for('generators.generators_page') }}" class="menu-item menu-parent {% if request.path.startswith('/generators') %}active{% endif %}" onclick="toggleMenuGroup(event, this)">
                     <i data-feather="printer"></i>
@@ -182,6 +217,14 @@
                 <i data-feather="bar-chart-2"></i>
                 <span>Portail Direction</span>
             </a>
+            <a href="{{ url_for('portfolio.portfolio_page') }}" class="menu-item {% if request.path.startswith('/portfolio') %}active{% endif %}">
+                <i data-feather="globe"></i>
+                <span>Portfolio</span>
+            </a>
+            <a href="{{ url_for('properties.properties_page') }}" class="menu-item {% if request.path.startswith('/properties') %}active{% endif %}">
+                <i data-feather="map-pin"></i>
+                <span>Propriétés</span>
+            </a>
             {% endif %}
 
             <div class="sidebar-divider"></div>
@@ -191,6 +234,13 @@
                 <i data-feather="help-circle"></i>
                 <span>FAQ</span>
             </a>
+
+            {% if is_admin or is_direction %}
+            <a href="{{ url_for('notifications.preferences_page') }}" class="menu-item {% if request.path.startswith('/notifications') %}active{% endif %}">
+                <i data-feather="bell"></i>
+                <span>Notifications</span>
+            </a>
+            {% endif %}
         </div>
 
         <div class="sidebar-footer">
@@ -212,6 +262,15 @@
             </a>
         </div>
     </nav>
+    {% endif %}
+
+    <!-- Mobile Hamburger Button (only visible on mobile) -->
+    {% if session.get('authenticated') %}
+    <button class="hamburger-btn" id="hamburger-toggle" title="Menu" style="display: none;">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+    </button>
     {% endif %}
 
     <main class="{% if session.get('authenticated') %}with-sidebar{% endif %}">
@@ -275,6 +334,9 @@
             group.classList.add('open');
         }
     </script>
+
+    <!-- Responsive Mobile Menu Handler -->
+    <script src="{{ url_for('static', filename='js/responsive.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

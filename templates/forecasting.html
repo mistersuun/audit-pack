@@ -1,0 +1,1111 @@
+{% extends "base.html" %}
+
+{% block title %}Prévisions | Audit de Nuit{% endblock %}
+
+{% block head %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: var(--bg-secondary);
+        border-radius: 12px;
+    }
+
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        color: var(--text-primary);
+    }
+
+    .page-header .subtitle {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    .error-container {
+        background-color: var(--color-error-light);
+        border-left: 4px solid var(--color-error);
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        color: var(--color-error);
+    }
+
+    .error-container strong {
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .loading-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 3rem;
+        text-align: center;
+        color: var(--text-secondary);
+    }
+
+    .spinner {
+        width: 32px;
+        height: 32px;
+        border: 4px solid var(--border-color);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.2s;
+    }
+
+    .card:hover {
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        border-color: var(--color-primary-light);
+    }
+
+    .card-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+        letter-spacing: 0.5px;
+    }
+
+    .card-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .card-subtitle {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .card-badge {
+        display: inline-block;
+        margin-top: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .badge-success {
+        background-color: var(--color-success-light);
+        color: var(--color-success);
+    }
+
+    .badge-warning {
+        background-color: var(--color-warning-light);
+        color: var(--color-warning);
+    }
+
+    .badge-danger {
+        background-color: var(--color-error-light);
+        color: var(--color-error);
+    }
+
+    .badge-info {
+        background-color: var(--color-info-light);
+        color: var(--color-info);
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 2.5rem 0 1.5rem 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 3px solid var(--color-primary);
+    }
+
+    .chart-container {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        height: 400px;
+    }
+
+    .chart-container canvas {
+        max-height: 350px;
+    }
+
+    .trend-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        margin-top: 0.75rem;
+    }
+
+    .trend-up {
+        color: var(--color-success);
+    }
+
+    .trend-down {
+        color: var(--color-error);
+    }
+
+    .trend-stable {
+        color: var(--text-secondary);
+    }
+
+    .anomaly-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+    }
+
+    .anomaly-table thead {
+        background-color: var(--bg-tertiary);
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    .anomaly-table th {
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+    }
+
+    .anomaly-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+        font-size: 0.9rem;
+    }
+
+    .anomaly-table tr:hover {
+        background-color: var(--bg-tertiary);
+    }
+
+    .severity-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .severity-info {
+        background-color: var(--color-info-light);
+        color: var(--color-info);
+    }
+
+    .severity-warning {
+        background-color: var(--color-warning-light);
+        color: var(--color-warning);
+    }
+
+    .severity-critical {
+        background-color: var(--color-error-light);
+        color: var(--color-error);
+    }
+
+    .grid-2col {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .pricing-bands {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .band-card {
+        background: var(--bg-tertiary);
+        padding: 1rem;
+        border-radius: 8px;
+        border-left: 4px solid var(--color-primary);
+    }
+
+    .band-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .band-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .band-detail {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .concentration-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .metric-block {
+        background: var(--bg-tertiary);
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .metric-label {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .metric-note {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+
+    .alert {
+        background: var(--color-info-light);
+        border-left: 4px solid var(--color-info);
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        color: var(--color-info);
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .grid-2col {
+            grid-template-columns: 1fr;
+        }
+
+        .pricing-bands {
+            grid-template-columns: 1fr;
+        }
+
+        .concentration-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Prévisions et Insights</h1>
+        <p class="subtitle">Analyse ML des tendances et recommandations de tarification</p>
+    </div>
+</div>
+
+<!-- Error Container -->
+<div id="errorContainer" style="display: none;"></div>
+
+<!-- Loading State -->
+<div id="loadingState" class="loading-container">
+    <div class="spinner"></div>
+    <span>Chargement des données...</span>
+</div>
+
+<!-- Dashboard Content -->
+<div id="dashboardContent" style="display: none;">
+
+    <!-- Section 1: Prévision de la Demande -->
+    <h2 class="section-title">📊 Prévision de la Demande</h2>
+
+    <div class="alert">
+        <strong>Modèle:</strong> Extrapolation des tendances historiques sur 365 derniers jours avec intervalles de confiance.
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-title">Occupancy dans 30 jours</div>
+            <div class="card-value" id="forecast30Occ">-</div>
+            <div class="card-subtitle">Taux d'occupation prévu</div>
+        </div>
+        <div class="card">
+            <div class="card-title">ADR dans 30 jours</div>
+            <div class="card-value" id="forecast30ADR">-</div>
+            <div class="card-subtitle">Tarif moyen par chambre</div>
+        </div>
+        <div class="card">
+            <div class="card-title">RevPAR dans 30 jours</div>
+            <div class="card-value" id="forecast30RevPAR">-</div>
+            <div class="card-subtitle">Revenu par chambre disponible</div>
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <div class="chart-container">
+            <canvas id="forecastChart"></canvas>
+        </div>
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--text-primary);">Données Historiques vs Prévisions</h3>
+            <table style="width: 100%; font-size: 0.9rem;">
+                <tr>
+                    <td style="color: var(--text-secondary); padding: 0.5rem 0;">Moyenne historique (365j)</td>
+                    <td style="text-align: right; font-weight: 600; padding: 0.5rem 0;" id="historicalAvgOcc">-</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-secondary); padding: 0.5rem 0;">Confiance 30j</td>
+                    <td style="text-align: right; font-weight: 600; padding: 0.5rem 0;" id="confidence30">-</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-secondary); padding: 0.5rem 0;">Confiance 90j</td>
+                    <td style="text-align: right; font-weight: 600; padding: 0.5rem 0;" id="confidence90">-</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Section 2: Saisonnalité -->
+    <h2 class="section-title">📅 Saisonnalité et Tendances par Période</h2>
+
+    <div class="alert">
+        <strong>Insight:</strong> Patterns de revenus par jour de la semaine et par mois basés sur l'historique.
+    </div>
+
+    <div class="grid-2col">
+        <div class="chart-container">
+            <canvas id="seasonalityMonthChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="seasonalityDOWChart"></canvas>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-title">🏆 Meilleur Mois</div>
+            <div class="card-value" id="bestMonth">-</div>
+            <div class="card-subtitle" id="bestMonthRev">Revenu moyen</div>
+        </div>
+        <div class="card">
+            <div class="card-title">📉 Pire Mois</div>
+            <div class="card-value" id="worstMonth">-</div>
+            <div class="card-subtitle" id="worstMonthRev">Revenu moyen</div>
+        </div>
+        <div class="card">
+            <div class="card-title">📊 Écart Saisonnier</div>
+            <div class="card-value" id="seasonalGap">-</div>
+            <div class="card-subtitle">Différence meilleur/pire</div>
+        </div>
+    </div>
+
+    <!-- Section 3: Tendances -->
+    <h2 class="section-title">📈 Tendances et Momentum</h2>
+
+    <div class="alert">
+        <strong>Analyse:</strong> Moyennes mobiles 7/30/90 jours et direction de la tendance (accelération/décélération).
+    </div>
+
+    <div class="grid-2col">
+        <div class="chart-container">
+            <canvas id="trendChart"></canvas>
+        </div>
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--text-primary);">Indicateurs de Tendance</h3>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Direction (30j)</div>
+                <div class="trend-indicator" id="trendDirection">
+                    <span>-</span>
+                </div>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Changement (%)</div>
+                <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);" id="trendPct">-</div>
+            </div>
+            <div>
+                <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Momentum</div>
+                <div class="card-badge" id="momentumBadge" style="display: inline-block;">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Anomalies -->
+    <h2 class="section-title">⚠️ Anomalies Détectées</h2>
+
+    <div class="alert">
+        <strong>Note:</strong> Événements inhabituels détectés via analyse statistique (écarts > 2 écarts-types).
+    </div>
+
+    <div class="card">
+        <div id="anomaliesContainer">
+            <p style="color: var(--text-secondary); text-align: center;">Chargement...</p>
+        </div>
+    </div>
+
+    <div class="chart-container" id="anomaliesChartContainer" style="display: none;">
+        <canvas id="anomaliesChart"></canvas>
+    </div>
+
+    <!-- Section 5: Pouvoir Tarifaire -->
+    <h2 class="section-title">💰 Pouvoir Tarifaire et Élasticité</h2>
+
+    <div class="alert">
+        <strong>Analyse:</strong> Relation entre occupancy et ADR — identifie les opportunités de yield management.
+    </div>
+
+    <div class="card">
+        <h3 style="margin-top: 0; color: var(--text-primary);">Analyse par Bandes d'Occupancy</h3>
+        <div class="pricing-bands" id="pricingBands">
+            <div class="band-card">
+                <div class="band-label">Bande Basse</div>
+                <div class="band-value">-</div>
+            </div>
+            <div class="band-card">
+                <div class="band-label">Bande Moyenne</div>
+                <div class="band-value">-</div>
+            </div>
+            <div class="band-card">
+                <div class="band-label">Bande Haute</div>
+                <div class="band-value">-</div>
+            </div>
+        </div>
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+            <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Prime Tarifaire</div>
+            <div style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary);" id="premiumPct">-</div>
+            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">Hausse ADR en bande haute vs bande moyenne</div>
+        </div>
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--color-success-light); border-radius: 8px; color: var(--color-success); font-size: 0.9rem;">
+            <strong>Uplift potentiel:</strong> <span id="upliftAnnual">-</span> par an en augmentant ADR de 10%
+        </div>
+    </div>
+
+    <div class="grid-2col">
+        <div class="chart-container">
+            <canvas id="pricingPowerChart"></canvas>
+        </div>
+        <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem;">
+            <h3 style="margin-top: 0; color: var(--text-primary);">Recommandations</h3>
+            <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                <li>Augmenter les tarifs lors des pics de demande (occupancy > 85%)</li>
+                <li>Offrir des packages ou réductions en basse occupancy (< 60%)</li>
+                <li>Tester des augmentations graduelles de 5-10% sur les segments hauts</li>
+                <li>Monitorer la sensibilité au prix via élasticité occupancy/ADR</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Section 6: Concentration des Revenus -->
+    <h2 class="section-title">🎯 Concentration et Diversification des Revenus</h2>
+
+    <div class="alert">
+        <strong>Métrique:</strong> HHI (Herfindahl-Hirschman Index) — mesure la concentration des revenus par source.
+    </div>
+
+    <div class="concentration-grid">
+        <div class="chart-container">
+            <canvas id="concentrationChart"></canvas>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="metric-block">
+                <div class="metric-label">HHI Index</div>
+                <div class="metric-value" id="hhiIndex">-</div>
+                <div class="metric-note">0-2500 diversifié | 2500-5000 modéré | 5000+ concentré</div>
+            </div>
+            <div class="metric-block">
+                <div class="metric-label">Score de Diversification</div>
+                <div class="metric-value" id="diversificationScore">-</div>
+                <div class="metric-note">Plus haut = meilleure diversification (max 100)</div>
+            </div>
+            <div class="metric-block">
+                <div class="metric-label">Dépendance Principale</div>
+                <div class="metric-value" id="mainDependency">-</div>
+                <div class="metric-note">% du revenu total</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+        <h3 style="margin-top: 0; color: var(--text-primary);">Stratégie de Diversification</h3>
+        <ul style="color: var(--text-secondary); line-height: 1.8;">
+            <li><strong>Chambres (principale):</strong> Mettre en œuvre le yield management + upsell packages</li>
+            <li><strong>F&B:</strong> Augmenter la capture F&B (% de guests mangeant à l'hôtel)</li>
+            <li><strong>Services annexes:</strong> Développer revenus ancillaires (spa, events, parking)</li>
+            <li><strong>Corporate/Groups:</strong> Diversifier le mix client pour réduire dépendance transient</li>
+        </ul>
+    </div>
+
+</div>
+
+<script>
+    // Chart colors
+    const chartColors = {
+        primary: 'rgb(59, 130, 246)',
+        secondary: 'rgb(249, 115, 22)',
+        success: 'rgb(34, 197, 94)',
+        danger: 'rgb(239, 68, 68)',
+        info: 'rgb(14, 165, 233)',
+        warning: 'rgb(245, 158, 11)',
+        ghost: 'rgba(59, 130, 246, 0.1)'
+    };
+
+    // State
+    let forecastChart, seasonalityMonthChart, seasonalityDOWChart, trendChart, anomaliesChart, pricingPowerChart, concentrationChart;
+
+    // Utility functions
+    function showError(message) {
+        const container = document.getElementById('errorContainer');
+        container.innerHTML = `<div class="error-container"><strong>⚠️ Erreur</strong> ${message}</div>`;
+        container.style.display = 'block';
+        document.getElementById('loadingState').style.display = 'none';
+    }
+
+    function formatCurrency(value) {
+        if (value === null || value === undefined || isNaN(value)) return '-';
+        return '$' + value.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function formatPercent(value) {
+        if (value === null || value === undefined || isNaN(value)) return '-';
+        return value.toLocaleString('en-US', {minimumFractionDigits: 1, maximumFractionDigits: 1}) + '%';
+    }
+
+    function formatNumber(value) {
+        if (value === null || value === undefined || isNaN(value)) return '-';
+        return value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+    }
+
+    // Load all data
+    async function loadDashboard() {
+        try {
+            const [forecast, seasonality, anomalies, pricing, trends, insights] = await Promise.all([
+                fetch('/api/previsions/forecast').then(r => r.json()),
+                fetch('/api/previsions/seasonality').then(r => r.json()),
+                fetch('/api/previsions/anomalies').then(r => r.json()),
+                fetch('/api/previsions/pricing').then(r => r.json()),
+                fetch('/api/previsions/trends').then(r => r.json()),
+                fetch('/api/previsions/insights').then(r => r.json())
+            ]);
+
+            // Check for errors
+            if (!forecast.success) {
+                showError(forecast.reason || 'Erreur lors du chargement des prévisions');
+                return;
+            }
+
+            // Populate data
+            await populateForecast(forecast);
+            await populateSeasonality(seasonality);
+            await populateAnomalies(anomalies);
+            await populatePricing(pricing);
+            await populateTrends(trends);
+
+            // Show dashboard
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('dashboardContent').style.display = 'block';
+
+        } catch (error) {
+            console.error('Dashboard load error:', error);
+            showError('Erreur réseau: ' + error.message);
+        }
+    }
+
+    async function populateForecast(data) {
+        const f30 = data.forecast_30 || {};
+        const f60 = data.forecast_60 || {};
+        const f90 = data.forecast_90 || {};
+        const hist = data.historical_avg || {};
+
+        document.getElementById('forecast30Occ').textContent = formatPercent(f30.occupancy_pct);
+        document.getElementById('forecast30ADR').textContent = formatCurrency(f30.adr);
+        document.getElementById('forecast30RevPAR').textContent = formatCurrency(f30.revpar);
+
+        document.getElementById('historicalAvgOcc').textContent = formatPercent(hist.occupancy_pct);
+        document.getElementById('confidence30').textContent = (f30.confidence || 0.85).toLocaleString('en-US', {style: 'percent'});
+        document.getElementById('confidence90').textContent = (f90.confidence || 0.75).toLocaleString('en-US', {style: 'percent'});
+
+        // Forecast chart: Historical + Forecast
+        const forecastCtx = document.getElementById('forecastChart').getContext('2d');
+        const labels = [];
+        const historicalData = [];
+        const forecastDataPoints = [];
+
+        // Simulate forecast curve (in real implementation, would come from engine)
+        const days = 90;
+        for (let i = 0; i < days; i++) {
+            const date = new Date();
+            date.setDate(date.getDate() + i);
+            labels.push(date.toLocaleDateString('fr-FR', {month: 'short', day: 'numeric'}));
+
+            if (i < 30) {
+                historicalData.push(null);
+                forecastDataPoints.push(null);
+            } else if (i === 30) {
+                const baseValue = hist.revpar || 150;
+                const trend = (f30.revpar - baseValue) / 30;
+                forecastDataPoints.push(baseValue + trend * (i - 30));
+            } else {
+                const baseValue = hist.revpar || 150;
+                const trend = (f90.revpar - baseValue) / 90;
+                forecastDataPoints.push(baseValue + trend * (i - 30));
+            }
+        }
+
+        forecastChart = new Chart(forecastCtx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'RevPAR Prévu',
+                        data: forecastDataPoints,
+                        borderColor: chartColors.secondary,
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'top'},
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (val) => '$' + val
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    async function populateSeasonality(data) {
+        if (!data.success) {
+            console.warn('Seasonality data error:', data.reason);
+            return;
+        }
+
+        const seasonality = data.seasonality || {};
+        const monthly = seasonality.monthly || [];
+        const best = seasonality.best_month || {};
+        const worst = seasonality.worst_month || {};
+
+        document.getElementById('bestMonth').textContent = best.label || '-';
+        document.getElementById('bestMonthRev').textContent = formatCurrency(best.avg_revenue);
+
+        document.getElementById('worstMonth').textContent = worst.label || '-';
+        document.getElementById('worstMonthRev').textContent = formatCurrency(worst.avg_revenue);
+
+        document.getElementById('seasonalGap').textContent = formatCurrency((best.avg_revenue || 0) - (worst.avg_revenue || 0));
+
+        // Monthly chart
+        const monthCtx = document.getElementById('seasonalityMonthChart').getContext('2d');
+        seasonalityMonthChart = new Chart(monthCtx, {
+            type: 'bar',
+            data: {
+                labels: monthly.map(m => m.label),
+                datasets: [
+                    {
+                        label: 'Revenu Moyen',
+                        data: monthly.map(m => m.avg_revenue),
+                        backgroundColor: chartColors.primary,
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Occupancy %',
+                        data: monthly.map(m => m.avg_occ),
+                        backgroundColor: chartColors.secondary,
+                        borderRadius: 6,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'top'},
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {callback: (val) => '$' + val}
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        ticks: {callback: (val) => val + '%'}
+                    }
+                }
+            }
+        });
+
+        // Day of week chart
+        const dow = data.day_of_week_revenue || {};
+        const dowData = dow.by_dow || [];
+        const dowCtx = document.getElementById('seasonalityDOWChart').getContext('2d');
+        seasonalityDOWChart = new Chart(dowCtx, {
+            type: 'radar',
+            data: {
+                labels: dowData.map(d => d.label),
+                datasets: [
+                    {
+                        label: 'Revenu Moyen',
+                        data: dowData.map(d => d.avg_revenue),
+                        borderColor: chartColors.success,
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: chartColors.success
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'top'},
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        ticks: {callback: (val) => '$' + val}
+                    }
+                }
+            }
+        });
+    }
+
+    async function populateAnomalies(data) {
+        if (!data.success) {
+            document.getElementById('anomaliesContainer').innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Aucune donnée disponible</p>';
+            return;
+        }
+
+        const anomalies = data.anomalies || [];
+
+        if (anomalies.length === 0) {
+            document.getElementById('anomaliesContainer').innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 1rem;">Aucune anomalie détectée ✓</p>';
+            return;
+        }
+
+        let html = '<table class="anomaly-table"><thead><tr>' +
+                   '<th>Date</th><th>Métrique</th><th>Valeur</th><th>Écart</th><th>Sévérité</th>' +
+                   '</tr></thead><tbody>';
+
+        anomalies.slice(0, 10).forEach(a => {
+            const severityClass = 'severity-' + (a.severity || 'info');
+            html += `<tr>
+                        <td>${new Date(a.date).toLocaleDateString('fr-FR')}</td>
+                        <td>${a.metric}</td>
+                        <td>${formatCurrency(a.value)}</td>
+                        <td>${formatPercent(a.deviation_pct)}</td>
+                        <td><span class="severity-badge ${severityClass}">${a.severity}</span></td>
+                    </tr>`;
+        });
+
+        html += '</tbody></table>';
+        document.getElementById('anomaliesContainer').innerHTML = html;
+    }
+
+    async function populatePricing(data) {
+        if (!data.success) {
+            console.warn('Pricing data error:', data.reason);
+            return;
+        }
+
+        const pricing = data.pricing_power || {};
+
+        // Populate band cards
+        const lowBand = pricing.low || {};
+        const midBand = pricing.mid || {};
+        const highBand = pricing.high || {};
+
+        const bandCards = document.querySelectorAll('.band-card');
+        if (bandCards.length >= 3) {
+            bandCards[0].innerHTML = `
+                <div class="band-label">${lowBand.label || '<60%'}</div>
+                <div class="band-value">${formatCurrency(lowBand.avg_adr)}</div>
+                <div class="band-detail">${lowBand.days || 0} jours</div>
+            `;
+            bandCards[1].innerHTML = `
+                <div class="band-label">${midBand.label || '60-85%'}</div>
+                <div class="band-value">${formatCurrency(midBand.avg_adr)}</div>
+                <div class="band-detail">${midBand.days || 0} jours</div>
+            `;
+            bandCards[2].innerHTML = `
+                <div class="band-label">${highBand.label || '>85%'}</div>
+                <div class="band-value">${formatCurrency(highBand.avg_adr)}</div>
+                <div class="band-detail">${highBand.days || 0} jours</div>
+            `;
+        }
+
+        document.getElementById('premiumPct').textContent = formatPercent(pricing.premium_pct);
+        document.getElementById('upliftAnnual').textContent = formatCurrency(pricing.uplift_10pct_annual);
+
+        // Pricing scatter chart
+        const pricingCtx = document.getElementById('pricingPowerChart').getContext('2d');
+        pricingPowerChart = new Chart(pricingCtx, {
+            type: 'scatter',
+            data: {
+                datasets: [
+                    {
+                        label: 'Bande Basse (<60%)',
+                        data: [{x: lowBand.avg_occ || 0, y: lowBand.avg_adr || 0}],
+                        backgroundColor: 'rgb(239, 68, 68)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        pointRadius: 8
+                    },
+                    {
+                        label: 'Bande Moyenne (60-85%)',
+                        data: [{x: midBand.avg_occ || 0, y: midBand.avg_adr || 0}],
+                        backgroundColor: 'rgb(245, 158, 11)',
+                        borderColor: 'rgb(245, 158, 11)',
+                        pointRadius: 8
+                    },
+                    {
+                        label: 'Bande Haute (>85%)',
+                        data: [{x: highBand.avg_occ || 0, y: highBand.avg_adr || 0}],
+                        backgroundColor: 'rgb(34, 197, 94)',
+                        borderColor: 'rgb(34, 197, 94)',
+                        pointRadius: 8
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'top'},
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: (ctx) => `Occ: ${ctx.raw.x}%, ADR: $${ctx.raw.y}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {display: true, text: 'Occupancy %'},
+                        min: 0,
+                        max: 100
+                    },
+                    y: {
+                        title: {display: true, text: 'ADR ($)'},
+                        beginAtZero: true,
+                        ticks: {callback: (val) => '$' + val}
+                    }
+                }
+            }
+        });
+    }
+
+    async function populateTrends(data) {
+        if (!data.success) {
+            console.warn('Trends data error:', data.reason);
+            return;
+        }
+
+        const trend = data.trend || {};
+
+        // Trend direction
+        const directionEmoji = trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→';
+        const directionClass = 'trend-' + (trend.direction || 'stable');
+        document.getElementById('trendDirection').innerHTML = `<span class="${directionClass}">${directionEmoji} ${trend.direction.toUpperCase()}</span>`;
+
+        document.getElementById('trendPct').textContent = formatPercent(trend.pct_change_30d);
+
+        const momentumBadge = trend.momentum === 'accelerating' ? 'badge-success' :
+                              trend.momentum === 'decelerating' ? 'badge-danger' : 'badge-info';
+        const momentumText = trend.momentum === 'accelerating' ? '🚀 Accelération' :
+                             trend.momentum === 'decelerating' ? '📉 Décélération' : '➡️ Stable';
+        document.getElementById('momentumBadge').className = 'card-badge ' + momentumBadge;
+        document.getElementById('momentumBadge').textContent = momentumText;
+
+        // Moving averages chart
+        const ma = data.moving_averages || {};
+        const ma7 = ma.ma7 || [];
+        const ma30 = ma.ma30 || [];
+        const ma90 = ma.ma90 || [];
+
+        const trendCtx = document.getElementById('trendChart').getContext('2d');
+        trendChart = new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: ma7.map((d, i) => i % 7 === 0 ? new Date(d.date).toLocaleDateString('fr-FR', {month: 'short', day: 'numeric'}) : ''),
+                datasets: [
+                    {
+                        label: 'MA 7 jours',
+                        data: ma7.map(d => d.revpar),
+                        borderColor: chartColors.primary,
+                        borderWidth: 1,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'MA 30 jours',
+                        data: ma30.map(d => d.revpar),
+                        borderColor: chartColors.secondary,
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0
+                    },
+                    {
+                        label: 'MA 90 jours',
+                        data: ma90.map(d => d.revpar),
+                        borderColor: chartColors.danger,
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'top'},
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: (ctx) => ctx.dataset.label + ': $' + ctx.raw.toFixed(2)
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {callback: (val) => '$' + val}
+                    }
+                }
+            }
+        });
+    }
+
+    async function populateConcentration(insights) {
+        // This would be populated from insights.revenue_concentration
+        const rc = insights.revenue_concentration || {};
+
+        document.getElementById('hhiIndex').textContent = (rc.hhi_index || 0).toFixed(0);
+        document.getElementById('diversificationScore').textContent = formatPercent(rc.diversification_score);
+        document.getElementById('mainDependency').textContent = formatPercent(rc.main_source_pct);
+
+        const sources = rc.sources || [];
+        const concentrationCtx = document.getElementById('concentrationChart').getContext('2d');
+        concentrationChart = new Chart(concentrationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sources.map(s => s.source),
+                datasets: [{
+                    data: sources.map(s => s.pct),
+                    backgroundColor: [
+                        chartColors.primary,
+                        chartColors.secondary,
+                        chartColors.success,
+                        chartColors.danger,
+                        chartColors.info,
+                        chartColors.warning
+                    ],
+                    borderColor: 'var(--bg-secondary)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {position: 'bottom'},
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        padding: 12,
+                        titleColor: '#fff',
+                        bodyColor: '#fff',
+                        callbacks: {
+                            label: (ctx) => ctx.label + ': ' + ctx.raw.toFixed(1) + '%'
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', loadDashboard);
+</script>
+{% endblock %}
