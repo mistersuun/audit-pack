@@ -71,9 +71,23 @@ def create_app():
     app.register_blueprint(portfolio_bp)
     app.register_blueprint(compset_bp)
 
-    # Create tables
+    # Create tables + auto-seed if empty
     with app.app_context():
         db.create_all()
+
+        # Auto-seed on first run (empty DB)
+        from database.models import User
+        if not User.query.first():
+            try:
+                from seed_db import auto_migrate, seed_users, seed_property, seed_tasks
+                print("\n🔧 Première exécution détectée — initialisation automatique...")
+                auto_migrate(app)
+                seed_users()
+                seed_property()
+                seed_tasks()
+                print("✅ Base de données initialisée avec succès.\n")
+            except Exception as e:
+                print(f"⚠ Erreur auto-seed: {e}\n")
 
     # Context processor to inject user info and CSRF token into templates
     @app.context_processor

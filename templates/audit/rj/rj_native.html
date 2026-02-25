@@ -366,7 +366,7 @@
       </div>
 
       <!-- ═══ MACROS — Emulates Excel VBA clear buttons ═══ -->
-      <div id="macro-panel" style="display:none;margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+      <div id="macro-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
           <i data-feather="zap" style="width:14px;height:14px;vertical-align:-2px"></i> Macros — Effacement
         </div>
@@ -388,7 +388,7 @@
       </div>
 
       <!-- ═══ AUTO-FILL — Upload Lightspeed reports ═══ -->
-      <div id="autofill-panel" style="display:none;margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+      <div id="autofill-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
           <i data-feather="cpu" style="width:14px;height:14px;vertical-align:-2px"></i> Auto-remplissage — Rapports Lightspeed
         </div>
@@ -434,6 +434,35 @@
         </div>
         <input type="file" id="file-report-upload" style="display:none">
         <div id="autofill-status" style="margin-top:10px;font-size:11px;color:var(--text-muted)"></div>
+      </div>
+
+      <!-- ═══ ARCHIVES — Browse historical RJ files ═══ -->
+      <div id="archives-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">
+            <i data-feather="archive" style="width:14px;height:14px;vertical-align:-2px"></i> Archives RJ historiques
+          </div>
+          <button class="rjn-btn" onclick="loadArchivesList()" style="font-size:11px;padding:4px 10px">
+            <i data-feather="refresh-cw" style="width:10px;height:10px"></i> Rafraîchir
+          </button>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Parcourez les RJ Excel des dernières années. Vous pouvez consulter ou télécharger n'importe quel fichier archivé.
+        </div>
+
+        <!-- Search/filter -->
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <input type="month" id="archives-month-filter" onchange="filterArchives()"
+                 style="flex:1;padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+          <span id="archives-count" style="font-size:11px;color:var(--text-muted);align-self:center"></span>
+        </div>
+
+        <!-- Archives list -->
+        <div id="archives-list" style="max-height:250px;overflow-y:auto;border:1px solid var(--border);border-radius:6px;background:var(--bg)">
+          <div style="padding:20px;text-align:center;font-size:12px;color:var(--text-muted)">
+            Chargement des archives...
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -3472,5 +3501,114 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(() => {});
   }
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// ARCHIVES — Browse historical RJ files
+// ═══════════════════════════════════════════════════════════════════
+
+let _allArchives = [];
+
+async function loadArchivesList() {
+  const listEl = document.getElementById('archives-list');
+  const countEl = document.getElementById('archives-count');
+  listEl.innerHTML = '<div style="padding:12px;text-align:center;font-size:11px;color:var(--text-muted)">Chargement...</div>';
+
+  try {
+    const r = await fetch('/api/rj/archives');
+    const data = await r.json();
+    _allArchives = data.archives || [];
+    countEl.textContent = `${_allArchives.length} fichier(s)`;
+    renderArchives(_allArchives);
+  } catch (e) {
+    listEl.innerHTML = `<div style="padding:12px;color:var(--red);font-size:11px">Erreur: ${e.message}</div>`;
+  }
+}
+
+function filterArchives() {
+  const monthVal = document.getElementById('archives-month-filter').value;
+  if (!monthVal) return renderArchives(_allArchives);
+  const [y, m] = monthVal.split('-');
+  const filtered = _allArchives.filter(a => {
+    const d = a.audit_date || '';
+    return d.startsWith(`${y}-${m}`);
+  });
+  document.getElementById('archives-count').textContent = `${filtered.length}/${_allArchives.length}`;
+  renderArchives(filtered);
+}
+
+function renderArchives(archives) {
+  const listEl = document.getElementById('archives-list');
+  if (!archives.length) {
+    listEl.innerHTML = '<div style="padding:20px;text-align:center;font-size:12px;color:var(--text-muted)">Aucune archive trouvée.<br><small>Lancez <code>python -m scripts.import_rj_archives</code> pour importer les RJ Excel.</small></div>';
+    return;
+  }
+
+  const rows = archives.map(a => {
+    const dateStr = a.audit_date || '?';
+    const fname = a.source_filename || '—';
+    const sheets = a.total_sheets || 0;
+    const dateObj = new Date(dateStr + 'T12:00:00');
+    const dayName = dateObj.toLocaleDateString('fr-CA', {weekday: 'short'});
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px" class="archive-row">
+      <span style="flex:0 0 90px;font-weight:600;color:var(--text)">${dateStr}</span>
+      <span style="flex:0 0 40px;color:var(--text-muted)">${dayName}</span>
+      <span style="flex:1;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${fname}">${fname}</span>
+      <span style="flex:0 0 50px;text-align:right;color:var(--text-muted)">${sheets} tab${sheets>1?'s':''}</span>
+      <button class="rjn-btn" onclick="viewArchive(${a.id})" style="font-size:10px;padding:2px 8px" title="Voir les onglets">
+        <i data-feather="eye" style="width:10px;height:10px"></i>
+      </button>
+      <a href="/api/rj/archives/${a.id}/download" class="rjn-btn" style="font-size:10px;padding:2px 8px;text-decoration:none" title="Télécharger">
+        <i data-feather="download" style="width:10px;height:10px"></i>
+      </a>
+    </div>`;
+  }).join('');
+
+  listEl.innerHTML = rows;
+  feather.replace();
+}
+
+async function viewArchive(archiveId) {
+  try {
+    const r = await fetch(`/api/rj/archives/${archiveId}`);
+    const data = await r.json();
+    const sheets = data.sheets || [];
+    const fname = data.source_filename || 'RJ';
+    const dateStr = data.audit_date || '';
+
+    let html = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">
+      <div style="background:var(--bg-card);border-radius:10px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <h3 style="margin:0;font-size:15px">📋 ${fname} — ${dateStr}</h3>
+          <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted)">✕</button>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${sheets.length} onglet(s) — ${data.total_rows || 0} lignes</div>
+        <div style="border:1px solid var(--border);border-radius:6px;overflow:hidden">`;
+
+    sheets.forEach((s, i) => {
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="flex:0 0 24px;color:var(--text-muted);font-weight:600">${i+1}</span>
+        <span style="flex:1;font-weight:500">${s.sheet_name}</span>
+        <span style="color:var(--text-muted)">${s.row_count} rows × ${s.col_count} cols</span>
+      </div>`;
+    });
+
+    html += `</div>
+        <div style="margin-top:14px;text-align:right">
+          <a href="/api/rj/archives/${archiveId}/download" class="rjn-btn primary" style="font-size:12px;padding:6px 16px;text-decoration:none">
+            <i data-feather="download" style="width:12px;height:12px"></i> Télécharger Excel
+          </a>
+        </div>
+      </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', html);
+    feather.replace();
+  } catch (e) {
+    alert('Erreur: ' + e.message);
+  }
+}
+
+// Auto-load archives on page load
+setTimeout(() => loadArchivesList(), 1500);
 </script>
 {% endblock %}
