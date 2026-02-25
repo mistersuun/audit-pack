@@ -27,7 +27,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from main import create_app
 from database.models import (
     db, DailyJourMetrics, DailyLaborMetrics, DailyTipMetrics,
-    MonthlyBudget, DailyCashRecon, DailyCardMetrics, MonthlyExpense, DepartmentLabor
+    MonthlyBudgetLegacy as MonthlyBudget, DailyCashRecon, DailyCardMetrics,
+    MonthlyExpense, DepartmentLabor
 )
 
 TOTAL_ROOMS = 252

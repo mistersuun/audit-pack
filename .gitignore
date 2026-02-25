@@ -61,3 +61,4 @@ test_data/
 # Claude session data
 .claude/
 CLAUDE.md
+database/audit.db

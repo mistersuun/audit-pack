@@ -4,16 +4,103 @@ Master seed script — run after a fresh git clone to set up the database.
 Usage:
     python seed_db.py          # Seed everything (users, tasks, property, demo RJ)
     python seed_db.py --quick  # Seed only users + tasks + property (no demo data)
+    python seed_db.py --reset  # Delete DB and recreate from scratch
 
 Safe to run multiple times — uses upsert logic where possible.
+Handles schema migrations automatically (adds missing columns to existing tables).
 """
 
+import os
 import sys
 import json
+import sqlite3
 from datetime import datetime, date, timedelta
 
 from main import create_app
 from database import db, User, Task, Property, NightAuditSession, MonthlyBudget
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# 0. AUTO-MIGRATION — Add missing columns to existing tables
+# ═══════════════════════════════════════════════════════════════════════════
+
+# Map SQLAlchemy types to SQLite types
+_TYPE_MAP = {
+    'INTEGER': 'INTEGER',
+    'FLOAT': 'REAL',
+    'VARCHAR': 'TEXT',
+    'TEXT': 'TEXT',
+    'BOOLEAN': 'INTEGER',
+    'DATE': 'TEXT',
+    'DATETIME': 'TEXT',
+    'NUMERIC': 'REAL',
+}
+
+
+def _sqlite_type(sa_column):
+    """Convert a SQLAlchemy column type to its SQLite equivalent."""
+    type_name = sa_column.type.__class__.__name__.upper()
+    # Handle String(N) → TEXT
+    if type_name == 'STRING':
+        return 'TEXT'
+    return _TYPE_MAP.get(type_name, 'TEXT')
+
+
+def _get_default_sql(sa_column):
+    """Get DEFAULT clause for a column, if any."""
+    if sa_column.default is not None:
+        val = sa_column.default.arg
+        if val is None:
+            return ''
+        if callable(val):
+            return ''  # Can't express Python callables as SQL defaults
+        if isinstance(val, bool):
+            return f' DEFAULT {1 if val else 0}'
+        if isinstance(val, (int, float)):
+            return f' DEFAULT {val}'
+        if isinstance(val, str):
+            return f" DEFAULT '{val}'"
+    return ''
+
+
+def auto_migrate(app):
+    """Compare SQLAlchemy models to actual SQLite schema and add missing columns."""
+    db_path = app.config.get('SQLALCHEMY_DATABASE_URI', '').replace('sqlite:///', '')
+    if not db_path or not os.path.exists(db_path):
+        return 0  # No DB yet, create_all will handle it
+
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    # Get all existing tables
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    existing_tables = {r[0] for r in cursor.fetchall()}
+
+    total_added = 0
+
+    for table in db.metadata.sorted_tables:
+        if table.name not in existing_tables:
+            continue  # Table doesn't exist yet, create_all will make it
+
+        # Get existing columns for this table
+        cursor.execute(f'PRAGMA table_info("{table.name}")')
+        existing_cols = {r[1] for r in cursor.fetchall()}
+
+        # Check each model column
+        for col in table.columns:
+            if col.name not in existing_cols:
+                col_type = _sqlite_type(col)
+                default_clause = _get_default_sql(col)
+                sql = f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {col_type}{default_clause}'
+                try:
+                    cursor.execute(sql)
+                    total_added += 1
+                except Exception as e:
+                    print(f"  ⚠ Erreur migration {table.name}.{col.name}: {e}")
+
+    conn.commit()
+    conn.close()
+    return total_added
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -374,10 +461,25 @@ def seed_sample_budget():
 
 def main():
     quick = '--quick' in sys.argv
+    reset = '--reset' in sys.argv
+
+    # Handle --reset before creating the app (avoids SQLite lock)
+    if reset:
+        db_path = os.path.join(os.path.dirname(__file__), 'database', 'audit.db')
+        if os.path.exists(db_path):
+            os.remove(db_path)
+            print(f"  Base de données supprimée: {os.path.basename(db_path)}")
 
     app = create_app()
+
     with app.app_context():
-        # Ensure all tables exist
+        # Auto-migrate: add missing columns to existing tables
+        migrated = auto_migrate(app)
+        if migrated:
+            print(f"\n── Migration automatique ──")
+            print(f"  {migrated} colonne(s) ajoutée(s) aux tables existantes")
+
+        # Ensure all tables exist (creates new tables, but won't add columns)
         db.create_all()
 
         print("\n╔══════════════════════════════════════════╗")
