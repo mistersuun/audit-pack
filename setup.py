@@ -163,16 +163,40 @@ def install_deps(python_path, pip_path):
         print(f"  Essayez manuellement: {pip_path} install -r requirements.txt")
         sys.exit(1)
 
-    # Vérifier les imports critiques
-    result = run(
-        [python_path, '-c', 'import flask, flask_sqlalchemy, openpyxl; print("ok")'],
-        check=False, capture=True
-    )
-    if result.returncode != 0:
-        fail("Imports critiques échoués après installation.")
+    # Vérifier TOUTES les imports critiques (y compris générateurs)
+    critical_imports = [
+        ('flask', 'Flask (framework web)'),
+        ('flask_sqlalchemy', 'Flask-SQLAlchemy (ORM)'),
+        ('openpyxl', 'OpenPyXL (Excel .xlsx)'),
+        ('xlrd', 'xlrd (Excel .xls lecture)'),
+        ('xlwt', 'xlwt (Excel .xls écriture)'),
+        ('docx', 'python-docx (Word)'),
+        ('reportlab', 'ReportLab (PDF)'),
+        ('pdfplumber', 'pdfplumber (PDF extraction)'),
+        ('PIL', 'Pillow (images)'),
+        ('matplotlib', 'Matplotlib (graphiques)'),
+        ('numpy', 'NumPy (calculs)'),
+        ('sklearn', 'scikit-learn (prévisions)'),
+        ('lxml', 'lxml (XML parsing)'),
+        ('dateutil', 'python-dateutil (dates)'),
+    ]
+
+    all_ok = True
+    for module, label in critical_imports:
+        result = run(
+            [python_path, '-c', f'import {module}'],
+            check=False, capture=True
+        )
+        if result.returncode != 0:
+            fail(f"  {label} — ÉCHEC d'import")
+            all_ok = False
+
+    if not all_ok:
+        fail("Certaines dépendances n'ont pas pu être importées.")
+        warn("Essayez: pip install -r requirements.txt --force-reinstall")
         sys.exit(1)
 
-    ok("Toutes les dépendances installées")
+    ok(f"Toutes les dépendances installées ({len(critical_imports)} vérifiées)")
 
 
 def setup_env():
