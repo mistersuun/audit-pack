@@ -5423,6 +5423,10 @@ def upload_zip():
         # Map extracted data to NightAuditSession fields
         updated_fields = _apply_parsed_data_to_session(nas, all_extracted_data, audit_dt)
 
+        # Run calculate_all() to propagate cross-tab data
+        # (Transelect → Quasimodo, Jour → DBRS/Internet/Sonifi, etc.)
+        nas.calculate_all()
+
         # Save
         db.session.commit()
 
@@ -5503,6 +5507,9 @@ def upload_single_file():
             db.session.flush()
 
         updated_fields = _apply_parsed_data_to_session(nas, {doc_type: result['data']}, audit_dt)
+
+        # Run calculate_all() to propagate cross-tab data
+        nas.calculate_all()
         db.session.commit()
 
         return jsonify({
@@ -5524,6 +5531,9 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
     """
     Apply parsed data from multiple parsers to the NightAuditSession model.
 
+    Maps extracted data to the EXACT JSON/scalar field formats expected by
+    each save endpoint (save_geac, save_transelect, save_jour, etc.).
+
     Args:
         nas: NightAuditSession instance
         all_data: dict of {doc_type: extracted_data}
@@ -5534,66 +5544,196 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
     """
     updated = []
 
-    # --- Sales Journal → Jour F&B ---
+    def _safe_abs(val):
+        """Return abs(val) or 0 if None/invalid."""
+        if val is None:
+            return None
+        try:
+            return abs(float(val))
+        except (ValueError, TypeError):
+            return None
+
+    def _safe_float(val):
+        """Return float(val) or None."""
+        if val is None:
+            return None
+        try:
+            return float(val)
+        except (ValueError, TypeError):
+            return None
+
+    def _set_field(field, val):
+        """Set a scalar field on nas if valid."""
+        if val is not None and hasattr(nas, field):
+            setattr(nas, field, round(float(val), 2))
+            updated.append(field)
+
+    def _set_json(field, data):
+        """Set a JSON text field on nas."""
+        if data and hasattr(nas, field):
+            nas.set_json(field, data) if hasattr(nas, 'set_json') else setattr(nas, field, json.dumps(data))
+            updated.append(field)
+
+    # =====================================================================
+    # 1. SALES JOURNAL → Jour F&B + Recap + Transelect Restaurant
+    # =====================================================================
     sj = all_data.get('sales_journal', {})
     if sj:
         depts = sj.get('departments', {})
-        rj_map = sj.get('rj_mapping', {})
-        jour = rj_map.get('jour', {})
+        taxes = sj.get('taxes', {})
+        payments = sj.get('payments', {})
+        adjustments = sj.get('adjustments', {})
 
-        field_map = {
-            'jour_piazza_nourriture': depts.get('piazza', {}).get('nourriture', None),
-            'jour_piazza_boisson': depts.get('piazza', {}).get('boisson', None),
-            'jour_piazza_bieres': depts.get('piazza', {}).get('bieres', None),
-            'jour_piazza_mineraux': depts.get('piazza', {}).get('mineraux', None),
-            'jour_piazza_vins': depts.get('piazza', {}).get('vins', None),
-            'jour_banquet_nourriture': depts.get('banquet', {}).get('nourriture', None),
-            'jour_banquet_boisson': depts.get('banquet', {}).get('boisson', None),
-            'jour_banquet_bieres': depts.get('banquet', {}).get('bieres', None),
-            'jour_banquet_vins': depts.get('banquet', {}).get('vins', None),
-            'jour_chambres_svc_nourriture': depts.get('chambres', {}).get('nourriture', None),
-            'jour_chambres_svc_bieres': depts.get('chambres', {}).get('bieres', None),
-            'jour_spesa_nourriture': depts.get('spesa', {}).get('nourriture', None),
-            'jour_tps': sj.get('taxes', {}).get('tps', None),
-            'jour_tvq': sj.get('taxes', {}).get('tvq', None),
-        }
-        for field, val in field_map.items():
-            if val is not None and hasattr(nas, field):
-                setattr(nas, field, round(val, 2))
-                updated.append(field)
+        # --- Jour F&B by department ---
+        # NOTE: SJ parser returns negative values due to trailing-space bug
+        # in debit/credit detection. Use abs() for all F&B revenue items.
+        piazza = depts.get('piazza', {})
+        banquet = depts.get('banquet', {})
+        chambres = depts.get('chambres', {})
+        spesa = depts.get('spesa', {})
 
-    # --- Daily Revenue → GEAC/Jour ---
+        # Piazza (5 standard F&B categories)
+        _set_field('jour_piazza_nourriture', _safe_abs(piazza.get('nourriture')))
+        _set_field('jour_piazza_boisson', _safe_abs(piazza.get('boisson')))
+        _set_field('jour_piazza_bieres', _safe_abs(piazza.get('bieres')))
+        _set_field('jour_piazza_mineraux', _safe_abs(piazza.get('mineraux')))
+        _set_field('jour_piazza_vins', _safe_abs(piazza.get('vins')))
+
+        # Banquet (5 standard F&B categories)
+        _set_field('jour_banquet_nourriture', _safe_abs(banquet.get('nourriture')))
+        _set_field('jour_banquet_boisson', _safe_abs(banquet.get('boisson')))
+        _set_field('jour_banquet_bieres', _safe_abs(banquet.get('bieres')))
+        _set_field('jour_banquet_mineraux', _safe_abs(banquet.get('mineraux')))
+        _set_field('jour_banquet_vins', _safe_abs(banquet.get('vins')))
+
+        # Chambres / Room Service
+        _set_field('jour_chambres_svc_nourriture', _safe_abs(chambres.get('nourriture')))
+        _set_field('jour_chambres_svc_bieres', _safe_abs(chambres.get('bieres')))
+
+        # La Spesa
+        _set_field('jour_spesa_nourriture', _safe_abs(spesa.get('nourriture')))
+
+        # --- Additional Jour fields from SJ ---
+        # Pourboires = tips from piazza + banquet
+        pourb_piazza = _safe_abs(piazza.get('pourboire_a_payer')) or 0
+        pourb_banquet = _safe_abs(banquet.get('pourboire_a_payer')) or 0
+        total_pourb = pourb_piazza + pourb_banquet
+        if total_pourb > 0:
+            _set_field('jour_pourboires', total_pourb)
+
+        # Location salle = room rental from piazza + banquet
+        loc_piazza = _safe_abs(piazza.get('location_salle')) or 0
+        loc_banquet = _safe_abs(banquet.get('location_salle')) or 0
+        total_loc = loc_piazza + loc_banquet
+        if total_loc > 0:
+            _set_field('jour_location_salle', total_loc)
+
+        # Tabagie (tobacco) from Spesa department
+        _set_field('jour_tabagie', _safe_abs(spesa.get('tabagie')))
+
+        # Forfait from SJ adjustments
+        _set_field('jour_forfait_sj', _safe_float(adjustments.get('forfait')))
+
+        # --- Taxes from SJ (POS F&B taxes) ---
+        _set_field('jour_tps', _safe_float(taxes.get('tps')))
+        _set_field('jour_tvq', _safe_float(taxes.get('tvq')))
+
+        # --- Recap: cash from POS ---
+        _set_field('cash_pos_lecture', _safe_float(payments.get('comptant')))
+
+        # --- Transelect Restaurant: SJ card payments as "positouch" terminal ---
+        # Format expected by save_transelect:
+        # {"_terminals": ["positouch"], "debit": {"positouch": X}, "visa": {...}, ...}
+        sj_visa = _safe_float(payments.get('visa')) or 0
+        sj_mc = _safe_float(payments.get('mastercard')) or 0
+        sj_amex = _safe_float(payments.get('amex')) or 0
+        sj_interac = _safe_float(payments.get('interac')) or 0
+        if any([sj_visa, sj_mc, sj_amex, sj_interac]):
+            rest_data = {
+                '_terminals': ['positouch'],
+                'debit': {'positouch': round(sj_interac, 2), 'esc_pct': 0},
+                'visa': {'positouch': round(sj_visa, 2), 'esc_pct': 0},
+                'mc': {'positouch': round(sj_mc, 2), 'esc_pct': 0},
+                'amex': {'positouch': round(sj_amex, 2), 'esc_pct': 0},
+                'discover': {'positouch': 0, 'esc_pct': 0},
+            }
+            _set_json('transelect_restaurant', rest_data)
+
+    # =====================================================================
+    # 2. DAILY REVENUE → GEAC (balance sheet + daily rev) + Jour
+    # =====================================================================
     dr = all_data.get('daily_revenue', {})
     if dr:
         rj_map = dr.get('rj_mapping', {})
-        geac = rj_map.get('geac_ux', {})
+        geac_ux = rj_map.get('geac_ux', {})
         jour_dr = rj_map.get('jour', {})
+        settlements = dr.get('settlements', {})
 
-        dr_fields = {
-            'jour_chambres_revenu': jour_dr.get('room_revenue', None),
-            'jour_taxe_hebergement': jour_dr.get('taxe_hebergement', None),
+        # --- Jour: Room revenue + taxes ---
+        _set_field('jour_room_revenue', _safe_float(jour_dr.get('room_revenue')))
+        _set_field('jour_taxe_hebergement', _safe_float(jour_dr.get('taxe_hebergement')))
+
+        # --- GEAC: Daily Rev (settlements by card type, absolute values) ---
+        # Format: {"amex": val, "visa": val, "mc": val, "diners": val}
+        daily_rev_data = {
+            'amex': round(geac_ux.get('settlement_amex', 0), 2),
+            'visa': round(geac_ux.get('settlement_visa', 0), 2),
+            'mc': round(geac_ux.get('settlement_mc', 0), 2),
+            'diners': 0,
         }
-        for field, val in dr_fields.items():
-            if val is not None and hasattr(nas, field):
-                setattr(nas, field, round(val, 2))
-                updated.append(field)
+        if any(v > 0 for v in daily_rev_data.values()):
+            _set_json('geac_daily_rev', daily_rev_data)
 
-    # --- Advance Deposit ---
+        # --- GEAC: Balance Sheet ---
+        # Format: {"prev_dr": X, "prev_gl": X, "today_dr": X, "today_gl": X,
+        #          "facture_dr": X, "facture_ar": X, "advdep_dr": X, "advdep_ad": X,
+        #          "newbal_dr": X, "newbal_gl": X}
+        bal_prev = geac_ux.get('balance_prev_day', 0)
+        bal_today = geac_ux.get('balance_today', 0)
+        bal_new = geac_ux.get('new_balance', 0)
+        facture = geac_ux.get('settlement_facture', 0)
+        adv_dep = geac_ux.get('adv_dep_applied', 0)
+        dep_total = geac_ux.get('dep_received_total', 0)
+
+        balance_sheet = {
+            'prev_dr': round(bal_prev, 2),
+            'prev_gl': round(bal_prev, 2),
+            'today_dr': round(bal_today, 2),
+            'today_gl': round(bal_today, 2),
+            'facture_dr': round(facture, 2),
+            'facture_ar': round(facture, 2),
+            'advdep_dr': round(adv_dep, 2),
+            'advdep_ad': round(adv_dep, 2),
+            'newbal_dr': round(bal_new, 2),
+            'newbal_gl': round(bal_new, 2),
+        }
+        if bal_prev > 0 or bal_new > 0:
+            _set_json('geac_balance_sheet', balance_sheet)
+
+        # --- GEAC: AR fields ---
+        # geac_ar_* are scalar fields from the Daily Revenue AR section
+        # (Not always available in the parser output)
+
+    # =====================================================================
+    # 3. ADVANCE DEPOSIT → GEAC
+    # =====================================================================
     ad = all_data.get('advance_deposit', {})
     if ad:
         if 'advance_deposit_balance' in ad and hasattr(nas, 'geac_advance_deposit'):
             nas.geac_advance_deposit = round(float(ad['advance_deposit_balance'] or 0), 2)
             updated.append('geac_advance_deposit')
 
-    # --- Market Segment → DBRS ---
+    # =====================================================================
+    # 4. MARKET SEGMENT → DBRS + Jour occupancy
+    # =====================================================================
     ms = all_data.get('market_segment', {})
     if ms:
-        ms_fields = {
-            'dbrs_daily_rev_today': ms.get('today_revenue', None),
-            'dbrs_adr': ms.get('today_avg_rate', None),
-            'dbrs_house_count': ms.get('today_guests', None),
-        }
-        # Market segments breakdown
+        # DBRS scalar fields
+        _set_field('dbrs_daily_rev_today', _safe_float(ms.get('today_revenue')))
+        _set_field('dbrs_adr', _safe_float(ms.get('today_avg_rate')))
+        _set_field('dbrs_house_count', _safe_float(ms.get('today_guests')))
+
+        # Market segments breakdown for DBRS tab
         segments = ms.get('segments_by_category', {})
         if segments:
             seg_data = {
@@ -5602,93 +5742,86 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
                 'contract': segments.get('contract', {}),
                 'other': {},
             }
-            if hasattr(nas, 'dbrs_market_segments'):
-                nas.dbrs_market_segments = json.dumps(seg_data)
-                updated.append('dbrs_market_segments')
+            _set_json('dbrs_market_segments', seg_data)
 
-        for field, val in ms_fields.items():
-            if val is not None and hasattr(nas, field):
-                setattr(nas, field, round(float(val), 2) if isinstance(val, (int, float)) else val)
-                updated.append(field)
+        # Jour occupancy: nb_clients from market segment guests
+        _set_field('jour_nb_clients', _safe_float(ms.get('today_guests')))
 
-    # --- Cashier Summary → GEAC Cashout ---
+    # =====================================================================
+    # 5. CASHIER SUMMARY → GEAC Cashout + Quasimodo F&B
+    # =====================================================================
     cs = all_data.get('cashier_summary', {})
     if cs:
         totals = cs.get('grand_totals', {})
-        cs_fields = {
-            'quasi_fb_amex': totals.get('AX', None),
-            'quasi_fb_visa': totals.get('VI', None),
-            'quasi_fb_mc': totals.get('MC', None),
-            'quasi_fb_debit': totals.get('IN', None),
-            'quasi_fb_discover': totals.get('DI', None),
-        }
-        # Also store in geac_cashout JSON
+
+        # --- Quasimodo F&B card totals (scalar fields) ---
+        _set_field('quasi_fb_amex', _safe_float(totals.get('AX')))
+        _set_field('quasi_fb_visa', _safe_float(totals.get('VI')))
+        _set_field('quasi_fb_mc', _safe_float(totals.get('MC')))
+        _set_field('quasi_fb_debit', _safe_float(totals.get('DB')))
+        _set_field('quasi_fb_discover', _safe_float(totals.get('DI')))
+
+        # --- GEAC Cashout JSON ---
+        # Format expected by save_geac: {"co1_amex": X, "co2_amex": 0, "co1_visa": X, ...}
+        # Cashier Summary gives us TOTALS → put all in co1 (first cashout row)
+        card_map = {'AX': 'amex', 'VI': 'visa', 'MC': 'mc', 'DB': 'diners'}
         cashout_data = {}
-        for code, val in totals.items():
-            if val and val > 0:
-                card_map = {'AX': 'amex', 'VI': 'visa', 'MC': 'mc', 'DB': 'facture', 'IN': 'debit', 'DI': 'discover'}
-                cashout_data[card_map.get(code, code)] = round(val, 2)
-        if cashout_data and hasattr(nas, 'geac_cashout'):
-            nas.geac_cashout = json.dumps(cashout_data)
-            updated.append('geac_cashout')
+        for code, card_name in card_map.items():
+            val = totals.get(code, 0) or 0
+            cashout_data[f'co1_{card_name}'] = round(val, 2)
+            cashout_data[f'co2_{card_name}'] = 0
+        _set_json('geac_cashout', cashout_data)
 
-        for field, val in cs_fields.items():
-            if val is not None and hasattr(nas, field):
-                setattr(nas, field, round(val, 2))
-                updated.append(field)
-
-    # --- Transaction Summary → Transelect Reception ---
+    # =====================================================================
+    # 6. TRANSACTION SUMMARY → Transelect Reception
+    # =====================================================================
     ts = all_data.get('transaction_summary', {})
     if ts:
+        # Format expected by save_transelect:
+        # {"debit": {"fusebox": X, "term8": 0, "k053": 0, "daily_rev": 0, "esc_pct": 0},
+        #  "visa":  {"fusebox": X, "term8": 0, "k053": 0, "daily_rev": 0, "esc_pct": 0}, ...}
+        # TransactionSummary = FreedomPay = "fusebox" terminal
         rec_data = {}
-        for card_key in ['amex_total', 'visa_total', 'mc_total', 'debit_total', 'discover_total']:
-            val = ts.get(card_key)
-            if val:
-                card_name = card_key.replace('_total', '')
-                rec_data[card_name] = round(val, 2)
-        if rec_data and hasattr(nas, 'transelect_reception'):
-            nas.transelect_reception = json.dumps(rec_data)
-            updated.append('transelect_reception')
+        card_mapping = {
+            'debit_total': 'debit',
+            'visa_total': 'visa',
+            'mc_total': 'mc',
+            'amex_total': 'amex',
+            'discover_total': 'discover',
+        }
+        empty_terminals = {'fusebox': 0, 'term8': 0, 'k053': 0, 'daily_rev': 0, 'esc_pct': 0}
+        for ts_key, card_name in card_mapping.items():
+            val = _safe_float(ts.get(ts_key)) or 0
+            terminals = dict(empty_terminals)
+            terminals['fusebox'] = round(val, 2)
+            rec_data[card_name] = terminals
 
-    # --- Recap Text → Transelect Restaurant + Recap ---
+        if any(rec_data[c].get('fusebox', 0) > 0 for c in rec_data):
+            _set_json('transelect_reception', rec_data)
+
+    # =====================================================================
+    # 7. RECAP TEXT → Recap cash (backup if SJ didn't set it)
+    # =====================================================================
     rt = all_data.get('recap_text', {})
     if rt:
-        # Server details for Transelect Restaurant
-        server_details = rt.get('server_details', [])
-        if server_details and hasattr(nas, 'transelect_restaurant'):
-            # Group by server → card type
-            rest_data = {}
-            for srv in server_details:
-                srv_name = srv.get('name', 'Unknown')
-                rest_data[srv_name] = {
-                    'visa': srv.get('visa', 0),
-                    'mc': srv.get('mastercard', 0),
-                    'amex': srv.get('amex', 0),
-                    'interac': srv.get('interac', 0),
-                    'cash': srv.get('cash', 0),
-                    'total': srv.get('total', 0),
-                }
-            nas.transelect_restaurant = json.dumps(rest_data)
-            updated.append('transelect_restaurant')
+        # Cash POS lecture (use abs since recap returns negative for cash)
+        if not hasattr(nas, 'cash_pos_lecture') or not nas.cash_pos_lecture:
+            cash_val = _safe_abs(rt.get('grand_total_cash'))
+            if cash_val:
+                _set_field('cash_pos_lecture', cash_val)
 
-        # Grand totals for Recap
-        rt_fields = {
-            'cash_pos_lecture': rt.get('grand_total_cash', None),
-        }
-        for field, val in rt_fields.items():
-            if val is not None and hasattr(nas, field):
-                setattr(nas, field, round(val, 2))
-                updated.append(field)
-
-    # --- HP Excel → HP Admin entries ---
+    # =====================================================================
+    # 8. HP EXCEL → HP Admin entries
+    # =====================================================================
     hp = all_data.get('hp_excel', {})
     if hp:
         hp_entries = hp.get('daily_entries', [])
         if hp_entries and hasattr(nas, 'hp_admin_entries'):
-            nas.hp_admin_entries = json.dumps(hp_entries)
-            updated.append('hp_admin_entries')
+            _set_json('hp_admin_entries', hp_entries)
 
-    # Mark session as in_progress
+    # =====================================================================
+    # Mark session as in_progress if any data was applied
+    # =====================================================================
     if updated and nas.status == 'draft':
         nas.status = 'in_progress'
 

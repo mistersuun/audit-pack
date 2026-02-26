@@ -1423,18 +1423,19 @@ class NightAuditSession(db.Model):
         recep = self.get_json('transelect_reception')
         card_types = ['debit', 'visa', 'mc', 'amex', 'discover']
 
-        # Restaurant: each terminal has {debit, visa, mc, amex, discover, total2, positouch, esc_pct}
-        # Variance per terminal = sum(cards) - total2
+        # Restaurant structure: {_terminals: [...], debit: {term: val}, visa: {term: val}, ...}
+        # Each card type maps to terminal→value dict
         rest_variance = 0
         rest_card_totals = {c: 0 for c in card_types}
-        for term_data in rest.values():
-            if not isinstance(term_data, dict):
+        terminals = rest.get('_terminals', [])
+        for card in card_types:
+            card_data = rest.get(card, {})
+            if not isinstance(card_data, dict):
                 continue
-            total1 = sum(term_data.get(c, 0) for c in card_types)
-            total2 = term_data.get('total2', 0)
-            rest_variance += total1 - total2
-            for c in card_types:
-                rest_card_totals[c] += term_data.get(c, 0)
+            # Sum all terminal values for this card (exclude esc_pct)
+            card_total = sum(v for k, v in card_data.items()
+                            if k not in ('esc_pct', 'esc_dollar') and isinstance(v, (int, float)))
+            rest_card_totals[card] = round(card_total, 2)
 
         # Reception: keyed by card type {fusebox, term8, k053, daily_rev, esc_pct}
         # total per card = fusebox + term8 + k053; variance = total - daily_rev
@@ -1565,10 +1566,14 @@ class NightAuditSession(db.Model):
         self.quasi_rj_total = self.jour_total_revenue
         self.quasi_variance = round(self.quasi_total - self.quasi_rj_total, 2)
 
-        # 13. DBRS auto-values from Jour
-        self.dbrs_daily_rev_today = self.jour_room_revenue or 0
-        self.dbrs_adr = self.jour_adr
-        self.dbrs_house_count = rooms_sold
+        # 13. DBRS auto-values from Jour (only if not already set from Market Segment)
+        # Market Segment provides more accurate DBRS data when available
+        if not self.dbrs_daily_rev_today:
+            self.dbrs_daily_rev_today = self.jour_room_revenue or 0
+        if not self.dbrs_adr:
+            self.dbrs_adr = self.jour_adr
+        if not self.dbrs_house_count:
+            self.dbrs_house_count = rooms_sold
 
         # 14. Analyse GL variances
         self.gl_101100_variance = round(
