@@ -5266,3 +5266,430 @@ def export_rj_excel(audit_date):
     except Exception as e:
         logger.error(f"RJ Excel export error: {e}", exc_info=True)
         return jsonify({'error': f"Erreur lors de l'export: {str(e)}"}), 500
+
+
+# ═══════════════════════════════════════
+# ZIP UPLOAD — Auto-dispatch files to parsers
+# ═══════════════════════════════════════
+
+@rj_native_bp.route('/api/rj/native/upload-zip', methods=['POST'])
+@auth_required
+def upload_zip():
+    """
+    Upload a zip file containing night audit documents.
+    Auto-detects file types, runs parsers, and fills the session.
+
+    Form data:
+        file: .zip file
+        audit_date: YYYY-MM-DD (optional, auto-detected from filenames)
+
+    Returns:
+        {
+            success: true,
+            audit_date: "2026-02-24",
+            files_found: [...],
+            parsed: [...],
+            skipped: [...],
+            errors: [...],
+            session_data: { updated NightAuditSession fields }
+        }
+    """
+    import zipfile
+    import tempfile
+    from utils.parsers import ParserFactory
+
+    uploaded = request.files.get('file')
+    if not uploaded:
+        return jsonify({'success': False, 'error': 'Fichier ZIP requis'}), 400
+
+    if not uploaded.filename.lower().endswith('.zip'):
+        return jsonify({'success': False, 'error': 'Le fichier doit être un .zip'}), 400
+
+    audit_date_str = request.form.get('audit_date')
+
+    try:
+        zip_bytes = uploaded.read()
+        files_found = []
+        parsed_results = []
+        skipped = []
+        errors = []
+        all_extracted_data = {}
+
+        with zipfile.ZipFile(io.BytesIO(zip_bytes), 'r') as zf:
+            # Flatten all files (including nested zips)
+            flat_files = {}  # name -> bytes
+
+            def _extract_zip(z, prefix=''):
+                for info in z.infolist():
+                    if info.is_dir():
+                        continue
+                    fname = info.filename.split('/')[-1]  # just the filename
+                    if not fname:
+                        continue
+                    data = z.read(info.filename)
+
+                    # If nested zip, recurse
+                    if fname.lower().endswith('.zip'):
+                        try:
+                            nested = zipfile.ZipFile(io.BytesIO(data), 'r')
+                            _extract_zip(nested, prefix=fname.replace('.zip', '/'))
+                            nested.close()
+                        except zipfile.BadZipFile:
+                            errors.append(f"Zip imbriqué corrompu: {fname}")
+                        continue
+
+                    flat_files[fname] = data
+
+            _extract_zip(zf)
+
+        # Auto-detect audit date from filenames if not provided
+        if not audit_date_str:
+            import re
+            for fname in flat_files:
+                # Pattern: "Rj DD-MM-YYYY.xls"
+                m = re.search(r'[Rr][Jj]\s*(\d{2})-(\d{2})-(\d{4})', fname)
+                if m:
+                    audit_date_str = f"{m.group(3)}-{m.group(2)}-{m.group(1)}"
+                    break
+                # Pattern: "24th_Feb" or similar
+                m2 = re.search(r'(\d{1,2})(?:st|nd|rd|th)[_\s]+([A-Za-z]+)', fname)
+                if m2:
+                    from dateutil import parser as dateparser
+                    try:
+                        dt = dateparser.parse(f"{m2.group(1)} {m2.group(2)} 2026")
+                        audit_date_str = dt.strftime('%Y-%m-%d')
+                        break
+                    except Exception:
+                        pass
+
+        if not audit_date_str:
+            audit_date_str = date.today().isoformat()
+
+        # Get or create session
+        try:
+            audit_dt = datetime.strptime(audit_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'success': False, 'error': f'Date invalide: {audit_date_str}'}), 400
+
+        nas = NightAuditSession.query.filter_by(audit_date=audit_dt).first()
+        if not nas:
+            nas = NightAuditSession(audit_date=audit_dt, status='draft')
+            db.session.add(nas)
+            db.session.flush()
+
+        # Process each file
+        for fname, fbytes in sorted(flat_files.items()):
+            ext = os.path.splitext(fname)[1].lower()
+            files_found.append({'filename': fname, 'size': len(fbytes), 'extension': ext})
+
+            # Auto-detect parser type
+            doc_type = ParserFactory.detect_type(fname)
+
+            if doc_type is None:
+                skipped.append({'filename': fname, 'reason': 'Pas de parser disponible'})
+                continue
+
+            # Check extension match
+            accepted = ParserFactory.ACCEPTED_EXTENSIONS.get(doc_type, [])
+            if ext not in accepted:
+                skipped.append({'filename': fname, 'reason': f'Extension {ext} non acceptée pour {doc_type}'})
+                continue
+
+            # Run parser
+            try:
+                extra_kwargs = {}
+                if doc_type == 'hp_excel':
+                    extra_kwargs['day'] = audit_dt.day
+
+                parser = ParserFactory.create(doc_type, fbytes, filename=fname, **extra_kwargs)
+                result = parser.get_result()
+
+                parsed_results.append({
+                    'filename': fname,
+                    'doc_type': doc_type,
+                    'success': result['success'],
+                    'confidence': result['confidence'],
+                    'warnings': result.get('warnings', []),
+                    'errors': result.get('errors', []),
+                    'fields_extracted': len(result.get('data', {})),
+                })
+
+                if result['success']:
+                    all_extracted_data[doc_type] = result['data']
+
+            except Exception as e:
+                errors.append(f"Erreur parsing {fname}: {str(e)}")
+
+        # Map extracted data to NightAuditSession fields
+        updated_fields = _apply_parsed_data_to_session(nas, all_extracted_data, audit_dt)
+
+        # Save
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'audit_date': audit_date_str,
+            'files_found': files_found,
+            'parsed': parsed_results,
+            'skipped': skipped,
+            'errors': errors,
+            'updated_fields': updated_fields,
+            'session_id': nas.id,
+        })
+
+    except zipfile.BadZipFile:
+        return jsonify({'success': False, 'error': 'Fichier ZIP invalide ou corrompu'}), 400
+    except Exception as e:
+        logger.error(f"ZIP upload error: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@rj_native_bp.route('/api/rj/native/upload-file', methods=['POST'])
+@auth_required
+def upload_single_file():
+    """
+    Upload a single report file for parsing.
+
+    Form data:
+        file: the report file
+        doc_type: parser type (optional, auto-detected if missing)
+        audit_date: YYYY-MM-DD
+
+    Returns parsed data and updated session fields.
+    """
+    from utils.parsers import ParserFactory
+
+    uploaded = request.files.get('file')
+    audit_date_str = request.form.get('audit_date')
+
+    if not uploaded:
+        return jsonify({'success': False, 'error': 'Fichier requis'}), 400
+    if not audit_date_str:
+        return jsonify({'success': False, 'error': 'Date requise'}), 400
+
+    try:
+        audit_dt = datetime.strptime(audit_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'error': f'Date invalide: {audit_date_str}'}), 400
+
+    doc_type = request.form.get('doc_type')
+    fname = uploaded.filename
+    fbytes = uploaded.read()
+
+    # Auto-detect if not specified
+    if not doc_type:
+        doc_type = ParserFactory.detect_type(fname)
+        if not doc_type:
+            return jsonify({'success': False, 'error': f'Type non reconnu pour {fname}. Spécifiez doc_type.'}), 400
+
+    try:
+        extra_kwargs = {}
+        if doc_type == 'hp_excel':
+            day = request.form.get('day')
+            extra_kwargs['day'] = int(day) if day else audit_dt.day
+
+        parser = ParserFactory.create(doc_type, fbytes, filename=fname, **extra_kwargs)
+        result = parser.get_result()
+
+        if not result['success']:
+            return jsonify(result), 400
+
+        # Get or create session
+        nas = NightAuditSession.query.filter_by(audit_date=audit_dt).first()
+        if not nas:
+            nas = NightAuditSession(audit_date=audit_dt, status='draft')
+            db.session.add(nas)
+            db.session.flush()
+
+        updated_fields = _apply_parsed_data_to_session(nas, {doc_type: result['data']}, audit_dt)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'doc_type': doc_type,
+            'confidence': result['confidence'],
+            'warnings': result.get('warnings', []),
+            'updated_fields': updated_fields,
+            'data': result['data'],
+        })
+
+    except Exception as e:
+        logger.error(f"Single file upload error: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def _apply_parsed_data_to_session(nas, all_data, audit_dt):
+    """
+    Apply parsed data from multiple parsers to the NightAuditSession model.
+
+    Args:
+        nas: NightAuditSession instance
+        all_data: dict of {doc_type: extracted_data}
+        audit_dt: date object
+
+    Returns:
+        list of field names that were updated
+    """
+    updated = []
+
+    # --- Sales Journal → Jour F&B ---
+    sj = all_data.get('sales_journal', {})
+    if sj:
+        depts = sj.get('departments', {})
+        rj_map = sj.get('rj_mapping', {})
+        jour = rj_map.get('jour', {})
+
+        field_map = {
+            'jour_piazza_nourriture': depts.get('piazza', {}).get('nourriture', None),
+            'jour_piazza_boisson': depts.get('piazza', {}).get('boisson', None),
+            'jour_piazza_bieres': depts.get('piazza', {}).get('bieres', None),
+            'jour_piazza_mineraux': depts.get('piazza', {}).get('mineraux', None),
+            'jour_piazza_vins': depts.get('piazza', {}).get('vins', None),
+            'jour_banquet_nourriture': depts.get('banquet', {}).get('nourriture', None),
+            'jour_banquet_boisson': depts.get('banquet', {}).get('boisson', None),
+            'jour_banquet_bieres': depts.get('banquet', {}).get('bieres', None),
+            'jour_banquet_vins': depts.get('banquet', {}).get('vins', None),
+            'jour_chambres_svc_nourriture': depts.get('chambres', {}).get('nourriture', None),
+            'jour_chambres_svc_bieres': depts.get('chambres', {}).get('bieres', None),
+            'jour_spesa_nourriture': depts.get('spesa', {}).get('nourriture', None),
+            'jour_tps': sj.get('taxes', {}).get('tps', None),
+            'jour_tvq': sj.get('taxes', {}).get('tvq', None),
+        }
+        for field, val in field_map.items():
+            if val is not None and hasattr(nas, field):
+                setattr(nas, field, round(val, 2))
+                updated.append(field)
+
+    # --- Daily Revenue → GEAC/Jour ---
+    dr = all_data.get('daily_revenue', {})
+    if dr:
+        rj_map = dr.get('rj_mapping', {})
+        geac = rj_map.get('geac_ux', {})
+        jour_dr = rj_map.get('jour', {})
+
+        dr_fields = {
+            'jour_chambres_revenu': jour_dr.get('room_revenue', None),
+            'jour_taxe_hebergement': jour_dr.get('taxe_hebergement', None),
+        }
+        for field, val in dr_fields.items():
+            if val is not None and hasattr(nas, field):
+                setattr(nas, field, round(val, 2))
+                updated.append(field)
+
+    # --- Advance Deposit ---
+    ad = all_data.get('advance_deposit', {})
+    if ad:
+        if 'advance_deposit_balance' in ad and hasattr(nas, 'geac_advance_deposit'):
+            nas.geac_advance_deposit = round(float(ad['advance_deposit_balance'] or 0), 2)
+            updated.append('geac_advance_deposit')
+
+    # --- Market Segment → DBRS ---
+    ms = all_data.get('market_segment', {})
+    if ms:
+        ms_fields = {
+            'dbrs_daily_rev_today': ms.get('today_revenue', None),
+            'dbrs_adr': ms.get('today_avg_rate', None),
+            'dbrs_house_count': ms.get('today_guests', None),
+        }
+        # Market segments breakdown
+        segments = ms.get('segments_by_category', {})
+        if segments:
+            seg_data = {
+                'transient': segments.get('transient', {}),
+                'group': segments.get('group', {}),
+                'contract': segments.get('contract', {}),
+                'other': {},
+            }
+            if hasattr(nas, 'dbrs_market_segments'):
+                nas.dbrs_market_segments = json.dumps(seg_data)
+                updated.append('dbrs_market_segments')
+
+        for field, val in ms_fields.items():
+            if val is not None and hasattr(nas, field):
+                setattr(nas, field, round(float(val), 2) if isinstance(val, (int, float)) else val)
+                updated.append(field)
+
+    # --- Cashier Summary → GEAC Cashout ---
+    cs = all_data.get('cashier_summary', {})
+    if cs:
+        totals = cs.get('grand_totals', {})
+        cs_fields = {
+            'quasi_fb_amex': totals.get('AX', None),
+            'quasi_fb_visa': totals.get('VI', None),
+            'quasi_fb_mc': totals.get('MC', None),
+            'quasi_fb_debit': totals.get('IN', None),
+            'quasi_fb_discover': totals.get('DI', None),
+        }
+        # Also store in geac_cashout JSON
+        cashout_data = {}
+        for code, val in totals.items():
+            if val and val > 0:
+                card_map = {'AX': 'amex', 'VI': 'visa', 'MC': 'mc', 'DB': 'facture', 'IN': 'debit', 'DI': 'discover'}
+                cashout_data[card_map.get(code, code)] = round(val, 2)
+        if cashout_data and hasattr(nas, 'geac_cashout'):
+            nas.geac_cashout = json.dumps(cashout_data)
+            updated.append('geac_cashout')
+
+        for field, val in cs_fields.items():
+            if val is not None and hasattr(nas, field):
+                setattr(nas, field, round(val, 2))
+                updated.append(field)
+
+    # --- Transaction Summary → Transelect Reception ---
+    ts = all_data.get('transaction_summary', {})
+    if ts:
+        rec_data = {}
+        for card_key in ['amex_total', 'visa_total', 'mc_total', 'debit_total', 'discover_total']:
+            val = ts.get(card_key)
+            if val:
+                card_name = card_key.replace('_total', '')
+                rec_data[card_name] = round(val, 2)
+        if rec_data and hasattr(nas, 'transelect_reception'):
+            nas.transelect_reception = json.dumps(rec_data)
+            updated.append('transelect_reception')
+
+    # --- Recap Text → Transelect Restaurant + Recap ---
+    rt = all_data.get('recap_text', {})
+    if rt:
+        # Server details for Transelect Restaurant
+        server_details = rt.get('server_details', [])
+        if server_details and hasattr(nas, 'transelect_restaurant'):
+            # Group by server → card type
+            rest_data = {}
+            for srv in server_details:
+                srv_name = srv.get('name', 'Unknown')
+                rest_data[srv_name] = {
+                    'visa': srv.get('visa', 0),
+                    'mc': srv.get('mastercard', 0),
+                    'amex': srv.get('amex', 0),
+                    'interac': srv.get('interac', 0),
+                    'cash': srv.get('cash', 0),
+                    'total': srv.get('total', 0),
+                }
+            nas.transelect_restaurant = json.dumps(rest_data)
+            updated.append('transelect_restaurant')
+
+        # Grand totals for Recap
+        rt_fields = {
+            'cash_pos_lecture': rt.get('grand_total_cash', None),
+        }
+        for field, val in rt_fields.items():
+            if val is not None and hasattr(nas, field):
+                setattr(nas, field, round(val, 2))
+                updated.append(field)
+
+    # --- HP Excel → HP Admin entries ---
+    hp = all_data.get('hp_excel', {})
+    if hp:
+        hp_entries = hp.get('daily_entries', [])
+        if hp_entries and hasattr(nas, 'hp_admin_entries'):
+            nas.hp_admin_entries = json.dumps(hp_entries)
+            updated.append('hp_admin_entries')
+
+    # Mark session as in_progress
+    if updated and nas.status == 'draft':
+        nas.status = 'in_progress'
+
+    return updated

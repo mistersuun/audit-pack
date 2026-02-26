@@ -387,13 +387,39 @@
         <div id="macro-result" style="margin-top:8px;font-size:11px;color:var(--text-muted)"></div>
       </div>
 
+      <!-- ═══ ZIP UPLOAD — Upload all reports at once ═══ -->
+      <div id="zip-upload-panel" style="margin-top:18px;padding:14px;background:linear-gradient(135deg,var(--bg-card),#1a2744);border:2px dashed var(--blue);border-radius:8px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--blue)">
+          <i data-feather="package" style="width:16px;height:16px;vertical-align:-2px"></i> Dépôt rapide — Fichier ZIP
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+          Déposez un fichier <strong>.zip</strong> contenant tous vos rapports de nuit. Les fichiers seront automatiquement identifiés et les données extraites dans les bons onglets.
+        </div>
+        <div id="zip-dropzone" style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
+             ondragover="event.preventDefault();this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,0.1)'"
+             ondragleave="this.style.borderColor='var(--border)';this.style.background='transparent'"
+             ondrop="handleZipDrop(event)"
+             onclick="document.getElementById('file-zip-upload').click()">
+          <i data-feather="upload-cloud" style="width:32px;height:32px;color:var(--blue);margin-bottom:8px"></i>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Glissez votre ZIP ici</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:4px">ou cliquez pour parcourir</div>
+        </div>
+        <input type="file" id="file-zip-upload" accept=".zip" style="display:none">
+        <div id="zip-upload-status" style="margin-top:10px;font-size:12px;display:none">
+          <div id="zip-progress" style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:8px">
+            <div id="zip-progress-bar" style="height:100%;background:var(--blue);width:0%;transition:width .3s"></div>
+          </div>
+          <div id="zip-result"></div>
+        </div>
+      </div>
+
       <!-- ═══ AUTO-FILL — Upload Lightspeed reports ═══ -->
       <div id="autofill-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
-          <i data-feather="cpu" style="width:14px;height:14px;vertical-align:-2px"></i> Auto-remplissage — Rapports Lightspeed
+          <i data-feather="cpu" style="width:14px;height:14px;vertical-align:-2px"></i> Auto-remplissage — Rapports individuels
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
-          Déposez vos rapports imprimés pour remplir automatiquement les champs correspondants.
+          Ou déposez vos rapports un par un pour remplir automatiquement les champs correspondants.
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
           <button class="rjn-btn" onclick="uploadReport('daily_revenue')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
@@ -430,6 +456,26 @@
             <i data-feather="grid" style="width:12px;height:12px;color:var(--orange)"></i>
             <strong>Suivi Dépôts (SD)</strong> <small style="color:var(--text-muted)">.xls</small><br>
             <small style="color:var(--text-muted)">→ SD, SetD</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('market_segment')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="pie-chart" style="width:12px;height:12px;color:var(--indigo)"></i>
+            <strong>Market Segment</strong> <small style="color:var(--text-muted)">.pdf</small><br>
+            <small style="color:var(--text-muted)">→ DBRS segments</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('cashier_summary')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="users" style="width:12px;height:12px;color:var(--cyan)"></i>
+            <strong>Cashier Summary</strong> <small style="color:var(--text-muted)">.pdf</small><br>
+            <small style="color:var(--text-muted)">→ GEAC cashout</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('transaction_summary')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="credit-card" style="width:12px;height:12px;color:var(--pink)"></i>
+            <strong>Transactions Cartes</strong> <small style="color:var(--text-muted)">.xlsx</small><br>
+            <small style="color:var(--text-muted)">→ Transelect réception</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('recap_text')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+            <i data-feather="list" style="width:12px;height:12px;color:var(--lime)"></i>
+            <strong>Recap Serveurs</strong> <small style="color:var(--text-muted)">.txt</small><br>
+            <small style="color:var(--text-muted)">→ Transelect restaurant</small>
           </button>
         </div>
         <input type="file" id="file-report-upload" style="display:none">
@@ -1475,6 +1521,10 @@ const _reportExtensions = {
   'ar_summary': '.pdf',
   'sales_journal': '.rtf,.txt',
   'sd_deposit': '.xls,.xlsx',
+  'market_segment': '.pdf',
+  'cashier_summary': '.pdf',
+  'transaction_summary': '.xlsx',
+  'recap_text': '.txt',
 };
 
 function uploadReport(docType) {
@@ -1497,7 +1547,11 @@ document.getElementById('file-report-upload').addEventListener('change', async (
     'ar_summary': 'AR Summary',
     'hp_excel': 'HP Admin',
     'sales_journal': 'Sales Journal',
-    'sd_deposit': 'Suivi Dépôts'
+    'sd_deposit': 'Suivi Dépôts',
+    'market_segment': 'Market Segment',
+    'cashier_summary': 'Cashier Summary',
+    'transaction_summary': 'Transactions Cartes',
+    'recap_text': 'Recap Serveurs',
   };
   const label = docLabels[_currentDocType] || _currentDocType;
   statusEl.innerHTML = `<span style="color:var(--blue)">Parsing ${label}: "${file.name}"...</span>`;
@@ -1506,31 +1560,35 @@ document.getElementById('file-report-upload').addEventListener('change', async (
     const formData = new FormData();
     formData.append('doc_type', _currentDocType);
     formData.append('file', file);
-    formData.append('date', $('#inp-date').value);
+    formData.append('audit_date', $('#inp-date').value);
 
-    const r = await fetch('/api/rj/native/parse-and-fill', {
+    const r = await fetch('/api/rj/native/upload-file', {
       method: 'POST',
       body: formData
     });
     const d = await r.json();
 
-    if (d.error) {
-      statusEl.innerHTML = `<span style="color:var(--red)">${d.error}</span>`;
+    if (!d.success) {
+      statusEl.innerHTML = `<span style="color:var(--red)">${d.error || 'Erreur de parsing'}</span>`;
       if (d.warnings && d.warnings.length) {
         statusEl.innerHTML += `<br><small>${d.warnings.join(', ')}</small>`;
       }
       return;
     }
 
-    // Reload session with new data
-    SESSION = d.session;
-    loadSessionToForm(SESSION);
+    // Reload session with updated data
+    const sessionR = await fetch(`/api/rj/native/session/${$('#inp-date').value}`);
+    const sessionD = await sessionR.json();
+    if (sessionD.session) {
+      SESSION = sessionD.session;
+      loadSessionToForm(SESSION);
+    }
 
     const conf = d.confidence ? ` (confiance: ${Math.round(d.confidence * 100)}%)` : '';
-    const sects = d.sections_updated?.join(', ') || '';
+    const nFields = d.updated_fields?.length || 0;
     statusEl.innerHTML =
-      `<span style="color:var(--emerald)">✓ ${label}: ${d.fields_filled} champs remplis${conf}</span>` +
-      (sects ? `<br><small>Sections: ${sects}</small>` : '') +
+      `<span style="color:var(--emerald)">✓ ${label}: ${nFields} champs remplis${conf}</span>` +
+      (d.updated_fields?.length ? `<br><small>Champs: ${d.updated_fields.slice(0,5).join(', ')}${d.updated_fields.length > 5 ? '...' : ''}</small>` : '') +
       (d.warnings?.length ? `<br><small style="color:var(--amber)">⚠ ${d.warnings.join(', ')}</small>` : '');
 
     // Auto-clear status after 10s
@@ -1547,6 +1605,117 @@ document.getElementById('file-report-upload').addEventListener('change', async (
   e.target.value = '';
   _currentDocType = null;
 });
+
+// ═══════════════════════════════════════
+// ZIP UPLOAD — Upload all reports at once
+// ═══════════════════════════════════════
+function handleZipDrop(event) {
+  event.preventDefault();
+  event.target.style.borderColor = 'var(--border)';
+  event.target.style.background = 'transparent';
+  const files = event.dataTransfer.files;
+  if (files.length > 0 && files[0].name.toLowerCase().endsWith('.zip')) {
+    processZipUpload(files[0]);
+  } else {
+    alert('Veuillez déposer un fichier .zip');
+  }
+}
+
+document.getElementById('file-zip-upload').addEventListener('change', (e) => {
+  if (e.target.files[0]) {
+    processZipUpload(e.target.files[0]);
+    e.target.value = '';
+  }
+});
+
+async function processZipUpload(file) {
+  const statusPanel = document.getElementById('zip-upload-status');
+  const progressBar = document.getElementById('zip-progress-bar');
+  const resultEl = document.getElementById('zip-result');
+  statusPanel.style.display = 'block';
+  progressBar.style.width = '20%';
+  resultEl.innerHTML = `<span style="color:var(--blue)">Envoi de "${file.name}" (${(file.size/1024).toFixed(0)} Ko)...</span>`;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const auditDate = document.getElementById('inp-date')?.value;
+    if (auditDate) formData.append('audit_date', auditDate);
+
+    progressBar.style.width = '40%';
+
+    const r = await fetch('/api/rj/native/upload-zip', {
+      method: 'POST',
+      body: formData
+    });
+    const d = await r.json();
+    progressBar.style.width = '80%';
+
+    if (!d.success) {
+      progressBar.style.background = 'var(--red)';
+      progressBar.style.width = '100%';
+      resultEl.innerHTML = `<span style="color:var(--red)">✗ ${d.error}</span>`;
+      return;
+    }
+
+    // Reload session
+    if (d.audit_date) {
+      document.getElementById('inp-date').value = d.audit_date;
+      const sessionR = await fetch(`/api/rj/native/session/${d.audit_date}`);
+      const sessionD = await sessionR.json();
+      if (sessionD.session) {
+        SESSION = sessionD.session;
+        loadSessionToForm(SESSION);
+      }
+    }
+
+    progressBar.style.width = '100%';
+    progressBar.style.background = 'var(--emerald)';
+
+    // Build result summary
+    const nFiles = d.files_found?.length || 0;
+    const nParsed = d.parsed?.filter(p => p.success).length || 0;
+    const nSkipped = d.skipped?.length || 0;
+    const nErrors = d.errors?.length || 0;
+    const nFields = d.updated_fields?.length || 0;
+
+    let html = `<div style="color:var(--emerald);font-weight:700;margin-bottom:6px">✓ ${nFiles} fichiers trouvés — ${nParsed} parsés — ${nFields} champs remplis</div>`;
+
+    // Parsed details
+    if (d.parsed?.length) {
+      html += '<div style="margin-top:6px">';
+      for (const p of d.parsed) {
+        const icon = p.success ? '✓' : '✗';
+        const color = p.success ? 'var(--emerald)' : 'var(--red)';
+        const conf = p.confidence ? ` (${Math.round(p.confidence * 100)}%)` : '';
+        html += `<div style="font-size:11px;color:${color}">${icon} ${p.filename} → ${p.doc_type}${conf}</div>`;
+      }
+      html += '</div>';
+    }
+
+    // Skipped files
+    if (d.skipped?.length) {
+      html += `<div style="margin-top:6px;font-size:11px;color:var(--text-muted)">`;
+      html += `<strong>Non parsés (${nSkipped}):</strong> `;
+      html += d.skipped.map(s => s.filename).join(', ');
+      html += `</div>`;
+    }
+
+    // Errors
+    if (d.errors?.length) {
+      html += `<div style="margin-top:6px;font-size:11px;color:var(--red)">`;
+      html += d.errors.map(e => `✗ ${e}`).join('<br>');
+      html += `</div>`;
+    }
+
+    resultEl.innerHTML = html;
+
+  } catch(err) {
+    progressBar.style.background = 'var(--red)';
+    progressBar.style.width = '100%';
+    resultEl.innerHTML = `<span style="color:var(--red)">Erreur: ${err.message}</span>`;
+  }
+}
 
 function loadSessionToForm(s) {
   // Controle
