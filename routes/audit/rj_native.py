@@ -5638,8 +5638,11 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
         _set_field('jour_tps', _safe_float(taxes.get('tps')))
         _set_field('jour_tvq', _safe_float(taxes.get('tvq')))
 
-        # --- Recap: cash from POS ---
-        _set_field('cash_pos_lecture', _safe_float(payments.get('comptant')))
+        # --- Recap: cash from POS (SJ comptant as fallback) ---
+        # NOTE: Cashier Summary deposits_rcvd is more accurate. SJ comptant is F&B only.
+        sj_cash = _safe_float(payments.get('comptant'))
+        if sj_cash and 'cash_pos_lecture' not in updated:
+            _set_field('cash_pos_lecture', sj_cash)
 
         # --- Transelect Restaurant: SJ card payments as "positouch" terminal ---
         # Format expected by save_transelect:
@@ -5673,16 +5676,10 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
         _set_field('jour_room_revenue', _safe_float(jour_dr.get('room_revenue')))
         _set_field('jour_taxe_hebergement', _safe_float(jour_dr.get('taxe_hebergement')))
 
-        # --- GEAC: Daily Rev (settlements by card type, absolute values) ---
-        # Format: {"amex": val, "visa": val, "mc": val, "diners": val}
-        daily_rev_data = {
-            'amex': round(geac_ux.get('settlement_amex', 0), 2),
-            'visa': round(geac_ux.get('settlement_visa', 0), 2),
-            'mc': round(geac_ux.get('settlement_mc', 0), 2),
-            'diners': 0,
-        }
-        if any(v > 0 for v in daily_rev_data.values()):
-            _set_json('geac_daily_rev', daily_rev_data)
+        # --- GEAC: Daily Rev ---
+        # NOTE: geac_daily_rev is set from Transaction Summary in section 6
+        # (same values as GEAC Cashout — both come from FreedomPay).
+        # The Daily Revenue PDF settlements are GL-level, not GEAC-level.
 
         # --- GEAC: Balance Sheet ---
         # Format: {"prev_dr": X, "prev_gl": X, "today_dr": X, "today_gl": X,
@@ -5748,8 +5745,10 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
         _set_field('jour_nb_clients', _safe_float(ms.get('today_guests')))
 
     # =====================================================================
-    # 5. CASHIER SUMMARY → GEAC Cashout + Quasimodo F&B
+    # 5. CASHIER SUMMARY → Quasimodo F&B only (NOT GEAC)
     # =====================================================================
+    # NOTE: Cashier Summary gives F&B-only card totals (partial).
+    # GEAC cashout uses FULL totals from Transaction Summary (section 6).
     cs = all_data.get('cashier_summary', {})
     if cs:
         totals = cs.get('grand_totals', {})
@@ -5761,25 +5760,21 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
         _set_field('quasi_fb_debit', _safe_float(totals.get('DB')))
         _set_field('quasi_fb_discover', _safe_float(totals.get('DI')))
 
-        # --- GEAC Cashout JSON ---
-        # Format expected by save_geac: {"co1_amex": X, "co2_amex": 0, "co1_visa": X, ...}
-        # Cashier Summary gives us TOTALS → put all in co1 (first cashout row)
-        card_map = {'AX': 'amex', 'VI': 'visa', 'MC': 'mc', 'DB': 'diners'}
-        cashout_data = {}
-        for code, card_name in card_map.items():
-            val = totals.get(code, 0) or 0
-            cashout_data[f'co1_{card_name}'] = round(val, 2)
-            cashout_data[f'co2_{card_name}'] = 0
-        _set_json('geac_cashout', cashout_data)
+        # --- Recap: cash_pos_lecture from cashier total deposits ---
+        # Cashier deposits_rcvd = cash deposited at POS (more accurate than SJ comptant)
+        cash_deposits = _safe_float(cs.get('total_deposits_rcvd'))
+        if cash_deposits and cash_deposits > 0:
+            _set_field('cash_pos_lecture', cash_deposits)
 
     # =====================================================================
-    # 6. TRANSACTION SUMMARY → Transelect Reception
+    # 6. TRANSACTION SUMMARY → Transelect Reception + GEAC Cashout
     # =====================================================================
+    # TransactionSummary (FreedomPay) gives FULL card totals for ALL cashiers
+    # (reception + F&B). These are the correct source for GEAC cashout.
     ts = all_data.get('transaction_summary', {})
     if ts:
-        # Format expected by save_transelect:
-        # {"debit": {"fusebox": X, "term8": 0, "k053": 0, "daily_rev": 0, "esc_pct": 0},
-        #  "visa":  {"fusebox": X, "term8": 0, "k053": 0, "daily_rev": 0, "esc_pct": 0}, ...}
+        # --- Transelect Reception ---
+        # Format: {"debit": {"fusebox": X, "term8": 0, "k053": 0, "daily_rev": 0, "esc_pct": 0}, ...}
         # TransactionSummary = FreedomPay = "fusebox" terminal
         rec_data = {}
         card_mapping = {
@@ -5798,6 +5793,36 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
 
         if any(rec_data[c].get('fusebox', 0) > 0 for c in rec_data):
             _set_json('transelect_reception', rec_data)
+
+        # --- GEAC Cashout ---
+        # Format: {"co1_amex": X, "co2_amex": 0, "co1_visa": X, "co2_visa": 0, ...}
+        # Transaction Summary gives FULL totals → put all in co1 (no CO1/CO2 split available)
+        geac_card_map = {
+            'amex_total': 'amex',
+            'visa_total': 'visa',
+            'mc_total': 'mc',
+        }
+        cashout_data = {}
+        for ts_key, card_name in geac_card_map.items():
+            val = _safe_float(ts.get(ts_key)) or 0
+            cashout_data[f'co1_{card_name}'] = round(val, 2)
+            cashout_data[f'co2_{card_name}'] = 0
+        # Diners not in FreedomPay
+        cashout_data['co1_diners'] = 0
+        cashout_data['co2_diners'] = 0
+        if any(v > 0 for k, v in cashout_data.items() if k.startswith('co1_')):
+            _set_json('geac_cashout', cashout_data)
+
+        # --- GEAC Daily Rev (same as Cashout = FreedomPay totals) ---
+        # In GEAC, Daily Revenue must equal Cashout (variance = $0)
+        daily_rev_data = {
+            'amex': round(_safe_float(ts.get('amex_total')) or 0, 2),
+            'visa': round(_safe_float(ts.get('visa_total')) or 0, 2),
+            'mc': round(_safe_float(ts.get('mc_total')) or 0, 2),
+            'diners': 0,
+        }
+        if any(v > 0 for v in daily_rev_data.values()):
+            _set_json('geac_daily_rev', daily_rev_data)
 
     # =====================================================================
     # 7. RECAP TEXT → Recap cash (backup if SJ didn't set it)
