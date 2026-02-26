@@ -169,8 +169,109 @@ def import_archives(base_dir, dry_run=False):
     return imported
 
 
+def extract_metrics_from_archives():
+    """
+    Extract DailyJourMetrics from all archived RJ files in RJArchive table.
+    This populates the metrics used by all dashboards.
+    """
+    from utils.jour_importer import JourImporter
+    from database.models import DailyJourMetrics
+    import io
+
+    archives = RJArchive.query.order_by(RJArchive.audit_date).all()
+    if not archives:
+        print("  Aucune archive RJ à traiter.")
+        return 0
+
+    # Check existing metrics
+    existing_dates = {d[0] for d in db.session.query(DailyJourMetrics.date).all()}
+    print(f"  {len(archives)} archives, {len(existing_dates)} métriques existantes")
+
+    total_extracted = 0
+    errors = 0
+
+    for i, archive in enumerate(archives):
+        if not archive.file_binary:
+            continue
+
+        try:
+            file_bytes = io.BytesIO(archive.file_binary)
+            metrics, info = JourImporter.extract_from_rj(file_bytes, archive.source_filename)
+
+            if metrics:
+                # Filter out dates we already have
+                new_metrics = [m for m in metrics if m.date not in existing_dates]
+                if new_metrics:
+                    result = JourImporter.persist_batch(new_metrics, source='archive_extract')
+                    total_extracted += result.get('inserted', 0) + result.get('updated', 0)
+                    for m in new_metrics:
+                        existing_dates.add(m.date)
+
+        except Exception as e:
+            errors += 1
+            if errors <= 5:
+                print(f"  ⚠ {archive.source_filename}: {e}")
+
+        if (i + 1) % 100 == 0:
+            print(f"  ... {i + 1}/{len(archives)} traités ({total_extracted} métriques extraites)")
+            db.session.commit()
+
+    db.session.commit()
+    print(f"  ✅ {total_extracted} métriques extraites, {errors} erreurs")
+    return total_extracted
+
+
+def extract_metrics_from_files(base_dir):
+    """
+    Extract DailyJourMetrics directly from RJ Excel files on disk.
+    Fallback when archives don't have binary data.
+    """
+    from utils.jour_importer import JourImporter
+    from database.models import DailyJourMetrics
+    import io
+
+    files = find_rj_files(base_dir)
+    if not files:
+        print("  Aucun fichier RJ trouvé.")
+        return 0
+
+    existing_dates = {d[0] for d in db.session.query(DailyJourMetrics.date).all()}
+    print(f"  {len(files)} fichiers RJ, {len(existing_dates)} métriques existantes")
+
+    total_extracted = 0
+    errors = 0
+
+    for i, (audit_date, filepath, fname) in enumerate(files):
+        try:
+            with open(filepath, 'rb') as f:
+                file_bytes = io.BytesIO(f.read())
+
+            metrics, info = JourImporter.extract_from_rj(file_bytes, fname)
+            if metrics:
+                new_metrics = [m for m in metrics if m.date not in existing_dates]
+                if new_metrics:
+                    result = JourImporter.persist_batch(new_metrics, source='file_extract')
+                    total_extracted += result.get('inserted', 0) + result.get('updated', 0)
+                    for m in new_metrics:
+                        existing_dates.add(m.date)
+
+        except Exception as e:
+            errors += 1
+            if errors <= 5:
+                print(f"  ⚠ {fname}: {e}")
+
+        if (i + 1) % 100 == 0:
+            print(f"  ... {i + 1}/{len(files)} traités ({total_extracted} métriques)")
+            db.session.commit()
+
+    db.session.commit()
+    print(f"  ✅ {total_extracted} métriques extraites depuis fichiers, {errors} erreurs")
+    return total_extracted
+
+
 def main():
     dry_run = '--dry-run' in sys.argv
+    metrics_only = '--metrics-only' in sys.argv
     custom_dir = None
 
     for i, arg in enumerate(sys.argv):
@@ -181,14 +282,22 @@ def main():
     project_root = os.path.join(os.path.dirname(__file__), '..')
     base_dir = custom_dir or os.path.join(project_root, 'RJ 2024-2025')
 
-    if not os.path.exists(base_dir):
-        print(f"❌ Dossier non trouvé: {base_dir}")
-        print("   Utilisez --dir /chemin/vers/dossier/rj pour spécifier le dossier")
-        sys.exit(1)
-
     app = create_app()
     with app.app_context():
-        import_archives(base_dir, dry_run=dry_run)
+        if not metrics_only:
+            if not os.path.exists(base_dir):
+                print(f"⚠ Dossier non trouvé: {base_dir}")
+                print("  Utilisez --dir /chemin/vers/dossier/rj pour spécifier le dossier")
+            else:
+                import_archives(base_dir, dry_run=dry_run)
+
+        # Always extract metrics (from archives in DB or from files)
+        if not dry_run:
+            print("\n📊 Extraction des métriques DailyJourMetrics...")
+            total = extract_metrics_from_archives()
+            if total == 0 and os.path.exists(base_dir):
+                print("  Tentative depuis les fichiers sur disque...")
+                extract_metrics_from_files(base_dir)
 
 
 if __name__ == '__main__':

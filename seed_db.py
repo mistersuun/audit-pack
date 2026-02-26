@@ -512,6 +512,23 @@ def main():
                 print("  (scripts/seed_crm_demo.py non trouvé — sauté)")
             except Exception as e:
                 print(f"  ⚠ Erreur CRM demo: {e}")
+
+            # Import RJ archives + extract metrics if available
+            try:
+                import os
+                rj_dir = os.path.join(os.path.dirname(__file__), 'RJ 2024-2025')
+                if os.path.exists(rj_dir):
+                    print("\n── Archives RJ + Métriques ──")
+                    from scripts.import_rj_archives import import_archives, extract_metrics_from_archives, extract_metrics_from_files
+                    import_archives(rj_dir)
+                    total = extract_metrics_from_archives()
+                    if total == 0:
+                        extract_metrics_from_files(rj_dir)
+                    from database.models import DailyJourMetrics
+                    count = DailyJourMetrics.query.count()
+                    print(f"  {count} métriques quotidiennes disponibles")
+            except Exception as e:
+                print(f"  ⚠ Erreur import archives: {e}")
         else:
             print("\n(Mode --quick: données démo non chargées)")
 

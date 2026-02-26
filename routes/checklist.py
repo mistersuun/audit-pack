@@ -13,6 +13,18 @@ from flask import (
 )
 from functools import wraps
 from datetime import date, datetime, timedelta
+
+def _audit_date():
+    """
+    Get the current audit date.
+    Night auditors work from ~11 PM to ~7 AM. If the current time is between
+    midnight and 6:59 AM, the audit date is yesterday (the night they started).
+    This ensures checklist progress persists across the midnight boundary.
+    """
+    now = datetime.now()
+    if now.hour < 7:
+        return (now - timedelta(days=1)).date()
+    return now.date()
 from markupsafe import escape
 from database import db, Task, Shift, TaskCompletion
 
@@ -495,7 +507,7 @@ def set_role():
 @checklist_bp.route('/api/shifts/current')
 @login_required
 def get_current_shift():
-    today = date.today()
+    today = _audit_date()
     shift = Shift.query.filter_by(date=today).first()
     if not shift:
         return jsonify({'shift': None, 'completions': []})
@@ -509,7 +521,7 @@ def get_current_shift():
 @checklist_bp.route('/api/shifts', methods=['POST'])
 @login_required
 def start_shift():
-    today = date.today()
+    today = _audit_date()
     user_name = session.get('user_name', 'Inconnu')
     shift = Shift.query.filter_by(date=today).first()
     if not shift:
@@ -521,7 +533,7 @@ def start_shift():
 @checklist_bp.route('/api/tasks/<int:task_id>/complete', methods=['POST'])
 @login_required
 def complete_task(task_id):
-    today = date.today()
+    today = _audit_date()
     user_name = session.get('user_name', 'Inconnu')
     shift = Shift.query.filter_by(date=today).first()
     if not shift:
@@ -547,7 +559,7 @@ def complete_task(task_id):
 @checklist_bp.route('/api/tasks/<int:task_id>/uncomplete', methods=['POST'])
 @login_required
 def uncomplete_task(task_id):
-    today = date.today()
+    today = _audit_date()
     shift = Shift.query.filter_by(date=today).first()
     if not shift:
         return jsonify({'success': True})
@@ -561,7 +573,7 @@ def uncomplete_task(task_id):
 @checklist_bp.route('/api/shifts/complete', methods=['POST'])
 @login_required
 def complete_shift():
-    today = date.today()
+    today = _audit_date()
     shift = Shift.query.filter_by(date=today).first()
     if shift:
         shift.completed_at = datetime.utcnow()

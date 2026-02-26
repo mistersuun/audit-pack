@@ -76,7 +76,7 @@ def create_app():
         db.create_all()
 
         # Auto-seed on first run (empty DB)
-        from database.models import User
+        from database.models import User, DailyJourMetrics
         if not User.query.first():
             try:
                 from seed_db import auto_migrate, seed_users, seed_property, seed_tasks
@@ -85,9 +85,25 @@ def create_app():
                 seed_users()
                 seed_property()
                 seed_tasks()
-                print("✅ Base de données initialisée avec succès.\n")
+                print("✅ Base de données initialisée avec succès.")
             except Exception as e:
-                print(f"⚠ Erreur auto-seed: {e}\n")
+                print(f"⚠ Erreur auto-seed: {e}")
+
+        # Auto-import RJ archives + extract metrics if DailyJourMetrics is empty
+        if DailyJourMetrics.query.count() == 0:
+            try:
+                rj_dir = os.path.join(os.path.dirname(__file__), 'RJ 2024-2025')
+                if os.path.exists(rj_dir):
+                    print("\n📊 Import automatique des archives RJ + extraction des métriques...")
+                    from scripts.import_rj_archives import import_archives, extract_metrics_from_archives, extract_metrics_from_files
+                    import_archives(rj_dir)
+                    total = extract_metrics_from_archives()
+                    if total == 0:
+                        extract_metrics_from_files(rj_dir)
+                    final_count = DailyJourMetrics.query.count()
+                    print(f"✅ {final_count} métriques disponibles pour les dashboards.\n")
+            except Exception as e:
+                print(f"⚠ Erreur import métriques: {e}\n")
 
     # Context processor to inject user info and CSRF token into templates
     @app.context_processor
