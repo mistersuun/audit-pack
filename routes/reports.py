@@ -5,7 +5,7 @@ Blueprint for Reports - Analytics and reporting functionality.
 from flask import Blueprint, request, jsonify, render_template, session
 from functools import wraps
 from datetime import datetime, timedelta
-from database.models import db, DailyReport, VarianceRecord
+from database.models import db, DailyReport, VarianceRecord, DailyJourMetrics, NightAuditSession
 from routes.checklist import login_required
 
 reports_bp = Blueprint('reports', __name__)
@@ -106,19 +106,44 @@ def daily_comparison():
     today = datetime.now().date()
     yesterday = today - timedelta(days=1)
 
-    today_report = DailyReport.query.filter_by(date=today).first()
-    yesterday_report = DailyReport.query.filter_by(date=yesterday).first()
+    def _build_day_data(target_date):
+        """Build day data from NightAuditSession or DailyJourMetrics."""
+        nas = NightAuditSession.query.filter_by(audit_date=target_date).first()
+        if nas:
+            d = nas.to_dict()
+            rev_total = d.get('jour_total_revenue', 0) or 0
+            dep_cdn = d.get('deposit_cdn', 0) or 0
+            dep_us = d.get('deposit_us', 0) or 0
+            return {
+                'date': target_date.isoformat(),
+                'revenue': {'comptant': dep_cdn, 'cartes': d.get('quasi_total', 0) or 0,
+                            'cheques': 0, 'total': rev_total},
+                'deposits': {'cdn': dep_cdn, 'us': dep_us, 'total': dep_cdn + dep_us},
+                'variance': d.get('quasi_variance', 0) or 0,
+                'dueback_total': 0,
+            }
+        djm = DailyJourMetrics.query.filter_by(date=target_date).first()
+        if djm:
+            return {
+                'date': target_date.isoformat(),
+                'revenue': {'comptant': 0, 'cartes': djm.total_cards or 0,
+                            'cheques': 0, 'total': djm.total_revenue or 0},
+                'deposits': {'cdn': 0, 'us': 0, 'total': 0},
+                'variance': 0,
+                'dueback_total': 0,
+            }
+        return None
+
+    today_data = _build_day_data(today)
+    yesterday_data = _build_day_data(yesterday)
 
     def calc_change(current, previous):
         if previous and previous != 0:
             return {
-                'value': current - previous,
-                'percent': ((current - previous) / abs(previous)) * 100
+                'value': round(current - previous, 2),
+                'percent': round(((current - previous) / abs(previous)) * 100, 1)
             }
-        return {'value': current, 'percent': 0}
-
-    today_data = today_report.to_dict() if today_report else None
-    yesterday_data = yesterday_report.to_dict() if yesterday_report else None
+        return {'value': round(current, 2), 'percent': 0}
 
     changes = {}
     if today_data and yesterday_data:
@@ -175,19 +200,24 @@ def get_trends():
 
     start_date = datetime.now().date() - timedelta(days=period)
 
-    reports = DailyReport.query.filter(
-        DailyReport.date >= start_date
-    ).order_by(DailyReport.date).all()
+    # Use DailyJourMetrics (has actual data) instead of DailyReport (legacy/empty)
+    metrics = DailyJourMetrics.query.filter(
+        DailyJourMetrics.date >= start_date
+    ).order_by(DailyJourMetrics.date).all()
 
     return jsonify({
         'success': True,
         'period': period,
-        'labels': [r.date.strftime('%d/%m') for r in reports],
+        'labels': [m.date.strftime('%d/%m') for m in metrics],
         'datasets': {
-            'revenue': [r.revenue_total for r in reports],
-            'deposits': [r.deposit_cdn + r.deposit_us for r in reports],
-            'variance': [r.variance for r in reports],
-            'dueback': [r.dueback_total for r in reports],
+            'revenue': [round(m.total_revenue or 0, 2) for m in metrics],
+            'deposits': [0 for _ in metrics],  # Deposits not tracked in DailyJourMetrics
+            'variance': [0 for _ in metrics],
+            'dueback': [0 for _ in metrics],
+            'adr': [round(m.adr or 0, 2) for m in metrics],
+            'occupancy': [round(m.occupancy_rate or 0, 1) for m in metrics],
+            'fb_revenue': [round(m.fb_revenue or 0, 2) for m in metrics],
+            'room_revenue': [round(m.room_revenue or 0, 2) for m in metrics],
         }
     })
 

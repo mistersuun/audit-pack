@@ -142,7 +142,10 @@ def dashboard_kpis():
     budget_revpar = budget_adr * budget_occ if budget_adr and budget_occ else 0
 
     # Recent audits — pull from DailyJourMetrics (real RJ data) + NightAuditSession for auditor info
-    days_param = min(int(request.args.get('days', 30)), 365)
+    try:
+        days_param = min(int(request.args.get('days', 30)), 365)
+    except (ValueError, TypeError):
+        days_param = 30
     if days_param > 0:
         cutoff = target - timedelta(days=days_param)
         recent_metrics = DailyJourMetrics.query.filter(
@@ -224,7 +227,10 @@ def rj_summary(report_date):
 @direction_required
 def trends_data():
     """Configurable trend data for charts (default 30 days, max 365)."""
-    days = min(int(request.args.get('days', 30)), 365)
+    try:
+        days = min(int(request.args.get('days', 30)), 365)
+    except (ValueError, TypeError):
+        days = 30
     metrics = DailyJourMetrics.query.order_by(
         DailyJourMetrics.date.desc()
     ).limit(days).all()
@@ -1064,7 +1070,10 @@ def _build_etat_rev(daily, mtd, budget, labor, fixed_costs, days_in_period):
 @direction_required
 def labor_analysis():
     """Labour cost % by department — JOIN DailyLaborMetrics × DailyJourMetrics."""
-    days = min(int(request.args.get('days', 30)), 365)
+    try:
+        days = min(int(request.args.get('days', 30)), 365)
+    except (ValueError, TypeError):
+        days = 30
     end = date.today()
     start = end - timedelta(days=days)
 
@@ -1202,7 +1211,10 @@ def gl_reconciliation():
 @direction_required
 def labor_by_department():
     """Detailed labor breakdown by department for a specific period."""
-    days = min(int(request.args.get('days', 30)), 365)
+    try:
+        days = min(int(request.args.get('days', 30)), 365)
+    except (ValueError, TypeError):
+        days = 30
     end = date.today()
     start = end - timedelta(days=days)
 
@@ -1282,7 +1294,10 @@ def gl_top_accounts():
 @direction_required
 def cross_analysis():
     """Complete cross-sheet analysis — combines all data sources for a date range."""
-    days = min(int(request.args.get('days', 30)), 365)
+    try:
+        days = min(int(request.args.get('days', 30)), 365)
+    except (ValueError, TypeError):
+        days = 30
     end = date.today()
     start = end - timedelta(days=days)
 

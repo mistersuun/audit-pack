@@ -534,9 +534,12 @@ def labor_analytics():
         monthly_by_dept[(dept, key)]['ot_cost'] += record.overtime_wages
 
     # ───── DEPARTMENT EFFICIENCY METRICS ─────
+    # Determine the years covered by labor records to scope revenue query
+    labor_years = set(r.year for r in labor_records)
+
     analytics = []
     for dept, stats in sorted(dept_stats.items()):
-        # Get revenue for this period
+        # Get revenue for the same period as labor data
         revenue_metrics = db.session.query(
             func.sum(DailyJourMetrics.total_revenue).label('revenue'),
             func.sum(DailyJourMetrics.total_rooms_sold).label('rooms_sold')
@@ -544,6 +547,8 @@ def labor_analytics():
 
         if year:
             revenue_metrics = revenue_metrics.filter(DailyJourMetrics.year == year)
+        elif labor_years:
+            revenue_metrics = revenue_metrics.filter(DailyJourMetrics.year.in_(labor_years))
 
         rev_data = revenue_metrics.first()
         total_revenue = rev_data.revenue or 0
@@ -665,8 +670,18 @@ def labor_analytics():
     # ───── OVERALL SUMMARY ─────
     total_labor_cost = sum(a['total_labor_cost'] for a in analytics)
     total_hours = sum(a['total_hours'] for a in analytics)
-    total_rooms_sold = db.session.query(func.sum(DailyJourMetrics.total_rooms_sold)).first()[0] or 0
-    total_revenue = db.session.query(func.sum(DailyJourMetrics.total_revenue)).first()[0] or 0
+
+    # Scope revenue queries to same years as labor data
+    rooms_q = db.session.query(func.sum(DailyJourMetrics.total_rooms_sold))
+    rev_q = db.session.query(func.sum(DailyJourMetrics.total_revenue))
+    if year:
+        rooms_q = rooms_q.filter(DailyJourMetrics.year == year)
+        rev_q = rev_q.filter(DailyJourMetrics.year == year)
+    elif labor_years:
+        rooms_q = rooms_q.filter(DailyJourMetrics.year.in_(labor_years))
+        rev_q = rev_q.filter(DailyJourMetrics.year.in_(labor_years))
+    total_rooms_sold = rooms_q.first()[0] or 0
+    total_revenue = rev_q.first()[0] or 0
 
     summary = {
         'total_departments': len(analytics),

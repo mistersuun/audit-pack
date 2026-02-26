@@ -1808,6 +1808,43 @@ const RECEPTIONNISTES = [
   'Emery Uwimana','Ramzi Ben Mansour','Annie-Lis Kasperian'
 ];
 
+// ═══════════════════════════════════════
+// AUTOCOMPLETE — Noms pour SD, SetD, HP Admin
+// ═══════════════════════════════════════
+const SD_DEPARTMENTS = ['Front Desk','Restaurant','Bar','Cuisine','Banquet','Entretien','Buanderie','Admin','Spa','Boutique','Réception'];
+const EMPLOYES_ALL = [...RECEPTIONNISTES, 'Petite Caisse','Conc. Banc.','Mixologue'];
+const HP_AUTORISATEURS = ['DG','GSM','Chef Cuisine','Maître D','Directeur F&B','Comptable','Revenue Manager'];
+const HP_RAISONS = ['Promotion','Gracieuseté','Employé','Client VIP','Erreur','Événement','Dégustation','Formation','Réunion'];
+
+function _attachAutocomplete(input, suggestions, saveSection) {
+  if (input._acAttached) return;
+  input._acAttached = true;
+  const dropdown = document.createElement('div');
+  dropdown.className = 'dueback-suggestions';
+  dropdown.style.cssText = 'display:none;position:absolute;z-index:999;background:#fff;border:1px solid var(--border);border-radius:var(--radius-xs);max-height:160px;overflow-y:auto;box-shadow:var(--shadow-md);width:200px;left:0;top:100%';
+  input.parentElement.style.position = 'relative';
+  input.parentElement.appendChild(dropdown);
+
+  function show() {
+    const val = input.value.toLowerCase().trim();
+    const matches = suggestions.filter(n => n.toLowerCase().includes(val)).slice(0, 8);
+    if (!matches.length || (matches.length === 1 && matches[0].toLowerCase() === val)) {
+      dropdown.style.display = 'none'; return;
+    }
+    dropdown.innerHTML = matches.map(n =>
+      `<div class="dueback-suggestion" style="padding:6px 8px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0" onmousedown="this.parentElement._input.value='${n.replace(/'/g,"\\'")}';this.parentElement.style.display='none';debounceSave('${saveSection}')">${
+        val ? n.replace(new RegExp('('+val.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'), '<strong>$1</strong>') : n
+      }</div>`
+    ).join('');
+    dropdown._input = input;
+    dropdown.style.display = 'block';
+  }
+
+  input.addEventListener('input', show);
+  input.addEventListener('focus', show);
+  input.addEventListener('blur', () => setTimeout(() => dropdown.style.display = 'none', 150));
+}
+
 function addDuebackRow(name='', prev=0, nouveau=0) {
   const container = $('#dueback-rows');
   const row = document.createElement('div');
@@ -2238,10 +2275,10 @@ function addSDRow(dept='', name='', currency='CDN', montant=0, verifie=0, remb=0
   const container = $('#sd-rows');
   const row = document.createElement('div');
   row.className = 'rjn-dueback-row';
-  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px;position:relative';
   row.innerHTML = `
-    <input type="text" class="sd-dept" placeholder="Dept" value="${dept}" style="flex:1.5;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px" oninput="debounceSave('sd')">
-    <input type="text" class="sd-name" placeholder="Nom" value="${name}" style="flex:2;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px" oninput="debounceSave('sd')">
+    <span style="flex:1.5;position:relative"><input type="text" class="sd-dept" placeholder="Dept" value="${dept}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px" autocomplete="off" oninput="debounceSave('sd')"></span>
+    <span style="flex:2;position:relative"><input type="text" class="sd-name" placeholder="Nom" value="${name}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px" autocomplete="off" oninput="debounceSave('sd')"></span>
     <select class="sd-currency" style="flex:0.7;padding:6px 4px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:center" onchange="debounceSave('sd')">
       <option value="CDN" ${currency==='CDN'?'selected':''}>CDN</option>
       <option value="US" ${currency==='US'?'selected':''}>US</option>
@@ -2253,6 +2290,9 @@ function addSDRow(dept='', name='', currency='CDN', montant=0, verifie=0, remb=0
     <button onclick="this.parentElement.remove();recalcSD()" style="width:28px;height:28px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:14px;line-height:1">×</button>
   `;
   container.appendChild(row);
+  // Attach autocomplete to dept and name fields
+  _attachAutocomplete(row.querySelector('.sd-dept'), SD_DEPARTMENTS, 'sd');
+  _attachAutocomplete(row.querySelector('.sd-name'), EMPLOYES_ALL, 'sd');
   recalcSD();
 }
 
@@ -2361,17 +2401,19 @@ function getDepotData() {
 function addSetDRow(name='', amount=0) {
   const container = $('#setd-personnel-rows');
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px';
+  row.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:4px;position:relative';
   row.innerHTML = `
-    <input type="text" class="setd-name" placeholder="Nom de l'employé" value="${name}"
-      style="flex:3;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px"
-      oninput="debounceSave('setd')">
+    <span style="flex:3;position:relative"><input type="text" class="setd-name" placeholder="Nom de l'employé" value="${name}"
+      style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px"
+      autocomplete="off" oninput="debounceSave('setd')"></span>
     <input type="number" step="0.01" class="setd-amount" value="${amount||''}" placeholder="0.00"
       style="flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:12px;text-align:right;font-family:var(--mono)"
       oninput="recalcSetD()">
     <button onclick="this.parentElement.remove();recalcSetD()" style="width:28px;height:28px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:14px;line-height:1">×</button>
   `;
   container.appendChild(row);
+  // Attach autocomplete to name field
+  _attachAutocomplete(row.querySelector('.setd-name'), EMPLOYES_ALL, 'setd');
 }
 
 function recalcSetD() {
@@ -2621,12 +2663,15 @@ function addHPRow(area='HP', nourriture=0, boisson=0, biere=0, vin=0, mineraux=0
     <input type="number" step="0.01" class="hp-min" value="${mineraux||''}" placeholder="Min" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
     <input type="number" step="0.01" class="hp-autre" value="${autre||''}" placeholder="Autre" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
     <input type="number" step="0.01" class="hp-pourb" value="${pourboire||''}" placeholder="Pourb" style="width:70px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px;text-align:right;font-family:var(--mono)" oninput="recalcHP()">
-    <input type="text" class="hp-raison" value="${raison}" placeholder="Raison" style="width:120px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" oninput="debounceSave('hp_admin')">
-    <input type="text" class="hp-autorise" value="${autorise}" placeholder="Autorisé" style="width:90px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" oninput="debounceSave('hp_admin')">
+    <span style="position:relative"><input type="text" class="hp-raison" value="${raison}" placeholder="Raison" style="width:120px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" autocomplete="off" oninput="debounceSave('hp_admin')"></span>
+    <span style="position:relative"><input type="text" class="hp-autorise" value="${autorise}" placeholder="Autorisé" style="width:90px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-xs);font-size:11px" autocomplete="off" oninput="debounceSave('hp_admin')"></span>
     <span class="hp-row-total" style="width:70px;text-align:right;font-family:var(--mono);font-size:11px;font-weight:600">$0</span>
     <button onclick="this.parentElement.remove();recalcHP()" style="width:24px;height:24px;border:none;background:var(--rose-bg);color:var(--rose);border-radius:var(--radius-xs);cursor:pointer;font-size:12px;line-height:1">×</button>
   `;
   container.appendChild(row);
+  // Attach autocomplete to raison and autorisé fields
+  _attachAutocomplete(row.querySelector('.hp-raison'), HP_RAISONS, 'hp_admin');
+  _attachAutocomplete(row.querySelector('.hp-autorise'), HP_AUTORISATEURS, 'hp_admin');
   recalcHP();
 }
 
