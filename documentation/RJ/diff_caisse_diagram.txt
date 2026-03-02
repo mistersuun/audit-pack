@@ -1,0 +1,147 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    DIFF.CAISSE DECOMPOSITION STRUCTURE                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌─ JOUR SHEET (Index 9) ─────────────────────────────────────────────────────┐
+│                                                                             │
+│  Column A: JOUR            Column B: bal.ouv      Column C: Diff.Caisse   │
+│  ─────────────             ──────────────         ────────────────         │
+│  Day 24                    -944,879.42           ┌─ 385.56 ─────────┐      │
+│                                                  │ (Total variance) │      │
+│                                                  └──────────────────┘      │
+│                                                           │                │
+└──────────────────────────────────────────────────────────┼────────────────┘
+                                                           │
+                                    ┌──────────────────────┘
+                                    │
+                                    ▼
+┌─ DIFF.CAISSE# SHEET (Index 4) ────────────────────────────────────────────┐
+│                                                                             │
+│  Row 25 (Day 24):                                                           │
+│  ═════════════════                                                          │
+│                                                                             │
+│  Col A (Jour):      24.0                                                    │
+│  Col B (Total):     385.56  ◄─── SOURCE: from Jour sheet Column C         │
+│                      │                                                      │
+│                      └─ DECOMPOSE INTO ──────────────────┐                │
+│                                                           │                │
+│     ┌─────────────────────────────────────────────────────┼────────────┐   │
+│     │                                                     │            │   │
+│  Col C    Col D    Col E  ...  Col AB   Col AL  ║  Col AM           │   │
+│  ─────    ─────    ─────       ─────    ─────   ║  ─────            │   │
+│  Adj 1    Adj 2    Adj 3  ...  Adj 36   [empty] ║  Remaining   ◄────┘   │
+│  [0]      [0]      [0]         [0]      [0]     ║  385.56 (unallocated) │
+│  ▲        ▲        ▲           ▲        ▲        ║  │                    │
+│  │        │        │           │        │        ║  │                    │
+│  └────────┴────────┴───────────┴────────┴────────╨──┴────────────────────┘
+│                              ▲
+│  ┌─ 36 ADJUSTMENT SLOTS ─────┘
+│  │
+│  └─ EMPTY (currently unused)
+│
+│     FORMULA:
+│     ════════
+│     Col B = SUM(Col C : Col AL) + Col AM
+│     385.56 = SUM(empty slots) + 385.56
+│     385.56 = 0 + 385.56  ✓ (balanced, but undecomposed)
+│
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                            MONTHLY SUMMARY (Feb 2026)                        ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+DIFF.CAISSE BY DAY
+══════════════════
+
+Days 1-10:
+  Day 1:  -$314.26    Day 2:   +$38.98    Day 3:  +$559.96    Day 4:   -$24.00
+  Day 5:   +$19.40    Day 6:  +$329.84    Day 7:  -$556.50    Day 8: -$1,428.12
+  Day 9: -$1,299.01   Day 10: +$1,009.74
+
+Days 11-20:
+  Day 11:  +$2,387.60  Day 12:   -$5.65   Day 13:  -$17.67   Day 14:  +$4.83
+  Day 15:   $0.00      Day 16: -$1,360.08  Day 17:  -$641.05  Day 18: +$1,000.85
+  Day 19:  +$20.00    Day 20:  -$296.07
+
+Days 21-25:
+  Day 21: -$2,634.12   Day 22: -$5,868.75  Day 23: -$1,692.93  Day 24: +$385.56
+  Day 25: +$866,165.21
+
+ANALYSIS
+════════
+Total Days Analyzed:           25
+Days with Discrepancies:       23 (92%)
+Days Balanced (Diff=0):        1 (Day 15)
+Days Nearly Balanced (|D|<$5): 2 (Days 14 & 12)
+
+Total Month Variance:    ±$854,837.54
+Largest Variance:        Day 25: +$866,165.21 ◄─ REQUIRES INVESTIGATION
+Most Common Issue:       Negative variances (13 days) vs positive (10 days)
+
+Allocation Status:
+  Days with Decompositions:  0 (0%)
+  Days with Full Allocation: 0 (0%)
+  Unallocated Balance:       ±$854,837.54 (100%)
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                      ADJUSTMENT ENTRY EXAMPLE (Day 24)                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+If auditor identifies causes for the +$385.56 discrepancy:
+
+  Entry 1:  Rounding error in Transelect reconciliation  → +$150.00 → Slot C
+  Entry 2:  Customer refund reversal (not applied)       → +$235.56 → Slot D
+  Remaining:                                                        → Slot AM
+
+Updated Row:
+  Col A (Jour):       24.0
+  Col B (Total):      385.56
+  Col C (Adj 1):      150.00
+  Col D (Adj 2):      235.56
+  Col E-AL:           [0]
+  Col AM (Remaining): 0.00  ◄─── GOAL: reduce to $0.00
+
+Verification:
+  385.56 = 150.00 + 235.56 + 0.00 ✓
+
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         IMPLEMENTATION ROADMAP                               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+Phase 1: Data Model
+  └─ Add to NightAuditSession:
+       • diff_caisse_adjustments (JSON: [{slot, reason, amount}, ...])
+       • OR: 36 scalar columns (diff_caisse_adj_01...36)
+       • diff_caisse_remaining (calculated)
+
+Phase 2: UI Components
+  └─ RJ Natif Tab: "Diff.Caisse" (new 15th tab)
+       • Display: Total Diff.Caisse from Jour
+       • Adjustment entry form (reason + amount)
+       • Slot allocation selector (36 options)
+       • Running balance tracker
+       • Edit/delete capability
+
+Phase 3: Business Logic
+  └─ recalcDiffCaisse() function:
+       • SUM all allocations
+       • Calculate remaining
+       • Validation: Diff.Caisse = SUM(allocations) + remaining
+       • Flag if remaining ≠ 0 for auditor review
+
+Phase 4: API Endpoints
+  └─ POST /save/diff_caisse
+       • Accept array of adjustment entries
+       • Validate and persist
+       • Recalculate remaining
+       • Return updated state
+
+Phase 5: Validation Rules
+  └─ In /calculate endpoint:
+       • Check: |remaining| ≤ $0.01 (acceptable tolerance)
+       • Warning: remaining > $0.01 (unresolved discrepancy)
+       • Summary table: show all entries by slot

@@ -1112,10 +1112,16 @@ class NightAuditSession(db.Model):
     audit_date = db.Column(db.Date, unique=True, nullable=False, index=True)
     property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
     auditor_name = db.Column(db.String(100))
-    status = db.Column(db.String(20), default='draft')  # draft|in_progress|submitted|locked
+    status = db.Column(db.String(20), default='draft')  # draft|in_progress|submitted|locked|correcting
     started_at = db.Column(db.DateTime, default=datetime.utcnow)
     completed_at = db.Column(db.DateTime, nullable=True)
     notes = db.Column(db.Text, default='')
+
+    # ── Correction tracking ──
+    correction_count = db.Column(db.Integer, default=0)
+    last_corrected_by = db.Column(db.String(100), nullable=True)
+    last_corrected_at = db.Column(db.DateTime, nullable=True)
+    correction_reason = db.Column(db.Text, nullable=True)
 
     # ── Contrôle ──
     temperature = db.Column(db.String(20), default='')
@@ -1335,6 +1341,7 @@ class NightAuditSession(db.Model):
     # ── Diff.Caisse# (Cash register variance by department/register) ──
     diff_caisse_entries = db.Column(db.Text, default='[]')  # [{register, system, physical, difference, notes}]
     diff_caisse_total = db.Column(db.Float, default=0)
+    diff_caisse_formula = db.Column(db.Float, default=0)  # Auto: -GEAC_UX + Transelect_Restaurant (Excel C column)
     diff_caisse_reconciled = db.Column(db.Boolean, default=False)
 
     # ── SOCAN (Music royalties — monthly tracking) ──
@@ -1367,6 +1374,49 @@ class NightAuditSession(db.Model):
     ristourne_total = db.Column(db.Float, default=0)
     ristourne_by_dept = db.Column(db.Text, default='{}')  # {ROOM: x, RESTAURANT: y, BAR: z, ...}
     ristourne_analysis_notes = db.Column(db.Text, default='')
+
+    # ── EJ (État Journalier — GL entries) ──
+    ej_entries = db.Column(db.Text, default='[]')  # [{gl_code, cc1, cc2, description1, description2, source, montant}]
+    ej_total = db.Column(db.Float, default=0)
+
+    # ── Salaires (Payroll hours by department) ──
+    salaires_data = db.Column(db.Text, default='{}')  # {dept: {position: {heures, heures_sup, taux, taux_sup, total}}}
+    salaires_total_heures = db.Column(db.Float, default=0)
+    salaires_total_montant = db.Column(db.Float, default=0)
+
+    # ── Nettoyeur (Housekeeping tips per employee per day) ──
+    nettoyeur_entries = db.Column(db.Text, default='[]')  # [{name, department, amounts: [day1..day31]}]
+    nettoyeur_total = db.Column(db.Float, default=0)
+
+    # ── Somm_Nettoyeur (Housekeeping summary) ──
+    somm_nettoyeur_data = db.Column(db.Text, default='{}')  # {day: {facture, client, rj, sv, a_payer, var_client, var_facture, remarques}}
+    somm_nettoyeur_distribution = db.Column(db.Text, default='[]')  # [{dept, code, brut, escompte, net, tps, tvq, total}]
+
+    # ── Auditeur (staff list) ──
+    auditeur_list = db.Column(db.Text, default='[]')  # ["name1", "name2", ...]
+
+    # ── RJ Rapport Principal (consolidated — mostly calculated) ──
+    rj_balance_ouverture = db.Column(db.Float, default=0)
+    rj_balance_fermeture = db.Column(db.Float, default=0)
+    rj_total_revenus = db.Column(db.Float, default=0)
+    rj_stats_data = db.Column(db.Text, default='{}')  # {complimentaire, hors_usage, disponible, louees, occ_pct, ...}
+    rj_cards_summary = db.Column(db.Text, default='{}')  # {amex: {count, escompte_pct, net}, visa: {...}, ...}
+
+    # ── Rapp_p1/p2/p3 (Management reports — calculated) ──
+    rapp_p1_data = db.Column(db.Text, default='{}')  # Cached report data
+    rapp_p2_data = db.Column(db.Text, default='{}')
+    rapp_p3_data = db.Column(db.Text, default='{}')
+
+    # ── Etat Rev (Revenue statement — calculated) ──
+    etat_rev_data = db.Column(db.Text, default='{}')
+
+    # ── Budget (reference data) ──
+    budget_data = db.Column(db.Text, default='{}')  # {chambre: amount, nour_piazza: amount, ...}
+
+    # ── Analyse GL accounts ──
+    analyse_101100_entries = db.Column(db.Text, default='[]')  # [{date, description, dt, ct, solde, correction}]
+    analyse_100401_entries = db.Column(db.Text, default='[]')  # [{date, description, dt, ct, solde, correction}]
+    autre_gl_data = db.Column(db.Text, default='{}')  # {gl_code: {name, entries: [{date, amount}]}}
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -1496,6 +1546,16 @@ class NightAuditSession(db.Model):
         total_fb += (self.jour_pourboires or 0) + (self.jour_tabagie or 0) + (self.jour_location_salle or 0)
         # Tabagie adjustment
         total_fb += (self.jour_adj_tabagie or 0)
+
+        # Soustraire déductions HP/Admin du total F&B (comme dans l'Excel RJ)
+        # Les entrées HP représentent des promotions hôtel / repas gratuits à déduire du revenu F&B
+        hp_entries_for_fb = self.get_json('hp_admin_entries')
+        if isinstance(hp_entries_for_fb, list):
+            for e in hp_entries_for_fb:
+                hp_amt = sum(e.get(f, 0) or 0 for f in
+                            ['nourriture', 'boisson', 'biere', 'vin', 'mineraux', 'autre', 'pourboire'])
+                total_fb -= hp_amt
+
         self.jour_total_fb = round(total_fb, 2)
 
         # G4 is added to room revenue (Daily Rev doesn't include it)
@@ -1583,6 +1643,24 @@ class NightAuditSession(db.Model):
             (self.gl_100401_previous or 0) + (self.gl_100401_additions or 0)
             - (self.gl_100401_deductions or 0) - (self.gl_100401_new_balance or 0), 2)
 
+        # 14B. Diff.Caisse formula: C = -GEAC_UX + Transelect_Restaurant
+        # GEAC_UX (D41 in Excel) = total from geac_daily_rev (all card types)
+        # Transelect_Restaurant (X20 in Excel) = sum of restaurant terminal card settlements
+        geac_ux = self.get_json('geac_daily_rev')
+        geac_ux_total = sum(v or 0 for v in geac_ux.values()) if isinstance(geac_ux, dict) else 0
+
+        trans_rest = self.get_json('transelect_restaurant')
+        trans_rest_total = 0
+        if isinstance(trans_rest, dict):
+            for terminal_key, terminal_data in trans_rest.items():
+                if isinstance(terminal_data, dict):
+                    trans_rest_total += sum(
+                        v or 0 for v in terminal_data.values()
+                        if isinstance(v, (int, float))
+                    )
+
+        self.diff_caisse_formula = round(-geac_ux_total + trans_rest_total, 2)
+
         # 15. Diff.Caisse total
         dc = self.get_json('diff_caisse_entries')
         if isinstance(dc, list):
@@ -1630,6 +1708,43 @@ class NightAuditSession(db.Model):
             (self.socan_allocation_resto or 0) + (self.socan_allocation_bar or 0)
             + (self.socan_allocation_banquet or 0), 2)
 
+        # 22. EJ total (sum of montant from ej_entries)
+        ej = self.get_json('ej_entries')
+        if isinstance(ej, list):
+            self.ej_total = round(sum(e.get('montant', 0) or 0 for e in ej), 2)
+
+        # 23. Salaires totals (from salaires_data)
+        sal = self.get_json('salaires_data')
+        if isinstance(sal, dict):
+            total_heures = 0
+            total_montant = 0
+            for dept_data in sal.values():
+                if isinstance(dept_data, dict):
+                    for pos_data in dept_data.values():
+                        if isinstance(pos_data, dict):
+                            total_heures += (pos_data.get('heures', 0) or 0)
+                            total_heures += (pos_data.get('heures_sup', 0) or 0)
+                            total_montant += (pos_data.get('total', 0) or 0)
+            self.salaires_total_heures = round(total_heures, 2)
+            self.salaires_total_montant = round(total_montant, 2)
+
+        # 24. Nettoyeur total (sum of amounts from nettoyeur_entries)
+        nett = self.get_json('nettoyeur_entries')
+        if isinstance(nett, list):
+            total = 0
+            for entry in nett:
+                if isinstance(entry, dict) and 'amounts' in entry:
+                    amounts = entry.get('amounts', [])
+                    if isinstance(amounts, list):
+                        total += sum(a for a in amounts if isinstance(a, (int, float)))
+            self.nettoyeur_total = round(total, 2)
+
+        # 25. Somm_Nettoyeur (no calculation needed, stored as-is)
+        # Data is stored in somm_nettoyeur_data and somm_nettoyeur_distribution
+
+        # 26. Auditeur (no calculation needed)
+        # Data is stored in auditeur_list
+
         # Overall
         self.is_fully_balanced = (self.is_recap_balanced and
                                   self.is_transelect_balanced and
@@ -1651,10 +1766,16 @@ class NightAuditSession(db.Model):
                        'jour_adj_notes',
                        'diff_caisse_entries', 'resonne_entries', 'vestiaire_entries',
                        'admin_entries', 'massage_entries', 'ristourne_entries',
-                       'ristourne_by_dept']
+                       'ristourne_by_dept', 'ej_entries', 'salaires_data', 'nettoyeur_entries',
+                       'somm_nettoyeur_data', 'somm_nettoyeur_distribution', 'auditeur_list',
+                       'rj_stats_data', 'rj_cards_summary', 'rapp_p1_data', 'rapp_p2_data',
+                       'rapp_p3_data', 'etat_rev_data', 'budget_data', 'analyse_101100_entries',
+                       'analyse_100401_entries', 'autre_gl_data']
         list_json_fields = ('dueback_entries', 'sd_entries', 'setd_personnel', 'hp_admin_entries', 'jour_adj_notes',
                             'diff_caisse_entries', 'resonne_entries', 'vestiaire_entries',
-                            'admin_entries', 'massage_entries', 'ristourne_entries')
+                            'admin_entries', 'massage_entries', 'ristourne_entries', 'ej_entries',
+                            'nettoyeur_entries', 'somm_nettoyeur_distribution', 'auditeur_list',
+                            'analyse_101100_entries', 'analyse_100401_entries')
         for jf in json_fields:
             try:
                 raw = d.get(jf) or ('[]' if jf in list_json_fields else '{}')
@@ -2016,4 +2137,38 @@ class OTBForecast(db.Model):
             'ly_occ': self.ly_occ,
             'ly_adr': self.ly_adr,
             'ly_revenue': self.ly_revenue,
+        }
+
+
+# ==============================================================================
+# SESSION EDIT LOG — Correction audit trail
+# ==============================================================================
+
+class SessionEditLog(db.Model):
+    """Tracks every field change made during a correction session."""
+    __tablename__ = 'session_edit_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    audit_date = db.Column(db.Date, nullable=False, index=True)
+    section = db.Column(db.String(30), nullable=False)       # e.g. 'recap', 'transelect', 'jour'
+    field_name = db.Column(db.String(100), nullable=False)    # e.g. 'cash_ls_lecture'
+    old_value = db.Column(db.Text, nullable=True)
+    new_value = db.Column(db.Text, nullable=True)
+    edited_by = db.Column(db.String(100), nullable=True)
+    edited_at = db.Column(db.DateTime, default=datetime.utcnow)
+    correction_round = db.Column(db.Integer, default=1)       # Which correction pass
+    note = db.Column(db.Text, nullable=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'audit_date': self.audit_date.isoformat() if self.audit_date else None,
+            'section': self.section,
+            'field_name': self.field_name,
+            'old_value': self.old_value,
+            'new_value': self.new_value,
+            'edited_by': self.edited_by,
+            'edited_at': self.edited_at.isoformat() if self.edited_at else None,
+            'correction_round': self.correction_round,
+            'note': self.note,
         }

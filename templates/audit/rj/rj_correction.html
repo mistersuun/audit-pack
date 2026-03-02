@@ -1,0 +1,732 @@
+{% extends "base.html" %}
+{% block title %}Correction RJ{% endblock %}
+
+{% block head %}
+<style>
+/* ═══════════════════════════════════════
+   CORRECTION MODULE — Design System
+   ═══════════════════════════════════════ */
+.cor{
+  --primary:#6366f1;--primary-bg:rgba(99,102,241,0.08);
+  --emerald:#10b981;--emerald-bg:rgba(16,185,129,0.08);
+  --rose:#ef4444;--rose-bg:rgba(239,68,68,0.08);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.08);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.08);
+  --pink:#e11d48;--pink-bg:rgba(225,29,72,0.08);
+  --card:#fff;--bg:#f8f9fb;--border:#e5e7eb;
+  --text:#1a1a2e;--text-sec:#6b7280;--text-muted:#9ca3af;
+  --radius:14px;--radius-sm:10px;--radius-xs:6px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08);
+  --mono:'JetBrains Mono','Fira Code',monospace;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+  padding:1.5rem 2rem 3rem;max-width:1300px;margin:0 auto;
+  font-family:'Inter',system-ui,sans-serif;
+}
+
+/* Header */
+.cor-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:24px;
+}
+.cor-header h1{font-size:1.4rem;font-weight:800;color:var(--text);margin:0;display:flex;align-items:center;gap:10px}
+.cor-header h1 .icon{color:var(--pink);font-size:1.6rem}
+.cor-subtitle{font-size:13px;color:var(--text-muted);margin-top:2px}
+.cor-back{
+  padding:8px 18px;border:1px solid var(--border);border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;cursor:pointer;background:var(--card);
+  color:var(--text-sec);text-decoration:none;display:inline-flex;align-items:center;gap:6px;
+  transition:all .2s;
+}
+.cor-back:hover{border-color:var(--primary);color:var(--primary)}
+
+/* Session picker */
+.cor-picker{
+  display:flex;gap:12px;align-items:center;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px 20px;margin-bottom:20px;box-shadow:var(--shadow);
+}
+.cor-picker label{font-size:13px;font-weight:600;color:var(--text)}
+.cor-picker input[type="date"]{
+  padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  font-size:14px;font-family:var(--mono);color:var(--text);
+}
+.cor-picker input[type="date"]:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+.cor-btn{
+  padding:8px 20px;border:none;border-radius:var(--radius-sm);
+  font-size:13px;font-weight:600;cursor:pointer;
+  transition:all .2s var(--ease);font-family:inherit;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.cor-btn.primary{background:var(--primary);color:#fff}
+.cor-btn.primary:hover{opacity:.9;transform:translateY(-1px)}
+.cor-btn.danger{background:var(--rose);color:#fff}
+.cor-btn.danger:hover{opacity:.9}
+.cor-btn.success{background:var(--emerald);color:#fff}
+.cor-btn.success:hover{opacity:.9}
+.cor-btn.outline{background:transparent;border:1px solid var(--border);color:var(--text-sec)}
+.cor-btn.outline:hover{border-color:var(--primary);color:var(--primary)}
+.cor-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* Session info banner */
+.cor-banner{
+  display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;
+  margin-bottom:24px;
+}
+.cor-stat{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+}
+.cor-stat::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.cor-stat.ok::before{background:var(--emerald)}
+.cor-stat.error::before{background:var(--rose)}
+.cor-stat.warning::before{background:var(--amber)}
+.cor-stat.info::before{background:var(--blue)}
+.cor-stat.correcting::before{background:var(--pink)}
+.cor-stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:6px}
+.cor-stat-value{font-size:20px;font-weight:700;color:var(--text);font-family:var(--mono)}
+.cor-stat-sub{font-size:11px;color:var(--text-sec);margin-top:4px}
+
+/* Two-column layout */
+.cor-grid{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
+@media(max-width:1100px){.cor-grid{grid-template-columns:1fr}}
+
+/* Diagnostic cards */
+.cor-diag{display:flex;flex-direction:column;gap:14px}
+.cor-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow);
+  transition:border-color .2s, box-shadow .2s;
+}
+.cor-card:hover{box-shadow:var(--shadow-md)}
+.cor-card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;cursor:pointer;user-select:none;
+}
+.cor-card-head:hover{background:var(--bg)}
+.cor-card-title{
+  font-size:14px;font-weight:700;color:var(--text);
+  display:flex;align-items:center;gap:8px;
+}
+.cor-card-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+  font-family:var(--mono);
+}
+.cor-card-badge.ok{color:var(--emerald);background:var(--emerald-bg)}
+.cor-card-badge.error{color:var(--rose);background:var(--rose-bg)}
+.cor-card-badge.warning{color:var(--amber);background:var(--amber-bg)}
+.cor-card-badge.info{color:var(--blue);background:var(--blue-bg)}
+.cor-card-chevron{color:var(--text-muted);transition:transform .2s}
+.cor-card.open .cor-card-chevron{transform:rotate(180deg)}
+.cor-card-body{
+  display:none;padding:0 18px 16px;
+  border-top:1px solid var(--border);
+}
+.cor-card.open .cor-card-body{display:block;padding-top:14px}
+
+/* Detail table inside card */
+.cor-detail{width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:10px}
+.cor-detail th{
+  text-align:left;padding:6px 10px;font-size:10px;font-weight:600;
+  text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
+  border-bottom:1px solid var(--border);
+}
+.cor-detail td{padding:6px 10px;color:var(--text);border-bottom:1px solid rgba(0,0,0,0.04)}
+.cor-detail td.num{text-align:right;font-family:var(--mono);font-size:12px}
+.cor-detail tr:last-child td{border-bottom:none}
+
+.cor-explain{
+  font-size:12px;color:var(--text-sec);line-height:1.5;
+  padding:10px 14px;background:var(--bg);border-radius:var(--radius-xs);
+  border-left:3px solid var(--primary);
+}
+
+/* Sidebar: history + actions */
+.cor-sidebar{display:flex;flex-direction:column;gap:14px}
+
+.cor-action-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow);
+}
+.cor-action-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+
+/* Unlock form */
+.cor-unlock-form textarea{
+  width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  font-size:13px;font-family:inherit;resize:vertical;min-height:70px;
+  color:var(--text);margin-bottom:12px;box-sizing:border-box;
+}
+.cor-unlock-form textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-bg)}
+
+/* Timeline */
+.cor-timeline{list-style:none;padding:0;margin:0;position:relative}
+.cor-timeline::before{
+  content:'';position:absolute;left:11px;top:8px;bottom:8px;
+  width:2px;background:var(--border);
+}
+.cor-timeline-item{display:flex;gap:12px;padding:8px 0;position:relative}
+.cor-timeline-dot{
+  width:24px;height:24px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;background:var(--card);border:2px solid var(--border);z-index:1;
+}
+.cor-timeline-dot.system{border-color:var(--primary);color:var(--primary)}
+.cor-timeline-dot.snapshot{border-color:var(--amber);color:var(--amber)}
+.cor-timeline-dot.field{border-color:var(--blue);color:var(--blue)}
+.cor-timeline-body{flex:1;min-width:0}
+.cor-timeline-title{font-size:12px;font-weight:600;color:var(--text)}
+.cor-timeline-meta{font-size:10px;color:var(--text-muted);margin-top:2px}
+.cor-timeline-detail{font-size:11px;color:var(--text-sec);margin-top:3px;font-family:var(--mono)}
+
+/* Session list (recent locked sessions) */
+.cor-session-list{list-style:none;padding:0;margin:0}
+.cor-session-item{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid rgba(0,0,0,0.04);
+  cursor:pointer;transition:background .15s;border-radius:var(--radius-xs);
+}
+.cor-session-item:hover{background:var(--primary-bg)}
+.cor-session-item.active{background:var(--primary-bg);border-left:3px solid var(--primary)}
+.cor-session-date{font-size:13px;font-weight:600;color:var(--text);font-family:var(--mono)}
+.cor-session-auditor{font-size:11px;color:var(--text-muted)}
+.cor-session-status{
+  font-size:10px;font-weight:600;padding:2px 8px;border-radius:12px;
+}
+.cor-session-status.locked{color:var(--emerald);background:var(--emerald-bg)}
+.cor-session-status.correcting{color:var(--pink);background:var(--pink-bg)}
+
+/* Empty state */
+.cor-empty{
+  text-align:center;padding:48px 20px;color:var(--text-muted);
+}
+.cor-empty-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.cor-empty-text{font-size:14px}
+
+/* Toast */
+.cor-toast{
+  position:fixed;bottom:24px;right:24px;z-index:1000;
+  padding:12px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;
+  box-shadow:var(--shadow-md);transform:translateY(100px);opacity:0;
+  transition:all .3s var(--ease);pointer-events:none;
+}
+.cor-toast.show{transform:translateY(0);opacity:1}
+.cor-toast.success{background:var(--emerald);color:#fff}
+.cor-toast.error{background:var(--rose);color:#fff}
+
+/* Loading spinner */
+.cor-spinner{
+  display:inline-block;width:16px;height:16px;
+  border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;
+  border-radius:50%;animation:cor-spin .6s linear infinite;
+}
+@keyframes cor-spin{to{transform:rotate(360deg)}}
+
+/* Link to RJ */
+.cor-link-rj{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:var(--radius-xs);
+  font-size:12px;font-weight:600;color:var(--primary);
+  background:var(--primary-bg);text-decoration:none;
+  transition:all .2s;
+}
+.cor-link-rj:hover{background:var(--primary);color:#fff}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cor">
+  <!-- Header -->
+  <div class="cor-header">
+    <div>
+      <h1><span class="icon">🔍</span> Module de Correction</h1>
+      <div class="cor-subtitle">Diagnostic de variance et correction des sessions verrouillées</div>
+    </div>
+    <a href="/rj/native" class="cor-back">
+      <i data-feather="arrow-left" style="width:14px;height:14px"></i> Retour au RJ
+    </a>
+  </div>
+
+  <!-- Session picker -->
+  <div class="cor-picker">
+    <label>Session du</label>
+    <input type="date" id="cor-date" onchange="loadDiagnostic()">
+    <button class="cor-btn primary" onclick="loadDiagnostic()">
+      <i data-feather="search" style="width:14px;height:14px"></i> Analyser
+    </button>
+    <div style="flex:1"></div>
+    <span id="cor-status-badge" style="display:none"></span>
+  </div>
+
+  <!-- Stats banner -->
+  <div class="cor-banner" id="cor-banner" style="display:none">
+    <div class="cor-stat" id="stat-recap">
+      <div class="cor-stat-label">Recap Balance</div>
+      <div class="cor-stat-value" id="stat-recap-val">—</div>
+      <div class="cor-stat-sub">Tolérance: ±$0.02</div>
+    </div>
+    <div class="cor-stat" id="stat-quasi">
+      <div class="cor-stat-label">Quasimodo</div>
+      <div class="cor-stat-value" id="stat-quasi-val">—</div>
+      <div class="cor-stat-sub">Tolérance: ±$0.02</div>
+    </div>
+    <div class="cor-stat" id="stat-diffcaisse">
+      <div class="cor-stat-label">Diff.Caisse</div>
+      <div class="cor-stat-value" id="stat-dc-val">—</div>
+      <div class="cor-stat-sub">-GEAC_UX + Trans_Rest</div>
+    </div>
+    <div class="cor-stat" id="stat-corrections">
+      <div class="cor-stat-label">Corrections</div>
+      <div class="cor-stat-value" id="stat-cor-val">0</div>
+      <div class="cor-stat-sub" id="stat-cor-sub">Aucune correction</div>
+    </div>
+  </div>
+
+  <!-- Main grid: diagnostic + sidebar -->
+  <div class="cor-grid" id="cor-main" style="display:none">
+    <!-- Left: Diagnostic cards -->
+    <div class="cor-diag" id="cor-diag-list">
+      <!-- Filled by JS -->
+    </div>
+
+    <!-- Right: Actions + History -->
+    <div class="cor-sidebar">
+      <!-- Actions card -->
+      <div class="cor-action-card" id="cor-actions">
+        <div class="cor-action-title">
+          <i data-feather="unlock" style="width:16px;height:16px;color:var(--pink)"></i>
+          Actions
+        </div>
+        <div id="cor-action-content">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Recent sessions card -->
+      <div class="cor-action-card">
+        <div class="cor-action-title">
+          <i data-feather="clock" style="width:16px;height:16px;color:var(--blue)"></i>
+          Sessions récentes
+        </div>
+        <ul class="cor-session-list" id="cor-recent">
+          <li class="cor-empty"><div class="cor-empty-text">Chargement...</div></li>
+        </ul>
+      </div>
+
+      <!-- History card -->
+      <div class="cor-action-card" id="cor-history-card">
+        <div class="cor-action-title">
+          <i data-feather="git-commit" style="width:16px;height:16px;color:var(--amber)"></i>
+          Historique des modifications
+        </div>
+        <ul class="cor-timeline" id="cor-timeline">
+          <li class="cor-empty"><div class="cor-empty-text">Aucune modification</div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state (before date selection) -->
+  <div class="cor-empty" id="cor-empty">
+    <div class="cor-empty-icon">📋</div>
+    <div class="cor-empty-text">Sélectionne une date pour analyser la session d'audit</div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="cor-toast" id="cor-toast"></div>
+
+<script>
+// ═══════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════
+let COR_SESSION = null;
+let COR_DIAGNOSTIC = null;
+const fmt = v => '$' + (v||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const fmtSign = v => (v >= 0 ? '+' : '') + fmt(v);
+
+// ═══════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+  loadRecentSessions();
+
+  // Pre-fill date from URL hash
+  const hash = location.hash.replace('#', '');
+  if(hash) {
+    document.getElementById('cor-date').value = hash;
+    loadDiagnostic();
+  }
+});
+
+// ═══════════════════════════════════════
+// LOAD DIAGNOSTIC
+// ═══════════════════════════════════════
+async function loadDiagnostic() {
+  const dateVal = document.getElementById('cor-date').value;
+  if(!dateVal) return;
+
+  try {
+    const r = await fetch(`/api/rj/correction/diagnostic/${dateVal}`);
+    if(!r.ok) {
+      const e = await r.json();
+      showToast(e.error || 'Erreur', 'error');
+      return;
+    }
+    const data = await r.json();
+    COR_SESSION = data.session;
+    COR_DIAGNOSTIC = data.diagnostic;
+
+    location.hash = dateVal;
+    renderBanner(data);
+    renderDiagnosticCards(data.diagnostic);
+    renderActions(data);
+    loadHistory(dateVal);
+
+    document.getElementById('cor-banner').style.display = 'grid';
+    document.getElementById('cor-main').style.display = 'grid';
+    document.getElementById('cor-empty').style.display = 'none';
+
+    // Highlight in recent list
+    document.querySelectorAll('.cor-session-item').forEach(el => {
+      el.classList.toggle('active', el.dataset.date === dateVal);
+    });
+
+    feather.replace();
+  } catch(err) {
+    showToast('Erreur de connexion', 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER BANNER
+// ═══════════════════════════════════════
+function renderBanner(data) {
+  const s = data.session;
+  const recapBal = s.recap_balance || 0;
+  const quasiVar = s.quasi_variance || 0;
+  const diffCaisse = s.diff_caisse_formula || 0;
+  const corCount = data.correction_count || 0;
+
+  setStatCard('stat-recap', recapBal, 0.02);
+  document.getElementById('stat-recap-val').textContent = fmtSign(recapBal);
+
+  setStatCard('stat-quasi', quasiVar, 0.02);
+  document.getElementById('stat-quasi-val').textContent = fmtSign(quasiVar);
+
+  const dcStatus = Math.abs(diffCaisse) < 1 ? 'ok' : 'warning';
+  document.getElementById('stat-diffcaisse').className = 'cor-stat ' + dcStatus;
+  document.getElementById('stat-dc-val').textContent = fmtSign(diffCaisse);
+
+  const corEl = document.getElementById('stat-corrections');
+  corEl.className = 'cor-stat ' + (s.status === 'correcting' ? 'correcting' : 'info');
+  document.getElementById('stat-cor-val').textContent = corCount;
+  document.getElementById('stat-cor-sub').textContent =
+    corCount === 0 ? 'Aucune correction' :
+    `Dernière: ${data.session.last_corrected_by || '?'}`;
+
+  // Status badge
+  const badge = document.getElementById('cor-status-badge');
+  badge.style.display = 'inline-flex';
+  badge.className = 'cor-session-status ' + s.status;
+  badge.textContent = s.status === 'locked' ? '🔒 Verrouillée' :
+                      s.status === 'correcting' ? '🔓 En correction' :
+                      s.status;
+}
+
+function setStatCard(id, value, tolerance) {
+  const el = document.getElementById(id);
+  if(Math.abs(value) < tolerance) el.className = 'cor-stat ok';
+  else if(Math.abs(value) < 1) el.className = 'cor-stat warning';
+  else el.className = 'cor-stat error';
+}
+
+// ═══════════════════════════════════════
+// RENDER DIAGNOSTIC CARDS
+// ═══════════════════════════════════════
+function renderDiagnosticCards(sections) {
+  const container = document.getElementById('cor-diag-list');
+  container.innerHTML = '';
+
+  sections.forEach((sec, i) => {
+    const card = document.createElement('div');
+    card.className = 'cor-card' + (sec.status === 'error' ? ' open' : '');
+    card.innerHTML = `
+      <div class="cor-card-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="cor-card-title">
+          ${getStatusIcon(sec.status)} ${sec.title}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="cor-card-badge ${sec.status}">
+            ${sec.tolerance !== null ? fmtSign(sec.variance) : (sec.id === 'hp_admin' ? fmt(sec.variance) : '—')}
+          </span>
+          <svg class="cor-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="cor-card-body">
+        ${renderDetailTable(sec)}
+        <div class="cor-explain">${sec.explanation}</div>
+        ${sec.id !== 'jour' && sec.id !== 'sd' ? `
+        <div style="margin-top:10px;text-align:right">
+          <a href="/rj/native#${sec.id}" class="cor-link-rj">
+            <i data-feather="edit-2" style="width:12px;height:12px"></i>
+            Ouvrir dans le RJ
+          </a>
+        </div>` : ''}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function getStatusIcon(status) {
+  switch(status) {
+    case 'ok': return '<span style="color:var(--emerald)">✓</span>';
+    case 'error': return '<span style="color:var(--rose)">✗</span>';
+    case 'warning': return '<span style="color:var(--amber)">⚠</span>';
+    default: return '<span style="color:var(--blue)">ℹ</span>';
+  }
+}
+
+function renderDetailTable(sec) {
+  if(!sec.items || sec.items.length === 0) return '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Aucune donnée</div>';
+
+  // Quasimodo has special columns (fb, rec, diff)
+  if(sec.id === 'quasimodo') {
+    let html = '<table class="cor-detail"><thead><tr><th>Carte</th><th style="text-align:right">F&B (POS)</th><th style="text-align:right">Réception (Bank)</th><th style="text-align:right">Écart</th></tr></thead><tbody>';
+    sec.items.forEach(item => {
+      const diffClass = Math.abs(item.diff) > 0.01 ? 'color:var(--rose)' : '';
+      html += `<tr><td>${item.label}</td><td class="num">${fmt(item.fb)}</td><td class="num">${fmt(item.rec)}</td><td class="num" style="${diffClass}">${fmtSign(item.diff)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // Recap has lecture/correction/net
+  if(sec.id === 'recap') {
+    let html = '<table class="cor-detail"><thead><tr><th>Ligne</th><th style="text-align:right">Lecture</th><th style="text-align:right">Correction</th><th style="text-align:right">Net</th></tr></thead><tbody>';
+    sec.items.forEach(item => {
+      html += `<tr><td>${item.label}</td><td class="num">${fmt(item.lecture)}</td><td class="num">${fmt(item.correction)}</td><td class="num">${fmt(item.net)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  // Default: label + value
+  let html = '<table class="cor-detail"><thead><tr><th>Élément</th><th style="text-align:right">Valeur</th></tr></thead><tbody>';
+  sec.items.forEach(item => {
+    const val = typeof item.value === 'string' ? item.value : fmt(item.value);
+    html += `<tr><td>${item.label}</td><td class="num">${val}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// ═══════════════════════════════════════
+// RENDER ACTIONS
+// ═══════════════════════════════════════
+function renderActions(data) {
+  const container = document.getElementById('cor-action-content');
+  const s = data.session;
+
+  if(s.status === 'locked') {
+    container.innerHTML = `
+      <div class="cor-unlock-form">
+        <p style="font-size:13px;color:var(--text-sec);margin:0 0 12px">
+          Déverrouiller cette session pour modifier les valeurs et corriger les écarts.
+        </p>
+        <textarea id="unlock-reason" placeholder="Raison de la correction (ex: erreur de saisie cash POS, HP manquant...)"></textarea>
+        <button class="cor-btn danger" onclick="unlockSession()" style="width:100%">
+          <i data-feather="unlock" style="width:14px;height:14px"></i>
+          Déverrouiller pour correction
+        </button>
+      </div>
+    `;
+  } else if(s.status === 'correcting') {
+    container.innerHTML = `
+      <p style="font-size:13px;color:var(--pink);font-weight:600;margin:0 0 8px">
+        🔓 Session en cours de correction
+      </p>
+      <p style="font-size:12px;color:var(--text-sec);margin:0 0 4px">
+        Raison: ${data.correction_reason || '—'}
+      </p>
+      <p style="font-size:12px;color:var(--text-sec);margin:0 0 14px">
+        Par: ${s.last_corrected_by || '?'} — Ronde #${data.correction_count}
+      </p>
+      <a href="/rj/native#controle" class="cor-link-rj" style="width:100%;justify-content:center;margin-bottom:10px;padding:10px">
+        <i data-feather="edit" style="width:14px;height:14px"></i>
+        Ouvrir le RJ pour corriger
+      </a>
+      <button class="cor-btn success" onclick="relockSession()" style="width:100%;margin-top:6px">
+        <i data-feather="lock" style="width:14px;height:14px"></i>
+        Reverrouiller la session
+      </button>
+    `;
+  } else {
+    container.innerHTML = `
+      <p style="font-size:13px;color:var(--text-sec)">
+        Cette session est en statut <strong>${s.status}</strong>. Les corrections ne s'appliquent qu'aux sessions verrouillées.
+      </p>
+    `;
+  }
+  feather.replace();
+}
+
+// ═══════════════════════════════════════
+// UNLOCK / RELOCK
+// ═══════════════════════════════════════
+async function unlockSession() {
+  const dateVal = document.getElementById('cor-date').value;
+  const reason = document.getElementById('unlock-reason')?.value || '';
+  if(!reason.trim()) {
+    showToast('Indique une raison pour la correction', 'error');
+    return;
+  }
+
+  try {
+    const r = await fetch(`/api/rj/correction/unlock/${dateVal}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({reason})
+    });
+    const d = await r.json();
+    if(d.success) {
+      showToast('Session déverrouillée', 'success');
+      loadDiagnostic();
+      loadRecentSessions();
+    } else {
+      showToast(d.error || 'Erreur', 'error');
+    }
+  } catch(e) {
+    showToast('Erreur de connexion', 'error');
+  }
+}
+
+async function relockSession() {
+  const dateVal = document.getElementById('cor-date').value;
+  try {
+    const r = await fetch(`/api/rj/correction/relock/${dateVal}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({})
+    });
+    const d = await r.json();
+    if(d.success) {
+      showToast('Session reverrouillée ✓', 'success');
+      loadDiagnostic();
+      loadRecentSessions();
+    } else {
+      showToast(d.error || 'Erreur', 'error');
+    }
+  } catch(e) {
+    showToast('Erreur de connexion', 'error');
+  }
+}
+
+// ═══════════════════════════════════════
+// HISTORY TIMELINE
+// ═══════════════════════════════════════
+async function loadHistory(dateVal) {
+  try {
+    const r = await fetch(`/api/rj/correction/history/${dateVal}`);
+    const d = await r.json();
+    renderTimeline(d.history || []);
+  } catch(e) {
+    // silent
+  }
+}
+
+function renderTimeline(history) {
+  const tl = document.getElementById('cor-timeline');
+  if(!history.length) {
+    tl.innerHTML = '<li class="cor-empty"><div class="cor-empty-text" style="font-size:12px">Aucune modification enregistrée</div></li>';
+    return;
+  }
+
+  tl.innerHTML = '';
+  history.forEach(h => {
+    const li = document.createElement('li');
+    li.className = 'cor-timeline-item';
+
+    let dotClass = 'field';
+    let icon = '✏';
+    if(h.section === 'system') { dotClass = 'system'; icon = '⚡'; }
+    else if(h.section === 'snapshot') { dotClass = 'snapshot'; icon = '📸'; }
+
+    const time = h.edited_at ? new Date(h.edited_at).toLocaleString('fr-CA', {
+      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    }) : '';
+
+    let detail = '';
+    if(h.old_value && h.new_value) {
+      detail = `<div class="cor-timeline-detail">${h.old_value} → ${h.new_value}</div>`;
+    } else if(h.old_value && h.section === 'snapshot') {
+      detail = `<div class="cor-timeline-detail">Valeur: ${h.old_value}</div>`;
+    }
+
+    li.innerHTML = `
+      <div class="cor-timeline-dot ${dotClass}">${icon}</div>
+      <div class="cor-timeline-body">
+        <div class="cor-timeline-title">${h.note || `${h.section}.${h.field_name}`}</div>
+        <div class="cor-timeline-meta">${h.edited_by || '?'} · ${time} · Ronde #${h.correction_round}</div>
+        ${detail}
+      </div>
+    `;
+    tl.appendChild(li);
+  });
+}
+
+// ═══════════════════════════════════════
+// RECENT SESSIONS
+// ═══════════════════════════════════════
+async function loadRecentSessions() {
+  try {
+    const r = await fetch('/api/rj/correction/sessions');
+    const d = await r.json();
+    const list = document.getElementById('cor-recent');
+    if(!d.sessions || !d.sessions.length) {
+      list.innerHTML = '<li class="cor-empty"><div class="cor-empty-text" style="font-size:12px">Aucune session verrouillée</div></li>';
+      return;
+    }
+
+    list.innerHTML = '';
+    d.sessions.slice(0, 15).forEach(s => {
+      const li = document.createElement('li');
+      li.className = 'cor-session-item';
+      li.dataset.date = s.audit_date;
+      li.onclick = () => {
+        document.getElementById('cor-date').value = s.audit_date;
+        loadDiagnostic();
+      };
+
+      const hasVariance = Math.abs(s.recap_balance) > 0.02 || Math.abs(s.quasi_variance) > 0.02;
+
+      li.innerHTML = `
+        <div>
+          <div class="cor-session-date">${s.audit_date}</div>
+          <div class="cor-session-auditor">${s.auditor_name}${s.correction_count > 0 ? ` · ${s.correction_count} corr.` : ''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${hasVariance ? '<span style="color:var(--rose);font-size:10px;font-weight:600">⚠ Écart</span>' : ''}
+          <span class="cor-session-status ${s.status}">${s.status === 'locked' ? '🔒' : s.status === 'correcting' ? '🔓' : '○'}</span>
+        </div>
+      `;
+      list.appendChild(li);
+    });
+  } catch(e) {
+    // silent
+  }
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+function showToast(msg, type) {
+  const t = document.getElementById('cor-toast');
+  t.textContent = msg;
+  t.className = 'cor-toast ' + type + ' show';
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+{% endblock %}

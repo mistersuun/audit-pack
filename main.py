@@ -15,6 +15,7 @@ from routes.balance_checker import balance_checker_bp
 from routes.audit.rj_native import rj_native_bp
 from routes.audit.rj_export_pdf import rj_export_bp
 from routes.audit.rj_export_excel import rj_excel_bp
+from routes.audit.rj_correction import rj_correction_bp
 from routes.pod import pod_bp
 from routes.hp import hp_bp
 from routes.direction import direction_bp
@@ -60,6 +61,7 @@ def create_app():
     app.register_blueprint(rj_native_bp)
     app.register_blueprint(rj_export_bp)
     app.register_blueprint(rj_excel_bp)
+    app.register_blueprint(rj_correction_bp)
     app.register_blueprint(pod_bp)
     app.register_blueprint(hp_bp)
     app.register_blueprint(direction_bp)
