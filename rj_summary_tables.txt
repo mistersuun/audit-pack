@@ -1,0 +1,185 @@
+================================================================================
+RJ 24-02-2026 RECONCILIATION SUMMARY TABLES
+================================================================================
+
+TABLE 1: CASH FLOW SUMMARY
+================================================================================
+SOURCE                          AMOUNT          NOTES
+================================================================================
+POS Transelect (NET):           $58,161.46      Cards after escompte
+Cash Bank Deposits:             $23,251.79      Cheque DR + small LS cash
+==========================================
+TOTAL DEPOSITS & SETTLEMENTS    $81,413.25      What was actually received
+
+vs.
+
+JOUR DAILY REVENUE:             $141,220.90     What was GL posted
+Tips:                           $5,548.78       Part of Jour total
+==========================================
+TOTAL JOUR CREDIT:              $146,769.68     What Lightspeed says we earned
+
+VARIANCE:                       -$65,356.43     CRITICAL DISCREPANCY
+                                (44% shortfall)
+
+================================================================================
+
+TABLE 2: CARD SETTLEMENT BREAKDOWN
+================================================================================
+CARD TYPE          TRANSELECT       GEAC REVENUE     VARIANCE
+                   (NET POSTED)     (TERMINAL)       
+================================================================================
+VISA               $37,185.21       $34,085.12       +$3,100.09
+MASTER             $15,120.30       $12,716.96       +$2,403.34
+AMEX               $5,158.81        $4,717.02        +$441.79
+DEBIT              $697.14          $0.00            +$697.14
+DISCOVER           $0.00            $0.00            $0.00
+================================================================================
+SUBTOTAL CARDS     $58,161.46       $51,519.10       +$6,642.36
+
+ANALYSIS: Transelect shows HIGHER card totals than GEAC settlement.
+This is unusual and suggests:
+a) Transelect includes pending transactions not yet settled
+b) GEAC is missing some terminal batches
+c) Timing issue: transactions captured but not yet settled
+d) Multiple escompte calculations in Transelect overstating
+
+================================================================================
+
+TABLE 3: CASH RECONCILIATION (RECAP TAB)
+================================================================================
+                                        AMOUNT
+================================================================================
+Opening Cash on Hand
+  Cash LS (Comptant):                  $262.59
+  Cheque Daily Revenue:                $23,251.79
+  OPENING TOTAL:                       $23,514.38
+
+Sales & Collections
+  (Captured in POS Transelect)
+
+Reductions
+  Less: Remboursement Gratuité:        -$430.78
+  Less: Remboursement Client:          -$1,859.86
+  SUBTOTAL AFTER REDUCTIONS:           $21,223.74
+
+Due Back (Customer Money Held)
+  Due Back Réception:                  -$1,859.86
+  Due Back N/B:                        -$1,859.86
+  NET AVAILABLE FOR DEPOSIT:           $17,504.02
+  
+Surplus/Déficit (Cash Count vs Books)  -$1,691.67
+                                       
+FINAL DEPOSIT CDN:                     $23,251.79
+
+Money Received (per cash receipt):     $25,542.43
+  = Deposit $23,251.79 + Remb $2,290.64
+  ✓ This checks out correctly
+
+================================================================================
+
+TABLE 4: JOUR DAILY REVENUE ANALYSIS
+================================================================================
+DEPARTMENT / CATEGORY               AMOUNT      % OF TOTAL
+================================================================================
+FOOD & BEVERAGE
+  Nourriture (Food):               $33,753.38   23.9%
+  Boisson (Beverage):              $5,325.63    3.8%
+  Location de Salles (Room Rental): $20,930.00  14.8%
+  SUBTOTAL F&B:                    $60,009.01   42.5%
+
+ROOMS (Hébergement)                $53,962.39   38.2%
+
+OTHER REVENUES                     $27,249.50   19.3%
+  (Includes: Internet, Audio-Visual, Tabagie, Nettoyage, etc.)
+
+TOTAL DAILY REVENUE:               $141,220.90  100.0%
+
+Gratuities (Tips):                 $5,548.78    (added to credit)
+
+TOTAL JOURNAL CREDIT:              $146,769.68
+
+================================================================================
+
+TABLE 5: THE MISSING $65,356.43
+================================================================================
+This amount is NOT traceable to actual card/cash settlements:
+
+LIKELY LOCATIONS (in order of probability):
+================================================================================
+
+1. ROOMS REVENUE OVERSTATEMENT
+   Reported in Jour:               $53,962.39
+   Status: Most likely culprit (38% of daily revenue)
+   Risk: Double-entry with Guest Ledger, or prepayments miscoded
+   Action: Cross-check GEAC Guest Ledger balance movements
+
+2. F&B SALES INFLATION
+   Reported in Jour:               $60,009.01
+   vs. Transelect Restaurant/Banquet/Spesa: $7,541.89
+   vs. Card + Cash:                $81,413.25
+   Status: Very suspicious gap (F&B appears only in some sections)
+   Risk: GL posted amounts don't match actual POS settlements
+   Action: Reconcile Lightspeed GL to POS terminal batches
+
+3. ADVANCE DEPOSITS / PREPAYMENTS
+   Could be in "Other Revenues" ($27,249.50)
+   Status: Not settlement revenue (customer's own money)
+   Risk: Customer deposits coded as revenue
+   Action: Check GL account codes for deposits vs revenue
+
+4. INVOICE / AR REVENUE
+   Direct billing without POS capture
+   Status: Won't appear in card/cash reconciliation
+   Risk: Mixing receivables with actual collected revenue
+   Action: Review AR posting journal for February 24
+
+5. PREVIOUS DAY RECONCILIATION
+   Unmatched transactions from Feb 23 posted to Feb 24
+   Status: Timing delay in settlement
+   Risk: Revenue double-counted across days
+   Action: Check transaction settlement dates vs posting dates
+
+================================================================================
+
+TABLE 6: CRITICAL ISSUES SUMMARY
+================================================================================
+ISSUE                          AMOUNT        SEVERITY     ROOT CAUSE LIKELY
+================================================================================
+1. Quasimodo Variance         -$65,356.43   CRITICAL     JOUR GL overstatement
+2. AMEX Terminal Gap          +$441.79      MAJOR        Escompte double-count
+3. Cash Shortage (S&D)        -$1,691.67    MODERATE     Count error or theft
+4. Transelect vs GEAC         +$6,642.36    MAJOR        Settlement timing
+================================================================================
+TOTAL UNRECONCILED:           -$67,489.89   UNACCEPTABLE DO NOT SUBMIT
+================================================================================
+
+================================================================================
+
+TABLE 7: WHAT SHOULD BE IN THE QUASIMODO TAB
+================================================================================
+The Quasimodo (global reconciliation) should show:
+
+CARDS (Transelect NET):
+  VISA                    $37,185.21
+  MASTER                  $15,120.30
+  AMEX (×0.9735 factor)   $5,024.05      ← $5,158.81 × 0.9735
+  DEBIT                   $697.14
+  TOTAL CARDS:            $58,026.70
+
+CASH (from Recap):
+  Canadian Deposit        $23,251.79
+  US Deposit              $0.00
+  TOTAL CASH:             $23,251.79
+
+TOTAL (Cards + Cash):      $81,278.49
+
+AGAINST:
+  JOUR Daily Revenue      $141,220.90
+  Tips                    $5,548.78
+  TOTAL JOUR:             $146,769.68
+
+QUASIMODO VARIANCE:        -$65,491.19   ← MUST BE ±$0.01 OR BETTER
+
+** This CANNOT be submitted until variance is resolved **
+
+================================================================================

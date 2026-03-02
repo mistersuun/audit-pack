@@ -44,7 +44,7 @@ class ParserFactory:
         'sales_journal': ['.rtf', '.txt'],
         'sd_deposit': ['.xls', '.xlsx'],
         'market_segment': ['.pdf'],
-        'cashier_summary': ['.pdf'],
+        'cashier_summary': ['.pdf', '.txt'],
         'transaction_summary': ['.xlsx'],
         'recap_text': ['.txt'],
     }

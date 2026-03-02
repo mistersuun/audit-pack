@@ -120,14 +120,26 @@ class CashierSummaryParser(BaseParser):
         return is_valid
 
     def _extract_text_from_pdf(self):
-        """Extract text from PDF using pdfplumber."""
-        text = ""
+        """Extract text from PDF using pdfplumber, or read as plain text."""
+        # Try PDF first
         try:
+            text = ""
             with pdfplumber.open(BytesIO(self.file_bytes)) as pdf:
                 for page in pdf.pages:
                     text += page.extract_text() or ""
-        except Exception as e:
-            raise Exception(f"Failed to extract text from PDF: {str(e)}")
+            if text.strip():
+                return text
+        except Exception:
+            pass  # Not a valid PDF, try plain text
+
+        # Fallback: treat as plain text (TXT/RTF format from Galaxy Lightspeed)
+        try:
+            text = self.file_bytes.decode('utf-8')
+        except UnicodeDecodeError:
+            try:
+                text = self.file_bytes.decode('latin-1')
+            except Exception as e:
+                raise Exception(f"Failed to read file as PDF or text: {str(e)}")
 
         return text
 
@@ -140,27 +152,70 @@ class CashierSummaryParser(BaseParser):
         else:
             self.report_type = 'cshsum'
 
-    def _parse_cashier_sections(self):
-        """Parse individual cashier sections from the PDF."""
-        # Split by cashier header: "For Cashier: NAMEHERE"
-        pattern = r'For Cashier:\s+([A-Z\s]+?)(?=\n.*?Settlement Summary|For Cashier:|$)'
-        cashier_blocks = re.split(r'For Cashier:\s+', self.raw_text)
+    # Department code → RJ department key mapping (for allowances)
+    DEPT_CODE_MAP = {
+        '1': 'chambres',
+        '4': 'club_lounge',
+        '10': 'restaurant_piazza',
+        '11': 'banquet',
+        '28': 'la_spesa',
+        '35': 'autres_revenus',
+        '36': 'internet',
+        '40': 'comptabilite',
+        '90': 'debourse',
+    }
 
-        for block in cashier_blocks[1:]:  # Skip first empty split
-            # Extract cashier name
-            name_match = re.match(r'([A-Z\s]+?)\n', block)
-            if not name_match:
+    def _parse_cashier_sections(self):
+        """Parse individual cashier sections from the PDF.
+
+        NOTE: The report may have "For All Cashiers" summary blocks with
+        aggregated totals. We detect them and use the dept_lines from the
+        FIRST "All Cashiers" block (the one with the full department table)
+        to get allowances without double-counting.
+        """
+        # Use finditer to locate each "For Cashier:" and "For All Cashiers" marker
+        # so we know exactly which blocks are cashier vs grand total
+        markers = list(re.finditer(r'For (Cashier:\s+\S+|All Cashiers)', self.raw_text))
+
+        self._grand_total_dept_lines = None
+
+        for idx, marker in enumerate(markers):
+            # Determine block boundaries
+            start = marker.end()
+            end = markers[idx + 1].start() if idx + 1 < len(markers) else len(self.raw_text)
+            block = self.raw_text[start:end]
+
+            marker_text = marker.group(1)
+            is_all_cashiers = (marker_text == 'All Cashiers')
+
+            if is_all_cashiers:
+                # Extract dept lines (allowances) from grand total block
+                dept_lines = self._extract_dept_lines(block)
+                if dept_lines and self._grand_total_dept_lines is None:
+                    # Use the FIRST "All Cashiers" block with dept lines
+                    self._grand_total_dept_lines = dept_lines
+
+                settlements = self._extract_settlement_lines(block)
+                if settlements.get('total', 0) > 0 and 'ALL_CASHIERS' not in self.cashiers:
+                    self.cashiers['ALL_CASHIERS'] = {
+                        'settlements': settlements,
+                        'cash_drop': self._extract_cash_drop(block),
+                        'dept_lines': dept_lines,
+                        'is_grand_total': True,
+                    }
                 continue
 
-            cashier_name = name_match.group(1).strip()
+            # Individual cashier
+            cashier_name = marker_text.replace('Cashier:', '').strip()
 
-            # Extract settlement lines from this cashier's block
             settlements = self._extract_settlement_lines(block)
             cash_drop = self._extract_cash_drop(block)
+            dept_lines = self._extract_dept_lines(block)
 
             self.cashiers[cashier_name] = {
                 'settlements': settlements,
                 'cash_drop': cash_drop,
+                'dept_lines': dept_lines,
             }
 
     def _extract_settlement_lines(self, cashier_block):
@@ -186,8 +241,12 @@ class CashierSummaryParser(BaseParser):
             'ar_payments': 0.0,
         }
 
-        # Extract ONLY the Settlement Summary section (after "Settlement Summary" header)
+        # Extract ONLY the Settlement Summary section
+        # Handle both PDF-extracted text ("Settlement Summary") and
+        # raw TXT format ("S E T T L E M E N T   S U M M A R Y")
         settlement_section_start = cashier_block.find('Settlement Summary')
+        if settlement_section_start == -1:
+            settlement_section_start = cashier_block.find('S E T T L E M E N T')
         if settlement_section_start == -1:
             # No settlement section found
             return settlements
@@ -196,8 +255,9 @@ class CashierSummaryParser(BaseParser):
         settlement_section = cashier_block[settlement_section_start:]
 
         # Pattern to match settlement lines: code + name + amounts
-        # 200858AX American Express       2,760.36     0.00          0.00          0.00          2,760.36
-        line_pattern = r'200858([A-Z]{2})\s+([A-Za-z\s]+?)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)'
+        # PDF format: "200858AX American Express  2,760.36  0.00  0.00  0.00  2,760.36"
+        # TXT format: "200858 AX    American Express  2,760.36  0.00  0.00  0.00  2,760.36"
+        line_pattern = r'200858\s*([A-Z]{2})\s+([A-Za-z\s]+?)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)\s+([\d,]+\.?\d*)'
 
         for match in re.finditer(line_pattern, settlement_section):
             card_code = match.group(1)
@@ -228,14 +288,68 @@ class CashierSummaryParser(BaseParser):
 
         return settlements
 
+    def _extract_dept_lines(self, cashier_block):
+        """Extract department charges & allowances from the Hotel Dpt Description table.
+
+        This is the table BEFORE the Settlement Summary section.
+        Pattern per line:
+        200858     4  Club Lounge                        0.00           47.72-          0.00           0.00           0.00           0.00
+
+        Amounts may have trailing '-' to indicate negative (allowances/credits).
+
+        Returns:
+            list of dicts with dept_code, description, charges, allowances, sundry, cash
+        """
+        lines = []
+
+        # Only parse the section BEFORE Settlement Summary
+        settlement_start = cashier_block.find('Settlement Summary')
+        if settlement_start == -1:
+            settlement_start = cashier_block.find('S E T T L E M E N T')
+        if settlement_start == -1:
+            dept_section = cashier_block
+        else:
+            dept_section = cashier_block[:settlement_start]
+
+        # Pattern: HOTEL  DEPT  DESCRIPTION  CHARGES  ALLOWANCES  SUNDRY  CASH  DEPT_PAIDOUTS  CASH_PAIDOUTS
+        # 200858     4  Club Lounge                        0.00           47.72-          0.00           0.00           0.00           0.00
+        dept_pattern = r'200858\s+(\d+)\s+([A-Za-zÀ-ÿ\s]+?)\s+([\d,]+\.?\d*)-?\s+([\d,]+\.?\d*)-?\s+([\d,]+\.?\d*)-?\s+([\d,]+\.?\d*)-?\s+([\d,]+\.?\d*)-?\s+([\d,]+\.?\d*)-?'
+
+        for match in re.finditer(dept_pattern, dept_section):
+            dept_code = match.group(1).strip()
+            desc = match.group(2).strip()
+            charges_str = match.group(3)
+            allowances_str = match.group(4)
+
+            charges = self._safe_float(charges_str)
+            allowances = self._safe_float(allowances_str)
+
+            # Check if allowances has trailing '-' in the raw text to mark negative
+            # The regex strips it, so we check the original text
+            raw_segment = match.group(0)
+            if allowances > 0 and (allowances_str + '-') in raw_segment:
+                allowances = -allowances
+
+            dept_key = self.DEPT_CODE_MAP.get(dept_code, f'dept_{dept_code}')
+
+            lines.append({
+                'dept_code': dept_code,
+                'dept_key': dept_key,
+                'description': desc,
+                'charges': charges,
+                'allowances': allowances,
+            })
+
+        return lines
+
     def _extract_cash_drop(self, cashier_block):
         """Extract cash drop amount from a cashier block (cshout only).
 
         Pattern: "Total Drop: 504.36-" (note the trailing minus for negative)
         or "Total Drop: 504.36"
         """
-        # Pattern for cash drop: "Total Drop: XXX.XX" or "Total Drop: XXX.XX-"
-        drop_match = re.search(r'Total Drop:\s*([\d,]+\.?\d*)(-?)', cashier_block)
+        # Pattern for cash drop: "Total Drop: XXX.XX" or "Total Cash Drop: XXX.XX-"
+        drop_match = re.search(r'Total (?:Cash )?Drop:\s*([\d,]+\.?\d*)(-?)', cashier_block)
         if drop_match:
             amount = self._safe_float(drop_match.group(1))
             is_negative = drop_match.group(2) == '-'
@@ -260,6 +374,10 @@ class CashierSummaryParser(BaseParser):
         }
 
         for cashier_name, data in self.cashiers.items():
+            # Skip "All Cashiers" grand total block to avoid double-counting
+            if data.get('is_grand_total'):
+                continue
+
             settlements = data['settlements']
             cash_drop = data['cash_drop']
 
@@ -275,6 +393,28 @@ class CashierSummaryParser(BaseParser):
             totals['total_deposits_rcvd'] += settlements.get('deposits_received', 0.0)
             totals['total_ar_payments'] += settlements.get('ar_payments', 0.0)
             totals['total_cash_drop'] += cash_drop
+
+        # Aggregate allowances by department
+        # Prefer "All Cashiers" grand total block (already summed, no double-counting)
+        # Fall back to summing individual cashiers if no grand total block
+        allowances_by_dept = {}
+        grand_total_lines = getattr(self, '_grand_total_dept_lines', None)
+        if grand_total_lines:
+            for dept_line in grand_total_lines:
+                allow = dept_line.get('allowances', 0)
+                if allow != 0:
+                    dept_key = dept_line['dept_key']
+                    allowances_by_dept[dept_key] = allowances_by_dept.get(dept_key, 0) + allow
+        else:
+            # Fallback: sum individual cashiers (no grand total section)
+            for cashier_name, data in self.cashiers.items():
+                if data.get('is_grand_total'):
+                    continue
+                for dept_line in data.get('dept_lines', []):
+                    allow = dept_line.get('allowances', 0)
+                    if allow != 0:
+                        dept_key = dept_line['dept_key']
+                        allowances_by_dept[dept_key] = allowances_by_dept.get(dept_key, 0) + allow
 
         self.extracted_data = {
             'report_type': self.report_type,
@@ -300,6 +440,9 @@ class CashierSummaryParser(BaseParser):
                 'IN': totals['debit'],
                 'DI': totals['discover'],
             },
+            # Allowances by department (negative values = credits/deductions)
+            'allowances_by_dept': allowances_by_dept,
+            'total_allowances': round(sum(allowances_by_dept.values()), 2),
         }
 
     def _extract_metadata(self):

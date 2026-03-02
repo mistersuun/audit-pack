@@ -1,0 +1,171 @@
+================================================================================
+RJ 24-02-2026 AUDIT FINDINGS SUMMARY
+================================================================================
+
+AUDIT DATE:     February 24, 2026
+AUDITOR:        Souleymane Camara
+FILE:           Rj 24-02-2026.xls
+STATUS:         CRITICAL BALANCING FAILURE - DO NOT SUBMIT
+
+================================================================================
+KEY FINDINGS AT A GLANCE
+================================================================================
+
+1. QUASIMODO VARIANCE (Global Reconciliation)
+   =========================================
+   Cards + Cash Reconciled:        $81,413.25
+   JOUR Daily Revenue + Tips:      $146,769.68
+   VARIANCE:                       -$65,356.43 (CRITICAL)
+   
+   Interpretation: The JOUR tab shows 44% MORE revenue than what was actually
+                   received in cards and cash. This is a RED FLAG for either:
+                   - False GL postings in Lightspeed
+                   - Unrecorded remittances
+                   - Prepayments miscoded as revenue
+
+2. CASH RECONCILIATION (RECAP)
+   ==========================
+   Physical Cash Shortage:         -$1,691.67 (moderate)
+   Money Received:                 $25,542.43 (correctly includes reimbursements)
+   DEPOSIT CDN:                    $23,251.79 (low - mostly cheques, not cash)
+   
+   Status: RECAP is internally consistent but has cash shortage
+
+3. CARD SETTLEMENT VARIANCE
+   ========================
+   Transelect Total (NET):         $58,161.46
+   GEAC Daily Revenue:             $51,519.10
+   VARIANCE:                       +$6,642.36 (major)
+   
+   Interpretation: Transelect shows MORE than GEAC settled
+                   Likely: Pending transactions or timing difference
+
+4. AMEX TERMINAL MISMATCH
+   ======================
+   Transelect AMEX (NET):          $5,158.81
+   GEAC AMEX Daily Revenue:        $4,717.02
+   VARIANCE:                       +$441.79
+   
+   Interpretation: AMEX not settling properly or fees are being double-counted
+
+================================================================================
+ROOT CAUSE ANALYSIS
+================================================================================
+
+PRIMARY ISSUE: $65,356.43 MISSING FROM CASH/CARD RECONCILIATION
+
+The JOUR tab reports:
+  - Room Revenue:                 $53,962.39  (38% of daily total)
+  - F&B Revenue:                  $60,009.01  (42% of daily total)
+  - Other Revenues:               $27,249.50  (19% of daily total)
+  - TOTAL:                        $141,220.90
+
+But actual deposits show:
+  - Card Settlements:             $58,161.46
+  - Cash Deposits:                $23,251.79
+  - TOTAL:                        $81,413.25
+
+MISSING:                          $59,807.65 in unaccounted revenue
+
+TOP SUSPECTS (in order of likelihood):
+
+1. ROOMS REVENUE ($53,962.39) — Most likely culprit
+   - This should appear in GEAC Guest Ledger, not daily cash
+   - No card or cash settlement for this amount visible
+   - Risk: Double-posted (once in GL, once in RJ)
+   
+2. F&B REVENUE ($60,009.01) — Second suspect
+   - Only $7,541.89 appears in card settlements (Transelect)
+   - Where is the other $52,467.12?
+   - Risk: GL posted but not settled on terminals
+   
+3. OTHER REVENUES ($27,249.50) — Miscellaneous
+   - Includes $25,194 in "Audio-Visual" revenue
+   - Includes internet, massage, shop, etc.
+   - Risk: Non-collected revenue (AR/prepayments) coded as daily revenue
+
+4. PREVIOUS DAY ADJUSTMENTS
+   - Could be Feb 23 transactions posted to Feb 24
+   - Timing delay in settlement
+   - Risk: Double-counting across days
+
+================================================================================
+FINANCIAL IMPACT
+================================================================================
+
+If $65,356 of this revenue is FALSE GL postings:
+- Daily revenue would be only $75,864 instead of $141,221
+- Cash position would show a $65k shortage
+- Year-to-date revenue would be overstated by ~$65k
+- Quasimodo variance would still not reconcile
+
+If $65,356 is REAL but UNDEPOSITED:
+- Cash is missing from the deposit
+- Must be found in:
+  * Outstanding cheques
+  * Unposted AR invoices
+  * Customer prepayments held
+  * Petty cash accounts
+- This requires immediate investigation
+
+================================================================================
+CRITICAL ACTION ITEMS
+================================================================================
+
+IMMEDIATE (Complete before end of shift):
+  1. [ ] Pull Lightspeed room revenue report for Feb 24
+  2. [ ] Cross-check GEAC Guest Ledger balance movement
+  3. [ ] Verify F&B sales by department in Lightspeed GL
+  4. [ ] Pull payment processor settlement report for all cards
+  5. [ ] Conduct physical cash count verification
+  6. [ ] Get manager approval to hold RJ submission
+
+WITHIN 24 HOURS:
+  7. [ ] Reconcile POS terminal batches to Transelect
+  8. [ ] Audit Audio-Visual revenue ($25,194 seems high)
+  9. [ ] Verify Customer Deposits are not coded as revenue
+  10. [ ] Review AR aging for any Feb 24 invoices
+  11. [ ] Check for outstanding cheques not yet cleared
+
+ESCALATION REQUIRED IF:
+  - Room revenue is indeed $54k and separate from deposits
+  - F&B revenue is GL-posted but not settled on terminals
+  - Audio-Visual is a one-time large transaction
+  - Any significant cash is unaccounted for
+  - AMEX is settling through different processor
+
+================================================================================
+SUBMISSION RECOMMENDATION
+================================================================================
+
+STATUS:         DO NOT SUBMIT THIS RJ
+
+Why: The Quasimodo variance of -$65,356.43 is far outside acceptable limits.
+     RJ policy requires variance within ±$0.01 of theoretical balance.
+     This variance indicates either major GL errors or missing deposits.
+
+What must be resolved first:
+  ✓ Identify the source of the $65,356 discrepancy
+  ✓ Obtain supporting documentation (GL reconciliation, settlement reports)
+  ✓ Make corrections to the affected tabs
+  ✓ Recalculate Quasimodo until variance is ±$0.01
+  ✓ Obtain manager sign-off
+
+Expected timeline: 2-3 hours if GL posting error, 1+ days if deposits missing
+
+================================================================================
+REFERENCE DOCUMENTS
+================================================================================
+
+Complete analysis available in:
+  - rj_reconciliation_analysis.md      (Detailed breakdown)
+  - rj_summary_tables.txt              (Reconciliation tables)
+  - RJ_AUDIT_CHECKLIST.md             (Action items with worksheets)
+
+File locations: /mnt/audit-pack/
+
+================================================================================
+Prepared by: Automated RJ Audit Analysis
+Date: February 27, 2026
+Source: Rj 24-02-2026.xls (Excel RJ file dump)
+================================================================================

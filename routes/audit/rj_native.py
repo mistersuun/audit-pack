@@ -26,6 +26,7 @@ from utils.jour_mapping import (
     nas_jour_to_excel_dict, excel_jour_to_nas_dict,
 )
 from utils.ole_builder import rebuild_xls_with_vba
+from routes.audit.rj_correction import log_field_changes, log_json_changes
 
 logger = logging.getLogger(__name__)
 
@@ -1630,6 +1631,7 @@ def _apply_parsed_to_nas(doc_type, result, nas, day):
         'hp_excel': _fill_from_hp_excel,
         'sales_journal': _fill_from_sales_journal,
         'sd_deposit': _fill_from_sd_deposit,
+        'cashier_summary': _fill_from_cashier_summary,
     }
 
     mapper_fn = mappers.get(doc_type)
@@ -2246,6 +2248,81 @@ def _fill_from_sd_deposit(data, nas, day):
                         'deposit_cdn': float(total_verifie) if total_verifie else 0}}
 
 
+# ─── CASHIER SUMMARY ─── (fills GEAC cashout + allowances by dept)
+def _fill_from_cashier_summary(data, nas, day):
+    """Fill GEAC cashout from Cashier Cashout settlements + extract allowances."""
+    count = [0]
+    sections = set()
+
+    # --- GEAC Cashout (Row 9) --- card settlements
+    geac_co = nas.get_json('geac_cashout')
+    if not isinstance(geac_co, dict):
+        geac_co = {}
+
+    card_map = {
+        'total_amex': 'amex', 'total_visa': 'visa', 'total_mc': 'master',
+        'total_debit': 'debit', 'total_discover': 'discover', 'total_facture': 'facture',
+    }
+    for data_key, geac_key in card_map.items():
+        val = data.get(data_key)
+        if val is not None and float(val) > 0:
+            geac_co[geac_key] = float(val)
+            count[0] += 1
+    nas.set_json('geac_cashout', geac_co)
+    if count[0] > 0:
+        sections.add('geac')
+
+    # --- Cash drop → Recap ---
+    cash_drop = data.get('total_cash_drop', 0)
+    if cash_drop and abs(float(cash_drop)) > 0:
+        _safe_set(nas, 'cash_pos_lecture', abs(float(cash_drop)), count)
+        sections.add('recap')
+
+    # --- Allowances by department → jour_adj_* fields ---
+    # These are HP/Admin allowances extracted from the "Hotel Dpt Description" table
+    # They need to be SUBTRACTED from F&B totals (they are already negative in the parser)
+    allowances = data.get('allowances_by_dept', {})
+
+    # Map department keys to jour_adj_* fields
+    dept_to_adj = {
+        'restaurant_piazza': 'jour_adj_piazza',
+        'la_spesa': 'jour_adj_spesa',
+        'banquet': 'jour_adj_banquet',
+        'club_lounge': 'jour_club_lounge',  # Club Lounge goes to its own field (not adj)
+        'internet': None,  # Internet allowances handled separately
+    }
+
+    for dept_key, adj_amount in allowances.items():
+        field = dept_to_adj.get(dept_key)
+        if field and adj_amount != 0:
+            # Allowances are already negative from the parser
+            # For jour_adj_* fields, we store positive values (they are subtracted in calculate_all)
+            # For jour_club_lounge, we store the absolute value
+            if field.startswith('jour_adj_'):
+                # Add to existing adjustment (don't overwrite — there may be manual entries)
+                current = getattr(nas, field, 0) or 0
+                new_val = round(current + abs(adj_amount), 2)
+                setattr(nas, field, new_val)
+                count[0] += 1
+            elif field == 'jour_club_lounge':
+                # Club lounge: store absolute value
+                _safe_set(nas, field, abs(adj_amount), count)
+            sections.add('jour')
+
+    return {
+        'count': count[0],
+        'sections': list(sections),
+        'details': {
+            'doc_type': 'cashier_summary',
+            'num_cashiers': data.get('num_cashiers', 0),
+            'total_settlements': data.get('total_settlements', 0),
+            'total_cash_drop': cash_drop,
+            'allowances_by_dept': allowances,
+            'total_allowances': data.get('total_allowances', 0),
+        }
+    }
+
+
 # ═══════════════════════════════════════
 # API — SAVE SECTIONS
 # ═══════════════════════════════════════
@@ -2264,6 +2341,7 @@ def _get_session(data):
         return None, jsonify({'error': 'Session non trouvée'}), 404
     if nas.status == 'locked':
         return None, jsonify({'error': 'Session verrouillée'}), 403
+    # 'correcting' status allows edits (same as in_progress)
     return nas, None, None
 
 
@@ -2312,6 +2390,9 @@ def save_recap():
         'dueback_nb_lecture', 'dueback_nb_corr',
         'deposit_cdn', 'deposit_us'
     ]
+    # Log changes during correction mode
+    log_field_changes(nas, 'recap', {f: float(data.get(f, 0) or 0) for f in float_fields if f in data}, float_fields)
+
     for f in float_fields:
         if f in data:
             try:
@@ -2343,8 +2424,10 @@ def save_transelect():
         return err, code
 
     if 'restaurant' in data:
+        log_json_changes(nas, 'transelect', 'transelect_restaurant', nas.get_json('transelect_restaurant'), data['restaurant'])
         nas.set_json('transelect_restaurant', data['restaurant'])
     if 'reception' in data:
+        log_json_changes(nas, 'transelect', 'transelect_reception', nas.get_json('transelect_reception'), data['reception'])
         nas.set_json('transelect_reception', data['reception'])
 
     nas.calculate_all()
@@ -2372,13 +2455,17 @@ def save_geac():
         return err, code
 
     if 'cashout' in data:
+        log_json_changes(nas, 'geac', 'geac_cashout', nas.get_json('geac_cashout'), data['cashout'])
         nas.set_json('geac_cashout', data['cashout'])
     if 'daily_rev' in data:
+        log_json_changes(nas, 'geac', 'geac_daily_rev', nas.get_json('geac_daily_rev'), data['daily_rev'])
         nas.set_json('geac_daily_rev', data['daily_rev'])
     if 'balance_sheet' in data:
         nas.set_json('geac_balance_sheet', data['balance_sheet'])
 
-    for f in ['geac_ar_previous', 'geac_ar_charges', 'geac_ar_payments', 'geac_ar_new_balance']:
+    ar_fields = ['geac_ar_previous', 'geac_ar_charges', 'geac_ar_payments', 'geac_ar_new_balance']
+    log_field_changes(nas, 'geac', {f: float(data.get(f, 0) or 0) for f in ar_fields if f in data}, ar_fields)
+    for f in ar_fields:
         if f in data:
             try:
                 setattr(nas, f, float(data[f] or 0))
@@ -2638,6 +2725,9 @@ def save_jour():
         'jour_gift_cards', 'jour_certificats',
         'jour_club_lounge', 'jour_deposit_on_hand', 'jour_ar_misc',
     ]
+    # Log changes during correction mode
+    log_field_changes(nas, 'jour', {f: float(data.get(f, 0) or 0) for f in float_fields if f in data}, float_fields)
+
     for f in float_fields:
         if f in data:
             try:
@@ -2967,6 +3057,233 @@ def save_ristourne():
                     'by_dept': nas.get_json('ristourne_by_dept')})
 
 
+@rj_native_bp.route('/api/rj/native/save/ej', methods=['POST'])
+@auth_required
+def save_ej():
+    """Save EJ (État Journalier) entries."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'ej_entries' in data:
+        nas.set_json('ej_entries', data['ej_entries'])
+    if 'ej_total' in data:
+        try:
+            nas.ej_total = float(data['ej_total'] or 0)
+        except (ValueError, TypeError):
+            pass
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'ej'})
+
+
+@rj_native_bp.route('/api/rj/native/save/salaires', methods=['POST'])
+@auth_required
+def save_salaires():
+    """Save Salaires (payroll) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'salaires_data' in data:
+        nas.set_json('salaires_data', data['salaires_data'])
+    if 'salaires_total_heures' in data:
+        try:
+            nas.salaires_total_heures = float(data['salaires_total_heures'] or 0)
+        except (ValueError, TypeError):
+            pass
+    if 'salaires_total_montant' in data:
+        try:
+            nas.salaires_total_montant = float(data['salaires_total_montant'] or 0)
+        except (ValueError, TypeError):
+            pass
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'salaires'})
+
+
+@rj_native_bp.route('/api/rj/native/save/nettoyeur', methods=['POST'])
+@auth_required
+def save_nettoyeur():
+    """Save Nettoyeur (cleaning) entries."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'nettoyeur_entries' in data:
+        nas.set_json('nettoyeur_entries', data['nettoyeur_entries'])
+    if 'nettoyeur_total' in data:
+        try:
+            nas.nettoyeur_total = float(data['nettoyeur_total'] or 0)
+        except (ValueError, TypeError):
+            pass
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'nettoyeur'})
+
+
+@rj_native_bp.route('/api/rj/native/save/somm_nettoyeur', methods=['POST'])
+@auth_required
+def save_somm_nettoyeur():
+    """Save Sommaire Nettoyeur (cleaning summary) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'somm_nettoyeur_data' in data:
+        nas.set_json('somm_nettoyeur_data', data['somm_nettoyeur_data'])
+    if 'somm_nettoyeur_distribution' in data:
+        nas.set_json('somm_nettoyeur_distribution', data['somm_nettoyeur_distribution'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'somm_nettoyeur'})
+
+
+@rj_native_bp.route('/api/rj/native/save/auditeur', methods=['POST'])
+@auth_required
+def save_auditeur():
+    """Save Auditeur (auditor) list."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'auditeur_list' in data:
+        nas.set_json('auditeur_list', data['auditeur_list'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'auditeur'})
+
+
+@rj_native_bp.route('/api/rj/native/save/rj_rapport', methods=['POST'])
+@auth_required
+def save_rj_rapport():
+    """Save RJ Rapport (main report) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'rj_balance_ouverture' in data:
+        try:
+            nas.rj_balance_ouverture = float(data['rj_balance_ouverture'] or 0)
+        except (ValueError, TypeError):
+            pass
+    if 'rj_balance_fermeture' in data:
+        try:
+            nas.rj_balance_fermeture = float(data['rj_balance_fermeture'] or 0)
+        except (ValueError, TypeError):
+            pass
+    if 'rj_total_revenus' in data:
+        try:
+            nas.rj_total_revenus = float(data['rj_total_revenus'] or 0)
+        except (ValueError, TypeError):
+            pass
+    if 'rj_stats_data' in data:
+        nas.set_json('rj_stats_data', data['rj_stats_data'])
+    if 'rj_cards_summary' in data:
+        nas.set_json('rj_cards_summary', data['rj_cards_summary'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'rj_rapport'})
+
+
+@rj_native_bp.route('/api/rj/native/save/rapp_reports', methods=['POST'])
+@auth_required
+def save_rapp_reports():
+    """Save Rapport Reports (P1, P2, P3) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'rapp_p1_data' in data:
+        nas.set_json('rapp_p1_data', data['rapp_p1_data'])
+    if 'rapp_p2_data' in data:
+        nas.set_json('rapp_p2_data', data['rapp_p2_data'])
+    if 'rapp_p3_data' in data:
+        nas.set_json('rapp_p3_data', data['rapp_p3_data'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'rapp_reports'})
+
+
+@rj_native_bp.route('/api/rj/native/save/etat_rev', methods=['POST'])
+@auth_required
+def save_etat_rev():
+    """Save État Revenus (revenue statement) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'etat_rev_data' in data:
+        nas.set_json('etat_rev_data', data['etat_rev_data'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'etat_rev'})
+
+
+@rj_native_bp.route('/api/rj/native/save/budget_rj', methods=['POST'])
+@auth_required
+def save_budget_rj():
+    """Save Budget RJ (budget comparison) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'budget_data' in data:
+        nas.set_json('budget_data', data['budget_data'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'budget_rj'})
+
+
+@rj_native_bp.route('/api/rj/native/save/analyse_gl', methods=['POST'])
+@auth_required
+def save_analyse_gl():
+    """Save Analyse GL (general ledger analysis) data."""
+    data = request.get_json(force=True)
+    nas, err, code = _get_session(data)
+    if err:
+        return err, code
+
+    if 'analyse_101100_entries' in data:
+        nas.set_json('analyse_101100_entries', data['analyse_101100_entries'])
+    if 'analyse_100401_entries' in data:
+        nas.set_json('analyse_100401_entries', data['analyse_100401_entries'])
+    if 'autre_gl_data' in data:
+        nas.set_json('autre_gl_data', data['autre_gl_data'])
+
+    if nas.status == 'draft':
+        nas.status = 'in_progress'
+    db.session.commit()
+    return jsonify({'success': True, 'section': 'analyse_gl'})
+
+
 # ═══════════════════════════════════════
 # API — CALCULATE & VALIDATE
 # ═══════════════════════════════════════
@@ -3021,6 +3338,7 @@ def calculate():
         'is_fully_balanced': nas.is_fully_balanced,
         'dueback_total': nas.dueback_total,
         'quasimodo': nas.get_json('transelect_quasimodo'),
+        'diff_caisse_formula': nas.diff_caisse_formula,
         'messages': messages
     })
 
