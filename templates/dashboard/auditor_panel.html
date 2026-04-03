@@ -1,0 +1,681 @@
+{#
+  AUDITOR PANEL WIDGET — Partial/component
+  =========================================
+  Usage: include this partial inside any page that needs the auditor error-detection widget.
+
+      {% include 'dashboard/auditor_panel.html' %}
+
+  The widget self-fetches from /api/dashboard/auditor-panel.
+  It exposes a global `auditPanel` object so the host page can call
+  auditPanel.refresh() or auditPanel.setDate('YYYY-MM-DD').
+  It requires feather-icons to be loaded by the host page.
+  It uses Chart.js for the sparkline — load it before this partial or it gracefully degrades.
+#}
+
+<style>
+/* ================================================================
+   AUDITOR PANEL WIDGET — scoped to .ap-widget
+   ================================================================ */
+.ap-widget {
+  --ap-up:      #10b981;
+  --ap-up-bg:   rgba(16,185,129,0.10);
+  --ap-dn:      #ef4444;
+  --ap-dn-bg:   rgba(239,68,68,0.10);
+  --ap-amb:     #f59e0b;
+  --ap-amb-bg:  rgba(245,158,11,0.10);
+  --ap-gray:    #9ca3af;
+  --ap-gray-bg: rgba(156,163,175,0.10);
+  --ap-mono:    'JetBrains Mono','SF Mono',monospace;
+  --ap-r12:     12px;
+  --ap-r8:      8px;
+  --ap-ease:    cubic-bezier(0.16,1,0.3,1);
+
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+/* ── Widget header ──────────────────────────────────────────── */
+.ap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+.ap-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ap-header-icon {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--primary-bg, rgba(99,102,241,0.08));
+  color: var(--primary, #6366f1);
+  display: flex; align-items: center; justify-content: center;
+}
+.ap-header-icon svg { width: 15px; height: 15px; }
+.ap-header-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text, #1a1a2e);
+  letter-spacing: -0.1px;
+}
+.ap-header-sub {
+  font-size: 10.5px;
+  color: var(--text-muted, #9ca3af);
+}
+.ap-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ap-status-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--ap-gray);
+}
+.ap-status-dot.ok       { background: var(--ap-up); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+.ap-status-dot.warning  { background: var(--ap-amb); animation: ap-pulse 2s ease infinite; }
+.ap-status-dot.critical { background: var(--ap-dn); animation: ap-pulse 1.2s ease infinite; }
+@keyframes ap-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+.ap-refresh-btn {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted, #9ca3af); padding: 4px; border-radius: 4px;
+  transition: color 0.15s;
+  display: flex; align-items: center;
+}
+.ap-refresh-btn:hover { color: var(--primary, #6366f1); }
+.ap-refresh-btn svg { width: 13px; height: 13px; }
+.ap-spinning { animation: ap-spin 0.8s linear infinite; }
+@keyframes ap-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* ── Section labels (within widget) ────────────────────────── */
+.ap-section-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted, #9ca3af);
+  padding: 10px 18px 6px;
+}
+
+/* ── Section 1: Balance grid ────────────────────────────────── */
+.ap-balance-grid {
+  display: flex;
+  gap: 6px;
+  padding: 0 18px 14px;
+  flex-wrap: wrap;
+}
+.ap-balance-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  min-width: 56px;
+  padding: 8px 6px;
+  border-radius: var(--ap-r8);
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  cursor: default;
+}
+.ap-balance-item:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.ap-balance-item.green   { background: var(--ap-up-bg);   border-color: rgba(16,185,129,0.2); }
+.ap-balance-item.red     { background: var(--ap-dn-bg);   border-color: rgba(239,68,68,0.2);  }
+.ap-balance-item.pending { background: var(--ap-gray-bg); border-color: rgba(156,163,175,0.15); }
+.ap-dot-large {
+  width: 10px; height: 10px; border-radius: 50%;
+}
+.ap-balance-item.green   .ap-dot-large { background: var(--ap-up);  box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+.ap-balance-item.red     .ap-dot-large { background: var(--ap-dn);  box-shadow: 0 0 6px rgba(239,68,68,0.4);  }
+.ap-balance-item.pending .ap-dot-large { background: var(--ap-gray); }
+.ap-balance-name {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+.ap-balance-item.green   .ap-balance-name { color: var(--ap-up);   }
+.ap-balance-item.red     .ap-balance-name { color: var(--ap-dn);   }
+.ap-balance-item.pending .ap-balance-name { color: var(--ap-gray); }
+.ap-balance-value {
+  font-size: 9px;
+  font-family: var(--ap-mono);
+  color: var(--text-muted, #9ca3af);
+}
+
+/* ── Divider ────────────────────────────────────────────────── */
+.ap-divider {
+  height: 1px;
+  background: var(--border-color, #e5e7eb);
+  margin: 0 18px;
+}
+
+/* ── Section 2: Outstanding items ───────────────────────────── */
+.ap-items-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 18px 6px;
+  gap: 2px;
+}
+.ap-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 8px;
+  border-radius: var(--ap-r8);
+  transition: background 0.15s;
+  cursor: default;
+}
+.ap-item:hover { background: var(--bg, #f8f9fb); }
+[data-theme="dark"] .ap-item:hover { background: rgba(255,255,255,0.03); }
+.ap-item-icon {
+  width: 22px; height: 22px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+.ap-item-icon svg { width: 12px; height: 12px; }
+.ap-item-icon.critical { background: var(--ap-dn-bg);  color: var(--ap-dn);  }
+.ap-item-icon.high     { background: var(--ap-dn-bg);  color: var(--ap-dn);  }
+.ap-item-icon.medium   { background: var(--ap-amb-bg); color: var(--ap-amb); }
+.ap-item-icon.info     { background: var(--primary-bg, rgba(99,102,241,0.08)); color: var(--primary, #6366f1); }
+.ap-item-body { flex: 1; min-width: 0; }
+.ap-item-issue {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #1a1a2e);
+  line-height: 1.35;
+  margin-bottom: 2px;
+}
+.ap-item-action {
+  font-size: 10.5px;
+  color: var(--text-muted, #9ca3af);
+  line-height: 1.45;
+}
+.ap-item-cat {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 3px;
+}
+.ap-item-cat.critical, .ap-item-cat.high { background: var(--ap-dn-bg);  color: var(--ap-dn);  }
+.ap-item-cat.medium { background: var(--ap-amb-bg); color: var(--ap-amb); }
+.ap-item-cat.info   { background: var(--primary-bg, rgba(99,102,241,0.08)); color: var(--primary, #6366f1); }
+
+.ap-no-issues {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px;
+  font-size: 12px;
+  color: var(--ap-up);
+  font-weight: 500;
+}
+.ap-no-issues svg { width: 14px; height: 14px; }
+
+/* ── Section 3: Sparkline ───────────────────────────────────── */
+.ap-sparkline-section {
+  padding: 0 18px 16px;
+}
+.ap-spark-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ap-spark-value {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  font-family: var(--ap-mono);
+  font-feature-settings: 'tnum';
+}
+.ap-spark-value.ok       { color: var(--ap-up);  }
+.ap-spark-value.warning  { color: var(--ap-amb); }
+.ap-spark-value.critical { color: var(--ap-dn);  }
+.ap-spark-badge {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--ap-mono);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.ap-spark-badge.ok       { background: var(--ap-up-bg);  color: var(--ap-up);  }
+.ap-spark-badge.warning  { background: var(--ap-amb-bg); color: var(--ap-amb); }
+.ap-spark-badge.critical { background: var(--ap-dn-bg);  color: var(--ap-dn);  }
+.ap-spark-container {
+  position: relative;
+  height: 52px;
+}
+.ap-spark-no-data {
+  font-size: 11px;
+  color: var(--text-muted, #9ca3af);
+  text-align: center;
+  padding: 12px 0;
+  font-style: italic;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.ap-footer {
+  padding: 10px 18px;
+  border-top: 1px solid var(--border-color, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ap-footer-date {
+  font-size: 10px;
+  font-family: var(--ap-mono);
+  color: var(--text-muted, #9ca3af);
+}
+.ap-footer-status {
+  font-size: 10px;
+  font-weight: 600;
+}
+.ap-footer-status.ok       { color: var(--ap-up);  }
+.ap-footer-status.warning  { color: var(--ap-amb); }
+.ap-footer-status.critical { color: var(--ap-dn);  }
+.ap-footer-status.pending  { color: var(--ap-gray); }
+
+/* ── Loading skeleton ───────────────────────────────────────── */
+.ap-skeleton {
+  background: linear-gradient(90deg,
+    var(--bg-card, #fff) 25%,
+    var(--border-color, #e5e7eb) 50%,
+    var(--bg-card, #fff) 75%);
+  background-size: 200% 100%;
+  animation: ap-shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes ap-shimmer { from {background-position:200%} to {background-position:-200%} }
+</style>
+
+<!-- ── WIDGET MARKUP ──────────────────────────────────────────── -->
+<div class="ap-widget" id="auditor-panel-widget">
+
+  <!-- Header -->
+  <div class="ap-header">
+    <div class="ap-header-left">
+      <div class="ap-header-icon"><i data-feather="shield"></i></div>
+      <div>
+        <div class="ap-header-title">Panneau Auditeur</div>
+        <div class="ap-header-sub" id="ap-header-sub">Chargement...</div>
+      </div>
+    </div>
+    <div class="ap-header-right">
+      <div class="ap-status-dot pending" id="ap-status-dot"></div>
+      <button class="ap-refresh-btn" id="ap-refresh-btn" onclick="auditPanel.refresh()" title="Actualiser">
+        <i data-feather="refresh-cw" id="ap-refresh-icon"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div id="ap-loading" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+    <div class="ap-skeleton" style="height:48px;"></div>
+    <div class="ap-skeleton" style="height:36px;"></div>
+    <div class="ap-skeleton" style="height:36px;"></div>
+    <div class="ap-skeleton" style="height:52px;"></div>
+  </div>
+
+  <!-- Content (hidden until loaded) -->
+  <div id="ap-content" style="display:none;">
+
+    <!-- Section 1: Balance grid -->
+    <div class="ap-section-label">Balances de la Nuit</div>
+    <div class="ap-balance-grid" id="ap-balance-grid"></div>
+
+    <div class="ap-divider"></div>
+
+    <!-- Section 2: Outstanding items -->
+    <div class="ap-section-label" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>Points en Suspens</span>
+      <span id="ap-items-count" style="font-size:9px;font-family:var(--ap-mono);color:var(--text-muted);"></span>
+    </div>
+    <div class="ap-items-list" id="ap-items-list"></div>
+
+    <div class="ap-divider"></div>
+
+    <!-- Section 3: Variance sparkline (Quasimodo) -->
+    <div class="ap-section-label">Variance Quasimodo — 7 Jours</div>
+    <div class="ap-sparkline-section">
+      <div class="ap-spark-row">
+        <span class="ap-spark-value pending" id="ap-spark-current">—</span>
+        <span class="ap-spark-badge pending" id="ap-spark-badge">—</span>
+      </div>
+      <div class="ap-spark-container">
+        <canvas id="ap-sparkline-canvas"></canvas>
+      </div>
+      <div id="ap-spark-context" style="font-size:10px;font-family:var(--ap-mono);color:var(--text-muted);margin-top:4px;"></div>
+    </div>
+
+  </div><!-- /#ap-content -->
+
+  <!-- Footer -->
+  <div class="ap-footer" id="ap-footer" style="display:none;">
+    <span class="ap-footer-date" id="ap-footer-date">—</span>
+    <span class="ap-footer-status pending" id="ap-footer-status">—</span>
+  </div>
+
+</div><!-- /.ap-widget -->
+
+<script>
+/* ================================================================
+   AUDITOR PANEL WIDGET — JavaScript controller
+   Exposed as global `auditPanel` for host-page integration.
+   ================================================================ */
+(function() {
+  'use strict';
+
+  let _sparkChart = null;
+  let _currentDate = null;
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function fmt$(v) {
+    if (v == null) return '—';
+    return new Intl.NumberFormat('fr-CA', {style:'currency', currency:'CAD', maximumFractionDigits:2}).format(v);
+  }
+  function fmtVar(v) {
+    if (v == null) return '—';
+    return `${v >= 0 ? '+' : ''}${parseFloat(v).toFixed(2)}$`;
+  }
+  function statusCls(s) {
+    if (s === 'ok')       return 'ok';
+    if (s === 'warning')  return 'warning';
+    if (s === 'critical') return 'critical';
+    return 'pending';
+  }
+
+  // ── Section 1: Balance grid ───────────────────────────────────
+  function renderBalance(bg) {
+    const el = document.getElementById('ap-balance-grid');
+    const checks = bg.checks || {};
+    const items = [
+      { key: 'recap',      label: 'Récap',      data: checks.recap      },
+      { key: 'transelect', label: 'Transelect',  data: checks.transelect },
+      { key: 'ar_geac',    label: 'AR GEAC',     data: checks.ar_geac    },
+      { key: 'quasimodo',  label: 'Quasimodo',   data: checks.quasimodo  },
+    ];
+
+    el.innerHTML = items.map(item => {
+      const d = item.data;
+      let cls = 'pending';
+      let valStr = '';
+      if (d) {
+        if (d.status === 'green')   cls = 'green';
+        else if (d.status === 'red') cls = 'red';
+        if (d.value != null) valStr = `${d.value >= 0 ? '+' : ''}${parseFloat(d.value).toFixed(2)}$`;
+      }
+      return `
+        <div class="ap-balance-item ${cls}" title="${item.label}: ${valStr || 'en attente'}">
+          <div class="ap-dot-large"></div>
+          <div class="ap-balance-name">${item.label}</div>
+          ${valStr ? `<div class="ap-balance-value">${valStr}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Section 2: Outstanding items ─────────────────────────────
+  function renderItems(outstanding) {
+    const el    = document.getElementById('ap-items-list');
+    const count = document.getElementById('ap-items-count');
+
+    if (!outstanding || outstanding.length === 0) {
+      el.innerHTML = `
+        <div class="ap-no-issues">
+          <i data-feather="check-circle"></i>
+          <span>Aucun point en suspens — nuit balancee!</span>
+        </div>
+      `;
+      count.textContent = '';
+      feather.replace();
+      return;
+    }
+
+    count.textContent = `${outstanding.length} item${outstanding.length > 1 ? 's' : ''}`;
+
+    const iconMap = {
+      critical: 'alert-triangle',
+      high:     'alert-triangle',
+      medium:   'alert-circle',
+      info:     'info',
+    };
+
+    el.innerHTML = outstanding.map(item => `
+      <div class="ap-item">
+        <div class="ap-item-icon ${item.priority}">
+          <i data-feather="${iconMap[item.priority] || 'info'}"></i>
+        </div>
+        <div class="ap-item-body">
+          <div class="ap-item-issue">${item.issue}</div>
+          ${item.action ? `<div class="ap-item-action">${item.action}</div>` : ''}
+        </div>
+        <span class="ap-item-cat ${item.priority}">${item.category}</span>
+      </div>
+    `).join('');
+    feather.replace();
+  }
+
+  // ── Section 3: Sparkline ──────────────────────────────────────
+  function renderSparkline(varianceAlerts) {
+    const quasi = (varianceAlerts || []).find(a => a.metric === 'quasimodo_variance');
+    const currentEl = document.getElementById('ap-spark-current');
+    const badgeEl   = document.getElementById('ap-spark-badge');
+    const ctxEl     = document.getElementById('ap-spark-context');
+
+    if (!quasi) {
+      currentEl.textContent = '—';
+      document.getElementById('ap-spark-no-data');
+      ctxEl.textContent = 'Aucune donnee Quasimodo disponible';
+      return;
+    }
+
+    const sc = statusCls(quasi.status);
+    currentEl.textContent = fmtVar(quasi.current);
+    currentEl.className   = `ap-spark-value ${sc}`;
+    const labels = { ok:'OK', warning:'ATTENTION', critical:'CRITIQUE' };
+    badgeEl.textContent   = labels[sc] || '—';
+    badgeEl.className     = `ap-spark-badge ${sc}`;
+    ctxEl.textContent     = quasi.context || '';
+
+    // Sparkline using Chart.js (graceful fallback if not loaded)
+    if (typeof Chart === 'undefined') {
+      document.querySelector('.ap-spark-container').innerHTML =
+        `<div class="ap-spark-no-data">Chart.js requis pour le graphique tendance.</div>`;
+      return;
+    }
+
+    // We only have the current value from this endpoint.
+    // The sparkline shows threshold lines to give context even with 1 point.
+    if (_sparkChart) { _sparkChart.destroy(); _sparkChart = null; }
+
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const colors = {
+      ok:       '#10b981',
+      warning:  '#f59e0b',
+      critical: '#ef4444',
+    };
+    const dotColor = colors[sc] || '#9ca3af';
+    const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)';
+    const textColor = isDark ? '#9ca3af' : '#6b7280';
+
+    const canvas = document.getElementById('ap-sparkline-canvas');
+    _sparkChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: ['—', '—', '—', '—', '—', '—', 'Ce soir'],
+        datasets: [
+          {
+            label: 'Quasimodo',
+            data: [null, null, null, null, null, null, quasi.current],
+            borderColor: dotColor,
+            backgroundColor: 'transparent',
+            pointBackgroundColor: [
+              'transparent','transparent','transparent',
+              'transparent','transparent','transparent',
+              dotColor,
+            ],
+            pointRadius: [0,0,0,0,0,0,5],
+            pointHoverRadius: 6,
+            borderWidth: 2,
+            tension: 0.35,
+          },
+          // Threshold reference lines
+          {
+            label: 'Seuil ±5$',
+            data: Array(7).fill(5),
+            borderColor: 'rgba(245,158,11,0.4)',
+            borderWidth: 1,
+            borderDash: [4,3],
+            pointRadius: 0,
+            fill: false,
+          },
+          {
+            label: 'Seuil ±10$',
+            data: Array(7).fill(10),
+            borderColor: 'rgba(239,68,68,0.3)',
+            borderWidth: 1,
+            borderDash: [3,4],
+            pointRadius: 0,
+            fill: false,
+          },
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode:'index', intersect:false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: isDark ? '#1e2433' : '#fff',
+            titleColor: isDark ? '#e5e7eb' : '#111',
+            bodyColor:  isDark ? '#9ca3af' : '#6b7280',
+            borderColor: isDark ? '#2a2f3d' : '#e5e7eb',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: ctx => ctx.datasetIndex === 0
+                ? `Variance: ${ctx.raw != null ? fmtVar(ctx.raw) : '—'}`
+                : ctx.dataset.label,
+            }
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: textColor, font: { size: 9 } },
+            grid:  { color: gridColor },
+          },
+          y: {
+            ticks: {
+              color: textColor, font: { size: 9 },
+              callback: v => `${v}$`,
+            },
+            grid: { color: gridColor },
+          },
+        }
+      }
+    });
+  }
+
+  // ── Overall status helper ─────────────────────────────────────
+  function computeOverallStatus(data) {
+    const items = data.outstanding_items || [];
+    if (items.some(i => i.priority === 'critical')) return 'critical';
+    if (items.some(i => i.priority === 'high'))     return 'warning';
+    if (!data.session_exists)                        return 'pending';
+    return 'ok';
+  }
+
+  // ── Main fetch & render ───────────────────────────────────────
+  async function load(dateParam) {
+    const loading   = document.getElementById('ap-loading');
+    const content   = document.getElementById('ap-content');
+    const footer    = document.getElementById('ap-footer');
+    const dot       = document.getElementById('ap-status-dot');
+    const sub       = document.getElementById('ap-header-sub');
+    const refreshIco = document.getElementById('ap-refresh-icon');
+
+    loading.style.display  = '';
+    content.style.display  = 'none';
+    footer.style.display   = 'none';
+    refreshIco.classList.add('ap-spinning');
+    dot.className = 'ap-status-dot pending';
+
+    try {
+      const url = '/api/dashboard/auditor-panel' + (dateParam ? `?date=${dateParam}` : '');
+      const res  = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.success) throw new Error('Reponse invalide');
+
+      _currentDate = data.audit_date;
+
+      // Header subtitle
+      const d = new Date(data.audit_date + 'T12:00:00');
+      sub.textContent = d.toLocaleDateString('fr-CA', {weekday:'long', month:'long', day:'numeric'});
+
+      // Render sections
+      renderBalance(data.balance_grid || {});
+      renderItems(data.outstanding_items || []);
+      renderSparkline(data.variance_alerts || []);
+
+      // Footer
+      const genTime = data.generated_at
+        ? new Date(data.generated_at).toLocaleTimeString('fr-CA', {hour:'2-digit', minute:'2-digit'})
+        : '—';
+      document.getElementById('ap-footer-date').textContent = `Généré à ${genTime}`;
+
+      const overall = computeOverallStatus(data);
+      const statusLabels = { ok:'Tout balancé', warning:'Points à vérifier', critical:'Action requise', pending:'En attente' };
+      const footerStatus = document.getElementById('ap-footer-status');
+      footerStatus.textContent = statusLabels[overall] || '—';
+      footerStatus.className   = `ap-footer-status ${overall}`;
+
+      dot.className = `ap-status-dot ${overall}`;
+
+      loading.style.display = 'none';
+      content.style.display = '';
+      footer.style.display  = '';
+      feather.replace();
+
+    } catch (e) {
+      sub.textContent = `Erreur: ${e.message}`;
+      dot.className = 'ap-status-dot critical';
+      loading.innerHTML = `
+        <div style="padding:8px 0;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ap-dn, #ef4444);">
+          <i data-feather="alert-circle" style="width:14px;height:14px;flex-shrink:0;"></i>
+          Impossible de charger le panneau: ${e.message}
+        </div>
+      `;
+      feather.replace();
+    } finally {
+      refreshIco.classList.remove('ap-spinning');
+    }
+  }
+
+  // ── Public API ────────────────────────────────────────────────
+  window.auditPanel = {
+    refresh:  () => load(_currentDate),
+    setDate:  (d) => { _currentDate = d; load(d); },
+    getDate:  () => _currentDate,
+  };
+
+  // Initial load
+  document.addEventListener('DOMContentLoaded', () => load(null));
+  // If DOMContentLoaded already fired (partial injected after load):
+  if (document.readyState !== 'loading') load(null);
+})();
+</script>

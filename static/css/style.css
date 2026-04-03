@@ -36,7 +36,7 @@
     --card-bg: #ffffff;
     --text: #1a1a2e;
     --text-secondary: #6b7280;
-    --text-muted: #9ca3af;
+    --text-muted: #6b7280;
     --border: #e5e7eb;
     --border-light: #f3f4f6;
 
@@ -46,10 +46,16 @@
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.03);
     --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
     --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.1);
-    --shadow-pink: 0 4px 14px rgba(99, 102, 241, 0.2);
+    --shadow-accent: 0 4px 14px rgba(99, 102, 241, 0.2);
 
     /* Layout */
     --sidebar-width: 280px;
+
+    /* Missing semantic aliases used across templates */
+    --bg-tertiary: #f1f3f7;
+    --accent-color: var(--primary);
+    --bg-card: var(--card-bg);
+    --border-color: var(--border);
 
     /* Transitions */
     --transition: 200ms ease;
@@ -62,7 +68,7 @@
     --card-bg: #14171f;
     --text: #e5e7eb;
     --text-secondary: #9ca3af;
-    --text-muted: #4b5563;
+    --text-muted: #9ca3af;
     --border: #1e2230;
     --border-light: #181c26;
     --primary-bg: rgba(99, 102, 241, 0.1);
@@ -75,7 +81,10 @@
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.25), 0 2px 4px rgba(0, 0, 0, 0.15);
     --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.2);
     --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
-    --shadow-pink: 0 4px 14px rgba(99, 102, 241, 0.3);
+    --shadow-accent: 0 4px 14px rgba(99, 102, 241, 0.3);
+    --bg-tertiary: #1a1e2a;
+    --bg-card: var(--card-bg);
+    --border-color: var(--border);
 }
 
 [data-theme="dark"] input,
@@ -599,13 +608,13 @@ main.with-sidebar {
 .btn-primary {
     background: var(--primary);
     color: white;
-    box-shadow: var(--shadow-pink);
+    box-shadow: var(--shadow-accent);
 }
 
 .btn-primary:hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(233, 30, 99, 0.35);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 .btn-block {
@@ -1444,7 +1453,7 @@ main.with-sidebar {
     justify-content: center;
     gap: 0.5rem;
     transition: var(--transition);
-    box-shadow: var(--shadow-pink);
+    box-shadow: var(--shadow-accent);
 }
 
 .guide-action-btn:hover {
@@ -2770,7 +2779,7 @@ main.with-sidebar {
     background: var(--primary);
     color: white;
     border-color: var(--primary);
-    box-shadow: var(--shadow-pink);
+    box-shadow: var(--shadow-accent);
 }
 
 .rj-toolbar-btn.primary:hover:not(:disabled) {
@@ -2860,13 +2869,13 @@ main.with-sidebar {
 .rj-btn:not(.secondary) {
     background: var(--primary);
     color: white;
-    box-shadow: var(--shadow-pink);
+    box-shadow: var(--shadow-accent);
 }
 
 .rj-btn:not(.secondary):hover {
     background: var(--primary-dark);
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(233, 30, 99, 0.35);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 .rj-btn.secondary {

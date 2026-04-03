@@ -645,6 +645,15 @@ async function fillAllSheets() {
     banner.style.color = '#166534';
     banner.textContent = fillCount + ' feuille(s) remplie(s). Cliquez "3. Remplir Jour" pour calculer et écrire dans l\'onglet Jour.';
 
+    // Invalidate cached tabs so they show fresh data on next click
+    if (typeof invalidateTabCache === 'function') {
+      invalidateTabCache('recap', 'transelect', 'geac', 'nouveau-jour');
+    }
+    // Mark affected tabs with green dot to signal they have new data
+    if (typeof markTabUpdated === 'function') {
+      markTabUpdated('recap', 'transelect', 'geac');
+    }
+
     // Auto-fill FreedomPay from Daily Revenue (variance = $0)
     // Settlements are negative in Daily Rev (deductions) — FreedomPay parser uses abs()
     const drResult = importState.results['daily_revenue'];
@@ -808,6 +817,14 @@ async function fillJourSheet() {
       banner.style.color = '#166534';
       banner.textContent = 'Onglet Jour rempli! ' + result.filled_count + ' colonnes écrites pour jour ' + result.day + '. Vous pouvez télécharger le RJ.';
 
+      // Invalidate all data tabs — Jour values have changed
+      if (typeof invalidateTabCache === 'function') {
+        invalidateTabCache('nouveau-jour', 'recap', 'transelect', 'geac');
+      }
+      if (typeof markTabUpdated === 'function') {
+        markTabUpdated('nouveau-jour');
+      }
+
       if (typeof notify === 'function') notify('Jour rempli: ' + result.filled_count + ' colonnes, jour ' + result.day, 'success');
     } else {
       banner.style.background = '#fef2f2';
@@ -871,10 +888,17 @@ function buildResultPreview(docType, result) {
     // Show daily deduction details if available
     const jourDed = data.jour_deductions;
     if (jourDed && Object.keys(jourDed).length > 0) {
-      const colNames = {'9':'J-Piazza Nourr','10':'K-Piazza Alcool','11':'L-Piazza Bières','12':'M-Piazza Minéraux','13':'N-Piazza Vins','14':'O-Banquet Nourr','15':'P-Banquet Boissons','18':'S-Tabagie'};
+      const colNames = {
+        '9':'J-Piazza Nourr','10':'K-Piazza Alcool','11':'L-Piazza Bières',
+        '12':'M-Piazza Minéraux','13':'N-Piazza Vins','14':'O-Spesa Nourr',
+        '15':'P-Banquet Boisn','35':'AJ-Tabagie',
+        '68':'BQ-Admin Tips','69':'BR-Promo Tips'
+      };
+      const directCols = new Set(['68', '69']);  // BQ/BR: tips, not deductions
       for (const [colIdx, amount] of Object.entries(jourDed)) {
         const name = colNames[colIdx] || 'Col ' + colIdx;
-        html += kvLine('HP ' + name, '-$' + parseFloat(amount).toFixed(2));
+        const prefix = directCols.has(colIdx) ? '+$' : '-$';
+        html += kvLine('HP ' + name, prefix + parseFloat(amount).toFixed(2));
       }
     }
     // Show departments summary

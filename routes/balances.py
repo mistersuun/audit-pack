@@ -9,7 +9,7 @@ from flask import Blueprint, request, jsonify, render_template, session
 from functools import wraps
 from datetime import datetime, timedelta
 from database.models import db, DailyReport, CashReconciliation, MonthEndChecklist, NightAuditSession
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 
 balances_bp = Blueprint('balances', __name__)
 

@@ -336,14 +336,41 @@
             align-items: flex-start;
         }
     }
+
+    .period-btn {
+        padding: 0.4rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .period-btn:hover {
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+    }
+    .period-btn.active {
+        background: var(--color-primary);
+        color: #fff;
+        border-color: var(--color-primary);
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1>Prévisions et Insights</h1>
+        <h1>Previsions et Insights</h1>
         <p class="subtitle">Analyse ML des tendances et recommandations de tarification</p>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center;">
+        <button class="period-btn active" data-days="30" onclick="setPeriod(30, this)">30 jours</button>
+        <button class="period-btn" data-days="90" onclick="setPeriod(90, this)">3 mois</button>
+        <button class="period-btn" data-days="365" onclick="setPeriod(365, this)">12 mois</button>
+        <button class="period-btn" data-days="1825" onclick="setPeriod(1825, this)">5 ans</button>
     </div>
 </div>
 
@@ -592,11 +619,44 @@
 
     // State
     let forecastChart, seasonalityMonthChart, seasonalityDOWChart, trendChart, anomaliesChart, pricingPowerChart, concentrationChart;
+    let currentDays = 30;
+    const hasChartJS = typeof Chart !== 'undefined';
+
+    function setPeriod(days, btn) {
+        currentDays = days;
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        // Destroy existing charts before reload
+        [forecastChart, seasonalityMonthChart, seasonalityDOWChart, trendChart, anomaliesChart, pricingPowerChart, concentrationChart].forEach(c => { if (c) c.destroy(); });
+        forecastChart = seasonalityMonthChart = seasonalityDOWChart = trendChart = anomaliesChart = pricingPowerChart = concentrationChart = null;
+        loadDashboard();
+    }
+
+    // Safe chart creation: returns null if Chart.js is not loaded
+    function createChart(canvasId, config) {
+        if (!hasChartJS) {
+            console.warn('Chart.js not loaded, skipping chart:', canvasId);
+            return null;
+        }
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.warn('Canvas not found:', canvasId);
+            return null;
+        }
+        const ctx = canvas.getContext('2d');
+        return new Chart(ctx, config);
+    }
 
     // Utility functions
     function showError(message) {
         const container = document.getElementById('errorContainer');
-        container.innerHTML = `<div class="error-container"><strong>⚠️ Erreur</strong> ${message}</div>`;
+        let hint = '';
+        if (message.includes('numpy')) {
+            hint = '<br><small style="opacity:0.8;">Exécutez: <code>pip install numpy scikit-learn</code></small>';
+        } else if (message.includes('30 jours')) {
+            hint = '<br><small style="opacity:0.8;">Importez des fichiers RJ historiques via le CRM pour alimenter les prévisions.</small>';
+        }
+        container.innerHTML = `<div class="error-container"><strong>Prévisions indisponibles</strong><br>${message}${hint}</div>`;
         container.style.display = 'block';
         document.getElementById('loadingState').style.display = 'none';
     }
@@ -616,16 +676,27 @@
         return value.toLocaleString('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 0});
     }
 
+    // Safe fetch: check response status before parsing JSON
+    async function safeFetch(url) {
+        const r = await fetch(url);
+        if (!r.ok) {
+            const text = await r.text().catch(() => '');
+            try { return JSON.parse(text); } catch(_) {}
+            return {success: false, reason: 'HTTP ' + r.status};
+        }
+        return r.json();
+    }
+
     // Load all data
     async function loadDashboard() {
         try {
             const [forecast, seasonality, anomalies, pricing, trends, insights] = await Promise.all([
-                fetch('/api/previsions/forecast').then(r => r.json()),
-                fetch('/api/previsions/seasonality').then(r => r.json()),
-                fetch('/api/previsions/anomalies').then(r => r.json()),
-                fetch('/api/previsions/pricing').then(r => r.json()),
-                fetch('/api/previsions/trends').then(r => r.json()),
-                fetch('/api/previsions/insights').then(r => r.json())
+                safeFetch('/api/previsions/forecast?days=' + currentDays),
+                safeFetch('/api/previsions/seasonality?days=' + currentDays),
+                safeFetch('/api/previsions/anomalies?days=' + currentDays),
+                safeFetch('/api/previsions/pricing?days=' + currentDays),
+                safeFetch('/api/previsions/trends?days=' + currentDays),
+                safeFetch('/api/previsions/insights?days=' + currentDays)
             ]);
 
             // Check for errors
@@ -634,16 +705,21 @@
                 return;
             }
 
-            // Populate data
-            await populateForecast(forecast);
-            await populateSeasonality(seasonality);
-            await populateAnomalies(anomalies);
-            await populatePricing(pricing);
-            await populateTrends(trends);
-
-            // Show dashboard
+            // Show dashboard immediately so KPIs are visible
             document.getElementById('loadingState').style.display = 'none';
             document.getElementById('dashboardContent').style.display = 'block';
+
+            // Populate each section independently — one failure doesn't block the rest
+            try { await populateForecast(forecast); } catch(e) { console.error('Forecast render:', e); }
+            try { await populateSeasonality(seasonality); } catch(e) { console.error('Seasonality render:', e); }
+            try { await populateAnomalies(anomalies); } catch(e) { console.error('Anomalies render:', e); }
+            try { await populatePricing(pricing); } catch(e) { console.error('Pricing render:', e); }
+            try { await populateTrends(trends); } catch(e) { console.error('Trends render:', e); }
+            try {
+                if (insights.success && insights.insights) {
+                    await populateConcentration(insights.insights);
+                }
+            } catch(e) { console.error('Concentration render:', e); }
 
         } catch (error) {
             console.error('Dashboard load error:', error);
@@ -665,47 +741,62 @@
         document.getElementById('confidence30').textContent = (f30.confidence || 0.85).toLocaleString('en-US', {style: 'percent'});
         document.getElementById('confidence90').textContent = (f90.confidence || 0.75).toLocaleString('en-US', {style: 'percent'});
 
-        // Forecast chart: Historical + Forecast
-        const forecastCtx = document.getElementById('forecastChart').getContext('2d');
-        const labels = [];
-        const historicalData = [];
-        const forecastDataPoints = [];
+        // Forecast chart: 3 monthly forecasts as bar chart
+        const raw = data.raw_forecast || {};
+        const histMonths = raw.historical_by_month || [];
+        const nextMonths = raw.next_3_months_forecast || [];
 
-        // Simulate forecast curve (in real implementation, would come from engine)
-        const days = 90;
-        for (let i = 0; i < days; i++) {
-            const date = new Date();
-            date.setDate(date.getDate() + i);
-            labels.push(date.toLocaleDateString('fr-FR', {month: 'short', day: 'numeric'}));
+        const allLabels = histMonths.map(h => h.month).concat(nextMonths.map(n => n.month));
+        const histRevpar = histMonths.map(h => {
+            const occ = h.avg_occ || 0;
+            const adr = h.avg_adr || 0;
+            return Math.round(occ / 100 * adr * 100) / 100;
+        });
+        const forecastRevpar = histMonths.map(() => null).concat(nextMonths.map(n => {
+            const occ = n.forecasted_occ || 0;
+            const adr = n.forecasted_adr || 0;
+            return Math.round(occ / 100 * adr * 100) / 100;
+        }));
+        const histOcc = histMonths.map(h => h.avg_occ || 0);
+        const forecastOcc = histMonths.map(() => null).concat(nextMonths.map(n => n.forecasted_occ || 0));
 
-            if (i < 30) {
-                historicalData.push(null);
-                forecastDataPoints.push(null);
-            } else if (i === 30) {
-                const baseValue = hist.revpar || 150;
-                const trend = (f30.revpar - baseValue) / 30;
-                forecastDataPoints.push(baseValue + trend * (i - 30));
-            } else {
-                const baseValue = hist.revpar || 150;
-                const trend = (f90.revpar - baseValue) / 90;
-                forecastDataPoints.push(baseValue + trend * (i - 30));
-            }
-        }
-
-        forecastChart = new Chart(forecastCtx, {
-            type: 'line',
+        forecastChart = createChart('forecastChart', {
+            type: 'bar',
             data: {
-                labels: labels,
+                labels: allLabels,
                 datasets: [
                     {
-                        label: 'RevPAR Prévu',
-                        data: forecastDataPoints,
-                        borderColor: chartColors.secondary,
+                        label: 'RevPAR Historique',
+                        data: histRevpar.concat(nextMonths.map(() => null)),
+                        backgroundColor: chartColors.primary,
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'RevPAR Prevu',
+                        data: forecastRevpar,
+                        backgroundColor: chartColors.secondary,
+                        borderRadius: 4
+                    },
+                    {
+                        type: 'line',
+                        label: 'Occ % Historique',
+                        data: histOcc.concat(nextMonths.map(() => null)),
+                        borderColor: chartColors.success,
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 3,
+                        yAxisID: 'y1'
+                    },
+                    {
+                        type: 'line',
+                        label: 'Occ % Prevu',
+                        data: forecastOcc,
+                        borderColor: chartColors.warning,
                         borderDash: [5, 5],
                         borderWidth: 2,
                         fill: false,
-                        pointRadius: 0,
-                        tension: 0.4
+                        pointRadius: 3,
+                        yAxisID: 'y1'
                     }
                 ]
             },
@@ -724,9 +815,15 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: (val) => '$' + val
-                        }
+                        ticks: {callback: (val) => '$' + val}
+                    },
+                    y1: {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {callback: (val) => val + '%'},
+                        grid: {drawOnChartArea: false}
                     }
                 }
             }
@@ -753,8 +850,7 @@
         document.getElementById('seasonalGap').textContent = formatCurrency((best.avg_revenue || 0) - (worst.avg_revenue || 0));
 
         // Monthly chart
-        const monthCtx = document.getElementById('seasonalityMonthChart').getContext('2d');
-        seasonalityMonthChart = new Chart(monthCtx, {
+        seasonalityMonthChart = createChart('seasonalityMonthChart', {
             type: 'bar',
             data: {
                 labels: monthly.map(m => m.label),
@@ -803,12 +899,11 @@
 
         // Day of week chart
         const dow = data.day_of_week_revenue || {};
-        const dowData = dow.by_dow || [];
-        const dowCtx = document.getElementById('seasonalityDOWChart').getContext('2d');
-        seasonalityDOWChart = new Chart(dowCtx, {
+        const dowData = dow.by_dow || dow.by_day || [];
+        seasonalityDOWChart = createChart('seasonalityDOWChart', {
             type: 'radar',
             data: {
-                labels: dowData.map(d => d.label),
+                labels: dowData.map(d => d.label || d.day_name),
                 datasets: [
                     {
                         label: 'Revenu Moyen',
@@ -911,31 +1006,42 @@
         document.getElementById('upliftAnnual').textContent = formatCurrency(pricing.uplift_10pct_annual);
 
         // Pricing scatter chart
-        const pricingCtx = document.getElementById('pricingPowerChart').getContext('2d');
-        pricingPowerChart = new Chart(pricingCtx, {
+        const scatterPoints = pricing.scatter_data || [];
+        pricingPowerChart = createChart('pricingPowerChart', {
             type: 'scatter',
             data: {
                 datasets: [
                     {
-                        label: 'Bande Basse (<60%)',
+                        label: 'Jours individuels',
+                        data: scatterPoints,
+                        backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                        borderColor: 'rgba(59, 130, 246, 0.3)',
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    },
+                    {
+                        label: 'Moy. Basse (<60%)',
                         data: [{x: lowBand.avg_occ || 0, y: lowBand.avg_adr || 0}],
                         backgroundColor: 'rgb(239, 68, 68)',
                         borderColor: 'rgb(239, 68, 68)',
-                        pointRadius: 8
+                        pointRadius: 10,
+                        pointStyle: 'triangle'
                     },
                     {
-                        label: 'Bande Moyenne (60-85%)',
+                        label: 'Moy. Moyenne (60-85%)',
                         data: [{x: midBand.avg_occ || 0, y: midBand.avg_adr || 0}],
                         backgroundColor: 'rgb(245, 158, 11)',
                         borderColor: 'rgb(245, 158, 11)',
-                        pointRadius: 8
+                        pointRadius: 10,
+                        pointStyle: 'triangle'
                     },
                     {
-                        label: 'Bande Haute (>85%)',
+                        label: 'Moy. Haute (>85%)',
                         data: [{x: highBand.avg_occ || 0, y: highBand.avg_adr || 0}],
                         backgroundColor: 'rgb(34, 197, 94)',
                         borderColor: 'rgb(34, 197, 94)',
-                        pointRadius: 8
+                        pointRadius: 10,
+                        pointStyle: 'triangle'
                     }
                 ]
             },
@@ -979,16 +1085,19 @@
         const trend = data.trend || {};
 
         // Trend direction
-        const directionEmoji = trend.direction === 'up' ? '↑' : trend.direction === 'down' ? '↓' : '→';
-        const directionClass = 'trend-' + (trend.direction || 'stable');
-        document.getElementById('trendDirection').innerHTML = `<span class="${directionClass}">${directionEmoji} ${trend.direction.toUpperCase()}</span>`;
+        const dir = trend.direction || 'stable';
+        const directionEmoji = dir === 'up' ? '&#8593;' : dir === 'down' ? '&#8595;' : '&#8594;';
+        const directionClass = 'trend-' + dir;
+        const directionLabel = dir === 'up' ? 'HAUSSE' : dir === 'down' ? 'BAISSE' : 'STABLE';
+        document.getElementById('trendDirection').innerHTML = `<span class="${directionClass}">${directionEmoji} ${directionLabel}</span>`;
 
         document.getElementById('trendPct').textContent = formatPercent(trend.pct_change_30d);
 
-        const momentumBadge = trend.momentum === 'accelerating' ? 'badge-success' :
-                              trend.momentum === 'decelerating' ? 'badge-danger' : 'badge-info';
-        const momentumText = trend.momentum === 'accelerating' ? '🚀 Accelération' :
-                             trend.momentum === 'decelerating' ? '📉 Décélération' : '➡️ Stable';
+        const mom = trend.momentum || 'stable';
+        const momentumBadge = mom === 'accelerating' ? 'badge-success' :
+                              mom === 'decelerating' ? 'badge-danger' : 'badge-info';
+        const momentumText = mom === 'accelerating' ? 'Acceleration' :
+                             mom === 'decelerating' ? 'Deceleration' : 'Stable';
         document.getElementById('momentumBadge').className = 'card-badge ' + momentumBadge;
         document.getElementById('momentumBadge').textContent = momentumText;
 
@@ -998,8 +1107,12 @@
         const ma30 = ma.ma30 || [];
         const ma90 = ma.ma90 || [];
 
-        const trendCtx = document.getElementById('trendChart').getContext('2d');
-        trendChart = new Chart(trendCtx, {
+        // Align all series by date: pad shorter series with nulls at the start
+        const maxLen = ma7.length;
+        const pad30 = new Array(Math.max(0, maxLen - ma30.length)).fill(null);
+        const pad90 = new Array(Math.max(0, maxLen - ma90.length)).fill(null);
+
+        trendChart = createChart('trendChart', {
             type: 'line',
             data: {
                 labels: ma7.map((d, i) => i % 7 === 0 ? new Date(d.date).toLocaleDateString('fr-FR', {month: 'short', day: 'numeric'}) : ''),
@@ -1015,7 +1128,7 @@
                     },
                     {
                         label: 'MA 30 jours',
-                        data: ma30.map(d => d.revpar),
+                        data: pad30.concat(ma30.map(d => d.revpar)),
                         borderColor: chartColors.secondary,
                         borderWidth: 2,
                         fill: false,
@@ -1024,7 +1137,7 @@
                     },
                     {
                         label: 'MA 90 jours',
-                        data: ma90.map(d => d.revpar),
+                        data: pad90.concat(ma90.map(d => d.revpar)),
                         borderColor: chartColors.danger,
                         borderWidth: 2,
                         fill: false,
@@ -1036,6 +1149,7 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                spanGaps: false,
                 plugins: {
                     legend: {position: 'top'},
                     tooltip: {
@@ -1044,13 +1158,13 @@
                         titleColor: '#fff',
                         bodyColor: '#fff',
                         callbacks: {
-                            label: (ctx) => ctx.dataset.label + ': $' + ctx.raw.toFixed(2)
+                            label: (ctx) => ctx.raw != null ? ctx.dataset.label + ': $' + ctx.raw.toFixed(2) : ''
                         }
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true,
+                        beginAtZero: false,
                         ticks: {callback: (val) => '$' + val}
                     }
                 }
@@ -1059,16 +1173,33 @@
     }
 
     async function populateConcentration(insights) {
-        // This would be populated from insights.revenue_concentration
         const rc = insights.revenue_concentration || {};
 
-        document.getElementById('hhiIndex').textContent = (rc.hhi_index || 0).toFixed(0);
-        document.getElementById('diversificationScore').textContent = formatPercent(rc.diversification_score);
-        document.getElementById('mainDependency').textContent = formatPercent(rc.main_source_pct);
+        // Map actual API keys to template fields
+        const hhi = rc.herfindahl_index || rc.hhi_index || 0;
+        const roomPct = rc.avg_room_pct || 0;
+        // Diversification: inverse of HHI normalized (10000 = monopoly, 0 = perfect)
+        const divScore = Math.max(0, Math.min(100, 100 - (hhi / 100)));
 
-        const sources = rc.sources || [];
-        const concentrationCtx = document.getElementById('concentrationChart').getContext('2d');
-        concentrationChart = new Chart(concentrationCtx, {
+        document.getElementById('hhiIndex').textContent = hhi.toFixed(0);
+        document.getElementById('diversificationScore').textContent = divScore.toFixed(0) + '%';
+        document.getElementById('mainDependency').textContent = roomPct.toFixed(1) + '% Chambres';
+
+        // Build sources from monthly_trend averages
+        const trend = rc.monthly_trend || [];
+        let avgRoom = 0, avgFB = 0, avgOther = 0;
+        if (trend.length > 0) {
+            avgRoom = trend.reduce((s, t) => s + (t.room_pct || 0), 0) / trend.length;
+            avgFB = trend.reduce((s, t) => s + (t.fb_pct || 0), 0) / trend.length;
+            avgOther = trend.reduce((s, t) => s + (t.other_pct || 0), 0) / trend.length;
+        }
+        const sources = [
+            {source: 'Chambres', pct: Math.max(0, avgRoom)},
+            {source: 'F&B', pct: Math.max(0, avgFB)},
+            {source: 'Autres', pct: Math.max(0, avgOther)},
+        ].filter(s => s.pct > 0);
+
+        concentrationChart = createChart('concentrationChart', {
             type: 'doughnut',
             data: {
                 labels: sources.map(s => s.source),
@@ -1082,7 +1213,7 @@
                         chartColors.info,
                         chartColors.warning
                     ],
-                    borderColor: 'var(--bg-secondary)',
+                    borderColor: '#ffffff',
                     borderWidth: 2
                 }]
             },

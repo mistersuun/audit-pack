@@ -17,8 +17,11 @@ import copy
 import re
 import io
 import os
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from utils.weather_capture import get_weather_screenshot, fetch_tomorrow_weather
+import logging
+
+logger = logging.getLogger(__name__)
 
 generators_bp = Blueprint('generators', __name__)
 
@@ -28,8 +31,8 @@ def generators_page():
     """Display the generators page."""
     return render_template('generators.html')
 
-# Path to template files
-TEMPLATE_DIR = 'static/templates'
+# Path to template files (absolute, relative to project root)
+TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'static', 'templates')
 
 # French day/month names (shared across generators)
 DAYS_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
@@ -69,6 +72,105 @@ def _format_date_fr(date_obj):
     return f"{day_name} le {date_obj.day} {month_name} {date_obj.year}"
 
 
+def _docx_to_pdf(docx_bytes):
+    """Convert .docx bytes to PDF bytes using Microsoft Word via COM.
+
+    Requires Microsoft Word installed on the machine.
+    Returns PDF bytes or None on failure.
+    """
+    import tempfile
+    try:
+        import win32com.client
+        import pythoncom
+    except ImportError:
+        return None
+
+    docx_path = None
+    pdf_path = None
+    try:
+        pythoncom.CoInitialize()
+
+        # Write .docx to temp file
+        with tempfile.NamedTemporaryFile(suffix='.docx', delete=False) as tmp:
+            tmp.write(docx_bytes)
+            docx_path = tmp.name
+
+        pdf_path = docx_path.replace('.docx', '.pdf')
+
+        word = win32com.client.Dispatch('Word.Application')
+        word.Visible = False
+        word.DisplayAlerts = False
+
+        doc = word.Documents.Open(os.path.abspath(docx_path))
+        doc.SaveAs(os.path.abspath(pdf_path), FileFormat=17)  # 17 = wdFormatPDF
+        doc.Close(False)
+        word.Quit()
+
+        with open(pdf_path, 'rb') as f:
+            return f.read()
+    except Exception as e:
+        logger.error(f"DOCX to PDF conversion failed: {e}")
+        return None
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+        for p in [docx_path, pdf_path]:
+            if p and os.path.exists(p):
+                try:
+                    os.unlink(p)
+                except Exception:
+                    pass
+
+
+def _xlsx_to_pdf(xlsx_bytes):
+    """Convert .xlsx bytes to PDF bytes using Microsoft Excel via COM."""
+    import tempfile
+    try:
+        import win32com.client
+        import pythoncom
+    except ImportError:
+        return None
+
+    xlsx_path = None
+    pdf_path = None
+    try:
+        pythoncom.CoInitialize()
+
+        with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as tmp:
+            tmp.write(xlsx_bytes)
+            xlsx_path = tmp.name
+
+        pdf_path = xlsx_path.replace('.xlsx', '.pdf')
+
+        excel = win32com.client.Dispatch('Excel.Application')
+        excel.Visible = False
+        excel.DisplayAlerts = False
+
+        wb = excel.Workbooks.Open(os.path.abspath(xlsx_path))
+        wb.ExportAsFixedFormat(0, os.path.abspath(pdf_path))  # 0 = xlTypePDF
+        wb.Close(False)
+        excel.Quit()
+
+        with open(pdf_path, 'rb') as f:
+            return f.read()
+    except Exception as e:
+        logger.error(f"XLSX to PDF conversion failed: {e}")
+        return None
+    finally:
+        try:
+            pythoncom.CoUninitialize()
+        except Exception:
+            pass
+        for p in [xlsx_path, pdf_path]:
+            if p and os.path.exists(p):
+                try:
+                    os.unlink(p)
+                except Exception:
+                    pass
+
+
 def _replace_runs_text(paragraph, new_text, leading_spaces=0):
     """
     Replace all text in a paragraph's runs with new_text while preserving
@@ -103,141 +205,132 @@ def _replace_runs_text(paragraph, new_text, leading_spaces=0):
 @login_required
 def print_preview(gen_type):
     """
-    Return a printable HTML page for the given generator type.
+    Generate the same document as 'Generer', convert to PDF via Word/Excel COM,
+    and serve it to the browser for instant print preview.
     Query param: ?date=YYYY-MM-DD
-    Opens in a new window and auto-prints.
     """
     date_str = request.args.get('date')
     if not date_str:
-        return 'Date manquante', 400
+        return jsonify({'error': 'Date manquante'}), 400
 
     try:
         date_obj = datetime.strptime(date_str, '%Y-%m-%d')
     except ValueError:
-        return 'Format de date invalide', 400
+        return jsonify({'error': 'Format de date invalide'}), 400
 
-    date_display = _format_date_fr(date_obj)
+    # Map gen_type to the generator function and file type
+    gen_map = {
+        'separateur-date': ('_gen_separateur', 'docx'),
+        'checklist-tournee': ('_gen_checklist_tournee', 'xlsx'),
+        'entretien-hiver': ('_gen_entretien', 'docx'),
+    }
 
-    if gen_type == 'separateur-date':
-        # Big centered date text — mimics the Word template
-        body = f'''
-        <div style="display:flex; align-items:center; justify-content:center;
-                    height:90vh; text-align:center;">
-            <h1 style="font-size:62pt; font-weight:normal; margin:0; line-height:1.2;">
-                {date_display}
-            </h1>
-        </div>'''
-        return _print_html('Séparateur Daté', body, landscape=True)
+    if gen_type not in gen_map:
+        return jsonify({'error': 'Type inconnu'}), 404
 
-    elif gen_type == 'checklist-tournee':
-        # Load template and render as HTML table
-        template_path = os.path.join(TEMPLATE_DIR, 'Checklist Tournée Étages.xlsx')
-        wb = load_workbook(template_path)
-        ws = wb.active
+    func_name, file_type = gen_map[gen_type]
 
-        formatted_date = date_obj.strftime('%m/%d/%Y')
-        rows_html = ''
-        for r in range(5, ws.max_row + 1):
-            a_val = ws.cell(r, 1).value or ''
-            b_val = ws.cell(r, 2).value or ''
-            if not str(a_val).strip() and not str(b_val).strip():
-                continue
-            rows_html += f'''<tr>
-                <td style="width:30px; text-align:center; font-weight:600;">{a_val}</td>
-                <td>{b_val}</td>
-                <td style="width:40px"></td>
-                <td style="width:40px"></td>
-                <td style="width:40px"></td>
-                <td style="width:40px"></td>
-                <td style="width:40px"></td>
-            </tr>'''
+    try:
+        # Generate the document bytes using the same logic as 'Generer'
+        doc_bytes = globals()[func_name](date_obj)
 
-        body = f'''
-        <h2 style="text-align:center; margin-bottom:0.3rem;">Checklist Tournée Étages</h2>
-        <p style="text-align:center; font-size:14pt; margin-bottom:1rem;">
-            liste des vérifications pour auditeur de nuit {formatted_date}
-        </p>
-        <table style="width:100%; border-collapse:collapse; font-size:10pt;">
-            <thead>
-                <tr>
-                    <th style="border:1px solid #999; padding:4px; background:#f0f0f0;">#</th>
-                    <th style="border:1px solid #999; padding:4px; background:#f0f0f0;">Vérification</th>
-                    <th style="border:1px solid #999; padding:4px; background:#f0f0f0;" colspan="5">Vérifier par</th>
-                </tr>
-            </thead>
-            <tbody>{rows_html}</tbody>
-        </table>'''
-        return _print_html('Checklist Tournée', body)
-
-    elif gen_type == 'entretien-hiver':
-        day_name = DAYS_FR[date_obj.weekday()]
-        day_num = date_obj.day
-        month_name = MONTHS_FR[date_obj.month - 1]
-        year = date_obj.year
-        if date_obj.month >= 10:
-            season = f"{year}-{year+1}"
+        # Convert to PDF
+        if file_type == 'docx':
+            pdf_bytes = _docx_to_pdf(doc_bytes)
         else:
-            season = f"{year-1}-{year}"
+            pdf_bytes = _xlsx_to_pdf(doc_bytes)
 
-        # Build empty table rows (23 data rows like the template)
-        data_rows = ''
-        for _ in range(23):
-            data_rows += '''<tr>
-                <td style="height:1.6em"></td><td></td><td></td><td></td>
-                <td></td><td></td><td></td><td></td>
-            </tr>'''
+        if pdf_bytes:
+            return send_file(
+                io.BytesIO(pdf_bytes),
+                mimetype='application/pdf',
+                as_attachment=False,
+                download_name=f'{gen_type}_{date_str}.pdf'
+            )
+        else:
+            # Fallback: serve the original file for download
+            mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' if file_type == 'docx' else 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            return send_file(
+                io.BytesIO(doc_bytes),
+                mimetype=mime,
+                as_attachment=True,
+                download_name=f'{gen_type}_{date_str}.{file_type}'
+            )
+    except Exception as e:
+        logger.exception(f"Print preview error for {gen_type}")
+        return jsonify({'error': str(e)}), 500
 
-        body = f'''
-        <table style="width:100%; border-collapse:collapse; font-size:10pt;">
-            <thead>
-                <tr>
-                    <th colspan="8" style="border:1px solid #999; padding:10px; text-align:center; font-size:14pt;">
-                        Entretien Sheraton Laval hiver {season}<br>
-                        <span style="font-size:12pt; font-weight:normal;">
-                            {day_name} {day_num} {month_name} {year}
-                        </span>
-                    </th>
-                </tr>
-                <tr>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Date</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Heure début</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Heure fin</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">État</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Condition Ext.</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Déneigement</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Abrasif</th>
-                    <th style="border:1px solid #999; padding:5px; background:#f0f0f0;">Équipier</th>
-                </tr>
-            </thead>
-            <tbody>{data_rows}</tbody>
-        </table>'''
-        return _print_html(f'Entretien Hiver — {day_name} {day_num} {month_name} {year}', body)
 
+def _gen_separateur(date_obj):
+    """Generate separateur date .docx bytes."""
+    new_date_text = _format_date_fr(date_obj)
+    template_path = os.path.join(TEMPLATE_DIR, 'separateur_date_comptabilité.docx')
+    doc = Document(template_path)
+    body = doc.element.body
+    txbx_elements = body.findall('.//' + '{%s}txbxContent' % W_NS)
+    for txbx in txbx_elements:
+        paragraphs = txbx.findall('{%s}p' % W_NS)
+        if not paragraphs:
+            continue
+        p_elem = paragraphs[0]
+        runs = p_elem.findall('{%s}r' % W_NS)
+        if not runs:
+            continue
+        # Replace text in first run, clear others
+        for i, r in enumerate(runs):
+            t = r.find('{%s}t' % W_NS)
+            if t is not None:
+                if i == 0:
+                    t.text = new_date_text
+                else:
+                    t.text = ''
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
+
+
+def _gen_checklist_tournee(date_obj):
+    """Generate checklist tournee .xlsx bytes."""
+    template_path = os.path.join(TEMPLATE_DIR, 'Checklist Tournée Étages.xlsx')
+    wb = load_workbook(template_path)
+    ws = wb.active
+    ws['B2'] = date_obj.strftime('%m/%d/%Y')
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+def _gen_entretien(date_obj):
+    """Generate entretien hiver .docx bytes."""
+    day_name = DAYS_FR[date_obj.weekday()]
+    day_num = date_obj.day
+    month_name = MONTHS_FR[date_obj.month - 1]
+    year = date_obj.year
+    if date_obj.month >= 10:
+        season = f"{year}-{year+1}"
     else:
-        return 'Type de générateur inconnu', 404
+        season = f"{year-1}-{year}"
 
+    template_path = os.path.join(TEMPLATE_DIR, 'Entretien Sheraton Laval Hiver.docx')
+    doc = Document(template_path)
 
-def _print_html(title, body_content, landscape=False):
-    """Wrap body content in a print-ready HTML page that auto-prints."""
-    orientation = '@page { size: landscape; }' if landscape else ''
-    return f'''<!DOCTYPE html>
-<html><head>
-<meta charset="utf-8">
-<title>{title}</title>
-<style>
-    body {{ font-family: Arial, sans-serif; margin: 1.5cm; }}
-    table {{ border-collapse: collapse; }}
-    td, th {{ border: 1px solid #999; padding: 5px 8px; }}
-    {orientation}
-    @media print {{
-        body {{ margin: 1cm; }}
-    }}
-</style>
-</head>
-<body>
-{body_content}
-<script>window.onload = function() {{ window.print(); }}</script>
-</body></html>'''
+    replacements = {
+        '2024-2025': season,
+        'Vendredi': day_name,
+        '17': str(day_num),
+        'Novembre': month_name,
+        '2025': str(year),
+    }
+    for p in doc.paragraphs:
+        for old, new in replacements.items():
+            if old in p.text:
+                for run in p.runs:
+                    if old in run.text:
+                        run.text = run.text.replace(old, new)
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    return buf.getvalue()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

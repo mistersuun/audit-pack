@@ -1,0 +1,864 @@
+{% extends "base.html" %}
+{% block title %}Tableau de Bord Comptabilité{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   ACCOUNTING MONTH-END DASHBOARD — Design tokens
+   ================================================================ */
+:root {
+  --up:     #10b981;
+  --up-bg:  rgba(16,185,129,0.10);
+  --dn:     #ef4444;
+  --dn-bg:  rgba(239,68,68,0.10);
+  --amber:  #f59e0b;
+  --amb-bg: rgba(245,158,11,0.10);
+  --mono:   'JetBrains Mono','SF Mono',monospace;
+  --ease:   cubic-bezier(0.16,1,0.3,1);
+  --r14:    14px;
+  --r10:    10px;
+  --r6:     6px;
+}
+
+/* ── Page shell ─────────────────────────────────────────────── */
+.acc-page {
+  padding: 1.5rem 2rem 4rem;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.acc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.acc-header h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text);
+}
+.acc-header p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.acc-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.acc-select {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text);
+  border-radius: var(--r10);
+  padding: 7px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  outline: none;
+}
+.acc-select:focus { border-color: var(--primary); }
+.acc-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--r10);
+  padding: 7px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.acc-apply-btn:hover { background: var(--primary-dark, #4f46e5); }
+.acc-apply-btn svg { width:14px; height:14px; }
+
+/* ── Section divider ────────────────────────────────────────── */
+.acc-section { margin-top: 1.75rem; }
+.acc-section:first-child { margin-top: 0; }
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.section-label .dot  { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.section-label h2    { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-muted); }
+.section-label .rule { flex:1; height:1px; background:linear-gradient(90deg, var(--border-color), transparent 80%); }
+
+/* ── Card ───────────────────────────────────────────────────── */
+.acc-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 20px 24px;
+  overflow: hidden;
+}
+
+/* ── Progress bar ───────────────────────────────────────────── */
+.progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.progress-title { font-size:14px; font-weight:600; color:var(--text); }
+.progress-pct   { font-size:14px; font-weight:700; font-family:var(--mono); }
+.progress-track {
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 8px;
+  background: var(--primary);
+  transition: width 0.6s var(--ease);
+}
+.progress-fill.complete { background: var(--up); }
+.checklist-items { display: flex; flex-direction: column; gap: 4px; }
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--r6);
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.checklist-item:hover { background: var(--bg, #f8f9fb); }
+.checklist-item svg { width:15px; height:15px; flex-shrink:0; }
+.checklist-item.done   { color: var(--text-muted); }
+.checklist-item.done svg   { color: var(--up); }
+.checklist-item.pending    { color: var(--text); }
+.checklist-item.pending svg{ color: var(--amber); }
+
+/* ── Revenue table ──────────────────────────────────────────── */
+.rev-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rev-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(0,0,0,0.015);
+}
+[data-theme="dark"] .rev-table th { background: rgba(255,255,255,0.02); }
+.rev-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+.rev-table tbody tr:last-child td { border-bottom: none; font-weight: 700; }
+.rev-table .mono { font-family: var(--mono); font-feature-settings:'tnum'; }
+.rev-table .above { color: var(--up); font-weight: 600; }
+.rev-table .below { color: var(--dn); font-weight: 600; }
+.rev-table .neutral{ color: var(--text-muted); }
+
+/* ── Missing data banner ────────────────────────────────────── */
+.missing-banner {
+  border: 1px solid transparent;
+  border-radius: var(--r14);
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.missing-banner.ok       { background: var(--up-bg);  border-color: rgba(16,185,129,0.2); }
+.missing-banner.warning  { background: var(--amb-bg); border-color: rgba(245,158,11,0.2); }
+.missing-banner.critical { background: var(--dn-bg);  border-color: rgba(239,68,68,0.2);  }
+.missing-icon {
+  width:34px; height:34px; border-radius:var(--r10);
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.missing-icon svg { width:17px; height:17px; }
+.missing-banner.ok       .missing-icon { background: var(--up-bg);  color: var(--up);    }
+.missing-banner.warning  .missing-icon { background: var(--amb-bg); color: var(--amber); }
+.missing-banner.critical .missing-icon { background: var(--dn-bg);  color: var(--dn);    }
+.missing-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+.missing-dates { font-size:11.5px; font-family:var(--mono); color:var(--text-muted); line-height:1.8; }
+
+/* ── GL Suspense two-column ─────────────────────────────────── */
+.gl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gl-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r10);
+  padding: 16px 18px;
+}
+.gl-account {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.gl-balance {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  font-feature-settings: 'tnum';
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.gl-balance.ok       { color: var(--up); }
+.gl-balance.critical { color: var(--dn); }
+.gl-balance.neutral  { color: var(--text); }
+.gl-variance-row {
+  font-size: 11.5px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+}
+.gl-notes {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+  font-style: italic;
+}
+
+/* ── Sortable tables ────────────────────────────────────────── */
+.sortable-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--r14);
+  border: 1px solid var(--border-color);
+}
+.sortable-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.sortable-table thead { background: rgba(0,0,0,0.015); }
+[data-theme="dark"] .sortable-table thead { background: rgba(255,255,255,0.02); }
+.sortable-table th {
+  text-align: left;
+  padding: 11px 14px;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  white-space: nowrap;
+  user-select: none;
+  transition: color 0.15s;
+}
+.sortable-table th:hover { color: var(--text); }
+.sortable-table th.sorted { color: var(--primary); }
+.sortable-table th .sort-arrow { font-size: 9px; margin-left: 4px; opacity: 0.5; }
+.sortable-table th.sorted .sort-arrow { opacity: 1; }
+.sortable-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-color);
+}
+.sortable-table tbody tr:last-child td { border-bottom: none; }
+.sortable-table tbody tr:hover td { background: rgba(99,102,241,0.03); }
+.sortable-table .mono { font-family: var(--mono); font-feature-settings:'tnum'; }
+.sortable-table .total-row { font-weight: 700; background: rgba(0,0,0,0.02); }
+[data-theme="dark"] .sortable-table .total-row { background: rgba(255,255,255,0.02); }
+
+/* ── Flag badges ────────────────────────────────────────────── */
+.flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.flag.critical { background: var(--dn-bg);  color: var(--dn);    }
+.flag.review   { background: var(--amb-bg); color: var(--amber); }
+.flag.ok       { background: var(--up-bg);  color: var(--up);    }
+
+/* ── Warning banners ────────────────────────────────────────── */
+.warning-banners { display: flex; flex-direction: column; gap: 8px; }
+.warn-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--r10);
+  border: 1px solid transparent;
+  font-size: 12.5px;
+}
+.warn-banner.error    { background: var(--dn-bg);  border-color: rgba(239,68,68,0.2);  color: var(--dn); }
+.warn-banner.caution  { background: var(--amb-bg); border-color: rgba(245,158,11,0.2); color: var(--amber); }
+.warn-banner.info     { background: var(--primary-bg); border-color: var(--primary-border); color: var(--primary); }
+.warn-banner.success  { background: var(--up-bg);  border-color: rgba(16,185,129,0.2); color: var(--up); }
+.warn-banner svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+.warn-banner-text { line-height: 1.5; }
+.warn-banner-text strong { font-weight: 700; }
+
+/* ── Loading & Error ────────────────────────────────────────── */
+.acc-skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--border-color) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+@keyframes shimmer { from {background-position:200%} to {background-position:-200%} }
+.acc-error {
+  background: var(--dn-bg);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--r14);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--dn);
+  font-size: 13px;
+}
+.acc-error svg { width: 18px; height: 18px; flex-shrink: 0; }
+.no-data-row {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  padding: 32px !important;
+  font-style: italic;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .acc-page   { padding: 1rem 1rem 3rem; }
+  .gl-grid    { grid-template-columns: 1fr; }
+  .acc-header { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="with-sidebar">
+<div class="acc-page">
+
+  <!-- ── PAGE HEADER ─────────────────────────────────────────── -->
+  <div class="acc-header">
+    <div>
+      <h1>Tableau de Bord Comptabilité</h1>
+      <p id="acc-subtitle">Fermeture de mois — verification et validation des donnees</p>
+    </div>
+    <div class="acc-controls">
+      <select class="acc-select" id="acc-month">
+        <option value="1">Janvier</option>
+        <option value="2">Fevrier</option>
+        <option value="3">Mars</option>
+        <option value="4">Avril</option>
+        <option value="5">Mai</option>
+        <option value="6">Juin</option>
+        <option value="7">Juillet</option>
+        <option value="8">Aout</option>
+        <option value="9">Septembre</option>
+        <option value="10">Octobre</option>
+        <option value="11">Novembre</option>
+        <option value="12">Decembre</option>
+      </select>
+      <select class="acc-select" id="acc-year" style="width:88px;"></select>
+      <button class="acc-apply-btn" onclick="loadAccounting()">
+        <i data-feather="search"></i> Charger
+      </button>
+    </div>
+  </div>
+
+  <!-- ── LOADING ────────────────────────────────────────────── -->
+  <div id="acc-loading">
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="acc-skeleton" style="height:90px;"></div>
+      <div class="acc-skeleton" style="height:160px;"></div>
+      <div class="acc-skeleton" style="height:120px;"></div>
+      <div class="acc-skeleton" style="height:180px;"></div>
+    </div>
+  </div>
+
+  <!-- ── ERROR ──────────────────────────────────────────────── -->
+  <div id="acc-error" style="display:none;">
+    <div class="acc-error">
+      <i data-feather="alert-circle"></i>
+      <span id="acc-error-msg">Erreur lors du chargement des donnees.</span>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+  <div id="acc-content" style="display:none;">
+
+    <!-- A — Checklist Progress -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--primary);"></span>
+        <h2>Progression Liste de Verification</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="acc-card" id="checklist-card">
+        <div class="progress-header">
+          <span class="progress-title" id="checklist-title">Chargement...</span>
+          <span class="progress-pct" id="checklist-pct">0%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="checklist-bar" style="width:0%;"></div>
+        </div>
+        <div class="checklist-items" id="checklist-items"></div>
+      </div>
+    </div>
+
+    <!-- B — Revenue Verification -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--up);"></span>
+        <h2>Verification des Revenus</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="acc-card" style="padding:0;overflow:hidden;">
+        <table class="rev-table" id="rev-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th class="mono" style="text-align:right;">Realisé (Mois)</th>
+              <th class="mono" style="text-align:right;">Budget</th>
+              <th style="text-align:right;">Ecart</th>
+              <th>Note</th>
+            </tr>
+          </thead>
+          <tbody id="rev-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- C — Missing Data -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--dn);"></span>
+        <h2>Donnees Manquantes</h2>
+        <span class="rule"></span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;" id="missing-banners"></div>
+    </div>
+
+    <!-- D — GL Suspense -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:#8b5cf6;"></span>
+        <h2>Comptes GL Suspense</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="gl-grid" id="gl-grid"></div>
+    </div>
+
+    <!-- E — Deposit Variance -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--amber);"></span>
+        <h2>Variances de Depot — Par Employe</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="sortable-table-wrap">
+        <table class="sortable-table" id="deposit-table">
+          <thead>
+            <tr>
+              <th onclick="sortTable('deposit-table', 0)" data-col="0">Employe <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable('deposit-table', 1)" data-col="1">Dept. <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable('deposit-table', 2)" data-col="2" style="text-align:right;">Occurrences <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable('deposit-table', 3)" data-col="3" style="text-align:right;">Total Variance <span class="sort-arrow">&#8597;</span></th>
+              <th onclick="sortTable('deposit-table', 4)" data-col="4" style="text-align:right;">Abs. Variance <span class="sort-arrow">&#8597;</span></th>
+              <th style="text-align:center;">Statut</th>
+            </tr>
+          </thead>
+          <tbody id="deposit-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- F — Card Discount Costs -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:#3b82f6;"></span>
+        <h2>Frais d'Escompte Cartes</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="sortable-table-wrap">
+        <table class="sortable-table" id="card-table">
+          <thead>
+            <tr>
+              <th>Type de Carte</th>
+              <th style="text-align:right;">Volume</th>
+              <th style="text-align:right;">Frais Escompte</th>
+              <th style="text-align:right;">Taux (%)</th>
+              <th style="text-align:right;">Transactions</th>
+              <th style="text-align:right;">Montant Net</th>
+            </tr>
+          </thead>
+          <tbody id="card-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- G — Data Quality Warnings -->
+    <div class="acc-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--dn);"></span>
+        <h2>Qualite des Donnees</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="warning-banners" id="quality-warnings"></div>
+    </div>
+
+  </div><!-- /#acc-content -->
+
+</div><!-- /.acc-page -->
+</main>
+
+<script>
+/* ================================================================
+   ACCOUNTING DASHBOARD — Data rendering
+   ================================================================ */
+
+function fmt$(v) {
+  if (v == null) return '—';
+  return new Intl.NumberFormat('fr-CA', {style:'currency', currency:'CAD', maximumFractionDigits:0}).format(v);
+}
+function fmtPct(v, d=1) {
+  if (v == null) return '—';
+  return `${parseFloat(v).toFixed(d)}%`;
+}
+function fmtDelta(v, suffix='%') {
+  if (v == null) return '—';
+  const s = v >= 0 ? '+' : '';
+  return `${s}${parseFloat(v).toFixed(1)}${suffix}`;
+}
+
+// Populate year/month selectors
+(function initSelectors() {
+  const now   = new Date();
+  const yearEl  = document.getElementById('acc-year');
+  const monthEl = document.getElementById('acc-month');
+  for (let y = now.getFullYear(); y >= now.getFullYear() - 3; y--) {
+    const opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    yearEl.appendChild(opt);
+  }
+  yearEl.value  = now.getFullYear();
+  monthEl.value = now.getMonth() + 1; // 1-based
+})();
+
+// ── A: Checklist ──────────────────────────────────────────────
+function renderChecklist(data) {
+  const bar   = document.getElementById('checklist-bar');
+  const pctEl = document.getElementById('checklist-pct');
+  const title = document.getElementById('checklist-title');
+  const items = document.getElementById('checklist-items');
+
+  const pct = data.checklist_pct ?? 0;
+  bar.style.width = `${pct}%`;
+  bar.className = 'progress-fill' + (pct >= 100 ? ' complete' : '');
+  pctEl.textContent = `${pct}%`;
+
+  const statusLabels = {
+    complete:    'Toutes les taches completees',
+    in_progress: `${data.completed_tasks ?? 0} / ${data.total_tasks ?? 0} taches completees`,
+    no_tasks:    'Aucune tache de fermeture de mois trouvee',
+  };
+  title.textContent = statusLabels[data.checklist_status] ?? 'Progression';
+
+  if (data.total_tasks === 0) {
+    items.innerHTML = `<div style="font-size:12.5px;color:var(--text-muted);padding:8px 0;">Aucune tache configuree pour ce mois.</div>`;
+    return;
+  }
+
+  // Show completed first, then pending
+  const done    = (data.completed_task_names || []);
+  const pending = (data.pending_tasks || []);
+  items.innerHTML = [
+    ...done.map(n => `
+      <div class="checklist-item done">
+        <i data-feather="check-circle"></i>
+        <span>${n}</span>
+      </div>`),
+    ...pending.map(n => `
+      <div class="checklist-item pending">
+        <i data-feather="clock"></i>
+        <span>${n}</span>
+      </div>`),
+  ].join('');
+  feather.replace();
+}
+
+// ── B: Revenue verification ───────────────────────────────────
+function renderRevenue(data) {
+  const rv = data.revenue_verification;
+  const tbody = document.getElementById('rev-tbody');
+  if (!rv) {
+    tbody.innerHTML = `<tr><td colspan="5" class="no-data-row">Aucune donnee de revenu disponible.</td></tr>`;
+    return;
+  }
+
+  const rows = [
+    { label: 'Revenus Chambres',   actual: rv.djm_room_revenue,  budget: null,                vs: null,           note: '' },
+    { label: 'Revenus F&B',        actual: rv.djm_fb_revenue,    budget: null,                vs: null,           note: '' },
+    { label: 'Revenus Totaux',     actual: rv.djm_total_revenue, budget: rv.budget_total_revenue, vs: rv.vs_budget_pct, note: rv.note },
+  ];
+
+  tbody.innerHTML = rows.map((r, i) => {
+    const isTotal = i === rows.length - 1;
+    const vsCls = r.vs == null ? 'neutral' : (r.vs >= 0 ? 'above' : 'below');
+    return `
+      <tr ${isTotal ? 'style="font-weight:700;"' : ''}>
+        <td>${r.label}</td>
+        <td class="mono" style="text-align:right;">${fmt$(r.actual)}</td>
+        <td class="mono neutral" style="text-align:right;">${r.budget != null ? fmt$(r.budget) : '—'}</td>
+        <td class="mono ${vsCls}" style="text-align:right;">${r.vs != null ? fmtDelta(r.vs) : '—'}</td>
+        <td style="font-size:11.5px;color:var(--text-muted);">${r.note || ''}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ── C: Missing data ───────────────────────────────────────────
+function renderMissing(data) {
+  const md  = data.missing_data;
+  const el  = document.getElementById('missing-banners');
+  if (!md) { el.innerHTML = `<div style="font-size:12.5px;color:var(--text-muted);">Non disponible</div>`; return; }
+
+  const djmDates = md.djm_missing_dates || [];
+  const rjDates  = md.rj_missing_dates  || [];
+
+  function bannerHtml(label, dates, coverage, icon) {
+    const missing = dates.length;
+    const cls = missing === 0 ? 'ok' : (missing > 3 ? 'critical' : 'warning');
+    const iconName = missing === 0 ? 'check-circle' : (missing > 3 ? 'alert-triangle' : 'alert-circle');
+    const dateStr = dates.length > 0
+      ? dates.map(d => {
+          const dt = new Date(d + 'T12:00:00');
+          return dt.toLocaleDateString('fr-CA', {month:'short', day:'numeric'});
+        }).join('  ·  ')
+      : 'Aucune date manquante';
+    return `
+      <div class="missing-banner ${cls}">
+        <div class="missing-icon"><i data-feather="${iconName}"></i></div>
+        <div>
+          <div class="missing-title">${label} — ${missing === 0 ? 'Complet' : `${missing} date${missing > 1 ? 's' : ''} manquante${missing > 1 ? 's' : ''}`} (couverture ${fmtPct(coverage)})</div>
+          <div class="missing-dates">${dateStr}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  el.innerHTML = bannerHtml('Journal Journalier (DJM)', djmDates, md.djm_coverage_pct)
+               + bannerHtml('Rapport de Nuit (RJ)',      rjDates,  md.rj_coverage_pct);
+  feather.replace();
+}
+
+// ── D: GL Suspense ────────────────────────────────────────────
+function renderGL(data) {
+  const gl = data.gl_suspense;
+  const el = document.getElementById('gl-grid');
+  if (!gl || !gl.gl_101100) {
+    el.innerHTML = `<div class="acc-card" style="text-align:center;color:var(--text-muted);font-size:13px;grid-column:span 2;">Aucune session RJ trouvee pour ce mois.</div>`;
+    return;
+  }
+
+  function glCard(account, info) {
+    if (!info) return `<div class="gl-card"><div class="gl-account">${account}</div><div style="color:var(--text-muted);font-size:13px;">Non disponible</div></div>`;
+    const v = info.variance ?? 0;
+    const b = info.new_balance ?? 0;
+    const cls = Math.abs(v) <= 0.02 ? 'ok' : 'critical';
+    return `
+      <div class="gl-card">
+        <div class="gl-account">Compte GL ${account}</div>
+        <div class="gl-balance ${cls}">${fmt$(b)}</div>
+        <div class="gl-variance-row">
+          Variance: <strong style="color:${Math.abs(v) <= 0.02 ? 'var(--up)' : 'var(--dn)'};">${v >= 0 ? '+' : ''}${v.toFixed(2)}$</strong>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px;font-family:var(--mono);">
+          Prev: ${fmt$(info.previous_balance)} · + ${fmt$(info.additions)} · - ${fmt$(info.deductions)}
+        </div>
+        ${info.notes ? `<div class="gl-notes">${info.notes}</div>` : ''}
+      </div>
+    `;
+  }
+
+  el.innerHTML = glCard('101100', gl.gl_101100) + glCard('100401', gl.gl_100401);
+  if (gl.as_of_date) {
+    const asOf = new Date(gl.as_of_date + 'T12:00:00').toLocaleDateString('fr-CA');
+    el.insertAdjacentHTML('beforeend', `<div style="grid-column:span 2;font-size:11px;color:var(--text-muted);font-family:var(--mono);">Au: ${asOf}</div>`);
+  }
+}
+
+// ── E: Deposit variance ───────────────────────────────────────
+function renderDeposit(data) {
+  const tbody = document.getElementById('deposit-tbody');
+  const rows  = data.deposit_leaderboard || [];
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-data-row">Aucune variance de depot enregistree pour ce mois.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.employee || '—'}</td>
+      <td style="color:var(--text-muted);">${r.department || '—'}</td>
+      <td class="mono" style="text-align:right;">${r.occurrences}</td>
+      <td class="mono" style="text-align:right;color:${r.total_variance >= 0 ? 'var(--up)' : 'var(--dn)'};">
+        ${r.total_variance >= 0 ? '+' : ''}${(r.total_variance || 0).toFixed(2)}$
+      </td>
+      <td class="mono" style="text-align:right;">${(r.abs_total || 0).toFixed(2)}$</td>
+      <td style="text-align:center;">
+        <span class="flag ${r.flag}">${r.flag === 'critical' ? 'Critique' : r.flag === 'review' ? 'Verif.' : 'OK'}</span>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ── F: Card discount costs ────────────────────────────────────
+function renderCards(data) {
+  const cd    = data.card_discount_costs;
+  const tbody = document.getElementById('card-tbody');
+  if (!cd || (cd.by_type || []).length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-data-row">Aucune donnee de carte trouvee pour ce mois.</td></tr>`;
+    return;
+  }
+  const rows = cd.by_type.map(r => `
+    <tr>
+      <td><strong>${r.card_type}</strong></td>
+      <td class="mono" style="text-align:right;">${fmt$(r.volume)}</td>
+      <td class="mono" style="text-align:right;color:var(--dn);">${fmt$(r.discount)}</td>
+      <td class="mono" style="text-align:right;color:${r.rate_pct > 2.5 ? 'var(--dn)' : 'var(--text)'};">${fmtPct(r.rate_pct, 2)}</td>
+      <td class="mono" style="text-align:right;">${r.transactions}</td>
+      <td class="mono" style="text-align:right;">${fmt$(r.net)}</td>
+    </tr>
+  `);
+  const t = cd.totals;
+  rows.push(`
+    <tr class="total-row">
+      <td>Total</td>
+      <td class="mono" style="text-align:right;">${fmt$(t.total_volume)}</td>
+      <td class="mono" style="text-align:right;color:var(--dn);">${fmt$(t.total_discount)}</td>
+      <td class="mono" style="text-align:right;">${fmtPct(t.blended_rate_pct, 2)} blended</td>
+      <td class="mono" style="text-align:right;">${t.total_transactions}</td>
+      <td class="mono" style="text-align:right;">${fmt$(t.total_net)}</td>
+    </tr>
+  `);
+  tbody.innerHTML = rows.join('');
+}
+
+// ── G: Data quality warnings ──────────────────────────────────
+function renderQuality(data) {
+  const el   = document.getElementById('quality-warnings');
+  const warns = data.data_quality_warnings || [];
+  if (warns.length === 0) {
+    el.innerHTML = `
+      <div class="warn-banner success">
+        <i data-feather="check-circle"></i>
+        <span class="warn-banner-text"><strong>Qualite des donnees: OK</strong> — Aucun probleme detecte pour cette periode.</span>
+      </div>`;
+    feather.replace();
+    return;
+  }
+  el.innerHTML = warns.map(w => `
+    <div class="warn-banner ${w.level || 'caution'}">
+      <i data-feather="${w.level === 'error' ? 'alert-triangle' : 'alert-circle'}"></i>
+      <span class="warn-banner-text"><strong>${w.title || 'Avertissement'}:</strong> ${w.message || ''}</span>
+    </div>
+  `).join('');
+  feather.replace();
+}
+
+// ── Simple client-side table sort ─────────────────────────────
+const _sortState = {};
+function sortTable(tableId, colIdx) {
+  const table = document.getElementById(tableId);
+  const tbody = table.querySelector('tbody');
+  const rows  = Array.from(tbody.querySelectorAll('tr:not(.total-row)'));
+  const key   = `${tableId}-${colIdx}`;
+  const asc   = !_sortState[key];
+  _sortState[key] = asc;
+
+  rows.sort((a, b) => {
+    const av = a.cells[colIdx]?.textContent.trim().replace(/[,$%+]/g, '') || '';
+    const bv = b.cells[colIdx]?.textContent.trim().replace(/[,$%+]/g, '') || '';
+    const an = parseFloat(av), bn = parseFloat(bv);
+    if (!isNaN(an) && !isNaN(bn)) return asc ? an - bn : bn - an;
+    return asc ? av.localeCompare(bv, 'fr') : bv.localeCompare(av, 'fr');
+  });
+
+  // Update header indicators
+  table.querySelectorAll('th').forEach((th, i) => {
+    th.classList.toggle('sorted', i === colIdx);
+    const arr = th.querySelector('.sort-arrow');
+    if (arr && i === colIdx) arr.textContent = asc ? '↑' : '↓';
+    else if (arr) arr.textContent = '↕';
+  });
+
+  // Keep total row at bottom
+  const totalRow = tbody.querySelector('.total-row');
+  rows.forEach(r => tbody.appendChild(r));
+  if (totalRow) tbody.appendChild(totalRow);
+}
+
+// ── Main loader ───────────────────────────────────────────────
+async function loadAccounting() {
+  const loading = document.getElementById('acc-loading');
+  const content = document.getElementById('acc-content');
+  const errEl   = document.getElementById('acc-error');
+
+  loading.style.display = '';
+  content.style.display = 'none';
+  errEl.style.display   = 'none';
+
+  const month = document.getElementById('acc-month').value;
+  const year  = document.getElementById('acc-year').value;
+
+  try {
+    const res  = await fetch(`/api/dashboard/accounting?year=${year}&month=${month}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Reponse invalide');
+
+    // Update subtitle
+    const monthNames = ['','Janvier','Fevrier','Mars','Avril','Mai','Juin',
+                        'Juillet','Aout','Septembre','Octobre','Novembre','Decembre'];
+    document.getElementById('acc-subtitle').textContent =
+      `Periode: ${monthNames[parseInt(month)]} ${year}`;
+
+    renderChecklist(data);
+    renderRevenue(data);
+    renderMissing(data);
+    renderGL(data);
+    renderDeposit(data);
+    renderCards(data);
+    renderQuality(data);
+
+    loading.style.display = 'none';
+    content.style.display = '';
+    feather.replace();
+
+  } catch (e) {
+    loading.style.display = 'none';
+    errEl.style.display   = '';
+    document.getElementById('acc-error-msg').textContent = `Erreur: ${e.message}`;
+    feather.replace();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => loadAccounting());
+</script>
+{% endblock %}

@@ -18,6 +18,7 @@ from database.models import (
 )
 from utils.email_service import EmailService
 from utils.alert_engine import AlertEngine
+from utils.auth_decorators import login_required
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,16 +28,6 @@ notifications_bp = Blueprint('notifications', __name__, url_prefix='/notificatio
 # Initialize services
 email_service = EmailService()
 alert_engine = AlertEngine()
-
-
-def login_required(f):
-    """Require user to be authenticated."""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('authenticated'):
-            return redirect(url_for('auth_v2.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 def admin_or_gm_required(f):

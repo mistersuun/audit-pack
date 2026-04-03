@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 HOTEL_NAME = "Sheraton Laval"
 HOTEL_PROPERTY = "Propriété 858"
-HOTEL_ROOMS = 252
+from database.models import TOTAL_ROOMS as HOTEL_ROOMS  # 252
 
 # Color palette (Sheraton/Marriott inspired)
 COLOR_DARK = colors.HexColor('#1a1a2e')

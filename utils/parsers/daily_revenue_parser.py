@@ -25,42 +25,19 @@ class DailyRevenueParser(BaseParser):
     """
 
     FIELD_MAPPINGS = {
-        # Revenue department fields
-        'room_charge_total': 'B6',
-        'telephones_total': 'B7',
-        'autres_revenus_total': 'B8',
-        'internet': 'B9',
-        'comptabilite_total': 'B10',
-        'givex_total': 'B11',
-        'subtotal_revenue': 'B12',
-
-        # Non-revenue department fields
-        'chambres_tax_total': 'B13',
-        'restaurant_piazza_total': 'B14',
-        'banquet_total': 'B15',
-        'la_spesa_total': 'B16',
-        'services_chambres_total': 'B17',
-        'comptabilite_nonrev_total': 'B18',
-        'debourse_total': 'B19',
-        'subtotal_non_revenue': 'B20',
-
-        # Key aggregates
-        'todays_activity': 'B21',
-        'settlements_total': 'B22',
-        'deposits_received_total': 'B23',
-        'advance_deposits_applied': 'B24',
-        'balance_today': 'B25',
-        'balance_prev_day': 'B26',
-        'new_balance': 'B27',
+        # These are informational — actual auto-fill goes through JourMapper (fill_jour endpoint)
+        'room_revenue': 'AK',
+        'new_balance': 'D',
+        'balance_today': 'E',
     }
 
     def __init__(self, file_bytes, filename=None):
         super().__init__(file_bytes, filename)
         self.raw_text = None
-        self.parsed_sections = {}
+        self._pages_text = []
 
     def parse(self):
-        """Parse the Daily Revenue PDF."""
+        """Parse the Daily Revenue PDF — actually reads the PDF, no hardcoded values."""
         try:
             import pdfplumber
         except ImportError:
@@ -70,326 +47,437 @@ class DailyRevenueParser(BaseParser):
 
         try:
             with pdfplumber.open(io.BytesIO(self.file_bytes)) as pdf:
-                # Extract text from all pages
-                all_text = ""
+                self._pages_text = []
                 for page in pdf.pages:
-                    all_text += page.extract_text() + "\n"
+                    self._pages_text.append(page.extract_text() or "")
 
-                self.raw_text = all_text
-                self._extract_metadata()
-                self._parse_revenue_departments()
-                self._parse_non_revenue_departments()
-                self._parse_settlements()
-                self._parse_deposits()
-                self._parse_balance()
-                self._compute_rj_mapping()
+            self.raw_text = "\n".join(self._pages_text)
 
-                self.confidence = 0.95
-                self._parsed = True
+            self._extract_metadata()
+            self._parse_revenue_departments()
+            self._parse_non_revenue_departments()
+            self._parse_settlements()
+            self._parse_deposits()
+            self._parse_balance()
+            self._compute_rj_mapping()
+
+            self.confidence = 0.90
+            self._parsed = True
 
         except Exception as e:
             self.validation_errors.append(f"PDF parsing failed: {str(e)}")
             self.confidence = 0.0
             self._parsed = True
 
+    # ── Helpers ──────────────────────────────────────────────────────────────
+
+    def _get_today(self, text, label, negate=False):
+        """Extract the Today (first numeric column) value for a line starting with label.
+
+        Numbers may have commas (1,234.56) and trailing '-' for negative values.
+        Some lines have an account number (integer) before the Today value — these
+        are skipped by requiring a decimal point in the matched value.
+        """
+        escaped = re.escape(label.strip())
+        # Match label, then optionally skip leading integers (account numbers), then the
+        # first decimal-formatted number (currency value).
+        pattern = rf'(?:^|\n)\s*{escaped}\s+(?:\d+\s+)*([\d,]+\.\d+)(-?)'
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            val = float(match.group(1).replace(',', ''))
+            if match.group(2) == '-':
+                val = -val
+            return -val if negate else val
+        return 0.0
+
+    def _get_section_total(self, text, section_header):
+        """Extract the 'Total' line value that follows a given section header."""
+        escaped = re.escape(section_header.strip())
+        # Find section header, then look for next 'Total' line within 3000 chars
+        pattern = rf'(?:^|\n)\s*{escaped}\s*\n(.*?)(?:^|\n)\s*Total\s+([\d,]+\.?\d*)(-?)'
+        match = re.search(pattern, text, re.IGNORECASE | re.DOTALL)
+        if match:
+            val = float(match.group(2).replace(',', ''))
+            if match.group(3) == '-':
+                val = -val
+            return val
+        return 0.0
+
+    def _get_between(self, text, start_label, end_label=None):
+        """Return text between start_label and end_label (or end of text)."""
+        start_pat = re.search(
+            rf'(?:^|\n)\s*{re.escape(start_label)}\s*\n',
+            text, re.IGNORECASE
+        )
+        if not start_pat:
+            return ""
+        start_pos = start_pat.end()
+        if end_label:
+            end_pat = re.search(
+                rf'(?:^|\n)\s*{re.escape(end_label)}',
+                text[start_pos:], re.IGNORECASE
+            )
+            if end_pat:
+                return text[start_pos:start_pos + end_pat.start()]
+        return text[start_pos:]
+
+    # ── Metadata ─────────────────────────────────────────────────────────────
+
     def _extract_metadata(self):
         """Extract report date, auditor, and property name."""
-        # Pattern: "Current Day Wednesday February 04, 2026"
-        date_match = re.search(r'Current Day\s+([A-Za-z]+\s+[A-Za-z]+\s+\d{2},\s+\d{4})', self.raw_text)
+        date_match = re.search(
+            r'Current Day\s+\w+\s+(\w+\s+\d{1,2},\s+\d{4})',
+            self.raw_text
+        )
         if date_match:
             self.extracted_data['report_date'] = date_match.group(1)
 
-        # Pattern: "Souleymane Camara 06-FEB-2026"
-        auditor_match = re.search(r'^([A-Za-z\s]+)\s+\d{2}-[A-Z]{3}-\d{4}', self.raw_text, re.MULTILINE)
+        auditor_match = re.search(
+            r'^([A-Za-z\s]+)\s+Current Day',
+            self.raw_text, re.MULTILINE
+        )
         if auditor_match:
             self.extracted_data['auditor'] = auditor_match.group(1).strip()
 
-        # Pattern: "Sheraton Laval YULLS"
-        property_match = re.search(r'(Sheraton\s+[A-Za-z\s]+YULLS)', self.raw_text)
+        property_match = re.search(r'(Sheraton\s+\w+)\s+\w+\s+Daily Revenue', self.raw_text)
         if property_match:
             self.extracted_data['property'] = property_match.group(1).strip()
 
+    # ── Revenue Departments (Pages 1-2) ──────────────────────────────────────
+
     def _parse_revenue_departments(self):
-        """Parse the Revenue Departments section."""
+        """Parse Revenue Departments section from pages 1-2."""
+        # Use pages 1-2 for revenue sections
+        p1 = self._pages_text[0] if len(self._pages_text) > 0 else ""
+        p2 = self._pages_text[1] if len(self._pages_text) > 1 else ""
+        text = p1 + "\n" + p2
+
         revenue = {}
 
-        # Extract Chambres section
-        chambres = self._extract_section_values(
-            r'\*\*\*\*\s*Revenue Departments\s*\*\*\*\*.*?(?=TELEPHONES)',
-            r'Chambres.*?(?=Total\s+\d+\.\d{2})'
-        )
-
-        chambres_data = {
-            'room_charge_allowance': self._get_value_for_line(chambres, 'Room Charge \\+ Allowa'),
-            'room_charge_premium': self._get_value_for_line(chambres, 'Room Chrg - Premium'),
-            'room_charge_standard': self._get_value_for_line(chambres, 'Room Chrg - Standard'),
-            'room_charge_echannel': self._get_value_for_line(chambres, 'Room Chrg - eChannel'),
-            'room_charge_special': self._get_value_for_line(chambres, 'Room Chrg - Special'),
-            'room_charge_wholesale': self._get_value_for_line(chambres, 'Room Chrg - Wholesal'),
-            'room_charge_govt': self._get_value_for_line(chambres, 'Room Chrg - Govt'),
-            'room_charge_weekend': self._get_value_for_line(chambres, 'Room Chrg - Weekend'),
-            'room_charge_aaa': self._get_value_for_line(chambres, 'Room Chrg - AAA'),
-            'room_charge_packages': self._get_value_for_line(chambres, 'Room Chrg - Packages'),
-            'room_charge_advance': self._get_value_for_line(chambres, 'Room Chrg - Advance'),
-            'room_charge_senior': self._get_value_for_line(chambres, 'Room Chrg - Senior'),
-            'room_charge_grp_corp': self._get_value_for_line(chambres, 'Room Chrg - GRP - Co'),
-            'room_charge_contract': self._get_value_for_line(chambres, 'Room Chrg - Contract'),
-            'guaranteed_no_show': self._get_value_for_line(chambres, 'Guaranteed No Show'),
-            'late_checkout_fee': self._get_value_for_line(chambres, 'Late Checkout Fee'),
-            'total': 50936.60
+        # Chambres section — bounded by "Chambres\n" ... "TELEPHONES"
+        ch_text = self._get_between(text, 'Chambres', 'TELEPHONES')
+        chambres_total = self._get_today(ch_text + "\nTotal ", 'Total') if ch_text else 0.0
+        if chambres_total == 0.0:
+            # Fallback: find Total line after Chambres header in page 1
+            chambres_total = self._get_section_total(p1, 'Chambres')
+        revenue['chambres'] = {
+            'total': chambres_total,
+            'room_charge_standard': self._get_today(ch_text, 'Room Chrg - Standard'),
+            'room_charge_premium': self._get_today(ch_text, 'Room Chrg - Premium'),
+            'guaranteed_no_show': self._get_today(ch_text, 'Guaranteed No Show'),
+            'late_checkout': self._get_today(ch_text, 'Late Checkout Fee'),
+            'reservation_cancel': self._get_today(ch_text, 'Reservation/Cancella'),
         }
-        revenue['chambres'] = chambres_data
 
         # Telephones
-        revenue['telephones'] = {'total': 0.00}
-
-        # Autres Revenus
-        autres_revenus = {
-            'massage': 383.30,
-            'location_salle_forfait': 1620.00,
-            'total': 2003.30
+        tel_text = self._get_between(text, 'TELEPHONES', 'Autres Revenus')
+        if not tel_text:
+            tel_text = self._get_between(text, 'TELEPHONES', 'Total')
+        revenue['telephones'] = {
+            'local': self._get_today(tel_text, 'Telephone Local'),
+            'interurbain': self._get_today(tel_text, 'Interurbain'),
+            'publics': self._get_today(tel_text, 'Telephone Publics'),
+            'total': self._get_section_total(text, 'TELEPHONES'),
         }
-        revenue['autres_revenus'] = autres_revenus
+
+        # Autres Revenus — header is at end of page 1, items/total continue on page 2
+        text12 = p1 + "\n" + p2
+        ar_text = self._get_between(text12, 'Autres Revenus', 'Internet')
+        revenue['autres_revenus'] = {
+            'massage': self._get_today(ar_text, 'Massage'),
+            'location_salle_forfait': self._get_today(ar_text, 'Location Salle Forfa'),
+            'location_boutique': self._get_today(ar_text, 'Location De Boutique'),
+            'nettoyeur': self._get_today(ar_text, 'Nettoyeur-Dry Cleani'),
+            'sonifi': self._get_today(ar_text, 'Sonifi'),
+            'lit_pliant': self._get_today(ar_text, 'Lit Pliant'),
+            'machine_distributrice': self._get_today(ar_text, 'MACHINE DISTRIBUTRIC'),
+            'total': self._get_section_total(text12, 'Autres Revenus'),
+        }
 
         # Internet
-        revenue['internet'] = {'total': -0.46}
-
-        # Comptabilite
-        revenue['comptabilite'] = {
-            'autres_grand_livre': -92589.85,
-            'total': -92589.85
+        int_text = self._get_between(p2, 'Internet', 'Comptabilite')
+        revenue['internet'] = {
+            'total': self._get_section_total(p2, 'Internet'),
         }
 
+        # Comptabilite revenue section
+        comp_text = self._get_between(p2, 'Comptabilite', 'GiveX')
+        revenue['comptabilite'] = {
+            'autres_grand_livre': self._get_today(comp_text, 'Autres Grand Livre'),
+            'total': self._get_section_total(p2, 'Comptabilite'),
+        }
+        # Handle negative "Autres Grand Livre" — the large negative entry
+        # Find the largest (most negative) Autres Grand Livre line
+        if comp_text:
+            ag_matches = re.findall(r'Autres Grand Livre\s*\w*\s+([\d,]+\.\d+)(-?)', comp_text, re.IGNORECASE)
+            if ag_matches:
+                values = []
+                for num_str, sign in ag_matches:
+                    v = float(num_str.replace(',', ''))
+                    if sign == '-':
+                        v = -v
+                    values.append(v)
+                # Use the sum (net GL activity)
+                revenue['comptabilite']['autres_grand_livre'] = sum(values)
+
         # GiveX
-        revenue['givex'] = {'total': 400.00}
+        revenue['givex'] = {
+            'total': self._get_section_total(p2, 'GiveX'),
+        }
 
         # AR Activity
-        revenue['ar_activity'] = {'total': 0.00}
+        revenue['ar_activity'] = {
+            'total': self._get_section_total(p2, 'AR Activity'),
+        }
 
-        # Subtotal
-        revenue['subtotal'] = -39250.41
+        # Subtotal Revenue Departments
+        sub_match = re.search(
+            r'Subtotal Revenue Dept\S*\s+([\d,]+\.?\d*)(-?)',
+            self.raw_text, re.IGNORECASE
+        )
+        if sub_match:
+            val = float(sub_match.group(1).replace(',', ''))
+            if sub_match.group(2) == '-':
+                val = -val
+            revenue['subtotal'] = val
 
         self.extracted_data['revenue'] = revenue
 
+    # ── Non-Revenue Departments (Pages 2-5) ──────────────────────────────────
+
     def _parse_non_revenue_departments(self):
-        """Parse the Non-Revenue Departments section."""
+        """Parse Non-Revenue Departments section."""
+        # Pages 2-5 contain non-revenue
+        p2 = self._pages_text[1] if len(self._pages_text) > 1 else ""
+        p3 = self._pages_text[2] if len(self._pages_text) > 2 else ""
+        p4 = self._pages_text[3] if len(self._pages_text) > 3 else ""
+        p5 = self._pages_text[4] if len(self._pages_text) > 4 else ""
+
+        # Non-revenue section starts after "Non-Revenue Departments" header
+        # Chambres tax section (p2)
+        non_rev_start = self.raw_text.find('Non-Revenue Departments')
+        non_rev_text = self.raw_text[non_rev_start:] if non_rev_start >= 0 else self.raw_text
+
         non_revenue = {}
 
         # Chambres (Taxes)
+        ch_tax_text = self._get_between(non_rev_text, 'Chambres', 'Club Lounge')
+        if not ch_tax_text:
+            ch_tax_text = non_rev_text[:2000]
         non_revenue['chambres_tax'] = {
-            'taxe_hebergement': 1783.53,
-            'tps': 2635.79,
-            'tvq': 5257.25,
-            'total': 9676.57
+            'taxe_hebergement': self._get_today(ch_tax_text, 'Taxe Hebergement'),
+            'tps': self._get_today(ch_tax_text, 'TPS'),
+            'tvq': self._get_today(ch_tax_text, 'TVQ'),
+            'total': self._get_section_total(non_rev_text, 'Chambres'),
         }
 
         # Club Lounge
-        non_revenue['club_lounge'] = {'total': 0.00}
-
-        # Do Not Use
-        non_revenue['do_not_use'] = {'total': 0.00}
-
-        # Restaurant Piazza
-        non_revenue['restaurant_piazza'] = {
-            'nourriture': 1981.40,
-            'alcool': 75.00,
-            'biere': 198.00,
-            'mineraux': 19.00,
-            'vin': 219.00,
-            'autres': 1675.00,
-            'pourboire_frais': 230.29,
-            'pourboire_rest': 238.65,
-            'tps': 219.90,
-            'tvq': 438.66,
-            'total': 5294.90
-        }
-
-        # Bar Cupola
-        non_revenue['bar_cupola'] = {'total': 0.00}
-
-        # Services aux Chambres
-        non_revenue['services_chambres'] = {
-            'nourriture': 138.87,
-            'pourboire': 3.44,
-            'tps': 1.15,
-            'tvq': 2.29,
-            'total': 145.75
-        }
-
-        # Banquet
-        non_revenue['banquet'] = {
-            'nourriture': 6451.45,
-            'alcool': -600.00,
-            'bieres': -30.00,
-            'mineraux': 0.00,
-            'vin': 0.00,
-            'autres': 0.00,
-            'location_salle': 600.00,
-            'equipement_audio': 0.00,
-            'equipement_divers': -565.00,
-            'pourboire_frais': 907.20,
-            'tps': 299.11,
-            'tvq': 596.72,
-            'total': 7659.48
-        }
-
-        # La Spesa
-        non_revenue['la_spesa'] = {
-            'la_spesa': 145.28,
-            'tps': 6.32,
-            'tvq': 12.60,
-            'total': 164.20
-        }
-
-        # Autres Revenus (Non-Revenue)
-        non_revenue['autres_revenus_nonrev'] = {
-            'tps_autres': 100.17,
-            'tvq_autres': 200.23,
-            'total': 300.40
-        }
-
-        # Internet (Non-Revenue)
-        non_revenue['internet_nonrev'] = {
-            'tps': 0.00,
-            'tvq': 0.46,
-            'total': 0.46
-        }
-
-        # Comptabilite
-        non_revenue['comptabilite'] = {
-            'due_back_nourriture': -584.89,
-            'total': -584.89
+        cl_text = self._get_between(non_rev_text, 'Club Lounge', 'Do Not Use')
+        if not cl_text:
+            cl_text = self._get_between(non_rev_text, 'Club Lounge', 'Restaurant')
+        non_revenue['club_lounge'] = {
+            'total': self._get_section_total(non_rev_text, 'Club Lounge'),
         }
 
         # Debourse
+        deb_text = self._get_between(non_rev_text, 'Debourse', 'Package')
         non_revenue['debourse'] = {
-            'debourse': 110.00,
-            'remboursement_serveur': 584.89,
-            'total': 694.89
+            'debourse': self._get_today(deb_text, 'Debourse'),
+            'remboursement_serveur': self._get_today(deb_text, 'Remboursement Serveu'),
+            'total': self._get_section_total(non_rev_text, 'Debourse'),
         }
 
-        # Subtotal
-        non_revenue['subtotal'] = 23351.76
+        # Autres Revenus tax section in non-revenue (pages 3-5): TVQ/TPS on misc revenue items
+        # Key names match daily_rev_jour_mapping.py accumulator fields: non_revenue.autres_tax.tvq_autres
+        ar_nr_text = self._get_between(non_rev_text, 'Autres Revenus', 'Internet')
+        non_revenue['autres_tax'] = {
+            'tvq_autres': self._get_today(ar_nr_text, 'TVQ') if ar_nr_text else 0.0,
+            'tps_autres': self._get_today(ar_nr_text, 'TPS') if ar_nr_text else 0.0,
+        }
+
+        # Internet tax section in non-revenue: TVQ/TPS on internet charges
+        # Key names match: non_revenue.internet_nonrev.tvq / tps
+        int_nr_text = self._get_between(non_rev_text, 'Internet', 'Comptabilite')
+        non_revenue['internet_nonrev'] = {
+            'tvq': self._get_today(int_nr_text, 'TVQ') if int_nr_text else 0.0,
+            'tps': self._get_today(int_nr_text, 'TPS') if int_nr_text else 0.0,
+        }
+
+        # Comptabilite tax section in non-revenue: TVQ/TPS on GL adjustments (not in mapping, informational)
+        comp_nr_text = self._get_between(non_rev_text, 'Comptabilite', 'Debourse')
+        non_revenue['comptabilite_nonrev'] = {
+            'tvq': self._get_today(comp_nr_text, 'TVQ') if comp_nr_text else 0.0,
+            'tps': self._get_today(comp_nr_text, 'TPS') if comp_nr_text else 0.0,
+        }
+
+        # Combined tax totals — convenience aggregate for test pipeline and quick reads
+        non_revenue['total_tvq'] = (
+            non_revenue.get('chambres_tax', {}).get('tvq', 0) +
+            non_revenue.get('autres_tax', {}).get('tvq_autres', 0) +
+            non_revenue.get('internet_nonrev', {}).get('tvq', 0) +
+            non_revenue.get('comptabilite_nonrev', {}).get('tvq', 0)
+        )
+        non_revenue['total_tps'] = (
+            non_revenue.get('chambres_tax', {}).get('tps', 0) +
+            non_revenue.get('autres_tax', {}).get('tps_autres', 0) +
+            non_revenue.get('internet_nonrev', {}).get('tps', 0) +
+            non_revenue.get('comptabilite_nonrev', {}).get('tps', 0)
+        )
+
+        # Subtotal Non-Revenue
+        sub_match = re.search(
+            r'Subtotal Non-Rev Dept\S*\s+([\d,]+\.?\d*)(-?)',
+            self.raw_text, re.IGNORECASE
+        )
+        if sub_match:
+            val = float(sub_match.group(1).replace(',', ''))
+            if sub_match.group(2) == '-':
+                val = -val
+            non_revenue['subtotal'] = val
 
         self.extracted_data['non_revenue'] = non_revenue
 
+    # ── Settlements (Pages 5-6) ───────────────────────────────────────────────
+
     def _parse_settlements(self):
-        """Parse settlements section."""
-        settlements = {
-            'comptant': 0.00,
-            'american_express': -28608.05,
-            'visa': -22164.17,
-            'mastercard': -18539.52,
-            'diners': 0.00,
-            'discover': 0.00,
-            'carte_debit': 0.00,
-            'cheque': 0.00,
-            'facture_direct': -4064.49,
-            'gift_card': 0.00,
-            'total': -73376.23
-        }
+        """Parse Settlements section — Today column values."""
+        # Settlements appear starting on page 5
+        p5 = self._pages_text[4] if len(self._pages_text) > 4 else ""
+        p6 = self._pages_text[5] if len(self._pages_text) > 5 else ""
+        settle_text = p5 + "\n" + p6
+
+        # Find settlement section
+        settle_start = settle_text.find('Settlements\n')
+        if settle_start >= 0:
+            settle_text = settle_text[settle_start:]
+
+        settlements = {}
+
+        settle_items = [
+            ('comptant', 'Comptant'),
+            ('american_express', 'American Express'),
+            ('visa', 'Visa'),
+            ('mastercard', 'MasterCard'),
+            ('diners', 'Diners'),
+            ('discover', 'Discover'),
+            ('carte_debit', 'Carte Debit'),
+            ('cheque', 'Cheque'),
+            ('facture_direct', 'Facture Direct'),
+            ('certificat_cadeaux', 'Gift Card'),
+            ('hotel_promotion', 'Hotel Promotion'),
+        ]
+
+        for key, label in settle_items:
+            settlements[key] = self._get_today(settle_text, label)
+
+        # Total settlements
+        total_match = re.search(
+            r'Total Settlements\s+([\d,]+\.?\d*)(-?)',
+            settle_text, re.IGNORECASE
+        )
+        if total_match:
+            val = float(total_match.group(1).replace(',', ''))
+            if total_match.group(2) == '-':
+                val = -val
+            settlements['total'] = val
+
         self.extracted_data['settlements'] = settlements
 
-    def _parse_deposits(self):
-        """Parse deposits section."""
-        deposits = {
-            'ax': 24288.03,
-            'visa': 8980.85,
-            'mastercard': 3047.46,
-            'total': 36316.34
-        }
-        self.extracted_data['deposits_received'] = deposits
+    # ── Deposits (Page 6) ─────────────────────────────────────────────────────
 
-        advance_deposits = {
-            'applied': -22312.44,
-            'cancel': 0.00,
-            'dna': 0.00
+    def _parse_deposits(self):
+        """Parse Deposits Received and Advance Deposits sections."""
+        p6 = self._pages_text[5] if len(self._pages_text) > 5 else ""
+        p7 = self._pages_text[6] if len(self._pages_text) > 6 else ""
+        dep_text = p6 + "\n" + p7
+
+        deposits_received = {
+            'ax': self._get_today(dep_text, 'Dep Recvd - AX'),
+            'visa': self._get_today(dep_text, 'Dep Recvd - Visa'),
+            'mastercard': self._get_today(dep_text, 'Dep Recvd - Master'),
+            'total': 0.0,
         }
-        self.extracted_data['advance_deposits'] = advance_deposits
+        # Total Net Dep Rcvd
+        total_dep_match = re.search(
+            r'Total Net Dep Rcvd\s+([\d,]+\.?\d*)(-?)',
+            dep_text, re.IGNORECASE
+        )
+        if total_dep_match:
+            val = float(total_dep_match.group(1).replace(',', ''))
+            if total_dep_match.group(2) == '-':
+                val = -val
+            deposits_received['total'] = val
+
+        self.extracted_data['deposits_received'] = deposits_received
+
+        # Advance Deposits (page 7)
+        advance = {
+            'applied': self._get_today(dep_text, 'Adv Dep Applied'),
+            'cancel': self._get_today(dep_text, 'Adv Dep Cancel'),
+            'dna': self._get_today(dep_text, 'Adv Dep DNA'),
+        }
+        self.extracted_data['advance_deposits'] = advance
+
+    # ── Balance (Page 7) ──────────────────────────────────────────────────────
 
     def _parse_balance(self):
-        """Parse balance section."""
+        """Parse Balance section from last page."""
+        last_page = self._pages_text[-1] if self._pages_text else ""
+        # Fallback: search entire text
+        text = last_page if 'Balance Today' in last_page else self.raw_text
+
+        def _bal(label):
+            m = re.search(rf'{re.escape(label)}\s+([\d,]+\.?\d*)(-?)', text, re.IGNORECASE)
+            if m:
+                v = float(m.group(1).replace(',', ''))
+                if m.group(2) == '-':
+                    v = -v
+                return v
+            return 0.0
+
         balance = {
-            'today': -75270.98,
-            'prev_day': -3796637.21,
-            'hotel_moved_in': 0.00,
-            'hotel_moved_out': 0.00,
-            'new_balance': -3871908.19
+            'today': _bal('Balance Today'),
+            'prev_day': _bal('Balance Prev Day'),
+            'hotel_moved_in': _bal('Today Hotel Moved In'),
+            'hotel_moved_out': _bal('Today Hotel Moved Out'),
+            'new_balance': _bal('New Balance'),
         }
         self.extracted_data['balance'] = balance
 
+    # ── RJ Mapping ────────────────────────────────────────────────────────────
+
     def _compute_rj_mapping(self):
-        """Compute RJ mapping with absolute values and key aggregates."""
-        balance = self.extracted_data['balance']
-        settlements = self.extracted_data['settlements']
-        deposits = self.extracted_data['deposits_received']
-        advance_deps = self.extracted_data['advance_deposits']
-        revenue = self.extracted_data['revenue']
-        non_revenue = self.extracted_data['non_revenue']
+        """Build rj_mapping with computed aggregates for downstream consumers."""
+        balance = self.extracted_data.get('balance', {})
+        settlements = self.extracted_data.get('settlements', {})
+        deposits = self.extracted_data.get('deposits_received', {})
+        adv_deps = self.extracted_data.get('advance_deposits', {})
+        revenue = self.extracted_data.get('revenue', {})
+        non_revenue = self.extracted_data.get('non_revenue', {})
 
-        rj_mapping = {
+        self.extracted_data['rj_mapping'] = {
             'geac_ux': {
-                # Balance (absolute values for reporting)
-                'balance_prev_day': abs(balance['prev_day']),
-                'balance_today': abs(balance['today']),
-                'new_balance': abs(balance['new_balance']),
-
-                # Room Revenue
-                'room_revenue_today': revenue['chambres']['total'],
-
-                # Settlements (absolute values)
-                'settlement_amex': abs(settlements['american_express']),
-                'settlement_visa': abs(settlements['visa']),
-                'settlement_mc': abs(settlements['mastercard']),
-                'settlement_facture': abs(settlements['facture_direct']),
-                'settlement_total': abs(settlements['total']),
-
-                # Deposits
-                'dep_received_total': deposits['total'],
-                'dep_received_ax': deposits['ax'],
-                'dep_received_visa': deposits['visa'],
-                'dep_received_mc': deposits['mastercard'],
-
-                # Advance Deposits
-                'adv_dep_applied': abs(advance_deps['applied']),
+                'balance_prev_day': abs(balance.get('prev_day', 0)),
+                'balance_today': abs(balance.get('today', 0)),
+                'new_balance': abs(balance.get('new_balance', 0)),
+                'room_revenue_today': revenue.get('chambres', {}).get('total', 0),
+                'settlement_amex': abs(settlements.get('american_express', 0)),
+                'settlement_visa': abs(settlements.get('visa', 0)),
+                'settlement_mc': abs(settlements.get('mastercard', 0)),
+                'settlement_total': abs(settlements.get('total', 0)),
+                'dep_received_total': deposits.get('total', 0),
+                'adv_dep_applied': abs(adv_deps.get('applied', 0)),
             },
             'jour': {
-                # Revenue breakdown
-                'room_revenue': revenue['chambres']['total'],
-                'todays_activity': abs(self.extracted_data.get('todays_activity', -15898.65)),
-
-                # Taxes (from chambres)
-                'taxe_hebergement': non_revenue['chambres_tax']['taxe_hebergement'],
-                'tps_chambres': non_revenue['chambres_tax']['tps'],
-                'tvq_chambres': non_revenue['chambres_tax']['tvq'],
-
-                # Restaurant revenue
-                'restaurant_piazza_revenue': non_revenue['restaurant_piazza']['total'],
-                'banquet_revenue': non_revenue['banquet']['total'],
-            }
+                'room_revenue': revenue.get('chambres', {}).get('total', 0),
+                'taxe_hebergement': non_revenue.get('chambres_tax', {}).get('taxe_hebergement', 0),
+                'tps_chambres': non_revenue.get('chambres_tax', {}).get('tps', 0),
+                'tvq_chambres': non_revenue.get('chambres_tax', {}).get('tvq', 0),
+                # Combined TVQ/TPS across all departments → Jour AX (col 49) and AY (col 50)
+                'tvq_total': non_revenue.get('total_tvq', 0),
+                'tps_total': non_revenue.get('total_tps', 0),
+            },
         }
-
-        self.extracted_data['rj_mapping'] = rj_mapping
-
-    def _extract_section_values(self, section_pattern, line_pattern):
-        """Extract values from a section using regex patterns."""
-        match = re.search(section_pattern, self.raw_text, re.DOTALL)
-        if not match:
-            return ""
-        return match.group(0)
-
-    def _get_value_for_line(self, text, line_pattern):
-        """Extract numeric value for a line matching the pattern."""
-        # Pattern: line name followed by numeric value (possibly with trailing -)
-        pattern = f"{line_pattern}.*?(\\d+\\.\\d{{2}})-?"
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            value = float(match.group(1))
-            # Check if it had trailing "-" indicating negative
-            if re.search(f"{line_pattern}.*?\\d+\\.\\d{{2}}-", text, re.IGNORECASE):
-                value = -value
-            return value
-        return 0.0
 
     def validate(self):
         """Validate extracted data."""
@@ -397,18 +485,13 @@ class DailyRevenueParser(BaseParser):
             self.validation_errors.append("No data extracted from PDF")
             return False
 
-        # Check critical sections exist
-        required_sections = ['revenue', 'non_revenue', 'settlements', 'balance']
-        for section in required_sections:
-            if section not in self.extracted_data:
-                self.validation_warnings.append(f"Missing section: {section}")
+        balance = self.extracted_data.get('balance', {})
+        if balance.get('new_balance', 0) == 0:
+            self.validation_warnings.append("New Balance is zero — balance section may not have parsed correctly")
 
-        # Validate totals make sense
         revenue = self.extracted_data.get('revenue', {})
-        if revenue and 'chambres' in revenue:
-            if revenue['chambres'].get('total', 0) != 50936.60:
-                self.validation_warnings.append(
-                    f"Room revenue total mismatch: {revenue['chambres'].get('total')} != 50936.60"
-                )
+        chambres_total = revenue.get('chambres', {}).get('total', 0)
+        if chambres_total == 0:
+            self.validation_warnings.append("Chambres total is zero — revenue section may not have parsed correctly")
 
         return len(self.validation_errors) == 0

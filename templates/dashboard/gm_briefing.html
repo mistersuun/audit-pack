@@ -1,0 +1,1078 @@
+{% extends "base.html" %}
+{% block title %}Briefing GM — Matin{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ================================================================
+   GM BRIEFING — Design tokens
+   ================================================================ */
+:root {
+  --up:    #10b981;
+  --up-bg: rgba(16,185,129,0.10);
+  --dn:    #ef4444;
+  --dn-bg: rgba(239,68,68,0.10);
+  --neu:   #9ca3af;
+  --amber: #f59e0b;
+  --amb-bg:rgba(245,158,11,0.10);
+  --mono:  'JetBrains Mono','SF Mono',monospace;
+  --ease:  cubic-bezier(0.16,1,0.3,1);
+  --r14:   14px;
+  --r10:   10px;
+  --r6:    6px;
+}
+
+/* ── Page shell ─────────────────────────────────────────────── */
+.gm-page {
+  padding: 1.5rem 2rem 4rem;
+  max-width: 1560px;
+  margin: 0 auto;
+}
+
+/* ── Page header ────────────────────────────────────────────── */
+.gm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.gm-header-left h1 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+}
+.gm-header-left p {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+.gm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.gm-date-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-bg);
+  border: 1px solid var(--primary-border);
+  padding: 5px 14px;
+  border-radius: 20px;
+}
+.gm-refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.gm-refresh-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.gm-refresh-btn svg { width:14px; height:14px; }
+
+/* ── Section heading ────────────────────────────────────────── */
+.gm-section { margin-top: 2rem; }
+.gm-section:first-child { margin-top: 0; }
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.section-label .dot {
+  width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+}
+.section-label h2 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--text-muted);
+}
+.section-label .rule {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border-color), transparent 80%);
+}
+
+/* ── ROW 1: KPI Hero cards ──────────────────────────────────── */
+.kpi-hero-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.kpi-hero {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 20px 22px 18px;
+  position: relative;
+  overflow: hidden;
+  transition: box-shadow 0.2s var(--ease), transform 0.2s var(--ease);
+}
+.kpi-hero:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  transform: translateY(-2px);
+}
+.kpi-hero-accent {
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: var(--primary);
+  border-radius: var(--r14) var(--r14) 0 0;
+}
+.kpi-hero-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+.kpi-hero-value {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  color: var(--text);
+  margin-bottom: 12px;
+  font-feature-settings: 'tnum';
+}
+.kpi-hero-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.kpi-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  padding: 3px 8px;
+  border-radius: 5px;
+  width: fit-content;
+}
+.kpi-badge.up   { background: var(--up-bg);  color: var(--up); }
+.kpi-badge.down { background: var(--dn-bg);  color: var(--dn); }
+.kpi-badge.neu  { background: rgba(156,163,175,0.12); color: var(--neu); }
+.kpi-badge-label {
+  font-size: 9.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  font-family: inherit;
+}
+.kpi-avg-line {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+
+/* ── ROW 2: Operational Status ──────────────────────────────── */
+.ops-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* Balance pills card */
+.balance-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 18px 20px;
+}
+.balance-card-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+}
+.balance-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.balance-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.balance-pill.green  { background: var(--up-bg);  color: var(--up);  border-color: rgba(16,185,129,0.2); }
+.balance-pill.red    { background: var(--dn-bg);  color: var(--dn);  border-color: rgba(239,68,68,0.2);  }
+.balance-pill.pending{ background: rgba(107,114,128,0.08); color: var(--neu); border-color: rgba(107,114,128,0.15); }
+.balance-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.balance-pill.green  .balance-dot { background: var(--up); }
+.balance-pill.red    .balance-dot { background: var(--dn); }
+.balance-pill.pending .balance-dot { background: var(--neu); }
+
+/* Auditor info card */
+.auditor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 18px 20px;
+}
+.auditor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.auditor-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--primary-bg);
+  border: 2px solid var(--primary-border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--primary); font-weight: 700; font-size: 13px;
+}
+.auditor-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.auditor-time { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: var(--up-bg);
+  color: var(--up);
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(16,185,129,0.2);
+}
+.streak-badge svg { width: 13px; height: 13px; }
+
+/* OOS card */
+.oos-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 18px 20px;
+}
+.oos-number {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--text);
+  font-feature-settings: 'tnum';
+}
+.oos-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 6px; }
+.oos-impact {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--amber);
+  background: var(--amb-bg);
+  padding: 3px 9px;
+  border-radius: 5px;
+  margin-top: 8px;
+}
+
+/* ── ROW 3: Forward Look ────────────────────────────────────── */
+.forward-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+}
+.chart-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 22px 24px;
+}
+.chart-panel-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.chart-panel-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+.chart-container { position: relative; height: 220px; }
+.chart-container canvas { width: 100% !important; }
+
+.pace-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.pace-card-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0;
+}
+.pace-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  background: var(--bg-primary, var(--bg));
+  border: 1px solid var(--border-color);
+  border-radius: var(--r10);
+}
+.pace-stat-label {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.pace-stat-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text);
+  font-feature-settings: 'tnum';
+}
+.pace-vs-ly {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--mono);
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-top: 2px;
+  width: fit-content;
+}
+.pace-vs-ly.up   { background: var(--up-bg);  color: var(--up); }
+.pace-vs-ly.down { background: var(--dn-bg);  color: var(--dn); }
+.stale-badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--amber);
+  background: var(--amb-bg);
+  padding: 3px 9px;
+  border-radius: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.stale-badge svg { width: 11px; height: 11px; }
+
+/* ── ROW 4: Trend Context ───────────────────────────────────── */
+.trend-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 12px;
+  align-items: start;
+}
+
+/* STR card */
+.str-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 20px 22px;
+  text-align: center;
+}
+.str-index {
+  font-size: 56px;
+  font-weight: 900;
+  letter-spacing: -3px;
+  line-height: 1;
+  font-feature-settings: 'tnum';
+}
+.str-index.above { color: var(--up); }
+.str-index.below { color: var(--dn); }
+.str-index.parity{ color: var(--primary); }
+.str-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 8px; }
+.str-rank {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--primary-bg);
+  color: var(--primary);
+  padding: 3px 10px;
+  border-radius: 12px;
+  margin-top: 8px;
+}
+.str-sub {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-family: var(--mono);
+}
+
+/* Labor table */
+.labor-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 20px 22px;
+}
+.labor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12.5px;
+}
+.labor-row:last-child { border-bottom: none; }
+.labor-period { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+.labor-pct {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 13px;
+}
+.labor-pct.ok       { color: var(--up); }
+.labor-pct.warning  { color: var(--amber); }
+.labor-pct.critical { color: var(--dn); }
+.labor-pct.no_data  { color: var(--neu); }
+
+/* Alert banner */
+.alert-banner {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 16px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.alert-icon-wrap {
+  width: 36px; height: 36px; border-radius: var(--r10);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.alert-icon-wrap svg { width: 18px; height: 18px; }
+.alert-icon-wrap.critical { background: var(--dn-bg); color: var(--dn); }
+.alert-icon-wrap.warning  { background: var(--amb-bg); color: var(--amber); }
+.alert-icon-wrap.info     { background: var(--primary-bg); color: var(--primary); }
+.alert-icon-wrap.success  { background: var(--up-bg); color: var(--up); }
+.alert-banner-body { flex: 1; }
+.alert-banner-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+.alert-banner-action { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+.alert-dismiss {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); padding: 4px; border-radius: 4px;
+  transition: color 0.15s;
+}
+.alert-dismiss:hover { color: var(--text); }
+.alert-dismiss svg { width: 14px; height: 14px; }
+
+/* ── Loading / Error skeletons ──────────────────────────────── */
+.gm-skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--border-color) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer { from {background-position: 200%} to {background-position: -200%} }
+
+.gm-error {
+  background: var(--dn-bg);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: var(--r14);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--dn);
+  font-size: 13px;
+  font-weight: 500;
+}
+.gm-error svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.no-data-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--r14);
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.no-data-card svg { width: 32px; height: 32px; opacity: 0.4; margin-bottom: 10px; }
+.no-data-card p { font-size: 13px; }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 1200px) {
+  .kpi-hero-row { grid-template-columns: repeat(3, 1fr); }
+  .forward-grid { grid-template-columns: 1fr; }
+  .trend-grid   { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 900px) {
+  .gm-page { padding: 1rem 1rem 3rem; }
+  .kpi-hero-row { grid-template-columns: repeat(2, 1fr); }
+  .ops-grid { grid-template-columns: 1fr; }
+  .trend-grid { grid-template-columns: 1fr; }
+  .kpi-hero-value { font-size: 28px; }
+}
+@media (max-width: 600px) {
+  .kpi-hero-row { grid-template-columns: 1fr; }
+  .forward-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="with-sidebar">
+<div class="gm-page">
+
+  <!-- ── PAGE HEADER ─────────────────────────────────────────── -->
+  <div class="gm-header">
+    <div class="gm-header-left">
+      <h1>Briefing Matinal — Direction</h1>
+      <p id="gm-subtitle">Chargement des données...</p>
+    </div>
+    <div class="gm-header-right">
+      <span class="gm-date-badge" id="gm-date-badge">---</span>
+      <button class="gm-refresh-btn" onclick="loadBriefing()">
+        <i data-feather="refresh-cw"></i> Actualiser
+      </button>
+    </div>
+  </div>
+
+  <!-- ── LOADING STATE ──────────────────────────────────────── -->
+  <div id="gm-loading">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:2rem;">
+      <div class="gm-skeleton" style="height:130px;"></div>
+      <div class="gm-skeleton" style="height:130px;"></div>
+      <div class="gm-skeleton" style="height:130px;"></div>
+      <div class="gm-skeleton" style="height:130px;"></div>
+      <div class="gm-skeleton" style="height:130px;"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:2rem;">
+      <div class="gm-skeleton" style="height:100px;"></div>
+      <div class="gm-skeleton" style="height:100px;"></div>
+      <div class="gm-skeleton" style="height:100px;"></div>
+    </div>
+  </div>
+
+  <!-- ── ERROR STATE ────────────────────────────────────────── -->
+  <div id="gm-error" style="display:none;">
+    <div class="gm-error">
+      <i data-feather="alert-circle"></i>
+      <span id="gm-error-msg">Erreur lors du chargement des données.</span>
+    </div>
+  </div>
+
+  <!-- ── MAIN CONTENT ───────────────────────────────────────── -->
+  <div id="gm-content" style="display:none;">
+
+    <!-- ROW 1 — Last Night KPIs -->
+    <div class="gm-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--primary);"></span>
+        <h2>Performance — Derniere Nuit</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="kpi-hero-row" id="kpi-row"></div>
+    </div>
+
+    <!-- ROW 2 — Operational Status -->
+    <div class="gm-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--up);"></span>
+        <h2>Statut Operationnel</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="ops-grid">
+        <div class="balance-card" id="balance-card">
+          <div class="balance-card-title">Balances de la Nuit</div>
+          <div class="balance-pills" id="balance-pills"></div>
+        </div>
+        <div class="auditor-card" id="auditor-card">
+          <div class="balance-card-title">Auditeur</div>
+          <div id="auditor-info"></div>
+        </div>
+        <div class="oos-card" id="oos-card">
+          <div class="oos-label">Chambres Hors Usage (OOS)</div>
+          <div class="oos-number" id="oos-count">—</div>
+          <div id="oos-impact"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 3 — Forward Look -->
+    <div class="gm-section">
+      <div class="section-label">
+        <span class="dot" style="background:#3b82f6;"></span>
+        <h2>Previsions — Prochains Jours</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="forward-grid">
+        <div class="chart-panel">
+          <div class="chart-panel-title">OTB — 7 Prochains Jours</div>
+          <div class="chart-panel-sub">Chambres confirmées (groupe + transient) vs N-1</div>
+          <div class="chart-container">
+            <canvas id="otb-chart"></canvas>
+          </div>
+        </div>
+        <div class="pace-card" id="pace-card">
+          <div class="pace-card-title">Allure — 30 Prochains Jours</div>
+          <div id="pace-stats"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROW 4 — Trend Context -->
+    <div class="gm-section">
+      <div class="section-label">
+        <span class="dot" style="background:var(--amber);"></span>
+        <h2>Contexte Tendances</h2>
+        <span class="rule"></span>
+      </div>
+      <div class="trend-grid">
+        <div class="str-card" id="str-card">
+          <div class="str-label">Indice RevPAR STR</div>
+          <div class="str-index" id="str-value">—</div>
+          <div id="str-rank"></div>
+          <div class="str-sub" id="str-sub"></div>
+        </div>
+        <div class="labor-card" id="labor-card">
+          <div class="balance-card-title" style="margin-bottom:12px;">Main-d'Oeuvre / Revenu</div>
+          <div id="labor-rows"></div>
+        </div>
+        <div id="alert-panel"></div>
+      </div>
+    </div>
+
+  </div><!-- /#gm-content -->
+
+</div><!-- /.gm-page -->
+</main>
+
+<script>
+/* ================================================================
+   GM BRIEFING — Data rendering
+   ================================================================ */
+
+let otbChartInstance = null;
+
+function fmt$(v) {
+  if (v == null) return '—';
+  return new Intl.NumberFormat('fr-CA', {style:'currency', currency:'CAD', maximumFractionDigits:0}).format(v);
+}
+function fmtPct(v, decimals=1) {
+  if (v == null) return '—';
+  return `${parseFloat(v).toFixed(decimals)}%`;
+}
+function fmtDelta(v, suffix='%') {
+  if (v == null) return null;
+  const sign = v >= 0 ? '+' : '';
+  return `${sign}${parseFloat(v).toFixed(1)}${suffix}`;
+}
+function dirClass(dir) {
+  // For most metrics, "above" is good. dir = 'above' | 'below' | 'unknown'
+  if (dir === 'above') return 'up';
+  if (dir === 'below') return 'down';
+  return 'neu';
+}
+
+// ── KPI config ────────────────────────────────────────────────
+const KPI_CONFIG = [
+  { key: 'occupancy_pct',  label: 'Occupation',      fmt: v => fmtPct(v, 1), budgetKey: 'occupancy', lyKey: 'occupancy', avgKey: 'occupancy' },
+  { key: 'adr',            label: 'ADR',              fmt: v => fmt$(v),      budgetKey: 'adr',       lyKey: 'adr',       avgKey: 'adr' },
+  { key: 'revpar',         label: 'RevPAR',           fmt: v => fmt$(v),      budgetKey: 'revpar',    lyKey: 'revpar',    avgKey: 'revpar' },
+  { key: 'room_revenue',   label: 'Rev. Chambres',    fmt: v => fmt$(v),      budgetKey: 'room_revenue', lyKey: 'room_revenue', avgKey: 'room_revenue' },
+  { key: 'fb_revenue',     label: 'Rev. F&B',         fmt: v => fmt$(v),      budgetKey: null,        lyKey: 'total_revenue', avgKey: 'total_revenue' },
+];
+
+function buildKpiRow(p1) {
+  const { kpis, vs_budget, vs_ly, vs_7day_avg } = p1;
+  const row = document.getElementById('kpi-row');
+  row.innerHTML = '';
+
+  KPI_CONFIG.forEach((cfg, i) => {
+    const val = kpis[cfg.key];
+    const bud = cfg.budgetKey ? vs_budget[cfg.budgetKey] : null;
+    const ly  = cfg.lyKey     ? vs_ly[cfg.lyKey]         : null;
+    const avg = cfg.avgKey    ? vs_7day_avg[cfg.avgKey]   : null;
+
+    const budBadge = bud && bud.pct != null
+      ? `<span class="kpi-badge ${dirClass(bud.direction)}">${fmtDelta(bud.pct)}</span>
+         <span class="kpi-badge-label">vs Budget</span>`
+      : '';
+    const lyBadge = ly && ly.pct != null
+      ? `<span class="kpi-badge ${dirClass(ly.direction)}">${fmtDelta(ly.pct)}</span>
+         <span class="kpi-badge-label">vs N-1</span>`
+      : '';
+    const avgLine = avg && avg.pct != null
+      ? `<div class="kpi-avg-line">Moy. 7j ${fmtDelta(avg.pct)}</div>`
+      : '';
+
+    const accentColors = ['#6366f1','#10b981','#3b82f6','#f59e0b','#8b5cf6'];
+
+    row.insertAdjacentHTML('beforeend', `
+      <div class="kpi-hero">
+        <div class="kpi-hero-accent" style="background:${accentColors[i]};"></div>
+        <div class="kpi-hero-label">${cfg.label}</div>
+        <div class="kpi-hero-value">${cfg.fmt(val)}</div>
+        <div class="kpi-hero-badges">
+          ${budBadge ? `<div style="display:flex;align-items:center;gap:5px;">${budBadge}</div>` : ''}
+          ${lyBadge  ? `<div style="display:flex;align-items:center;gap:5px;">${lyBadge}</div>`  : ''}
+          ${avgLine}
+        </div>
+      </div>
+    `);
+  });
+}
+
+// ── Ops status ────────────────────────────────────────────────
+function buildOpsRow(p2) {
+  // Balance pills
+  const pills = document.getElementById('balance-pills');
+  const grid  = p2.balance_grid;
+  const checks = [
+    { label: 'Récap',      key: 'recap' },
+    { label: 'Transelect', key: 'transelect' },
+    { label: 'AR GEAC',    key: 'ar' },
+  ];
+  let phtml = '';
+  checks.forEach(c => {
+    const item = grid[c.key];
+    let cls = 'pending';
+    if (item && item.balanced === true)  cls = 'green';
+    if (item && item.balanced === false) cls = 'red';
+    phtml += `<div class="balance-pill ${cls}"><span class="balance-dot"></span>${c.label}</div>`;
+  });
+  // Quasimodo (from p2.quasimodo)
+  const q = p2.quasimodo;
+  const qcls = !q || q.status === 'no_data' ? 'pending' : (q.status === 'ok' ? 'green' : 'red');
+  const qval = q && q.variance != null ? ` (${q.variance >= 0 ? '+' : ''}${q.variance}$)` : '';
+  phtml += `<div class="balance-pill ${qcls}"><span class="balance-dot"></span>Quasimodo${qval}</div>`;
+  pills.innerHTML = phtml;
+
+  // Auditor info
+  const rj = p2.rj_session;
+  let ahtml = '';
+  if (rj && rj.exists) {
+    const initials = rj.auditor ? rj.auditor.substring(0,2).toUpperCase() : '?';
+    const time = rj.submitted_at
+      ? new Date(rj.submitted_at).toLocaleTimeString('fr-CA', {hour:'2-digit', minute:'2-digit'})
+      : '—';
+    const statusLabel = rj.is_submitted ? 'Soumis' : rj.status || 'En cours';
+    ahtml = `
+      <div class="auditor-row">
+        <div class="auditor-avatar">${initials}</div>
+        <div>
+          <div class="auditor-name">${rj.auditor || '—'}</div>
+          <div class="auditor-time">Soumis à ${time}</div>
+        </div>
+      </div>
+    `;
+    if (p2.consecutive_balanced_streak > 0) {
+      ahtml += `<div class="streak-badge"><i data-feather="award"></i> ${p2.consecutive_balanced_streak} nuit${p2.consecutive_balanced_streak > 1 ? 's' : ''} consécutive${p2.consecutive_balanced_streak > 1 ? 's' : ''} balancée${p2.consecutive_balanced_streak > 1 ? 's' : ''}</div>`;
+    }
+  } else {
+    ahtml = `<div style="color:var(--text-muted);font-size:13px;">Aucune session RJ trouvée pour cette nuit.</div>`;
+  }
+  document.getElementById('auditor-info').innerHTML = ahtml;
+
+  // OOS
+  const oos = p2.oos_rooms;
+  document.getElementById('oos-count').textContent = oos.count ?? '0';
+  const impEl = document.getElementById('oos-impact');
+  if (oos.revpar_impact > 0) {
+    impEl.innerHTML = `<div class="oos-impact"><i data-feather="trending-down" style="width:12px;height:12px;"></i> Impact RevPAR estimé : ${fmt$(oos.revpar_impact)}</div>`;
+  } else {
+    impEl.innerHTML = `<div style="font-size:12px;color:var(--text-muted);margin-top:8px;">Aucun impact RevPAR</div>`;
+  }
+
+  feather.replace();
+}
+
+// ── Forward Look chart ────────────────────────────────────────
+function buildForwardLook(p3) {
+  const paceEl = document.getElementById('pace-stats');
+
+  if (!p3 || !p3.snapshot_date) {
+    paceEl.innerHTML = `<div class="no-data-card"><i data-feather="inbox"></i><p>Aucune donnée OTB disponible</p></div>`;
+    feather.replace();
+    return;
+  }
+
+  // Stale warning
+  if (p3.data_is_stale) {
+    document.querySelector('.chart-panel-sub').insertAdjacentHTML('afterend',
+      `<div class="stale-badge" style="margin-bottom:10px;"><i data-feather="clock"></i> Données OTB vieilles de ${p3.snapshot_age_days} jours</div>`
+    );
+  }
+
+  // Chart
+  const days   = p3.next_7_days;
+  const labels = days.map(d => {
+    const dt = new Date(d.target_date + 'T12:00:00');
+    return dt.toLocaleDateString('fr-CA', {weekday:'short', month:'short', day:'numeric'});
+  });
+  const groupRooms     = days.map(d => d.group_rooms);
+  const transientRooms = days.map(d => d.transient_rooms);
+  const lyRooms        = days.map(d => d.ly_rooms);
+
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+  const textColor = isDark ? '#9ca3af' : '#6b7280';
+
+  if (otbChartInstance) otbChartInstance.destroy();
+  const ctx = document.getElementById('otb-chart').getContext('2d');
+  otbChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {
+          label: 'Groupe',
+          data: groupRooms,
+          backgroundColor: 'rgba(99,102,241,0.7)',
+          borderRadius: 4,
+          stack: 'otb',
+        },
+        {
+          label: 'Transient',
+          data: transientRooms,
+          backgroundColor: 'rgba(99,102,241,0.25)',
+          borderRadius: 4,
+          stack: 'otb',
+        },
+        {
+          label: 'N-1',
+          data: lyRooms,
+          type: 'line',
+          borderColor: 'rgba(245,158,11,0.8)',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [4,3],
+          pointRadius: 3,
+          pointBackgroundColor: 'rgba(245,158,11,0.8)',
+          tension: 0.3,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          labels: { color: textColor, font: { size: 11 }, boxWidth: 12 },
+          position: 'bottom',
+        },
+        tooltip: {
+          backgroundColor: isDark ? '#1e2433' : '#fff',
+          titleColor: isDark ? '#e5e7eb' : '#111',
+          bodyColor: isDark ? '#9ca3af' : '#6b7280',
+          borderColor: isDark ? '#2a2f3d' : '#e5e7eb',
+          borderWidth: 1,
+          padding: 12,
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { color: textColor, font: { size: 10 } },
+          grid:  { color: gridColor },
+        },
+        y: {
+          stacked: true,
+          ticks: { color: textColor, font: { size: 10 } },
+          grid:  { color: gridColor },
+        }
+      }
+    }
+  });
+
+  // 30-day pace card
+  const pace = p3.next_30_days_pace;
+  const vsRoomsCls = pace.vs_ly_rooms_pct >= 0 ? 'up' : 'down';
+  const vsRevCls   = pace.vs_ly_revenue_pct >= 0 ? 'up' : 'down';
+
+  paceEl.innerHTML = `
+    <div class="pace-stat">
+      <div class="pace-stat-label">Chambres OTB (30j)</div>
+      <div class="pace-stat-value">${pace.total_rooms_otb ?? '—'}</div>
+      ${pace.vs_ly_rooms_pct != null
+        ? `<div class="pace-vs-ly ${vsRoomsCls}">${fmtDelta(pace.vs_ly_rooms_pct)} vs N-1</div>`
+        : ''}
+    </div>
+    <div class="pace-stat">
+      <div class="pace-stat-label">Revenu OTB (30j)</div>
+      <div class="pace-stat-value">${fmt$(pace.total_revenue_otb)}</div>
+      ${pace.vs_ly_revenue_pct != null
+        ? `<div class="pace-vs-ly ${vsRevCls}">${fmtDelta(pace.vs_ly_revenue_pct)} vs N-1</div>`
+        : ''}
+    </div>
+    ${pace.avg_daily_occ_otb != null
+      ? `<div class="pace-stat">
+           <div class="pace-stat-label">Occ. Moy. (30j)</div>
+           <div class="pace-stat-value">${fmtPct(pace.avg_daily_occ_otb)}</div>
+         </div>`
+      : ''}
+  `;
+}
+
+// ── Trend context ─────────────────────────────────────────────
+function buildTrendContext(p4) {
+  // STR
+  const str = p4.str_index;
+  const strEl = document.getElementById('str-value');
+  const rankEl = document.getElementById('str-rank');
+  const subEl  = document.getElementById('str-sub');
+
+  if (str && str.data_available) {
+    const idx = parseFloat(str.revpar_index);
+    const cls = idx >= 110 ? 'above' : idx >= 90 ? 'parity' : 'below';
+    strEl.textContent = idx.toFixed(1);
+    strEl.className = `str-index ${cls}`;
+    if (str.revpar_rank && str.comp_set_size) {
+      rankEl.innerHTML = `<div class="str-rank">${str.revpar_rank}/${str.comp_set_size}</div>`;
+    }
+    subEl.textContent = `Moi: ${fmt$(str.my_revpar)} · Comp: ${fmt$(str.comp_revpar)}`;
+  } else {
+    strEl.textContent = '—';
+    subEl.textContent = 'Données STR non disponibles';
+  }
+
+  // Labor trend
+  const laborRows = document.getElementById('labor-rows');
+  if (p4.labor_pct_trend && p4.labor_pct_trend.length > 0) {
+    laborRows.innerHTML = p4.labor_pct_trend.map(r => `
+      <div class="labor-row">
+        <span class="labor-period">${r.period}</span>
+        <span class="labor-pct ${r.status}">${r.labor_pct != null ? fmtPct(r.labor_pct) : '—'}</span>
+      </div>
+    `).join('');
+  } else {
+    laborRows.innerHTML = `<div style="font-size:12px;color:var(--text-muted);">Aucune donnée main-d'oeuvre</div>`;
+  }
+
+  // Top alert banner
+  const alertPanel = document.getElementById('alert-panel');
+  const alert = p4.top_alert;
+  if (alert) {
+    const iconMap = {
+      critical: 'alert-triangle',
+      warning:  'alert-circle',
+      info:     'info',
+      success:  'check-circle',
+    };
+    alertPanel.innerHTML = `
+      <div class="alert-banner" id="top-alert-banner">
+        <div class="alert-icon-wrap ${alert.severity}">
+          <i data-feather="${iconMap[alert.severity] || 'info'}"></i>
+        </div>
+        <div class="alert-banner-body">
+          <div class="alert-banner-title">${alert.message}</div>
+          <div class="alert-banner-action">${alert.action || ''}</div>
+        </div>
+        <button class="alert-dismiss" onclick="document.getElementById('top-alert-banner').style.display='none'" title="Fermer">
+          <i data-feather="x"></i>
+        </button>
+      </div>
+    `;
+  } else {
+    alertPanel.innerHTML = `
+      <div class="alert-banner">
+        <div class="alert-icon-wrap success">
+          <i data-feather="check-circle"></i>
+        </div>
+        <div class="alert-banner-body">
+          <div class="alert-banner-title">Aucune alerte active</div>
+          <div class="alert-banner-action">Toutes les metriques sont dans les seuils normaux.</div>
+        </div>
+      </div>
+    `;
+  }
+
+  feather.replace();
+}
+
+// ── Main loader ───────────────────────────────────────────────
+async function loadBriefing(dateParam) {
+  const loading = document.getElementById('gm-loading');
+  const content = document.getElementById('gm-content');
+  const errEl   = document.getElementById('gm-error');
+
+  loading.style.display = '';
+  content.style.display = 'none';
+  errEl.style.display   = 'none';
+
+  try {
+    const url = '/api/dashboard/gm-briefing' + (dateParam ? `?date=${dateParam}` : '');
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    if (!data.success || !data.has_data) {
+      loading.style.display = 'none';
+      errEl.style.display   = '';
+      document.getElementById('gm-error-msg').textContent =
+        data.reason === 'no_djm_data'
+          ? 'Aucune donnée de journal disponible dans le système.'
+          : `Données non disponibles pour la date demandée (${data.briefing_date || 'inconnue'}).`;
+      return;
+    }
+
+    // Update header
+    const d = new Date(data.briefing_date + 'T12:00:00');
+    document.getElementById('gm-date-badge').textContent = d.toLocaleDateString('fr-CA', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+    document.getElementById('gm-subtitle').textContent =
+      `Généré à ${new Date().toLocaleTimeString('fr-CA', {hour:'2-digit', minute:'2-digit'})} · Période: nuit du ${d.toLocaleDateString('fr-CA')}`;
+
+    buildKpiRow(data.last_night);
+    buildOpsRow(data.operational_status);
+    buildForwardLook(data.forward_look);
+    buildTrendContext(data.trend_context);
+
+    loading.style.display = 'none';
+    content.style.display = '';
+    feather.replace();
+
+  } catch (e) {
+    loading.style.display = 'none';
+    errEl.style.display   = '';
+    document.getElementById('gm-error-msg').textContent = `Erreur: ${e.message}`;
+  }
+}
+
+// Kick off on load
+document.addEventListener('DOMContentLoaded', () => loadBriefing());
+</script>
+{% endblock %}

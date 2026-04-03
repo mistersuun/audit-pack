@@ -100,6 +100,8 @@ class HPExcelParser(BaseParser):
         self.daily_totals = {}     # {day: {area: total}}
         self.jour_deductions = {}  # {jour_col_index: hp_deduction_amount}
         self.available_days = []
+        self.bq_tips = {}          # {day: total} → Jour col 68 (BQ, auth "14 - Administration")
+        self.br_tips = {}          # {day: total} → Jour col 69 (BR, auth "15 - Promotion")
 
     def parse(self):
         """Parse HP Excel file — extracts both monthly and daily data."""
@@ -221,6 +223,18 @@ class HPExcelParser(BaseParser):
             total_val = self._safe_float(row[cols['total']].value)
             self.daily_totals[day][area] += total_val
 
+            # Accumulate tips by paiement code → BQ (col 68) / BR (col 69)
+            pourboire_col = cols['pourboire']
+            paiement_col = cols['paiement']
+            if pourboire_col < len(row) and paiement_col < len(row):
+                tip_val = self._safe_float(row[pourboire_col].value)
+                if tip_val != 0:
+                    pmt_code = str(row[paiement_col].value or '').strip()
+                    if '14' in pmt_code:  # "14 - Administration" → BQ
+                        self.bq_tips[day] = self.bq_tips.get(day, 0.0) + tip_val
+                    elif '15' in pmt_code:  # "15 - Promotion" → BR
+                        self.br_tips[day] = self.br_tips.get(day, 0.0) + tip_val
+
         self.available_days = sorted(self.daily_data.keys())
         self.extracted_data['available_days'] = self.available_days
         self.extracted_data['total_transactions'] = sum(
@@ -256,18 +270,25 @@ class HPExcelParser(BaseParser):
                     col_idx = self.AREA_PRODUCT_TO_JOUR[key]
                     self.jour_deductions[col_idx] = self.jour_deductions.get(col_idx, 0.0) + amount
 
-        # Also add tips (pourboire) to the appropriate columns
-        # Tips follow the same department mapping as nourriture
-        for area, products in day_data.items():
-            tip_key = (area, 'nourriture')  # Tips follow food department
-            if tip_key in self.AREA_PRODUCT_TO_JOUR:
-                # Tips are in the pourboire field, already parsed as part of the total
-                pass  # Tips are included in the line total, not separately deducted
+        # BQ (Jour col 68) = HP Admin tips (paiement code "14 - Administration")
+        bq = self.bq_tips.get(day, 0.0)
+        if bq != 0:
+            self.jour_deductions[68] = bq
+
+        # BR (Jour col 69) = HP Promo tips (paiement code "15 - Promotion")
+        br = self.br_tips.get(day, 0.0)
+        if br != 0:
+            self.jour_deductions[69] = br
 
         # Store in extracted_data for API responses
         day_total = sum(self.daily_totals.get(day, {}).values())
         self.extracted_data[f'day_{day}_total'] = day_total
         self.extracted_data[f'day_{day}_departments'] = self.daily_totals.get(day, {})
+        self.extracted_data[f'day_{day}_bq_tips'] = round(bq, 2)
+        self.extracted_data[f'day_{day}_br_tips'] = round(br, 2)
+        # Flat keys for JourMapper field resolution: _resolve_field('hp.bq_tips')
+        self.extracted_data['bq_tips'] = round(bq, 2)
+        self.extracted_data['br_tips'] = round(br, 2)
         self.extracted_data[f'day_{day}_deductions'] = {
             str(k): round(v, 2) for k, v in self.jour_deductions.items()
         }

@@ -11,7 +11,7 @@
       <p class="bi-subtitle" id="bi-subtitle">Chargez un fichier RJ pour activer le dashboard analytique.</p>
     </div>
     <div class="bi-header-right">
-      <button onclick="showImportModal()" class="bi-btn bi-btn-ghost" id="btn-import" style="display:none;">
+      <button onclick="showImportModal()" class="bi-btn bi-btn-ghost" id="btn-import">
         <i data-feather="upload-cloud"></i> Importer
       </button>
       <button onclick="loadDashboard()" class="bi-btn bi-btn-ghost">
@@ -68,6 +68,20 @@
           <p class="bi-dropzone-sub">ou <label for="file-input" class="bi-link">parcourez vos fichiers</label></p>
           <p class="bi-dropzone-hint">.xls / .xlsx — Plusieurs fichiers acceptés (5 ans de RJ)</p>
           <input type="file" id="file-input" multiple accept=".xls,.xlsx" style="display:none;" onchange="handleFiles(this.files)">
+        </div>
+        <div style="text-align:center;margin:1rem 0;color:var(--text-secondary);font-size:0.85rem;">— ou —</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="dir-path-input" placeholder="K:\RJ 2026-2027" style="flex:1;min-width:200px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);font-size:0.85rem;">
+          <button onclick="importFromDir()" class="bi-btn bi-btn-primary" style="white-space:nowrap;">Importer dossier</button>
+        </div>
+        <div style="text-align:center;margin:1rem 0;color:var(--text-secondary);font-size:0.85rem;">— ou —</div>
+        <div style="display:flex;gap:0.5rem;justify-content:center;">
+          <button onclick="syncKDrive('full')" class="bi-btn bi-btn-ghost" style="white-space:nowrap;">
+            <i data-feather="hard-drive"></i> Sync complet K: (toutes les annees)
+          </button>
+          <button onclick="syncKDrive('daily')" class="bi-btn bi-btn-primary" style="white-space:nowrap;">
+            <i data-feather="refresh-cw"></i> Sync 30 derniers jours
+          </button>
         </div>
         <div id="import-progress" style="display:none;">
           <div class="bi-progress"><div class="bi-progress-fill" id="progress-fill"></div></div>
@@ -1295,6 +1309,111 @@ function handleDrop(e) {
   if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
 }
 
+async function importFromDir() {
+  const dirPath = document.getElementById('dir-path-input').value.trim();
+  if (!dirPath) { alert('Entrez le chemin du dossier RJ'); return; }
+
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('import-progress').style.display = 'block';
+  document.getElementById('import-result').style.display = 'none';
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  fill.style.width = '30%';
+  text.textContent = 'Scan du dossier en cours...';
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const res = await fetch('/api/crm/import-from-dir', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
+      body: JSON.stringify({path: dirPath})
+    });
+    const data = await res.json();
+    fill.style.width = '100%';
+
+    const resultDiv = document.getElementById('import-result');
+    resultDiv.style.display = 'block';
+
+    if (data.success) {
+      text.textContent = 'Import termine!';
+      resultDiv.innerHTML = `<div class="import-result-success">
+        <h4>Import reussi</h4>
+        <p>${data.total_files} fichiers traites, ${data.imported} importes, ${data.updated} mis a jour</p>
+        <p>Periode: ${data.date_range.from} - ${data.date_range.to}</p>
+        ${data.errors.length ? '<p style="color:var(--bi-orange);font-size:0.75rem;">' + data.errors.length + ' erreurs</p>' : ''}
+      </div>`;
+      setTimeout(() => { hideImportModal(); loadDashboard(); }, 2000);
+    } else {
+      text.textContent = 'Erreur';
+      const errDiv = document.createElement('div');
+      errDiv.className = 'import-result-error';
+      errDiv.innerHTML = '<h4>Echec</h4>';
+      const p = document.createElement('p');
+      p.textContent = data.error || 'Erreur inconnue';
+      errDiv.appendChild(p);
+      resultDiv.innerHTML = '';
+      resultDiv.appendChild(errDiv);
+    }
+  } catch(e) {
+    fill.style.width = '100%';
+    text.textContent = 'Erreur!';
+    const resultDiv = document.getElementById('import-result');
+    resultDiv.style.display = 'block';
+    const errDiv = document.createElement('div');
+    errDiv.className = 'import-result-error';
+    errDiv.innerHTML = '<h4>Erreur reseau</h4>';
+    const p = document.createElement('p');
+    p.textContent = e.message;
+    errDiv.appendChild(p);
+    resultDiv.innerHTML = '';
+    resultDiv.appendChild(errDiv);
+  }
+}
+
+async function syncKDrive(mode) {
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('import-progress').style.display = 'block';
+  document.getElementById('import-result').style.display = 'none';
+  const fill = document.getElementById('progress-fill');
+  const text = document.getElementById('progress-text');
+  fill.style.width = '20%';
+  text.textContent = mode === 'full' ? 'Sync complet en cours (peut prendre quelques minutes)...' : 'Sync des 30 derniers jours...';
+
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const res = await fetch('/api/crm/sync-kdrive', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken},
+      body: JSON.stringify({mode: mode})
+    });
+    const data = await res.json();
+    fill.style.width = '100%';
+
+    const resultDiv = document.getElementById('import-result');
+    resultDiv.style.display = 'block';
+
+    if (data.success) {
+      const rj = data.rj || {};
+      const hp = data.hp || {};
+      text.textContent = 'Sync termine!';
+      resultDiv.innerHTML = `<div class="import-result-success">
+        <h4>Sync K: reussi</h4>
+        <p>RJ: ${rj.imported || 0} importes, ${rj.updated || 0} mis a jour (${rj.total_files || 0} fichiers)</p>
+        <p>HP: ${hp.imported || 0} importes (${hp.total_files || 0} fichiers)</p>
+      </div>`;
+      setTimeout(() => { hideImportModal(); loadDashboard(); }, 2500);
+    } else {
+      text.textContent = 'Erreur';
+      resultDiv.innerHTML = `<div class="import-result-error"><h4>Echec</h4><p>${data.error}</p></div>`;
+    }
+  } catch(e) {
+    fill.style.width = '100%';
+    text.textContent = 'Erreur!';
+    document.getElementById('import-result').style.display = 'block';
+    document.getElementById('import-result').innerHTML = `<div class="import-result-error"><h4>Erreur reseau</h4><p>${e.message}</p></div>`;
+  }
+}
+
 async function handleFiles(files) {
   if (!files.length) return;
 
@@ -1314,7 +1433,8 @@ async function handleFiles(files) {
   text.textContent = 'Extraction des données...';
 
   try {
-    const res = await fetch('/api/crm/import-history', { method: 'POST', body: formData });
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    const res = await fetch('/api/crm/import-history', { method: 'POST', body: formData, headers: {'X-CSRF-Token': csrfToken} });
     const data = await res.json();
 
     fill.style.width = '100%';
@@ -2027,7 +2147,29 @@ async function loadTabData(tab) {
 }
 
 function renderTab(tab, data) {
-  if (!data || !data.has_data) return;
+  if (!data || !data.has_data) {
+    // Show empty state message in the tab panel
+    const panel = document.getElementById('panel-' + tab);
+    if (panel) {
+      const loading = panel.querySelector('[id$="-loading"]');
+      if (loading) loading.style.display = 'none';
+      // Only add message if not already present
+      if (!panel.querySelector('.tab-empty-state')) {
+        const msg = document.createElement('div');
+        msg.className = 'tab-empty-state';
+        msg.style.cssText = 'text-align:center;padding:3rem 1rem;color:var(--text-secondary);';
+        msg.innerHTML = '<p style="font-size:1.1rem;">Aucune donnee pour cette periode.</p><p style="font-size:0.85rem;margin-top:0.5rem;">Importez des fichiers RJ historiques ou ajustez la periode.</p>';
+        panel.appendChild(msg);
+      }
+    }
+    return;
+  }
+  // Clear any previous empty state
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) {
+    const emptyMsg = panel.querySelector('.tab-empty-state');
+    if (emptyMsg) emptyMsg.remove();
+  }
   const renderers = {
     revenue: renderRevenueTab,
     fb: renderFBTab,

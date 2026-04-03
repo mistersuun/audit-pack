@@ -4,7 +4,7 @@
 
 {% block head %}
 <!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js?v=20260324"></script>
 <style>
     .tabs-container {
         display: flex;
@@ -337,6 +337,43 @@
             font-size: 0.85rem;
         }
     }
+
+    .period-bar {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+    .period-bar .label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-right: 0.5rem;
+        white-space: nowrap;
+    }
+    .period-btn {
+        padding: 0.35rem 0.9rem;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--card-bg, #fff);
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .period-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+    .period-btn.active {
+        background: var(--primary, #6366f1);
+        color: #fff;
+        border-color: var(--primary, #6366f1);
+    }
 </style>
 {% endblock %}
 
@@ -346,7 +383,7 @@
         <div class="page-title-section">
             <i data-feather="target" class="page-icon"></i>
             <h1>Positionnement Concurrentiel</h1>
-            <p>STR et OTB — Benchmarking vs concurrents et prévisions de réservations</p>
+            <p>STR et OTB — Benchmarking vs concurrents et previsions de reservations</p>
         </div>
     </div>
 
@@ -367,6 +404,15 @@
     <!-- ═══════════════════════════════════════════════════════════════════════ -->
     <div id="str" class="tab-content active">
         <div id="strMessage"></div>
+
+        <!-- Period Filter -->
+        <div class="period-bar">
+            <span class="label">Periode:</span>
+            <button class="period-btn active" onclick="setSTRPeriod(30, this)">30 jours</button>
+            <button class="period-btn" onclick="setSTRPeriod(90, this)">3 mois</button>
+            <button class="period-btn" onclick="setSTRPeriod(365, this)">12 mois</button>
+            <button class="period-btn" onclick="setSTRPeriod(1825, this)">5 ans</button>
+        </div>
 
         <!-- Controls -->
         <div class="controls-row">
@@ -437,9 +483,18 @@
     <div id="otb" class="tab-content">
         <div id="otbMessage"></div>
 
+        <!-- Period Filter -->
+        <div class="period-bar">
+            <span class="label">Horizon:</span>
+            <button class="period-btn" onclick="setOTBPeriod(30, this)">30 jours</button>
+            <button class="period-btn active" onclick="setOTBPeriod(90, this)">90 jours</button>
+            <button class="period-btn" onclick="setOTBPeriod(180, this)">6 mois</button>
+            <button class="period-btn" onclick="setOTBPeriod(365, this)">12 mois</button>
+        </div>
+
         <!-- Controls -->
         <div class="controls-row">
-            <input type="date" id="otbSnapshotDate" onchange="loadOTBData()">
+            <input type="date" id="otbSnapshotDate">
             <button class="btn btn-secondary" onclick="loadOTBData()">
                 <i data-feather="refresh-cw" style="width: 16px; height: 16px;"></i> Charger
             </button>
@@ -478,12 +533,12 @@
 
         <!-- Charts -->
         <div class="chart-container">
-            <div class="chart-title">Occupation OTB — 90 jours</div>
+            <div class="chart-title" id="otbOccTitle">Occupation OTB</div>
             <canvas id="otbOccupancyChart"></canvas>
         </div>
 
         <div class="chart-container">
-            <div class="chart-title">Chambres — Groupe vs Individuels</div>
+            <div class="chart-title">Chambres — <span style="color:#F59E0B;">Groupe</span> vs <span style="color:#3B82F6;">Individuels</span></div>
             <canvas id="otbMixChart"></canvas>
         </div>
 
@@ -550,7 +605,36 @@
 <script>
     feather.replace();
 
+    // Set Chart.js defaults for dark mode compatibility
+    if (typeof Chart !== 'undefined') {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        Chart.defaults.color = isDark ? '#e5e7eb' : '#374151';
+        Chart.defaults.borderColor = isDark ? '#1e2230' : '#e5e7eb';
+    }
+
     let strChart, strCompChart, otbOccChart, otbMixChart;
+    let currentOTBDays = 90;
+    let otbInitialized = false;  // lazy-load flag: render OTB charts only after tab is visible
+
+    function setSTRPeriod(days, btn) {
+        // Update active button
+        btn.closest('.period-bar').querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        // Update date inputs
+        const today = new Date();
+        const start = new Date(today);
+        start.setDate(today.getDate() - days);
+        document.getElementById('strStartDate').value = start.toISOString().split('T')[0];
+        document.getElementById('strEndDate').value = today.toISOString().split('T')[0];
+        loadSTRData();
+    }
+
+    function setOTBPeriod(days, btn) {
+        btn.closest('.period-bar').querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentOTBDays = days;
+        loadOTBData();
+    }
 
     // ═════════════════════════════════════════════════════════════════════════
     // TAB SWITCHING
@@ -565,16 +649,24 @@
         document.getElementById(tabName).classList.add('active');
         btn.classList.add('active');
 
-        // Trigger chart redraw
+        // OTB tab: lazy-load on first visit (canvas must be visible before Chart.js renders)
+        // then resize on subsequent visits so layout is correct after reveal.
         setTimeout(() => {
             if (tabName === 'str') {
                 if (strChart) strChart.resize();
                 if (strCompChart) strCompChart.resize();
             } else {
-                if (otbOccChart) otbOccChart.resize();
-                if (otbMixChart) otbMixChart.resize();
+                if (!otbInitialized) {
+                    // First time OTB tab is shown: load data now that canvas is visible
+                    otbInitialized = true;
+                    loadOTBData();
+                } else {
+                    // Already loaded: just resize to fit new layout
+                    if (otbOccChart) otbOccChart.resize();
+                    if (otbMixChart) otbMixChart.resize();
+                }
             }
-        }, 100);
+        }, 50);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -584,7 +676,7 @@
     function initDateInputs() {
         const today = new Date();
         const startDate = new Date(today);
-        startDate.setDate(today.getDate() - 90);
+        startDate.setDate(today.getDate() - 30);
 
         const formatDate = (d) => d.toISOString().split('T')[0];
 
@@ -734,6 +826,12 @@
         const myAdr = records.map(r => r.my_adr || 0);
         const compAdr = records.map(r => r.comp_adr || 0);
 
+        // Hardcoded colors for canvas
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#e5e7eb' : '#374151';
+        const textSecondary = isDark ? '#9ca3af' : '#6b7280';
+        const borderColor = isDark ? '#1e2230' : '#e5e7eb';
+
         // RevPAR chart
         const revparCtx = document.getElementById('strRevparChart').getContext('2d');
         if (strChart) strChart.destroy();
@@ -745,33 +843,38 @@
                     {
                         label: 'Mon RevPAR',
                         data: myRevpar,
-                        borderColor: 'var(--primary)',
+                        borderColor: '#6366F1',
                         backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 2.5,
                         tension: 0.3,
                         fill: true,
+                        pointRadius: 3,
                     },
                     {
                         label: 'Comp Set RevPAR',
                         data: compRevpar,
-                        borderColor: 'var(--text-secondary)',
+                        borderColor: '#94A3B8',
                         backgroundColor: 'transparent',
+                        borderWidth: 2,
                         tension: 0.3,
-                        borderDash: [5, 5],
+                        borderDash: [6, 4],
+                        pointRadius: 2,
+                        pointStyle: 'rect',
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                plugins: { legend: { display: true, labels: { color: textColor } } },
                 scales: {
-                    y: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
-                    x: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                    y: { ticks: { color: textSecondary }, grid: { color: borderColor } },
+                    x: { ticks: { color: textSecondary }, grid: { color: borderColor } }
                 }
             }
         });
 
-        // Comparison chart
+        // Comparison chart — Occupation (bars, left axis) + ADR (bars, right axis)
         const compCtx = document.getElementById('strComparisonChart').getContext('2d');
         if (strCompChart) strCompChart.destroy();
         strCompChart = new Chart(compCtx, {
@@ -782,7 +885,7 @@
                     {
                         label: 'Mon Occ (%)',
                         data: myOcc,
-                        backgroundColor: 'var(--primary)',
+                        backgroundColor: '#6366F1',
                     },
                     {
                         label: 'Comp Occ (%)',
@@ -790,13 +893,13 @@
                         backgroundColor: 'rgba(99, 102, 241, 0.3)',
                     },
                     {
-                        label: 'Mon ADR',
+                        label: 'Mon ADR ($)',
                         data: myAdr,
-                        backgroundColor: 'var(--success)',
+                        backgroundColor: '#10B981',
                         yAxisID: 'y1',
                     },
                     {
-                        label: 'Comp ADR',
+                        label: 'Comp ADR ($)',
                         data: compAdr,
                         backgroundColor: 'rgba(16, 185, 129, 0.3)',
                         yAxisID: 'y1',
@@ -806,11 +909,11 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                plugins: { legend: { display: true, labels: { color: textColor } } },
                 scales: {
-                    y: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
-                    y1: { type: 'linear', position: 'right', ticks: { color: 'var(--text-secondary)' }, grid: { drawOnChartArea: false } },
-                    x: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                    y: { ticks: { color: textSecondary }, grid: { color: borderColor } },
+                    y1: { type: 'linear', position: 'right', ticks: { color: textSecondary }, grid: { drawOnChartArea: false } },
+                    x: { ticks: { color: textSecondary }, grid: { color: borderColor } }
                 }
             }
         });
@@ -866,7 +969,7 @@
 
         showMessage('otbMessage', 'Chargement...', 'info');
 
-        fetch(`/compset/api/otb?snapshot_date=${snapshotDate}&days=90`)
+        fetch(`/compset/api/otb?snapshot_date=${snapshotDate}&days=${currentOTBDays}`)
             .then(r => r.json())
             .then(data => {
                 if (data.error) {
@@ -875,6 +978,7 @@
                 }
 
                 hideMessage('otbMessage');
+                document.getElementById('otbOccTitle').textContent = 'Occupation OTB — ' + currentOTBDays + ' jours';
                 renderOTBData(data.data);
             })
             .catch(e => showMessage('otbMessage', `Erreur: ${e.message}`, 'error'));
@@ -905,8 +1009,8 @@
                         <th>Occupation (%)</th>
                         <th>ADR</th>
                         <th>Revenu</th>
-                        <th>Groupe</th>
-                        <th>Individuels</th>
+                        <th><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#F59E0B;margin-right:4px;vertical-align:middle;"></span>Groupe</th>
+                        <th><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#3B82F6;margin-right:4px;vertical-align:middle;"></span>Individuels</th>
                         <th>Var LY</th>
                     </tr>
                 </thead>
@@ -914,17 +1018,18 @@
         `;
 
         records.forEach(r => {
-            const ly_var = r.ly_rooms ? `${(r.rooms_otb - r.ly_rooms >= 0 ? '+' : '')}${r.rooms_otb - r.ly_rooms}` : '—';
+            const ly_var = r.ly_rooms ? `${(r.rooms_otb - r.ly_rooms >= 0 ? '+' : '')}${r.rooms_otb - r.ly_rooms}` : '---';
+            const ly_cls = r.ly_rooms ? (r.rooms_otb >= r.ly_rooms ? 'color:#10B981' : 'color:#EF4444') : '';
             html += `
                 <tr>
                     <td>${r.target_date}</td>
-                    <td>${r.rooms_otb}</td>
-                    <td>${(r.occ_otb || 0).toFixed(1)}</td>
+                    <td><strong>${r.rooms_otb}</strong></td>
+                    <td>${(r.occ_otb || 0).toFixed(1)}%</td>
                     <td>$${(r.adr_otb || 0).toFixed(2)}</td>
-                    <td>$${(r.revenue_otb || 0).toFixed(2)}</td>
-                    <td>${r.group_rooms}</td>
-                    <td>${r.transient_rooms}</td>
-                    <td>${ly_var}</td>
+                    <td>$${(r.revenue_otb || 0).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}</td>
+                    <td style="color:#D97706;font-weight:500;">${r.group_rooms}</td>
+                    <td style="color:#2563EB;font-weight:500;">${r.transient_rooms}</td>
+                    <td style="${ly_cls};font-weight:500;">${ly_var}</td>
                 </tr>
             `;
         });
@@ -968,7 +1073,21 @@
         const group = records.map(r => r.group_rooms || 0);
         const transient = records.map(r => r.transient_rooms || 0);
 
-        // Occupancy chart
+        // Hardcoded colors — CSS vars don't work in canvas
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#e5e7eb' : '#374151';
+        const textSecondary = isDark ? '#9ca3af' : '#6b7280';
+        const gridColor = isDark ? '#1e2230' : '#e5e7eb';
+
+        // Palette
+        const AMBER = 'rgb(245, 158, 11)';
+        const AMBER_BG = 'rgba(245, 158, 11, 0.85)';
+        const BLUE = 'rgb(59, 130, 246)';
+        const BLUE_BG = 'rgba(59, 130, 246, 0.85)';
+        const INDIGO = 'rgb(99, 102, 241)';
+        const GRAY = 'rgb(156, 163, 175)';
+
+        // Occupancy chart — OTB vs Last Year
         const occCtx = document.getElementById('otbOccupancyChart').getContext('2d');
         if (otbOccChart) otbOccChart.destroy();
         otbOccChart = new Chart(occCtx, {
@@ -977,35 +1096,43 @@
                 labels: dates,
                 datasets: [
                     {
-                        label: 'OTB Occupation',
+                        label: 'Occupation OTB',
                         data: occ,
-                        borderColor: 'var(--primary)',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderColor: INDIGO,
+                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        borderWidth: 2.5,
                         tension: 0.3,
                         fill: true,
+                        pointRadius: 2,
                     },
                     {
-                        label: 'LY Occupation',
+                        label: 'Annee precedente',
                         data: lyOcc,
-                        borderColor: 'var(--text-secondary)',
+                        borderColor: GRAY,
                         backgroundColor: 'transparent',
+                        borderWidth: 2,
                         tension: 0.3,
-                        borderDash: [5, 5],
+                        borderDash: [6, 4],
+                        pointRadius: 1,
+                        pointStyle: 'rect',
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                plugins: { legend: { display: true, labels: { color: textColor } } },
                 scales: {
-                    y: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
-                    x: { ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                    y: {
+                        ticks: { color: textSecondary, callback: v => v + '%' },
+                        grid: { color: gridColor },
+                    },
+                    x: { ticks: { color: textSecondary }, grid: { color: gridColor } }
                 }
             }
         });
 
-        // Mix chart
+        // Mix chart — Groupe vs Individuels (stacked bar)
         const mixCtx = document.getElementById('otbMixChart').getContext('2d');
         if (otbMixChart) otbMixChart.destroy();
         otbMixChart = new Chart(mixCtx, {
@@ -1016,22 +1143,39 @@
                     {
                         label: 'Groupe',
                         data: group,
-                        backgroundColor: 'var(--primary)',
+                        backgroundColor: AMBER_BG,
+                        borderColor: AMBER,
+                        borderWidth: 1,
+                        borderRadius: 2,
                     },
                     {
                         label: 'Individuels',
                         data: transient,
-                        backgroundColor: 'var(--success)',
+                        backgroundColor: BLUE_BG,
+                        borderColor: BLUE,
+                        borderWidth: 1,
+                        borderRadius: 2,
                     }
                 ]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: true, labels: { color: 'var(--text)' } } },
+                plugins: {
+                    legend: { display: true, labels: { color: textColor } },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(items) {
+                                const idx = items[0].dataIndex;
+                                const total = (group[idx] || 0) + (transient[idx] || 0);
+                                return total > 0 ? `Total: ${total} chambres` : '';
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    x: { stacked: true, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } },
-                    y: { stacked: true, ticks: { color: 'var(--text-secondary)' }, grid: { color: 'var(--border)' } }
+                    x: { stacked: true, ticks: { color: textSecondary }, grid: { color: gridColor } },
+                    y: { stacked: true, ticks: { color: textSecondary }, grid: { color: gridColor } }
                 }
             }
         });
@@ -1141,11 +1285,18 @@
         el.classList.add('hidden');
     }
 
-    // Initialize on load
+    // Initialize on load.
+    // OTB data is NOT loaded here — it is lazy-loaded the first time the OTB tab
+    // is clicked, ensuring the canvas is visible before Chart.js renders.
+    // Loading a chart into a display:none canvas produces black/broken bars in
+    // Chart.js v3 because the canvas has zero computed dimensions at that point.
     document.addEventListener('DOMContentLoaded', () => {
         initDateInputs();
         loadSTRData();
-        loadOTBData();
+        // Attach OTB date change listener AFTER init to prevent premature load
+        document.getElementById('otbSnapshotDate').addEventListener('change', () => {
+            if (otbInitialized) loadOTBData();
+        });
     });
 </script>
 {% endblock %}

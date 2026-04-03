@@ -3,7 +3,7 @@ RJ Quasimodo blueprint - handles auto card reconciliation.
 """
 
 from flask import Blueprint, request, jsonify, session
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from .rj_core import RJ_FILES, get_session_id
 
 

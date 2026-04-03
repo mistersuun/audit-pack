@@ -2,6 +2,7 @@
 from functools import wraps
 from flask import session, redirect, url_for, abort, jsonify, request
 from database.models import User
+from database import db
 
 
 def login_required(f):
@@ -39,18 +40,18 @@ def get_current_user():
     """Get current logged-in user from session."""
     user_id = session.get('user_id')
     if user_id:
-        return User.query.get(user_id)
+        return db.session.get(User, user_id)
     return None
 
 
 # Role visibility config - what each role can see in the sidebar
 ROLE_NAV_ITEMS = {
     'night_auditor': ['checklist', 'rj', 'balances', 'reports', 'generators', 'documentation', 'faq'],
-    'admin': ['manager', 'direction', 'checklist', 'rj', 'balances', 'reports', 'generators', 'documentation', 'faq', 'crm', 'admin'],
-    'gm': ['manager', 'direction', 'reports', 'documentation'],
-    'gsm': ['manager', 'direction', 'reports', 'documentation'],
+    'admin': ['manager', 'gm-briefing', 'accounting-dashboard', 'direction', 'checklist', 'rj', 'balances', 'reports', 'generators', 'documentation', 'faq', 'crm', 'admin'],
+    'gm': ['gm-briefing', 'manager', 'direction', 'reports', 'documentation'],
+    'gsm': ['gm-briefing', 'manager', 'direction', 'reports', 'documentation'],
     'front_desk_supervisor': ['checklist', 'reports', 'documentation', 'faq'],
-    'accounting': ['reports', 'balances', 'documentation'],
+    'accounting': ['accounting-dashboard', 'reports', 'balances', 'documentation'],
 }
 
 ROLE_LABELS_FR = {

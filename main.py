@@ -82,30 +82,69 @@ def create_app():
         if not User.query.first():
             try:
                 from seed_db import auto_migrate, seed_users, seed_property, seed_tasks
-                print("\n🔧 Première exécution détectée — initialisation automatique...")
+                print("\n[INIT] Première exécution détectée — initialisation automatique...")
                 auto_migrate(app)
                 seed_users()
                 seed_property()
                 seed_tasks()
-                print("✅ Base de données initialisée avec succès.")
+                print("[OK] Base de données initialisée avec succès.")
             except Exception as e:
-                print(f"⚠ Erreur auto-seed: {e}")
+                print(f"[WARN] Erreur auto-seed: {e}")
 
-        # Auto-import RJ archives + extract metrics if DailyJourMetrics is empty
+        # Auto-import from K: drive if DailyJourMetrics is empty
         if DailyJourMetrics.query.count() == 0:
             try:
-                rj_dir = os.path.join(os.path.dirname(__file__), 'RJ 2024-2025')
-                if os.path.exists(rj_dir):
-                    print("\n📊 Import automatique des archives RJ + extraction des métriques...")
-                    from scripts.import_rj_archives import import_archives, extract_metrics_from_archives, extract_metrics_from_files
-                    import_archives(rj_dir)
-                    total = extract_metrics_from_archives()
-                    if total == 0:
-                        extract_metrics_from_files(rj_dir)
-                    final_count = DailyJourMetrics.query.count()
-                    print(f"✅ {final_count} métriques disponibles pour les dashboards.\n")
+                from utils.sync_engine import SyncEngine
+                print("\n[SYNC] Import automatique depuis K: drive...")
+                result = SyncEngine.full_sync(app)
+                rj = result.get('rj', {})
+                final_count = DailyJourMetrics.query.count()
+                print(f"[OK] {final_count} métriques importées ({rj.get('errors', 0)} erreurs)\n")
             except Exception as e:
-                print(f"⚠ Erreur import métriques: {e}\n")
+                print(f"[WARN] Erreur auto-import: {e}\n")
+
+    # ── Scheduled daily sync (9 AM Canada/Eastern) ─────────────────────
+    try:
+        from apscheduler.schedulers.background import BackgroundScheduler
+        from apscheduler.triggers.cron import CronTrigger
+
+        scheduler = BackgroundScheduler(daemon=True)
+
+        def _daily_sync_job():
+            """Run daily K: drive sync inside app context."""
+            from utils.sync_engine import SyncEngine
+            try:
+                result = SyncEngine.daily_sync(app)
+                rj = result.get('rj', {})
+                print(f"[SYNC] Daily sync: {rj.get('imported', 0)} new, {rj.get('updated', 0)} updated RJ metrics")
+            except Exception as e:
+                print(f"[WARN] Daily sync error: {e}")
+
+        scheduler.add_job(
+            _daily_sync_job,
+            CronTrigger(
+                hour=Config.SYNC_HOUR,
+                minute=Config.SYNC_MINUTE,
+                timezone=Config.SYNC_TIMEZONE,
+            ),
+            id='daily_kdrive_sync',
+            name='Daily K: drive sync (9 AM ET)',
+            replace_existing=True,
+        )
+        scheduler.start()
+        print(f"[SYNC] Planifie: {Config.SYNC_HOUR}:{Config.SYNC_MINUTE:02d} ({Config.SYNC_TIMEZONE})")
+    except ImportError:
+        print("[WARN] APScheduler non installe - sync automatique desactive (pip install APScheduler)")
+    except Exception as e:
+        print(f"[WARN] Scheduler error: {e}")
+
+    # Handle upload size limit errors
+    from werkzeug.exceptions import RequestEntityTooLarge
+
+    @app.errorhandler(RequestEntityTooLarge)
+    def handle_too_large(e):
+        from flask import jsonify as j
+        return j({'success': False, 'error': 'Fichier trop volumineux (max 32 MB)'}), 413
 
     # Context processor to inject user info and CSRF token into templates
     @app.context_processor
@@ -123,4 +162,5 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    app.run(debug=debug, host='127.0.0.1', port=5000)

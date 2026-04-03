@@ -157,12 +157,14 @@ class SalesJournalParser(BaseParser):
         """
         # Try UTF-8 first, then fall back to latin-1
         try:
-            return self.file_bytes.decode('utf-8')
+            text = self.file_bytes.decode('utf-8')
         except UnicodeDecodeError:
             try:
-                return self.file_bytes.decode('latin-1')
+                text = self.file_bytes.decode('latin-1')
             except UnicodeDecodeError:
-                return self.file_bytes.decode('cp1252')
+                text = self.file_bytes.decode('cp1252')
+        # Normalize Windows CRLF → LF so trailing \r doesn't confuse column detection
+        return text.replace('\r\n', '\n').replace('\r', '\n')
 
     def _clean_rtf(self, text):
         """Remove RTF markup from text.

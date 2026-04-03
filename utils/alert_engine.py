@@ -11,7 +11,7 @@ Features:
 
 import logging
 from datetime import datetime, date as date_type, timedelta
-from database.models import NightAuditSession, User, NotificationPreference, DailyReport
+from database.models import NightAuditSession, User, NotificationPreference, DailyJourMetrics, TOTAL_ROOMS
 from flask import current_app
 
 logger = logging.getLogger(__name__)
@@ -145,13 +145,13 @@ class AlertEngine:
                 revenue = float(session_data.get('jour_total_revenue', 0))
                 audit_date = session_data.get('audit_date')
 
-            # Compare with last year same date
+            # Compare with last year same date using DailyJourMetrics (authoritative source)
             if audit_date:
                 last_year_date = audit_date - timedelta(days=365)
-                last_year = DailyReport.query.filter_by(date=last_year_date).first()
+                last_year = DailyJourMetrics.query.filter_by(date=last_year_date).first()
 
                 if last_year:
-                    ly_revenue = float(last_year.revenue_total or 0)
+                    ly_revenue = float(last_year.total_revenue or 0)
                     variance = ((revenue - ly_revenue) / ly_revenue * 100) if ly_revenue > 0 else 0
 
                     triggered = variance < -10  # Alert if 10% below LY
@@ -283,7 +283,7 @@ class AlertEngine:
                 'occupancy': {
                     'rate': float(session.jour_occupancy_rate or 0),
                     'rooms_sold': session.jour_rooms_simple + session.jour_rooms_double + session.jour_rooms_suite + session.jour_rooms_comp,
-                    'total_available': 252,  # TOTAL_ROOMS from models
+                    'total_available': TOTAL_ROOMS,
                 },
                 'payments': {
                     'cash': float(session.deposit_cdn or 0),

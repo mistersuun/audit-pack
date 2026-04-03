@@ -26,37 +26,38 @@ from database.models import RJArchive
 # ── Date extraction from filename ──────────────────────────────────────
 
 # Patterns: "Rj MM-DD-YYYY", "Rj_MM-DD-YYYY", "Rj DD-MM-YYYY", etc.
-DATE_PATTERNS = [
-    # MM-DD-YYYY (most common: "Rj 09-14-2025.xls")
-    re.compile(r'[Rr][Jj][\s_.-]*(\d{2})-(\d{2})-(\d{4})'),
-    # YYYY-MM-DD
-    re.compile(r'[Rr][Jj][\s_.-]*(\d{4})-(\d{2})-(\d{2})'),
-]
+DATE_RE = re.compile(r'[Rr][Jj][\s_.-]*(\d{2,4})-(\d{2})-(\d{2,4})')
 
 
 def extract_date_from_filename(filename):
-    """Try to extract audit date from RJ filename."""
-    basename = os.path.basename(filename)
+    """Try to extract audit date from RJ filename.
 
-    # Pattern 1: Rj MM-DD-YYYY
-    m = DATE_PATTERNS[0].search(basename)
-    if m:
-        mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+    Supports: Rj DD-MM-YYYY, Rj MM-DD-YYYY, Rj YYYY-MM-DD
+    """
+    basename = os.path.basename(filename)
+    m = DATE_RE.search(basename)
+    if not m:
+        return None
+
+    a, b, c = int(m.group(1)), int(m.group(2)), int(m.group(3))
+
+    candidates = []
+
+    if a >= 2000:
+        # YYYY-MM-DD
+        candidates.append((a, b, c))
+    elif c >= 2000:
+        # Could be DD-MM-YYYY or MM-DD-YYYY
+        # Try DD-MM-YYYY first (more common in this project)
+        candidates.append((c, b, a))  # DD-MM-YYYY → year=c, month=b, day=a
+        candidates.append((c, a, b))  # MM-DD-YYYY → year=c, month=a, day=b
+
+    for yyyy, mm, dd in candidates:
         if 1 <= mm <= 12 and 1 <= dd <= 31 and 2000 <= yyyy <= 2030:
             try:
                 return date(yyyy, mm, dd)
             except ValueError:
-                pass
-
-    # Pattern 2: Rj YYYY-MM-DD
-    m = DATE_PATTERNS[1].search(basename)
-    if m:
-        yyyy, mm, dd = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        if 1 <= mm <= 12 and 1 <= dd <= 31:
-            try:
-                return date(yyyy, mm, dd)
-            except ValueError:
-                pass
+                continue
 
     return None
 
@@ -74,31 +75,26 @@ def should_skip(filepath):
 
 
 def find_rj_files(base_dir):
-    """Find all RJ Excel files recursively, sorted by date."""
+    """Find all RJ Excel files recursively, sorted by date.
+
+    Handles folder structures:
+    - RJ 2024-2025/01-JANVIER/Rj 15-01-2025.xls
+    - RJ 2026-2027/01-MARS 2026/Rj 22-03-2026.xls
+    - Flat folder with Rj files
+    """
     files = []
-    rj_dirs = []
 
-    # Look for RJ year folders
-    for item in os.listdir(base_dir):
-        full = os.path.join(base_dir, item)
-        if os.path.isdir(full) and item.startswith('RJ '):
-            rj_dirs.append(full)
-
-    if not rj_dirs:
-        # Try base_dir itself
-        rj_dirs = [base_dir]
-
-    for rj_dir in rj_dirs:
-        for root, dirs, filenames in os.walk(rj_dir):
-            for fname in filenames:
-                if not (fname.lower().endswith('.xls') or fname.lower().endswith('.xlsx')):
-                    continue
-                filepath = os.path.join(root, fname)
-                if should_skip(filepath):
-                    continue
-                audit_date = extract_date_from_filename(fname)
-                if audit_date:
-                    files.append((audit_date, filepath, fname))
+    # Walk entire tree — handles any nesting depth
+    for root, dirs, filenames in os.walk(base_dir):
+        for fname in filenames:
+            if not (fname.lower().endswith('.xls') or fname.lower().endswith('.xlsx')):
+                continue
+            filepath = os.path.join(root, fname)
+            if should_skip(filepath):
+                continue
+            audit_date = extract_date_from_filename(fname)
+            if audit_date:
+                files.append((audit_date, filepath, fname))
 
     # Sort by date
     files.sort(key=lambda x: x[0])
@@ -110,7 +106,7 @@ def import_archives(base_dir, dry_run=False):
     from routes.audit.rj_native import _archive_rj_to_db
 
     files = find_rj_files(base_dir)
-    print(f"\n📁 {len(files)} fichiers RJ trouvés dans {base_dir}")
+    print(f"\n[SCAN] {len(files)} fichiers RJ trouvés dans {base_dir}")
 
     if not files:
         print("  Aucun fichier RJ trouvé.")
@@ -153,11 +149,11 @@ def import_archives(base_dir, dry_run=False):
                 imported += 1
             else:
                 errors += 1
-                print(f"  ⚠ {fname}: {result.get('error', 'erreur inconnue')}")
+                print(f"  [WARN] {fname}: {result.get('error', 'erreur inconnue')}")
 
         except Exception as e:
             errors += 1
-            print(f"  ⚠ {fname}: {e}")
+            print(f"  [WARN] {fname}: {e}")
 
         # Progress every 50 files
         if (i + 1) % 50 == 0:
@@ -165,7 +161,7 @@ def import_archives(base_dir, dry_run=False):
             db.session.commit()  # Commit in batches
 
     db.session.commit()
-    print(f"\n✅ Import terminé: {imported} importés, {skipped} déjà existants, {errors} erreurs")
+    print(f"\n[OK] Import terminé: {imported} importés, {skipped} déjà existants, {errors} erreurs")
     return imported
 
 
@@ -210,14 +206,14 @@ def extract_metrics_from_archives():
         except Exception as e:
             errors += 1
             if errors <= 5:
-                print(f"  ⚠ {archive.source_filename}: {e}")
+                print(f"  [WARN] {archive.source_filename}: {e}")
 
         if (i + 1) % 100 == 0:
             print(f"  ... {i + 1}/{len(archives)} traités ({total_extracted} métriques extraites)")
             db.session.commit()
 
     db.session.commit()
-    print(f"  ✅ {total_extracted} métriques extraites, {errors} erreurs")
+    print(f"  [OK] {total_extracted} métriques extraites, {errors} erreurs")
     return total_extracted
 
 
@@ -258,14 +254,14 @@ def extract_metrics_from_files(base_dir):
         except Exception as e:
             errors += 1
             if errors <= 5:
-                print(f"  ⚠ {fname}: {e}")
+                print(f"  [WARN] {fname}: {e}")
 
         if (i + 1) % 100 == 0:
             print(f"  ... {i + 1}/{len(files)} traités ({total_extracted} métriques)")
             db.session.commit()
 
     db.session.commit()
-    print(f"  ✅ {total_extracted} métriques extraites depuis fichiers, {errors} erreurs")
+    print(f"  [OK] {total_extracted} métriques extraites depuis fichiers, {errors} erreurs")
     return total_extracted
 
 
@@ -286,14 +282,14 @@ def main():
     with app.app_context():
         if not metrics_only:
             if not os.path.exists(base_dir):
-                print(f"⚠ Dossier non trouvé: {base_dir}")
+                print(f"[WARN] Dossier non trouvé: {base_dir}")
                 print("  Utilisez --dir /chemin/vers/dossier/rj pour spécifier le dossier")
             else:
                 import_archives(base_dir, dry_run=dry_run)
 
         # Always extract metrics (from archives in DB or from files)
         if not dry_run:
-            print("\n📊 Extraction des métriques DailyJourMetrics...")
+            print("\n[SYNC] Extraction des métriques DailyJourMetrics...")
             total = extract_metrics_from_archives()
             if total == 0 and os.path.exists(base_dir):
                 print("  Tentative depuis les fichiers sur disque...")

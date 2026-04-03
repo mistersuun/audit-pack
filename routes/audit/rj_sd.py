@@ -5,8 +5,8 @@ RJ SD blueprint - handles Sommaire Journalier (SD) file operations.
 from flask import Blueprint, request, jsonify, send_file, session
 from datetime import datetime
 import io
-from routes.checklist import login_required
-from .rj_core import RJ_FILES, SD_FILES, get_session_id
+from utils.auth_decorators import login_required
+from .rj_core import RJ_FILES, SD_FILES, SD_FILES_TIMESTAMPS, get_session_id
 
 
 rj_sd_bp = Blueprint('rj_sd', __name__)
@@ -56,9 +56,11 @@ def upload_sd():
         available_days = reader.get_available_days()
 
         # Store in session-based storage
+        import time
         session_id = get_session_id()
         file_bytes.seek(0)
         SD_FILES[session_id] = file_bytes
+        SD_FILES_TIMESTAMPS[session_id] = time.time()
 
         return jsonify({
             'success': True,

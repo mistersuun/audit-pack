@@ -11,10 +11,10 @@ Exposes InsightsEngine ML capabilities to a user-facing dashboard with:
 """
 
 from flask import Blueprint, request, jsonify, render_template, session
-from functools import wraps
 from datetime import datetime, timedelta, date
 from database.models import db, DailyJourMetrics
 from utils.insights_engine import InsightsEngine, HAS_NUMPY
+from utils.auth_decorators import login_required
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,18 +22,16 @@ logger = logging.getLogger(__name__)
 forecasting_bp = Blueprint('forecasting', __name__)
 
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('authenticated'):
-            from flask import redirect, url_for
-            return redirect(url_for('auth_v2.login'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-
 def _load_metrics(days_back=365):
     """Load historical DailyJourMetrics from database."""
+    # Allow override via ?days= query param
+    from flask import request as req
+    try:
+        days_param = req.args.get('days')
+        if days_param:
+            days_back = int(days_param)
+    except (ValueError, RuntimeError):
+        pass
     cutoff_date = date.today() - timedelta(days=days_back)
     metrics = DailyJourMetrics.query.filter(
         DailyJourMetrics.date >= cutoff_date
@@ -75,7 +73,7 @@ def api_forecast():
     """
     metrics = _load_metrics(days_back=365)
 
-    if len(metrics) < 30:
+    if len(metrics) < 14:
         return jsonify({
             'success': False,
             'has_insights': False,
@@ -140,7 +138,7 @@ def api_seasonality():
     """
     metrics = _load_metrics(days_back=365)
 
-    if len(metrics) < 30:
+    if len(metrics) < 14:
         return jsonify({
             'success': False,
             'reason': 'Minimum 30 jours de données requis'
@@ -192,7 +190,7 @@ def api_anomalies():
     """
     metrics = _load_metrics(days_back=365)
 
-    if len(metrics) < 30:
+    if len(metrics) < 14:
         return jsonify({
             'success': False,
             'anomalies': [],
@@ -210,9 +208,45 @@ def api_anomalies():
 
         anomalies = engine._anomalies()
 
+        # Map revenue_outliers to the format the frontend expects
+        formatted = []
+        for item in anomalies.get('revenue_outliers', []):
+            z = abs(item.get('z_score', 0))
+            if z > 3:
+                severity = 'critical'
+            elif z > 2.5:
+                severity = 'warning'
+            else:
+                severity = 'info'
+
+            formatted.append({
+                'date': item['date'],
+                'metric': 'Revenu total',
+                'value': item.get('revenue', 0),
+                'expected': anomalies.get('avg_revenue', 0),
+                'deviation_pct': round((item.get('revenue', 0) - anomalies.get('avg_revenue', 0))
+                                       / anomalies.get('avg_revenue', 1) * 100, 1),
+                'severity': severity,
+                'direction': item.get('direction', 'high'),
+            })
+
+        # Add data quality outliers
+        for item in anomalies.get('data_quality_outliers', []):
+            formatted.append({
+                'date': item['date'],
+                'metric': 'Qualite donnees',
+                'value': item.get('revenue', 0),
+                'expected': anomalies.get('avg_revenue', 0),
+                'deviation_pct': round((item.get('revenue', 0) - anomalies.get('avg_revenue', 0))
+                                       / max(anomalies.get('avg_revenue', 1), 1) * 100, 1),
+                'severity': 'critical',
+                'direction': 'data_quality',
+            })
+
         return jsonify({
             'success': True,
-            'anomalies': anomalies.get('anomalies', []),
+            'anomalies': formatted,
+            'total_dq_days': anomalies.get('total_dq_days', 0),
             'raw': anomalies
         })
     except Exception as e:
@@ -243,7 +277,7 @@ def api_pricing():
     """
     metrics = _load_metrics(days_back=365)
 
-    if len(metrics) < 30:
+    if len(metrics) < 14:
         return jsonify({
             'success': False,
             'reason': 'Minimum 30 jours de données requis'
@@ -258,6 +292,11 @@ def api_pricing():
             }), 400
 
         pricing = engine._pricing_power()
+
+        # Add scatter data points for the chart (every day's occ vs ADR)
+        scatter = [{'x': round(m.occupancy_rate, 1), 'y': round(m.adr, 2)}
+                   for m in metrics if m.occupancy_rate > 0 and m.adr > 0]
+        pricing['scatter_data'] = scatter
 
         return jsonify({
             'success': True,
@@ -293,7 +332,7 @@ def api_trends():
     """
     metrics = _load_metrics(days_back=365)
 
-    if len(metrics) < 90:
+    if len(metrics) < 14:
         return jsonify({
             'success': False,
             'reason': 'Minimum 90 jours de données requis'
@@ -307,7 +346,22 @@ def api_trends():
                 'reason': 'Installez numpy pour activer les prévisions'
             }), 400
 
-        ma_data = engine._moving_averages()
+        # Build time-series moving averages for charts
+        # The frontend expects {ma7: [{date, revpar}], ma30: [...], ma90: [...]}
+        def compute_ma_series(data_list, window):
+            if len(data_list) < window:
+                return []
+            result = []
+            for i in range(window - 1, len(data_list)):
+                window_slice = data_list[i - window + 1:i + 1]
+                avg = sum(v for _, v in window_slice) / window
+                result.append({'date': window_slice[-1][0], 'revpar': round(avg, 2)})
+            return result
+
+        dated_revpar = [(m.date.isoformat(), m.revpar) for m in metrics]
+        ma7_series = compute_ma_series(dated_revpar, 7)
+        ma30_series = compute_ma_series(dated_revpar, 30)
+        ma90_series = compute_ma_series(dated_revpar, 90)
 
         # Calculate trend direction
         if len(metrics) >= 60:
@@ -344,13 +398,16 @@ def api_trends():
 
         return jsonify({
             'success': True,
-            'moving_averages': ma_data.get('moving_averages', {}),
+            'moving_averages': {
+                'ma7': ma7_series,
+                'ma30': ma30_series,
+                'ma90': ma90_series,
+            },
             'trend': {
                 'direction': direction,
                 'pct_change_30d': round(pct_change, 1),
                 'momentum': momentum
             },
-            'raw': ma_data
         })
     except Exception as e:
         logger.error(f"Trends error: {e}")
@@ -369,7 +426,7 @@ def api_all_insights():
     """
     metrics = _load_metrics(days_back=365)
 
-    if len(metrics) < 30:
+    if len(metrics) < 14:
         return jsonify({
             'success': False,
             'reason': 'Minimum 30 jours de données requis',

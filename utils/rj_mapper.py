@@ -527,8 +527,10 @@ DUBACK_TO_SETD_MAPPING = {
 # These define where macros write data into the jour sheet.
 # Previously hardcoded in rj_filler.py, now centralized here.
 
-# Row offset for days in jour sheet: Day 1 = row 5 (index 4), Day 2 = row 6, etc.
-JOUR_DAY_ROW_OFFSET = 4  # target_row = JOUR_DAY_ROW_OFFSET + day - 1
+# Row offset for days in jour sheet: Day 1 = row 3 (index 2), Day 2 = row 4, etc.
+# Row 0 is blank, row 1 is the column headers (JOUR, bal.ouv, Diff.Caisse, ...),
+# data starts at row 2 (0-indexed) for day 1.
+JOUR_DAY_ROW_OFFSET = 2  # target_row = JOUR_DAY_ROW_OFFSET + day - 1
 
 def get_jour_row_for_day(day):
     """Get 0-indexed row number for a day in the jour sheet."""
@@ -539,10 +541,20 @@ def get_jour_row_for_day(day):
 JOUR_RECAP_COLS = [72, 73, 74, 75, 76, 77, 78]  # BU through CA
 JOUR_RECAP_SOURCE = {'sheet': 'Recap', 'row': 18, 'cols': list(range(7, 14))}  # H19:N19
 
-# calcul_carte macro: copies transelect totals → jour columns starting at BF
-# BF=57 (0-indexed)
-JOUR_CC_START_COL = 57  # BF column
-JOUR_CC_SOURCE = {'sheet': 'transelect', 'row': 13}  # Row 14 totals
+# calcul_carte macro: reads Transelect compact summary row → jour card columns
+# Row 37 (0-indexed = Excel row 38) is the dedicated summary block with card totals
+# in a contiguous block cols 0-5 (amex_elavon, discover, master, visa, debit, amex_global).
+# Column X (col 23) in Transelect is the POSITOUCH column (Sales Journal fills it).
+# Transelect col → Jour col (0-indexed)
+TRANSELECT_TOTAUX_ROW = 37  # 0-indexed; row 38 in Excel (compact summary block)
+TRANSELECT_TO_JOUR_CARD_MAP = {
+    0: 60,  # amex elavon → Jour BI
+    1: 61,  # discover    → Jour BJ (often 0; sometimes used to absorb X20 variance)
+    2: 62,  # master      → Jour BK
+    3: 63,  # visa        → Jour BL
+    4: 64,  # debit       → Jour BM
+    5: 65,  # amex global → Jour BN
+}
 
 # Jour sheet total columns count
 JOUR_TOTAL_COLUMNS = 117

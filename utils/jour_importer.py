@@ -344,12 +344,13 @@ class JourImporter:
         rooms_suite = int(day_data.get('rooms_suite', 0))
         rooms_comp = int(day_data.get('rooms_comp', 0))
         total_sold = rooms_simple + rooms_double + rooms_suite + rooms_comp
+        paid_rooms = rooms_simple + rooms_double + rooms_suite  # exclude comps for ADR/occ
         rooms_avail = int(day_data.get('disponible', 0)) or TOTAL_ROOMS
         nb_clients = int(day_data.get('nb_clients', 0))
         hors_usage = int(day_data.get('hors_usage', 0))
         ch_refaire = int(day_data.get('ch_refaire', 0))
 
-        occ_rate = (total_sold / rooms_avail * 100) if rooms_avail > 0 else 0
+        occ_rate = (paid_rooms / rooms_avail * 100) if rooms_avail > 0 else 0
 
         # Payments
         visa = day_data.get('visa', 0)
@@ -371,7 +372,7 @@ class JourImporter:
         new_balance = day_data.get('new_balance', 0)
 
         # KPIs
-        adr = (chambres / total_sold) if total_sold > 0 else 0
+        adr = (chambres / paid_rooms) if paid_rooms > 0 else 0
         revpar = (chambres / rooms_avail) if rooms_avail > 0 else 0
         trevpar = (total_revenue / rooms_avail) if rooms_avail > 0 else 0
         food_pct = (total_nour / fb_revenue * 100) if fb_revenue > 0 else 0

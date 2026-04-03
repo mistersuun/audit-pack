@@ -6,26 +6,35 @@ revenue optimization analysis, and strategic decision-making.
 """
 
 from flask import Blueprint, request, jsonify, render_template, session
-from functools import wraps
 from datetime import datetime, timedelta, date
 from database.models import (db, DailyJourMetrics, DailyReconciliation,
                               JournalEntry, DepositVariance, TipDistribution,
                               HPDepartmentSales, DueBack, DepartmentLabor)
 from sqlalchemy import func
+from utils.auth_decorators import login_required, role_required
 import logging
 
 logger = logging.getLogger(__name__)
 
 manager_bp = Blueprint('manager', __name__)
 
+MANAGER_ROLES = ('admin', 'gm', 'gsm', 'accounting')
+
 
 def manager_required(f):
-    """Access control for manager portal."""
+    """Access control for manager portal — requires manager-level role."""
+    from functools import wraps
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if not session.get('authenticated'):
             from flask import redirect, url_for
             return redirect(url_for('auth_v2.login'))
+        user_role = session.get('user_role_type')
+        if user_role not in MANAGER_ROLES:
+            if request.is_json or request.path.startswith('/api/'):
+                return jsonify({'error': 'Accès non autorisé'}), 403
+            from flask import abort
+            abort(403)
         return f(*args, **kwargs)
     return decorated_function
 

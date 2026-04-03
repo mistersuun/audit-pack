@@ -118,6 +118,10 @@
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
 </style>
 
 <script>
@@ -132,10 +136,46 @@ let rjFileLoaded = false;
 const tabCache = {};
 const VALID_TABS = ['nouveau-jour', 'sd', 'dueback', 'recap', 'depot', 'transelect', 'geac', 'import-docs'];
 
+// Invalidate cached tabs so next switch re-fetches fresh data
+function invalidateTabCache(...tabIds) {
+  tabIds.forEach(id => { delete tabCache[id]; });
+}
+
+// Force reload a specific tab (clear cache + re-render if currently active)
+function forceReloadTab(tabId) {
+  delete tabCache[tabId];
+  const activeBtn = document.querySelector('.rj-tab-btn.active');
+  if (activeBtn && activeBtn.dataset.tab === tabId) {
+    switchRJTab(tabId);
+  }
+}
+
+// Mark tab buttons as "updated" with a visual dot
+function markTabUpdated(...tabIds) {
+  tabIds.forEach(id => {
+    const btn = document.querySelector(`.rj-tab-btn[data-tab="${id}"]`);
+    if (btn && !btn.querySelector('.tab-updated-dot')) {
+      const dot = document.createElement('span');
+      dot.className = 'tab-updated-dot';
+      dot.style.cssText = 'display:inline-block;width:8px;height:8px;border-radius:50%;background:#10b981;margin-left:6px;vertical-align:middle;animation:pulse 1.5s ease-in-out 3;';
+      btn.appendChild(dot);
+      // Remove dot after 10s
+      setTimeout(() => dot.remove(), 10000);
+    }
+  });
+}
+
 async function switchRJTab(tabId) {
   if (!VALID_TABS.includes(tabId)) {
     console.error('Invalid tab ID:', tabId);
     return;
+  }
+
+  // Clear the "updated" dot when user clicks the tab
+  const btn = document.querySelector(`.rj-tab-btn[data-tab="${tabId}"]`);
+  if (btn) {
+    const dot = btn.querySelector('.tab-updated-dot');
+    if (dot) dot.remove();
   }
 
   // Remove active from all buttons
