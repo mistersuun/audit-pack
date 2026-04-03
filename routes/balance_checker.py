@@ -3,7 +3,7 @@ Blueprint for Balance Checker — Upload files and auto-detect/fix imbalances.
 """
 
 from flask import Blueprint, request, jsonify, render_template, session
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 import logging
 
 logger = logging.getLogger(__name__)

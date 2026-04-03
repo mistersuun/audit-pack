@@ -4,10 +4,10 @@ RJ Parsers blueprint - handles document parsing and auto-fill.
 
 from flask import Blueprint, request, jsonify, session
 import io
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from utils.csrf import csrf_protect
 from utils.rj_filler import RJFiller
-from .rj_core import RJ_FILES, get_session_id
+from .rj_core import RJ_FILES, RJ_FILES_LOCK, get_session_id, invalidate_rj_cache
 
 
 rj_parsers_bp = Blueprint('rj_parsers', __name__)
@@ -69,6 +69,7 @@ def parse_document():
 
 @rj_parsers_bp.route('/api/rj/parse-and-fill', methods=['POST'])
 @login_required
+@csrf_protect
 def parse_and_fill():
     """
     Parse document AND auto-fill the corresponding RJ sheet.
@@ -81,6 +82,7 @@ def parse_and_fill():
         Parsed data + list of cells that were filled
     """
     from utils.parsers import ParserFactory
+    from utils.rj_filler import excel_cell_to_indices
 
     doc_type = request.form.get('doc_type')
     file = request.files.get('file')
@@ -95,13 +97,24 @@ def parse_and_fill():
     try:
         # 1. Parse the document
         file_bytes = file.read()
-        parser = ParserFactory.create(doc_type, file_bytes, filename=file.filename)
+
+        # Extra kwargs for parsers that need them (HP parser needs day for daily deductions)
+        extra_kwargs = {}
+        if doc_type == 'hp_excel':
+            day = request.form.get('day')
+            if day:
+                try:
+                    extra_kwargs['day'] = int(day)
+                except (ValueError, TypeError):
+                    pass
+
+        parser = ParserFactory.create(doc_type, file_bytes, filename=file.filename, **extra_kwargs)
         result = parser.get_result()
 
         if not result['success']:
             return jsonify(result), 400
 
-        # 2. Get fillable data (cell_ref -> value)
+        # 2. Get fillable data (cell_ref -> value) from parser
         fillable = parser.get_fillable_data()
 
         if not fillable:
@@ -112,7 +125,7 @@ def parse_and_fill():
                 'message': 'Données extraites mais aucune cellule à remplir (parser en mode squelette)'
             })
 
-        # 3. Fill RJ file
+        # 3. Fill RJ file using cell references directly from fillable data
         rj_bytes = RJ_FILES[session_id]
         rj_bytes.seek(0)
         filler = RJFiller(rj_bytes)
@@ -121,16 +134,22 @@ def parse_and_fill():
         type_info = ParserFactory.get_type_info().get(doc_type, {})
         target_sheet = type_info.get('target_sheet', 'Recap')
 
-        filled_count = filler.fill_sheet(target_sheet, {
-            k: v for k, v in result['data'].items()
-            if k in parser.FIELD_MAPPINGS
-        })
+        sheet = filler._get_sheet_by_name(target_sheet)
+        filled_count = 0
+        for cell_ref, value in fillable.items():
+            if value is None or value == '':
+                continue
+            row_idx, col_idx = excel_cell_to_indices(cell_ref)
+            sheet.write(row_idx, col_idx, value)
+            filled_count += 1
 
-        # 4. Save modified RJ back to memory
+        # 4. Save modified RJ back to memory and invalidate cache
         output = io.BytesIO()
         filler.save(output)
         output.seek(0)
-        RJ_FILES[session_id] = output
+        with RJ_FILES_LOCK:
+            RJ_FILES[session_id] = output
+        invalidate_rj_cache(session_id)
 
         return jsonify({
             'success': True,
@@ -149,6 +168,7 @@ def parse_and_fill():
 
 @rj_parsers_bp.route('/api/rj/fill-jour', methods=['POST'])
 @login_required
+@csrf_protect
 def fill_jour():
     """
     Compute jour values from all parsed data + manual values + adjustments,
@@ -226,11 +246,13 @@ def fill_jour():
 
         result = filler.fill_jour_day(day, jour_values)
 
-        # Save modified RJ back to memory
+        # Save modified RJ back to memory and invalidate cache
         output = io.BytesIO()
         filler.save(output)
         output.seek(0)
-        RJ_FILES[session_id] = output
+        with RJ_FILES_LOCK:
+            RJ_FILES[session_id] = output
+        invalidate_rj_cache(session_id)
 
         # Convert column indices to letters for display
         from utils.daily_rev_jour_mapping import col_index_to_letter

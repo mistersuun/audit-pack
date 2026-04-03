@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 import logging
 from functools import wraps
 
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from utils.lightspeed_client import LightspeedClient, LightspeedAPIError, LightspeedConfigError
 from utils.lightspeed_sync import LightspeedSync
 from utils.csrf import csrf_protect

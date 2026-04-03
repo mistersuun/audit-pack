@@ -28,6 +28,7 @@ class InsightsEngine:
         Args:
             metrics: list of DailyJourMetrics ORM objects, ordered by date
         """
+        self._all_metrics = list(metrics)  # unfiltered, for anomaly scanning
         self.metrics = [m for m in metrics if m.total_revenue > 0 and m.total_rooms_sold > 0]
         self.n = len(self.metrics)
 
@@ -36,7 +37,7 @@ class InsightsEngine:
         if not HAS_NUMPY:
             logger.warning("numpy/sklearn not installed — insights disabled")
             return {'has_insights': False, 'reason': 'numpy not installed'}
-        if self.n < 30:
+        if self.n < 14:
             return {'has_insights': False}
 
         return {
@@ -371,9 +372,25 @@ class InsightsEngine:
 
         rev_outliers.sort(key=lambda x: abs(x['z_score']), reverse=True)
 
+        # Scan ALL metrics (including filtered-out) for data quality issues
+        dq_outliers = []
+        for m in self._all_metrics:
+            if m.total_revenue <= 0 or (hasattr(m, 'other_revenue') and (m.other_revenue or 0) < -10000):
+                dq_outliers.append({
+                    'date': m.date.isoformat(),
+                    'revenue': round(m.total_revenue, 0),
+                    'z_score': 0,
+                    'occ': round(m.occupancy_rate, 1) if m.occupancy_rate else 0,
+                    'adr': round(m.adr, 2) if m.adr else 0,
+                    'direction': 'data_quality',
+                })
+        dq_outliers.sort(key=lambda x: x['revenue'])
+
         return {
             'revenue_outliers': rev_outliers[:10],
+            'data_quality_outliers': dq_outliers[:10],
             'total_outlier_days': len(rev_outliers),
+            'total_dq_days': len(dq_outliers),
             'avg_revenue': round(avg_rev, 0),
             'std_revenue': round(std_rev, 0),
         }
@@ -747,11 +764,15 @@ class InsightsEngine:
         by_month = defaultdict(list)
 
         for m in self.metrics:
-            room_pct = (m.room_revenue / m.total_revenue * 100) if m.total_revenue > 0 else 0
-            fb_pct = (m.fb_revenue / m.total_revenue * 100) if m.total_revenue > 0 else 0
-            other_pct = 100 - room_pct - fb_pct
+            # Skip days with invalid revenue composition
+            if m.total_revenue <= 0 or m.room_revenue > m.total_revenue:
+                continue
 
-            # Herfindahl index = sum of squared shares
+            room_pct = max(0, min(100, m.room_revenue / m.total_revenue * 100))
+            fb_pct = max(0, min(100, m.fb_revenue / m.total_revenue * 100))
+            other_pct = max(0, 100 - room_pct - fb_pct)
+
+            # Herfindahl index = sum of squared shares (range: 33.3 to 100 for 3 streams)
             herfindahl = (room_pct ** 2 + fb_pct ** 2 + other_pct ** 2) / 100
 
             by_month[m.month].append({
@@ -944,36 +965,67 @@ class InsightsEngine:
                 'n': n,
             }
 
-        # Month-over-month growth trend
+        # YoY ADR growth — only meaningful with 2+ years of data per month
         ordered_months = sorted(seasonal_profile.keys())
-        growth_trend = []
-        for i, mo in enumerate(ordered_months):
-            if i > 0:
-                prev_mo = ordered_months[i - 1]
-                curr_rev = seasonal_profile[mo]['avg_revenue']
-                prev_rev = seasonal_profile[prev_mo]['avg_revenue']
-                growth = ((curr_rev - prev_rev) / prev_rev * 100) if prev_rev > 0 else 0
-                growth_trend.append(growth)
+        yoy_growths = []
+        for mo in ordered_months:
+            days = by_month.get(mo, [])
+            years = set(d.year for d in days)
+            if len(years) >= 2:
+                sorted_years = sorted(years)
+                older = [d for d in days if d.year == sorted_years[-2]]
+                newer = [d for d in days if d.year == sorted_years[-1]]
+                if older and newer:
+                    old_adr = sum(d.adr for d in older) / len(older)
+                    new_adr = sum(d.adr for d in newer) / len(newer)
+                    if old_adr > 0:
+                        yoy_growths.append((new_adr - old_adr) / old_adr * 100)
 
-        avg_growth = sum(growth_trend) / len(growth_trend) if growth_trend else 0
+        # Use YoY growth if available, otherwise no growth applied
+        if yoy_growths:
+            avg_growth = sum(yoy_growths) / len(yoy_growths)
+        else:
+            avg_growth = 0  # not enough multi-year data
 
-        # Project next 3 months
-        current_month = 12  # Assume end of year
+        # Growth factor applies to ADR/revenue only, NOT occupancy
+        adr_growth_factor = 1 + (avg_growth / 100)
+
+        # Project next 3 months from current month
+        current_month = date.today().month
         forecast = []
         for offset in range(1, 4):
             forecast_mo = ((current_month + offset - 1) % 12) + 1
             if forecast_mo in seasonal_profile:
                 profile = seasonal_profile[forecast_mo]
-                # Apply growth trend to base seasonal profile
-                growth_factor = 1 + (avg_growth / 100)
+                occ = min(100.0, round(profile['avg_occ'], 1))  # raw seasonal avg, capped at 100
+                adr = round(profile['avg_adr'] * adr_growth_factor, 2)
                 forecast.append({
                     'month': months_fr.get(forecast_mo, str(forecast_mo)),
-                    'forecasted_occ': round(profile['avg_occ'] * growth_factor, 1),
-                    'forecasted_adr': round(profile['avg_adr'] * growth_factor, 2),
-                    'forecasted_revenue': round(profile['avg_revenue'] * growth_factor, 0),
-                    'confidence_high': round(profile['avg_revenue'] * growth_factor + profile['std_revenue'], 0),
-                    'confidence_low': round(profile['avg_revenue'] * growth_factor - profile['std_revenue'], 0),
+                    'forecasted_occ': occ,
+                    'forecasted_adr': adr,
+                    'forecasted_revenue': round(profile['avg_revenue'] * adr_growth_factor, 0),
+                    'confidence_high': round(profile['avg_revenue'] * adr_growth_factor + profile['std_revenue'], 0),
+                    'confidence_low': round(profile['avg_revenue'] * adr_growth_factor - profile['std_revenue'], 0),
                 })
+
+        # Build forecast_30/60/90 from seasonal data
+        forecast_periods = {}
+        for label, days_ahead in [('forecast_30', 30), ('forecast_60', 60), ('forecast_90', 90)]:
+            target_date = date.today() + timedelta(days=days_ahead)
+            target_mo = target_date.month
+            if target_mo in seasonal_profile:
+                profile = seasonal_profile[target_mo]
+                occ = min(100.0, round(profile['avg_occ'], 1))  # raw avg, no growth multiplier
+                adr = round(profile['avg_adr'] * adr_growth_factor, 2)
+                revpar = round(occ / 100 * adr, 2)
+                forecast_periods[label] = {
+                    'occupancy_pct': occ,
+                    'adr': adr,
+                    'revpar': revpar,
+                    'confidence': round(max(0, 1.0 - (profile['std_occ'] / max(profile['avg_occ'], 1))), 2),
+                }
+            else:
+                forecast_periods[label] = {'occupancy_pct': 0, 'adr': 0, 'revpar': 0, 'confidence': 0}
 
         # Historical summary
         historical = []
@@ -990,6 +1042,7 @@ class InsightsEngine:
             'historical_by_month': historical,
             'avg_monthly_growth_pct': round(avg_growth, 1),
             'next_3_months_forecast': forecast,
+            **forecast_periods,
         }
 
     # ==========================================================================
@@ -1615,7 +1668,7 @@ class InsightsEngine:
         and calculates optimal staffing for each based on industry ratios.
         Returns: regimes with staffing breakdown, actual vs optimal, annual savings potential.
         """
-        if self.n < 30:
+        if self.n < 14:
             return {'sufficient_data': False}
 
         # Classify days into regimes
@@ -1733,7 +1786,7 @@ class InsightsEngine:
         Creates a structured narrative with headline, strengths, warnings, opportunities,
         staffing insights, and actionable recommendations. All text in French.
         """
-        if self.n < 30:
+        if self.n < 14:
             return {'has_insights': False}
 
         # Compute key metrics once

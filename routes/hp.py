@@ -5,7 +5,7 @@ Dual storage: Excel file (for compatibility) + SQLite DB (for persistence/ETL).
 """
 
 from flask import Blueprint, request, jsonify, send_file, render_template
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from database import db, HPPeriod, HPEntry
 from openpyxl import load_workbook
 from datetime import datetime

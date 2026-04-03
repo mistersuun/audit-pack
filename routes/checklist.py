@@ -27,16 +27,9 @@ def _audit_date():
     return now.date()
 from markupsafe import escape
 from database import db, Task, Shift, TaskCompletion
+from utils.auth_decorators import login_required
 
 checklist_bp = Blueprint('checklist', __name__)
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('authenticated'):
-            return redirect(url_for('auth_v2.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 @checklist_bp.route('/')
 @login_required

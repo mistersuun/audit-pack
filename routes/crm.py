@@ -10,7 +10,6 @@ Power BI-style analytics combining:
 """
 
 from flask import Blueprint, request, jsonify, render_template, session
-from functools import wraps
 from datetime import datetime, timedelta, date
 from database.models import (
     db, User, Shift, TaskCompletion, Task,
@@ -18,23 +17,16 @@ from database.models import (
     DailyJourMetrics
 )
 from sqlalchemy import func, desc, or_
+from utils.auth_decorators import login_required
+from utils.csrf import csrf_protect
 import json
 import io
+import os
 import logging
 
 logger = logging.getLogger(__name__)
 
 crm_bp = Blueprint('crm', __name__)
-
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('authenticated'):
-            from flask import redirect, url_for
-            return redirect(url_for('auth_v2.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 def _parse_date(s):
@@ -261,6 +253,7 @@ def revenue_opportunities():
 
 @crm_bp.route('/api/crm/import-history', methods=['POST'])
 @login_required
+@csrf_protect
 def import_history():
     """
     Bulk import historical RJ files.
@@ -324,13 +317,95 @@ def import_history():
         }), 400
 
 
+@crm_bp.route('/api/crm/import-from-dir', methods=['POST'])
+@login_required
+@csrf_protect
+def import_from_directory():
+    """
+    Import RJ files from a server-side directory path (e.g. K: drive).
+    Body: { "path": "K:\\RJ 2026-2027" }
+    """
+    data = request.get_json(silent=True) or {}
+    dir_path = data.get('path', '').strip()
+
+    if not dir_path or not os.path.isdir(dir_path):
+        return jsonify({'success': False, 'error': f'Dossier introuvable: {dir_path}'}), 400
+
+    try:
+        from scripts.import_rj_archives import find_rj_files, extract_date_from_filename
+        from utils.jour_importer import JourImporter
+
+        files = find_rj_files(dir_path)
+        if not files:
+            return jsonify({'success': False, 'error': 'Aucun fichier RJ trouvé dans ce dossier'}), 400
+
+        total_imported = 0
+        total_updated = 0
+        errors = []
+
+        for audit_date, filepath, fname in files:
+            try:
+                with open(filepath, 'rb') as f:
+                    file_bytes = io.BytesIO(f.read())
+                metrics, info = JourImporter.extract_from_rj(file_bytes, fname)
+                if metrics:
+                    result = JourImporter.persist_batch(metrics, source='dir_import')
+                    total_imported += result.get('inserted', 0)
+                    total_updated += result.get('updated', 0)
+            except Exception as e:
+                errors.append({'file': fname, 'reason': str(e)})
+
+        return jsonify({
+            'success': True,
+            'total_files': len(files),
+            'imported': total_imported,
+            'updated': total_updated,
+            'errors': errors[:20],
+            'date_range': {
+                'from': files[0][0].isoformat(),
+                'to': files[-1][0].isoformat(),
+            }
+        })
+    except Exception as e:
+        logger.exception('Import from directory failed')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@crm_bp.route('/api/crm/sync-kdrive', methods=['POST'])
+@login_required
+@csrf_protect
+def sync_kdrive():
+    """
+    Trigger K: drive sync manually.
+    Body: { "mode": "full" | "daily" }
+    """
+    from utils.sync_engine import SyncEngine
+
+    data = request.get_json(silent=True) or {}
+    mode = data.get('mode', 'daily')
+
+    try:
+        from flask import current_app
+        if mode == 'full':
+            result = SyncEngine.full_sync(current_app._get_current_object())
+        else:
+            result = SyncEngine.daily_sync(current_app._get_current_object())
+
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        logger.exception('K: drive sync failed')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @crm_bp.route('/api/crm/data-status')
 @login_required
 def data_status():
     """Get summary of historical data in the database."""
     from utils.jour_importer import JourImporter
-    status = JourImporter.get_data_status()
-    return jsonify({'success': True, **status})
+    from utils.sync_engine import SyncEngine
+    jour_status = JourImporter.get_data_status()
+    sync_status = SyncEngine.get_sync_status()
+    return jsonify({'success': True, **jour_status, **sync_status})
 
 
 # ==============================================================================
@@ -349,6 +424,28 @@ def get_staff():
     excluded = {'petite caisse', 'conc. banc.', 'corr. mois suivant',
                 'mixologue', 'mixologue 2.0', 'mixologue 3.0'}
 
+    # Build aggregated variance stats in a single GROUP BY query instead of
+    # one query per staff member (avoids N+1 on large datasets).
+    # Note: func.sum on a cast boolean avoids SQLAlchemy 1.x/2.x case() API differences.
+    # SQLite and PostgreSQL both support CAST(is_alert AS INTEGER) for counting booleans.
+    agg_rows = db.session.query(
+        func.lower(VarianceRecord.receptionist).label('receptionist_lower'),
+        func.count(VarianceRecord.id).label('variance_count'),
+        func.sum(VarianceRecord.variance).label('total_variance'),
+        func.sum(
+            db.cast(VarianceRecord.is_alert, db.Integer)
+        ).label('alert_count'),
+    ).group_by(func.lower(VarianceRecord.receptionist)).all()
+
+    variance_stats = {
+        row.receptionist_lower: {
+            'variance_count': row.variance_count or 0,
+            'total_variance': round(float(row.total_variance or 0), 2),
+            'alert_count': row.alert_count or 0,
+        }
+        for row in agg_rows
+    }
+
     staff_list = []
     for name, col in SETD_PERSONNEL_COLUMNS.items():
         if name.lower() in excluded:
@@ -356,18 +453,16 @@ def get_staff():
         if search and search not in name.lower():
             continue
 
-        variances = VarianceRecord.query.filter(
-            func.lower(VarianceRecord.receptionist) == name.lower()
-        ).all()
+        stats = variance_stats.get(name.lower(), {
+            'variance_count': 0,
+            'total_variance': 0.0,
+            'alert_count': 0,
+        })
 
         staff_list.append({
             'name': name,
             'column': col,
-            'stats': {
-                'variance_count': len(variances),
-                'total_variance': round(sum(v.variance for v in variances), 2),
-                'alert_count': sum(1 for v in variances if v.is_alert),
-            }
+            'stats': stats,
         })
 
     if sort_by == 'name':

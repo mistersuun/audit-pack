@@ -14,10 +14,10 @@
   --card:#ffffff;
   --card-hover:#fafbfd;
   --border-light:#f0f1f4;
-  --border-focus:rgba(233,30,99,0.25);
+  --border-focus:rgba(99,102,241,0.25);
   --text-tertiary:#6b7280;
-  --primary-bg:rgba(233,30,99,0.06);
-  --primary-bg-strong:rgba(233,30,99,0.10);
+  --primary-bg:rgba(99,102,241,0.06);
+  --primary-bg-strong:rgba(99,102,241,0.10);
   --gradient:linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   --gradient-subtle:linear-gradient(135deg, rgba(102,126,234,0.06), rgba(118,75,162,0.06), rgba(240,147,251,0.04));
   --emerald:#10b981;--emerald-bg:rgba(16,185,129,0.08);
@@ -114,7 +114,7 @@
   background:var(--primary);border:none;color:#fff;cursor:pointer;
   font-family:inherit;transition:all .2s;
 }
-.filter-apply:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(233,30,99,0.25)}
+.filter-apply:hover{background:var(--primary-dark);box-shadow:0 2px 8px rgba(99,102,241,0.25)}
 
 /* ═══════════════════════════════════════
    SECTION DIVIDERS
@@ -1106,7 +1106,7 @@ function renderMixChart(){
 
 function renderPaymentsChart(){
   const p=DATA.payments;if(!p)return;destroyChart('payments');const ctx=document.getElementById('chart-payments');if(!ctx)return;
-  const labels=[],values=[];const colors=['#667eea','#e91e63','#f59e0b','#ef4444','#10b981','#8b5cf6'];
+  const labels=[],values=[];const colors=['#667eea','#6366f1','#f59e0b','#ef4444','#10b981','#8b5cf6'];
   if(p.by_type){p.by_type.forEach(t=>{if(t.total>0){labels.push(t.type);values.push(t.total)}});}else{const k=DATA.kpis;if(k.total_cards>0){labels.push('Total Cartes');values.push(k.total_cards)}}
   charts['payments']=new Chart(ctx,{type:'doughnut',
     data:{labels,datasets:[{data:values,backgroundColor:colors.slice(0,values.length),borderWidth:0,hoverOffset:5,borderRadius:2}]},
@@ -1118,7 +1118,7 @@ function renderPaymentsChart(){
 function renderFBChart(){
   const fb=DATA.fb;if(!fb||!fb.outlets)return;destroyChart('fb');const ctx=document.getElementById('chart-fb');if(!ctx)return;
   const outlets=fb.outlets.filter(o=>o.total>0).sort((a,b)=>b.total-a.total);
-  const colors=['#764ba2','#667eea','#e91e63','#0d9488','#10b981'];
+  const colors=['#764ba2','#667eea','#6366f1','#0d9488','#10b981'];
   charts['fb']=new Chart(ctx,{type:'bar',
     data:{labels:outlets.map(o=>o.name),datasets:[{label:'Revenus F&B',data:outlets.map(o=>o.total),backgroundColor:colors.slice(0,outlets.length),borderRadius:6,barPercentage:.55}]},
     options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},
@@ -1409,7 +1409,7 @@ function renderMAChart(canvasId, maData, label, prefix) {
       labels: sliceLabels,
       datasets: [
         {label:'7 jours',data:slice(ma7),borderColor:'#667eea',backgroundColor:'rgba(102,126,234,0.05)',fill:false,tension:.3,pointRadius:0,borderWidth:2},
-        {label:'30 jours',data:slice(ma30),borderColor:'#e91e63',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+        {label:'30 jours',data:slice(ma30),borderColor:'#6366f1',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
         {label:'90 jours',data:slice(ma90),borderColor:'#f59e0b',backgroundColor:'transparent',fill:false,tension:.3,pointRadius:0,borderWidth:1.5,borderDash:[8,4]}
       ]
     },

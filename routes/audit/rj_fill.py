@@ -6,12 +6,12 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 import io
 import math
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from utils.rj_filler import RJFiller
 from utils.rj_reader import RJReader
 from utils.rj_mapper import CELL_MAPPINGS
 from utils.csrf import csrf_protect
-from .rj_core import RJ_FILES, get_session_id, get_or_create_filler, save_and_store, _RJ_FILLER_CACHE
+from .rj_core import RJ_FILES, get_session_id, get_or_create_filler, save_and_store
 
 
 # Configuration constants

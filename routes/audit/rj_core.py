@@ -10,7 +10,7 @@ import uuid
 import threading
 import time
 import logging
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from utils.rj_filler import RJFiller, DEFAULT_FILENAME
 from utils.rj_reader import RJReader
 from utils.csrf import csrf_protect
@@ -85,8 +85,9 @@ RJ_FILES = {}
 RJ_FILES_LOCK = threading.Lock()
 
 # Cache for RJFiller instances to avoid re-parsing on every request
-# Stores: session_id -> (BytesIO_id, RJFiller)
+# Stores: session_id -> (version_counter, RJFiller)
 _RJ_FILLER_CACHE = {}
+_RJ_VERSION_COUNTER = {}  # session_id -> int (monotonic version)
 
 # Temporary storage for SD files (per session)
 SD_FILES = {}
@@ -113,68 +114,98 @@ def get_or_create_filler(session_id):
 
     Raises KeyError if session_id not in RJ_FILES.
     """
-    file_bytes = RJ_FILES[session_id]
-    buf_id = id(file_bytes)
+    with RJ_FILES_LOCK:
+        file_bytes = RJ_FILES[session_id]
+        version = _RJ_VERSION_COUNTER.get(session_id, 0)
 
-    cached = _RJ_FILLER_CACHE.get(session_id)
-    if cached and cached[0] == buf_id:
-        # Same BytesIO object — reuse the filler
-        return cached[1]
+        cached = _RJ_FILLER_CACHE.get(session_id)
+        if cached and cached[0] == version:
+            return cached[1]
 
-    # New or changed buffer — create fresh filler
-    file_bytes.seek(0)
-    filler = RJFiller(file_bytes)
-    _RJ_FILLER_CACHE[session_id] = (buf_id, filler)
-    return filler
+        # New or changed buffer — create fresh filler
+        file_bytes.seek(0)
+        filler = RJFiller(file_bytes)
+        _RJ_FILLER_CACHE[session_id] = (version, filler)
+        return filler
 
 
 def save_and_store(session_id, filler):
     """
     Save the RJFiller to bytes and store back in RJ_FILES.
-    Invalidates the filler cache so next access creates a fresh one.
+    Bumps version counter so next access creates a fresh filler.
     """
     output_buffer = filler.save_to_bytes()
-    RJ_FILES[session_id] = output_buffer
-    # Invalidate cache since buffer changed
+    with RJ_FILES_LOCK:
+        RJ_FILES[session_id] = output_buffer
+        _invalidate_filler_cache(session_id)
+
+
+def _invalidate_filler_cache(session_id):
+    """Bump version counter and clear cached filler. Must hold RJ_FILES_LOCK."""
+    _RJ_VERSION_COUNTER[session_id] = _RJ_VERSION_COUNTER.get(session_id, 0) + 1
     _RJ_FILLER_CACHE.pop(session_id, None)
 
 
+def invalidate_rj_cache(session_id):
+    """Public helper: invalidate filler cache after direct RJ_FILES writes."""
+    with RJ_FILES_LOCK:
+        _invalidate_filler_cache(session_id)
+
+
 def _cleanup_expired_sessions():
-    """Remove expired sessions from RJ_FILES and SD_FILES."""
+    """Remove expired sessions from RJ_FILES, SD_FILES, and HP_FILES."""
     now = time.time()
 
-    # Clean RJ_FILES
-    expired = [sid for sid, ts in RJ_FILES_TIMESTAMPS.items()
-               if now - ts > SESSION_EXPIRY_SECONDS]
-    for sid in expired:
-        RJ_FILES.pop(sid, None)
-        RJ_FILES_TIMESTAMPS.pop(sid, None)
-        _RJ_FILLER_CACHE.pop(sid, None)
+    with RJ_FILES_LOCK:
+        # Clean RJ_FILES
+        expired = [sid for sid, ts in RJ_FILES_TIMESTAMPS.items()
+                   if now - ts > SESSION_EXPIRY_SECONDS]
+        for sid in expired:
+            RJ_FILES.pop(sid, None)
+            RJ_FILES_TIMESTAMPS.pop(sid, None)
+            _RJ_FILLER_CACHE.pop(sid, None)
+            _RJ_VERSION_COUNTER.pop(sid, None)
 
-    # Clean SD_FILES
-    expired = [sid for sid, ts in SD_FILES_TIMESTAMPS.items()
-               if now - ts > SESSION_EXPIRY_SECONDS]
-    for sid in expired:
-        SD_FILES.pop(sid, None)
-        SD_FILES_TIMESTAMPS.pop(sid, None)
+        # If still over max, remove oldest (guard against empty dicts)
+        while len(RJ_FILES) > MAX_SESSIONS and RJ_FILES_TIMESTAMPS:
+            oldest = min(RJ_FILES_TIMESTAMPS, key=RJ_FILES_TIMESTAMPS.get)
+            RJ_FILES.pop(oldest, None)
+            RJ_FILES_TIMESTAMPS.pop(oldest, None)
+            _RJ_FILLER_CACHE.pop(oldest, None)
+            _RJ_VERSION_COUNTER.pop(oldest, None)
 
-    # If still over max, remove oldest
-    while len(RJ_FILES) > MAX_SESSIONS:
-        oldest = min(RJ_FILES_TIMESTAMPS, key=RJ_FILES_TIMESTAMPS.get)
-        RJ_FILES.pop(oldest, None)
-        RJ_FILES_TIMESTAMPS.pop(oldest, None)
-        _RJ_FILLER_CACHE.pop(oldest, None)
+    with SD_FILES_LOCK:
+        # Clean SD_FILES
+        expired = [sid for sid, ts in SD_FILES_TIMESTAMPS.items()
+                   if now - ts > SESSION_EXPIRY_SECONDS]
+        for sid in expired:
+            SD_FILES.pop(sid, None)
+            SD_FILES_TIMESTAMPS.pop(sid, None)
 
-    while len(SD_FILES) > MAX_SESSIONS:
-        oldest = min(SD_FILES_TIMESTAMPS, key=SD_FILES_TIMESTAMPS.get)
-        SD_FILES.pop(oldest, None)
-        SD_FILES_TIMESTAMPS.pop(oldest, None)
+        while len(SD_FILES) > MAX_SESSIONS and SD_FILES_TIMESTAMPS:
+            oldest = min(SD_FILES_TIMESTAMPS, key=SD_FILES_TIMESTAMPS.get)
+            SD_FILES.pop(oldest, None)
+            SD_FILES_TIMESTAMPS.pop(oldest, None)
+
+    with HP_FILES_LOCK:
+        # Clean HP_FILES
+        expired = [sid for sid, ts in HP_FILES_TIMESTAMPS.items()
+                   if now - ts > SESSION_EXPIRY_SECONDS]
+        for sid in expired:
+            HP_FILES.pop(sid, None)
+            HP_FILES_TIMESTAMPS.pop(sid, None)
+
+        while len(HP_FILES) > MAX_SESSIONS and HP_FILES_TIMESTAMPS:
+            oldest = min(HP_FILES_TIMESTAMPS, key=HP_FILES_TIMESTAMPS.get)
+            HP_FILES.pop(oldest, None)
+            HP_FILES_TIMESTAMPS.pop(oldest, None)
 
 
 def _touch_session(session_id):
     """Update the timestamp for a session to keep it alive."""
-    if session_id in RJ_FILES_TIMESTAMPS:
-        RJ_FILES_TIMESTAMPS[session_id] = time.time()
+    with RJ_FILES_LOCK:
+        if session_id in RJ_FILES_TIMESTAMPS:
+            RJ_FILES_TIMESTAMPS[session_id] = time.time()
 
 
 def get_session_id():
@@ -272,8 +303,9 @@ def upload_rj():
 
         # Store in session-based storage
         session_id = get_session_id()
-        RJ_FILES[session_id] = file_bytes
-        RJ_FILES_TIMESTAMPS[session_id] = time.time()
+        with RJ_FILES_LOCK:
+            RJ_FILES[session_id] = file_bytes
+            RJ_FILES_TIMESTAMPS[session_id] = time.time()
         _cleanup_expired_sessions()
 
         # Read current audit data from the file

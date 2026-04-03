@@ -6,7 +6,7 @@ from flask import Blueprint, request, jsonify, render_template, session
 from functools import wraps
 from datetime import datetime, timedelta
 from database.models import db, DailyReport, VarianceRecord, DailyJourMetrics, NightAuditSession
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 
 reports_bp = Blueprint('reports', __name__)
 

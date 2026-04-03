@@ -295,11 +295,20 @@ class JourMapper:
             return
 
         # Format 1: Direct jour_deductions from HP parser (preferred)
+        # jour_deductions contains both food deductions (cols 9-35) and BQ/BR tips (cols 68-69).
+        # Food cols: subtract HP amount from existing SJ-sourced value.
+        # BQ (68) / BR (69): direct write — these are tip totals, not deductions from other cols.
+        HP_DIRECT_COLS = {68, 69}  # BQ=Admin tips, BR=Promo tips
         jour_deductions = self.hp_data.get('jour_deductions', {})
         if jour_deductions:
             for col_idx_str, hp_amount in jour_deductions.items():
                 col_idx = int(col_idx_str)
-                if hp_amount and col_idx in jour_values:
+                if not hp_amount:
+                    continue
+                if col_idx in HP_DIRECT_COLS:
+                    # Write directly — sign preserved as-is
+                    jour_values[col_idx] = float(hp_amount)
+                elif col_idx in jour_values:
                     jour_values[col_idx] -= abs(float(hp_amount))
             return
 

@@ -251,9 +251,14 @@ class DailyJourMetrics(db.Model):
     """
     __tablename__ = 'daily_jour_metrics'
 
+    __table_args__ = (
+        db.Index('ix_djm_year_month', 'year', 'month'),
+        db.Index('ix_djm_property_date', 'property_id', 'date'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, unique=True, nullable=False, index=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True)
+    property_id = db.Column(db.Integer, db.ForeignKey('properties.id'), nullable=True, index=True)
     year = db.Column(db.Integer, nullable=False, index=True)
     month = db.Column(db.Integer, nullable=False)
     day_of_month = db.Column(db.Integer, nullable=False)
@@ -1045,6 +1050,9 @@ class MonthlyBudgetLegacy(db.Model):
 class DailyCashRecon(db.Model):
     """Daily cash reconciliation from Diff.Caisse# and Recap."""
     __tablename__ = 'daily_cash_recon'
+    __table_args__ = (
+        db.Index('ix_dcr_year_month', 'year', 'month'),
+    )
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, unique=True, nullable=False, index=True)
     year = db.Column(db.Integer, nullable=False)

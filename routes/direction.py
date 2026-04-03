@@ -14,15 +14,13 @@ from functools import wraps
 from datetime import datetime, date, timedelta
 from database.models import (db, DailyJourMetrics, NightAuditSession,
                               DepartmentLabor, MonthlyExpense, MonthlyBudget,
-                              JournalEntry, DailyLaborMetrics)
+                              JournalEntry, DailyLaborMetrics, TOTAL_ROOMS)
 from sqlalchemy import func, text
 import logging
 
 logger = logging.getLogger(__name__)
 
 direction_bp = Blueprint('direction', __name__)
-
-TOTAL_ROOMS = 340
 
 # Budget ratios from Excel Budget sheet (#34) — used when no MonthlyBudget exists
 DEFAULT_BUDGET = {

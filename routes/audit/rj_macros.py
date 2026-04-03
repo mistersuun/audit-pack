@@ -5,10 +5,10 @@ RJ Macros blueprint - handles reset, sync, and macro operations.
 from flask import Blueprint, request, jsonify, session
 import io
 import logging
-from routes.checklist import login_required
+from utils.auth_decorators import login_required
 from utils.rj_filler import RJFiller
 from utils.rj_reader import RJReader
-from .rj_core import RJ_FILES, get_session_id, get_or_create_filler, save_and_store, _RJ_FILLER_CACHE
+from .rj_core import RJ_FILES, RJ_FILES_LOCK, get_session_id, get_or_create_filler, save_and_store, invalidate_rj_cache
 
 
 from utils.csrf import csrf_protect
@@ -284,8 +284,9 @@ def send_recap_to_jour():
         jour_data = get_jour_day_data(updated_rj, day)
 
         # Update in session and invalidate cache
-        RJ_FILES[session_id] = updated_rj
-        _RJ_FILLER_CACHE.pop(session_id, None)
+        with RJ_FILES_LOCK:
+            RJ_FILES[session_id] = updated_rj
+        invalidate_rj_cache(session_id)
 
         return jsonify({
             'success': True,

@@ -9,7 +9,7 @@ everything is saved to the database. Export to Excel/PDF on demand.
 from flask import Blueprint, request, jsonify, render_template, session, send_file
 from functools import wraps
 from datetime import datetime, date, timedelta
-from database.models import db, NightAuditSession, DailyReconciliation, DueBack, DailyJourMetrics, RJArchive, RJSheetData
+from database.models import db, NightAuditSession, DailyReconciliation, DueBack, DailyJourMetrics, RJArchive, RJSheetData, TOTAL_ROOMS
 import json
 import logging
 import io
@@ -27,20 +27,11 @@ from utils.jour_mapping import (
 )
 from utils.ole_builder import rebuild_xls_with_vba
 from routes.audit.rj_correction import log_field_changes, log_json_changes
+from utils.auth_decorators import login_required as auth_required
 
 logger = logging.getLogger(__name__)
 
 rj_native_bp = Blueprint('rj_native', __name__)
-
-
-def auth_required(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not session.get('authenticated'):
-            from flask import redirect, url_for
-            return redirect(url_for('auth_v2.login'))
-        return f(*args, **kwargs)
-    return decorated
 
 
 # ═══════════════════════════════════════
@@ -1243,13 +1234,16 @@ def native_parse_and_fill():
 
         # ★ Store source file for SD and HP (for write-back on save)
         if doc_type in ('sd_deposit', 'hp_excel'):
-            from routes.audit.rj_core import SD_FILES, HP_FILES, get_session_id
+            from routes.audit.rj_core import SD_FILES, SD_FILES_TIMESTAMPS, HP_FILES, HP_FILES_TIMESTAMPS, get_session_id
+            import time as _time
             session_id = get_session_id()
             file_buf = io.BytesIO(file_bytes)
             if doc_type == 'sd_deposit':
                 SD_FILES[session_id] = file_buf
+                SD_FILES_TIMESTAMPS[session_id] = _time.time()
             elif doc_type == 'hp_excel':
                 HP_FILES[session_id] = file_buf
+                HP_FILES_TIMESTAMPS[session_id] = _time.time()
 
         # Map parsed data to NAS
         fill_result = _apply_parsed_to_nas(doc_type, result, nas, extra_kwargs.get('day', d.day))
@@ -2587,8 +2581,9 @@ def save_sd():
 
     # ★ Write-back to SD Excel file (if uploaded)
     try:
-        from routes.audit.rj_core import SD_FILES, get_session_id
+        from routes.audit.rj_core import SD_FILES, SD_FILES_TIMESTAMPS, get_session_id
         from utils.sd_writer import SDWriter
+        import time as _time
         session_id = get_session_id()
         if session_id in SD_FILES:
             day = nas.audit_date.day if nas.audit_date else None
@@ -2609,6 +2604,7 @@ def save_sd():
                     })
                 SD_FILES[session_id] = SDWriter.write_entries(
                     SD_FILES[session_id], day, sd_entries_for_excel)
+                SD_FILES_TIMESTAMPS[session_id] = _time.time()
     except Exception as e:
         logger.warning(f"SD write-back failed (non-critical): {e}")
 
@@ -2783,14 +2779,16 @@ def save_hp_admin():
 
     # ★ Write-back to HP Excel file (if uploaded)
     try:
-        from routes.audit.rj_core import HP_FILES, get_session_id
+        from routes.audit.rj_core import HP_FILES, HP_FILES_TIMESTAMPS, get_session_id
         from utils.hp_writer import HPWriter
+        import time as _time
         session_id = get_session_id()
         if session_id in HP_FILES:
             day = nas.audit_date.day if nas.audit_date else None
             if day and entries:
                 HP_FILES[session_id] = HPWriter.write_entries(
                     HP_FILES[session_id], day, entries)
+                HP_FILES_TIMESTAMPS[session_id] = _time.time()
     except Exception as e:
         logger.warning(f"HP write-back failed (non-critical): {e}")
 
@@ -5177,7 +5175,7 @@ def export_month(year, month):
 
         ws4.freeze_panes = 'A2'
 
-        TOTAL_ROOMS = 252  # From models.py
+        # TOTAL_ROOMS imported from database.models
 
         row_num = 2
         for day in range(1, monthrange(year, month)[1] + 1):

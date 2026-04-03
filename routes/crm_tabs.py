@@ -14,26 +14,17 @@ Default to last 12 months if no params provided.
 """
 
 from flask import Blueprint, request, jsonify, session
-from functools import wraps
 from datetime import datetime, timedelta, date
 from database.models import (
     db, DailyJourMetrics, DailyLaborMetrics, DailyTipMetrics,
-    MonthlyBudget, DailyCashRecon, DailyCardMetrics, MonthlyExpense, DepartmentLabor
+    MonthlyBudget, DailyCashRecon, DailyCardMetrics, MonthlyExpense, DepartmentLabor,
+    DepositVariance, TOTAL_ROOMS
 )
 from sqlalchemy import func, desc
+from utils.auth_decorators import login_required
 import json
 
 crm_tabs_bp = Blueprint('crm_tabs', __name__)
-
-
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not session.get('authenticated'):
-            from flask import redirect, url_for
-            return redirect(url_for('auth_v2.login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 def _parse_date(s):
@@ -191,11 +182,11 @@ def revenue_management():
             'year': year,
             'month': month,
             'room_rev_actual': room_rev_actual,
-            'room_rev_budget': _round2(budget.room_revenue_budget if budget else 0),
+            'room_rev_budget': _round2(budget.room_revenue if budget else 0),
             'adr_actual': adr_actual,
-            'adr_budget': _round2(budget.adr_budget if budget else 0),
+            'adr_budget': _round2(budget.adr_target if budget else 0),
             'occ_actual': occ_actual,
-            'occ_budget': _round2(budget.occupancy_budget if budget else 0),
+            'occ_budget': _round2((budget.rooms_target / TOTAL_ROOMS * 100) if budget and budget.rooms_target else 0),
         })
 
     # 6. Yearly Summary
@@ -573,6 +564,57 @@ def labor_analytics():
             'headcount': d['headcount'],
         })
 
+    # 8. Budget variance by department (actual vs budget cost and hours)
+    budget_by_dept = {}
+    for dl in dept_labor:
+        dept = dl.department
+        if dept not in budget_by_dept:
+            budget_by_dept[dept] = {
+                'actual_cost': 0.0,
+                'budget_cost': 0.0,
+                'actual_hours': 0.0,
+                'budget_hours': 0.0,
+            }
+        budget_by_dept[dept]['actual_cost'] += dl.total_labor_cost or 0
+        budget_by_dept[dept]['budget_cost'] += dl.budget_cost or 0
+        budget_by_dept[dept]['actual_hours'] += dl.total_hours or 0
+        budget_by_dept[dept]['budget_hours'] += dl.budget_hours or 0
+
+    budget_variance_by_dept = []
+    total_actual_cost = 0.0
+    total_budget_cost = 0.0
+
+    for dept in sorted(budget_by_dept.keys()):
+        b = budget_by_dept[dept]
+        variance_dollars = b['actual_cost'] - b['budget_cost']
+        variance_pct = _round2(
+            (variance_dollars / b['budget_cost'] * 100) if b['budget_cost'] > 0 else 0
+        )
+        total_actual_cost += b['actual_cost']
+        total_budget_cost += b['budget_cost']
+
+        budget_variance_by_dept.append({
+            'department': dept,
+            'actual_cost': _round2(b['actual_cost']),
+            'budget_cost': _round2(b['budget_cost']),
+            'variance_dollars': _round2(variance_dollars),
+            'variance_pct': variance_pct,
+            'actual_hours': _round2(b['actual_hours']),
+            'budget_hours': _round2(b['budget_hours']),
+            'has_budget_data': b['budget_cost'] > 0 or b['budget_hours'] > 0,
+        })
+
+    total_variance_dollars = total_actual_cost - total_budget_cost
+    budget_variance = {
+        'by_department': budget_variance_by_dept,
+        'total_actual_cost': _round2(total_actual_cost),
+        'total_budget_cost': _round2(total_budget_cost),
+        'total_variance_dollars': _round2(total_variance_dollars),
+        'total_variance_pct': _round2(
+            (total_variance_dollars / total_budget_cost * 100) if total_budget_cost > 0 else 0
+        ),
+    }
+
     return jsonify({
         'success': True,
         'has_data': True,
@@ -583,6 +625,7 @@ def labor_analytics():
         'overtime_trend': overtime_trend,
         'headcount_trend': headcount_trend,
         'dept_summary': dept_stats,
+        'budget_variance': budget_variance,
     })
 
 
@@ -725,6 +768,8 @@ def cash_reconciliation():
     # 5. Cash deposit trend monthly
     deposit_by_month = {}
     for r in recon:
+        if not r.year or not r.month:
+            continue
         key = f"{r.year}-{r.month:02d}"
         if key not in deposit_by_month:
             deposit_by_month[key] = {'cdn': 0, 'usd': 0}
@@ -745,6 +790,8 @@ def cash_reconciliation():
     threshold = 5  # ±$5
     recon_quality = {}
     for r in recon:
+        if not r.year or not r.month:
+            continue
         key = f"{r.year}-{r.month:02d}"
         if key not in recon_quality:
             recon_quality[key] = {'quasimodo': 0, 'surplus': 0, 'within': 0, 'count': 0}
@@ -767,6 +814,61 @@ def cash_reconciliation():
             'pct_within_threshold': pct_within,
         })
 
+    # 7. Deposit variances (DepositVariance — per-employee SD file data)
+    dep_variances = DepositVariance.query.filter(
+        DepositVariance.audit_date.between(start, end)
+    ).all()
+
+    # Top employees by total absolute variance (ranked)
+    emp_variance_totals = {}
+    for dv in dep_variances:
+        emp = dv.employee_name or 'Unknown'
+        if emp not in emp_variance_totals:
+            emp_variance_totals[emp] = {
+                'employee_name': emp,
+                'department': dv.department,
+                'total_abs_variance': 0.0,
+                'total_variance': 0.0,
+                'record_count': 0,
+            }
+        emp_variance_totals[emp]['total_abs_variance'] += abs(dv.variance or 0)
+        emp_variance_totals[emp]['total_variance'] += dv.variance or 0
+        emp_variance_totals[emp]['record_count'] += 1
+
+    top_employees_by_variance = sorted(
+        emp_variance_totals.values(),
+        key=lambda x: x['total_abs_variance'],
+        reverse=True
+    )
+    for entry in top_employees_by_variance:
+        entry['total_abs_variance'] = _round2(entry['total_abs_variance'])
+        entry['total_variance'] = _round2(entry['total_variance'])
+
+    # Monthly variance trend (sum of absolute variances per month)
+    monthly_dep_variance = {}
+    for dv in dep_variances:
+        if not dv.audit_date:
+            continue
+        key = f"{dv.audit_date.year}-{dv.audit_date.month:02d}"
+        if key not in monthly_dep_variance:
+            monthly_dep_variance[key] = {'total_abs_variance': 0.0, 'record_count': 0}
+        monthly_dep_variance[key]['total_abs_variance'] += abs(dv.variance or 0)
+        monthly_dep_variance[key]['record_count'] += 1
+
+    dep_variance_trend = []
+    for key in sorted(monthly_dep_variance.keys()):
+        dep_variance_trend.append({
+            'period': key,
+            'total_abs_variance': _round2(monthly_dep_variance[key]['total_abs_variance']),
+            'record_count': monthly_dep_variance[key]['record_count'],
+        })
+
+    deposit_variances = {
+        'top_employees': top_employees_by_variance,
+        'monthly_trend': dep_variance_trend,
+        'total_records': len(dep_variances),
+    }
+
     return jsonify({
         'success': True,
         'has_data': True,
@@ -776,6 +878,7 @@ def cash_reconciliation():
         'auditor_stats': auditor_list,
         'cash_deposit_trend': deposit_trend,
         'recon_quality_monthly': quality_monthly,
+        'deposit_variances': deposit_variances,
     })
 
 
@@ -1029,7 +1132,7 @@ def pnl_budget():
         year, month = key
         budget = budget_map.get(key)
         actual_rev = revenue_by_period.get(key, 0)
-        budget_rev = budget.total_revenue_budget if budget else 0
+        budget_rev = budget.total_revenue if budget else 0
 
         variance = actual_rev - budget_rev
         variance_pct = _round2((variance / budget_rev * 100) if budget_rev > 0 else 0)
@@ -1134,20 +1237,37 @@ def pnl_budget():
         if year not in annual_pnl:
             annual_pnl[year] = {'revenue': 0, 'expenses': 0, 'labor': 0}
         annual_pnl[year]['expenses'] += exp.total_expenses or 0
-        annual_pnl[year]['labor'] += exp.labor_total or 0
 
+    # Use DepartmentLabor as authoritative labor source (not MonthlyExpense.labor_total
+    # to avoid double-counting when both tables have data for the same period)
     for dl in dept_labor:
         year = dl.year
         if year not in annual_pnl:
             annual_pnl[year] = {'revenue': 0, 'expenses': 0, 'labor': 0}
         annual_pnl[year]['labor'] += dl.total_labor_cost or 0
 
+    # Build per-year franchise fees from actual MonthlyExpense records
+    annual_franchise_fees = {}
+    for exp in expenses:
+        year = exp.year
+        if year not in annual_franchise_fees:
+            annual_franchise_fees[year] = 0
+        annual_franchise_fees[year] += exp.franchise_fees or 0
+
     annual = []
     for year in sorted(annual_pnl.keys()):
         a = annual_pnl[year]
         gross_profit = a['revenue'] - a['expenses']
         labor_pct = _round2((a['labor'] / a['revenue'] * 100) if a['revenue'] > 0 else 0)
-        franchise_pct = _round2(((a['expenses'] * 0.05) / a['revenue'] * 100) if a['revenue'] > 0 else 0)  # Assume 5%
+
+        # Use actual franchise fees from MonthlyExpense; flag if no expense data exists for this year
+        actual_franchise = annual_franchise_fees.get(year, None)
+        if actual_franchise is None:
+            franchise_pct = 0.0
+            franchise_data_missing = True
+        else:
+            franchise_pct = _round2((actual_franchise / a['revenue'] * 100) if a['revenue'] > 0 else 0)
+            franchise_data_missing = False
 
         annual.append({
             'year': year,
@@ -1155,8 +1275,34 @@ def pnl_budget():
             'total_expenses': _round2(a['expenses']),
             'gross_profit': _round2(gross_profit),
             'labor_pct': labor_pct,
+            'franchise_fees': _round2(actual_franchise or 0),
             'franchise_pct': franchise_pct,
+            'franchise_data_missing': franchise_data_missing,
         })
+
+    # Data quality check — identify months with revenue data but no expense record.
+    # Without this, the P&L tab silently shows 0 expenses and 100% margins.
+    expense_keys = {(e.year, e.month) for e in expenses}
+    missing_expense_months = []
+    for key in sorted(revenue_by_period.keys()):
+        if key not in expense_keys and revenue_by_period[key] > 0:
+            year, month = key
+            missing_expense_months.append(f"{year}-{month:02d}")
+
+    warnings = []
+    if missing_expense_months:
+        warnings.append(
+            f"Données de dépenses manquantes pour {len(missing_expense_months)} mois avec revenus: "
+            + ", ".join(missing_expense_months)
+            + ". Les marges affichées pour ces périodes sont incorrectes (dépenses à 0)."
+        )
+
+    data_quality = {
+        'months_with_revenue': len(revenue_by_period),
+        'months_with_expenses': len(expense_keys),
+        'missing_expense_months': missing_expense_months,
+        'has_complete_data': len(missing_expense_months) == 0,
+    }
 
     return jsonify({
         'success': True,
@@ -1168,4 +1314,6 @@ def pnl_budget():
         'franchise_fee_trend': franchise_trend,
         'utility_trend': utility_trend,
         'annual_pnl': annual,
+        'data_quality': data_quality,
+        'warnings': warnings,
     })

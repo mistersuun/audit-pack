@@ -82,8 +82,10 @@ class ParserFactory:
         """Auto-detect parser type from filename.
 
         Returns:
-            (doc_type, label) or (None, reason) if not parseable
+            doc_type string, or None if not parseable.
         """
+        if not filename:
+            return None
         fn_lower = filename.lower()
         for pattern, doc_type in cls.FILENAME_PATTERNS:
             if pattern in fn_lower:

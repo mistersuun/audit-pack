@@ -2950,7 +2950,7 @@ function getSetDPersonnel() {
 // ═══════════════════════════════════════
 // JOUR — Calculs
 // ═══════════════════════════════════════
-const TOTAL_ROOMS = 340;
+const TOTAL_ROOMS = 252;  // Sheraton Laval capacity
 
 function toggleAutres() {
   const grid = $('#autres-revenus-grid');
@@ -4046,7 +4046,14 @@ async function runMacro(macroName) {
     });
     const d = await r.json();
     if(d.success) {
-      resultEl.innerHTML = `<span style="color:var(--emerald)">✓ ${d.message}</span>`;
+      resultEl.innerHTML = `<span style="color:var(--emerald)">OK ${d.message}</span>`;
+      // Invalidate tab cache so data tabs refresh with new values
+      if (typeof invalidateTabCache === 'function') {
+        invalidateTabCache('nouveau-jour', 'recap', 'transelect', 'geac');
+      }
+      if (typeof markTabUpdated === 'function') {
+        markTabUpdated('nouveau-jour');
+      }
     } else {
       resultEl.innerHTML = `<span style="color:var(--rose)">✗ ${d.error || 'Erreur'}</span>`;
     }

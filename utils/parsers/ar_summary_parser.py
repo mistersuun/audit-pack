@@ -133,10 +133,7 @@ class ARSummaryParser(BaseParser):
         """Find a numeric value that appears BEFORE a sequence of label keywords.
 
         This method looks for: NUMBER ... KEYWORD1 ... KEYWORD2 ... KEYWORD3
-        and returns the NUMBER.
-
-        The strategy: try multiple pattern variations to find the label sequence,
-        then look backward for the nearest number.
+        and returns the NUMBER.  Used for reversed (old-format) PDFs.
 
         Args:
             label_keywords: One or more keywords that identify the field
@@ -144,14 +141,11 @@ class ARSummaryParser(BaseParser):
         Returns:
             float: The extracted numeric value, or 0.0 if not found
         """
-        # Build pattern to find the label sequence
         escaped_keywords = [re.escape(kw) for kw in label_keywords]
-
-        # Try different joining patterns
         patterns_to_try = [
-            r'\s+'.join(escaped_keywords),  # Keyword1 + Keyword2 + Keyword3
-            r'[\s\-]+'.join(escaped_keywords),  # Allow dashes between keywords
-            r'[\s\-]+.*?[\s\-]+'.join(escaped_keywords),  # Allow words between keywords
+            r'\s+'.join(escaped_keywords),
+            r'[\s\-]+'.join(escaped_keywords),
+            r'[\s\-]+.*?[\s\-]+'.join(escaped_keywords),
         ]
 
         match = None
@@ -163,27 +157,69 @@ class ARSummaryParser(BaseParser):
         if not match:
             return 0.0
 
-        # Look backward from the label match to find the nearest number
         label_start = match.start()
-
-        # Use a smaller search window by default (80 chars), with fallback to larger window
-        # This prevents matching numbers from previous sections that happen to be in the
-        # 200-char window
         text_before_label = self.text_normalized[max(0, label_start - 80):label_start]
         number_matches = list(re.finditer(r'[\d,]+\.?\d*', text_before_label))
 
         if not number_matches:
-            # Fallback to larger window if nothing found
             text_before_label = self.text_normalized[max(0, label_start - 200):label_start]
             number_matches = list(re.finditer(r'[\d,]+\.?\d*', text_before_label))
 
         if number_matches:
-            # Get the LAST number in the window (closest to the label)
             last_match = number_matches[-1]
-            value_str = last_match.group(0)
-            return self._safe_float(value_str)
+            return self._safe_float(last_match.group(0))
 
         return 0.0
+
+    def _find_value_after_label(self, *label_keywords):
+        """Find a numeric value that appears AFTER a sequence of label keywords.
+
+        Handles normal-order PDFs where format is: LABEL ... NUMBER (NUMBER-)
+
+        Args:
+            label_keywords: One or more keywords that identify the field
+
+        Returns:
+            float or None: The extracted numeric value, or None if label not found.
+        """
+        escaped_keywords = [re.escape(kw) for kw in label_keywords]
+        patterns_to_try = [
+            r'[\s\-]+'.join(escaped_keywords),
+            r'\s+'.join(escaped_keywords),
+        ]
+
+        match = None
+        for pattern in patterns_to_try:
+            match = re.search(pattern, self.text_normalized, re.IGNORECASE)
+            if match:
+                break
+
+        if not match:
+            return None  # Label not found — caller decides fallback
+
+        # Look AFTER the label (within 120 chars) for the first currency-formatted number
+        # Require decimal point to avoid matching list indices like "4)" in "4) Invoices"
+        text_after = self.text_normalized[match.end():match.end() + 120]
+        num_match = re.search(r'([\d,]+\.\d+)\s*(-?)', text_after)
+        if num_match:
+            value = self._safe_float(num_match.group(1).replace(',', ''))
+            if num_match.group(2) == '-':
+                value = -value
+            return value
+
+        return 0.0  # Label found but no number after it — field is zero/blank
+
+    def _find_value(self, *label_keywords):
+        """Auto-detect PDF orientation and extract numeric value for the label.
+
+        Tries forward-search first (normal-order PDFs), falls back to backward-search
+        (reversed-text PDFs) only when the label itself is not found.
+        """
+        result = self._find_value_after_label(*label_keywords)
+        if result is not None:
+            return result  # Label was found (value may be 0.0 — that's valid)
+        # Label not found in forward search — try reversed-order fallback
+        return self._find_value_by_label_sequence(*label_keywords)
 
     def _extract_report_date(self):
         """Extract report date from scattered header components.
@@ -259,73 +295,52 @@ class ARSummaryParser(BaseParser):
         return None
 
     def _extract_ar_balance_previous(self):
-        """Extract A/R Ledger Balance - Previous Day.
-
-        Pattern in text: "22,194,423.95 Day Previous - Balance Ledger A/R"
-        """
-        return self._find_value_by_label_sequence('Day', 'Previous', 'Balance', 'Ledger', 'A/R')
+        """Extract A/R Ledger Balance - Previous Day."""
+        return self._find_value('A/R', 'Ledger', 'Balance', 'Previous', 'Day')
 
     def _extract_front_office_transfers(self):
         """Extract all Front Office Transfer line items."""
         return {
-            'guest_folios': self._find_value_by_label_sequence('Folios', 'Guest'),
-            'non_guest_folios': self._find_value_by_label_sequence('Folios', 'Non-Guest'),
-            'subtotal': self._find_value_by_label_sequence('Subtotal'),
-            'advance_deposits_cancel_dna': self._find_value_by_label_sequence('Cancel', 'DNA', 'Deposits', 'Advance'),
-            'credit_cards': self._find_value_by_label_sequence('Cards', 'Credit'),
-            'total': self._find_value_by_label_sequence('Transfers', 'Total'),
+            'guest_folios': self._find_value('Guest', 'Folios'),
+            'non_guest_folios': self._find_value('Non-Guest', 'Folios'),
+            'subtotal': self._find_value('Subtotal'),
+            'advance_deposits_cancel_dna': self._find_value('Advance', 'Deposits', 'Cancel'),
+            'credit_cards': self._find_value('Credit', 'Cards'),
+            'total': self._find_value('Total', 'Transfers'),
         }
 
     def _extract_adjustments(self):
-        """Extract Adjustments line items."""
-        # Special handling for Total Adjustments since the label appears after the values
-        # and our normal search gets confused by the Transfers section values.
-        # Look for pattern: Debits ... number ... Adjustments
-        adjustments_total = 0.0
+        """Extract Adjustments line items.
 
-        # Find text between "Debits" and "Adjustments Total"
-        debits_match = re.search(r'Debits', self.text_normalized, re.IGNORECASE)
-        total_adj_match = re.search(r'Total\s+Adjustments', self.text_normalized, re.IGNORECASE)
-
-        if debits_match and total_adj_match:
-            # Get text between Debits and Total Adjustments
-            between_text = self.text_normalized[debits_match.end():total_adj_match.start()]
-            # Extract the last number in this section
-            numbers = re.findall(r'[\d,]+\.?\d*', between_text)
-            if numbers:
-                adjustments_total = self._safe_float(numbers[-1])
-        else:
-            # Fallback to normal method
-            adjustments_total = self._find_value_by_label_sequence('Total', 'Adjustments')
-
+        'Total Adjustments' has no number on its line — compute from credits - debits.
+        """
+        credits = self._find_value('Credits')
+        debits = self._find_value('Debits')
         return {
-            'credits': self._find_value_by_label_sequence('Credits'),
-            'debits': self._find_value_by_label_sequence('Debits'),
-            'total': adjustments_total,
+            'credits': credits,
+            'debits': debits,
+            'total': credits - debits,
         }
 
     def _extract_invoices(self):
         """Extract Invoices value."""
-        return self._find_value_by_label_sequence('Invoices')
+        return self._find_value('Invoices')
 
     def _extract_payments(self):
         """Extract Payments value."""
-        return self._find_value_by_label_sequence('Payments')
+        return self._find_value('Payments')
 
     def _extract_ar_credit_card_charges(self):
         """Extract A/R Credit Card Charges value."""
-        return self._find_value_by_label_sequence('Charges', 'Card', 'Credit', 'A/R')
+        return self._find_value('A/R', 'Credit', 'Card', 'Charges')
 
     def _extract_service_charges(self):
         """Extract Service Charges value."""
-        return self._find_value_by_label_sequence('Charges', 'Service')
+        return self._find_value('Service', 'Charges')
 
     def _extract_ar_balance_end_of_day(self):
-        """Extract A/R Ledger Balance - End of Day.
-
-        Pattern in text: "22,198,488.44 Day of End - Balance Ledger A/R"
-        """
-        return self._find_value_by_label_sequence('Day', 'of', 'End', 'Balance', 'Ledger', 'A/R')
+        """Extract A/R Ledger Balance - End of Day."""
+        return self._find_value('A/R', 'Ledger', 'Balance', 'End', 'of', 'Day')
 
     def _validate_balance(self):
         """
@@ -361,3 +376,20 @@ class ARSummaryParser(BaseParser):
                 'ar_transfers': self.extracted_data.get('front_office_transfers', {}).get('total', 0.0),
             }
         }
+
+    def get_fillable_data(self):
+        """Return {cell_ref: value} from rj_mapping for GEAC sheet auto-fill."""
+        if not self._parsed:
+            self.parse()
+        rj = self.extracted_data.get('rj_mapping', {}).get('geac_ux', {})
+        fillable = {}
+        # Map logical names to FIELD_MAPPINGS cell refs
+        key_to_cell = {
+            'ar_previous_balance': self.FIELD_MAPPINGS.get('ar_previous_balance'),
+            'ar_end_of_day': self.FIELD_MAPPINGS.get('ar_end_of_day'),
+            'ar_transfers': self.FIELD_MAPPINGS.get('ar_transfers'),
+        }
+        for logical_key, cell_ref in key_to_cell.items():
+            if cell_ref and rj.get(logical_key) is not None and rj.get(logical_key) != 0.0:
+                fillable[cell_ref] = rj[logical_key]
+        return fillable

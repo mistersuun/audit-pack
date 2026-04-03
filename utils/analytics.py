@@ -166,7 +166,7 @@ FB_OUTLETS = {
     'Banquet': {'nour': 24, 'boi': 25, 'bie': 26, 'min': 27, 'vin': 28},
 }
 
-TOTAL_ROOMS = 252  # Hotel has 252 rooms
+from database.models import TOTAL_ROOMS  # 252, Sheraton Laval
 
 
 class JourAnalytics:
@@ -772,8 +772,8 @@ class JourAnalytics:
             })
 
         # Weekend vs Weekday comparison
-        weekday = [r for r in result if r['dow'] < 5 and r['count'] > 0]
-        weekend = [r for r in result if r['dow'] >= 5 and r['count'] > 0]
+        weekday = [r for r in result if r['dow'] < 4 and r['count'] > 0]
+        weekend = [r for r in result if r['dow'] >= 4 and r['count'] > 0]  # Fri-Sun for hotel industry
 
         wd_occ = stats_mean([r['avg_occ'] for r in weekday]) if weekday else 0
         we_occ = stats_mean([r['avg_occ'] for r in weekend]) if weekend else 0
@@ -1477,8 +1477,8 @@ class HistoricalAnalytics:
                 'avg_clients': round(info['clients'] / nc, 0),
             })
 
-        weekday = [r for r in result if r['dow'] < 5 and r['count'] > 0]
-        weekend = [r for r in result if r['dow'] >= 5 and r['count'] > 0]
+        weekday = [r for r in result if r['dow'] < 4 and r['count'] > 0]
+        weekend = [r for r in result if r['dow'] >= 4 and r['count'] > 0]  # Fri-Sun for hotel industry
         wd_occ = stats_mean([r['avg_occ'] for r in weekday]) if weekday else 0
         we_occ = stats_mean([r['avg_occ'] for r in weekend]) if weekend else 0
         wd_adr = stats_mean([r['avg_adr'] for r in weekday]) if weekday else 0

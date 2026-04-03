@@ -784,11 +784,11 @@ DAILY_REV_TO_JOUR = {
         'column_index': 68,
         'label_en': 'H/P Administration 14',
         'label_fr': 'H/P Administration 14',
-        'source_page': 'HP EXCEL',
-        'source_line': 'HP administration deductions',
+        'source_page': 'SALES JOURNAL',
+        'source_line': 'ADMINISTRATION total (page 2 adjustments)',
         'operation': 'direct',
-        'base_field': 'hp.administration_total',
-        'description': 'HP administration charges',
+        'base_field': 'sales_journal.adjustments.administration',
+        'description': 'HP administration total from Sales Journal page 2',
         'sign_handling': 'keep_sign'
     },
     'BR': {
@@ -796,10 +796,10 @@ DAILY_REV_TO_JOUR = {
         'label_en': 'Hotel Promotion 15',
         'label_fr': 'Hotel Promotion 15',
         'source_page': 'SALES JOURNAL',
-        'source_line': 'Hotel Promotion adjustments',
+        'source_line': 'HOTEL PROMOTION total (page 2 adjustments)',
         'operation': 'direct',
         'base_field': 'sales_journal.adjustments.hotel_promotion',
-        'description': 'Hotel promotion adjustments from Sales Journal',
+        'description': 'Hotel promotion total from Sales Journal page 2',
         'sign_handling': 'keep_sign'
     },
 

@@ -18,8 +18,8 @@ from utils.rj_mapper import (
     JOUR_DAY_ROW_OFFSET,
     JOUR_RECAP_COLS,
     JOUR_RECAP_SOURCE,
-    JOUR_CC_START_COL,
-    JOUR_CC_SOURCE,
+    TRANSELECT_TOTAUX_ROW,
+    TRANSELECT_TO_JOUR_CARD_MAP,
     get_jour_row_for_day,
 )
 
@@ -643,40 +643,35 @@ class RJFiller:
         if trans_sheet is None:
             raise ValueError("transelect sheet not found")
 
-        # Read credit card totals - the exact cells depend on transelect structure
-        # Typically it's a summary row with totals for different card types
-        # From transelect analysis: row 14 has totals, columns B onwards
-        # total_carte_crédit named range likely covers the card totals
+        # Read from Transelect compact summary block (row 37, 0-indexed = Excel row 38).
+        # This row has card totals (FreedomPay + Positouch combined) in a contiguous
+        # block at cols 0-5: amex_elavon, discover, master, visa, debit, amex_global.
+        # Column X (col 23) is the POSITOUCH column — Sales Journal data lands there.
+        # Column mapping (Transelect col → Jour col) defined in TRANSELECT_TO_JOUR_CARD_MAP.
 
-        # Read row 14 (0-indexed = 13) columns B to T (1 to 19)
-        card_totals = []
-        for col in range(1, 20):  # B to T
+        card_values = {}
+        for trans_col, jour_col in TRANSELECT_TO_JOUR_CARD_MAP.items():
             try:
-                val = trans_sheet.cell_value(13, col)  # Row 14
+                val = trans_sheet.cell_value(TRANSELECT_TOTAUX_ROW, trans_col)
                 if val and isinstance(val, (int, float)):
-                    card_totals.append(val)
-                else:
-                    card_totals.append(0)
+                    card_values[jour_col] = val
             except Exception:
-                card_totals.append(0)
+                pass
 
         jour_sheet = self._get_sheet_by_name('jour')
-
-        # CC_[day] named ranges in jour (from rj_mapper constants)
         target_row = get_jour_row_for_day(day)
 
-        # Write card totals to jour starting at BF (from rj_mapper.JOUR_CC_START_COL)
-        start_col = JOUR_CC_START_COL
+        for jour_col, val in card_values.items():
+            jour_sheet.write(target_row, jour_col, val)
 
-        for i, val in enumerate(card_totals):
-            if val != 0:
-                jour_sheet.write(target_row, start_col + i, val)
+        col_names = {60: 'amex_elavon', 61: 'discover', 62: 'master', 63: 'visa', 64: 'debit', 65: 'amex_global'}
+        card_totals_display = {col_names[jc]: v for jc, v in card_values.items() if jc in col_names}
 
         return {
             'day': day,
-            'card_totals': card_totals,
+            'card_totals': card_totals_display,
             'target_row': target_row + 1,
-            'start_column': 'BF'
+            'columns': 'BI/BJ/BK/BL/BM/BN'
         }
 
     def fill_jour_day(self, day, jour_values):
