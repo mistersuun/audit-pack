@@ -145,6 +145,10 @@
                 <i data-feather="edit-3"></i>
                 <span>Rapport Journalier</span>
             </a>
+            <a href="{{ url_for('balancer.balancer_page') }}" class="menu-item {% if request.path == '/balancer' %}active{% endif %}">
+                <i data-feather="check-circle"></i>
+                <span>RJ Balancer</span>
+            </a>
             <div class="menu-group {% if request.path.startswith('/crm') %}open{% endif %}">
                 <a href="{{ url_for('crm.crm_page') }}" class="menu-item menu-parent {% if request.path.startswith('/crm') %}active{% endif %}" onclick="toggleMenuGroup(event, this)">
                     <i data-feather="briefcase"></i>

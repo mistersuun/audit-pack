@@ -23,6 +23,12 @@ build/
 dist/
 /out/
 target/
+package-lock.json
+
+# Playwright test artifacts
+tests/playwright/.session-cookie
+test-results/
+playwright-report/
 
 # Logs & temp
 *.log
@@ -62,3 +68,6 @@ test_data/
 .claude/
 CLAUDE.md
 database/audit.db
+fullrjs.zip
+24-03-2026.zip
+test_fixtures/

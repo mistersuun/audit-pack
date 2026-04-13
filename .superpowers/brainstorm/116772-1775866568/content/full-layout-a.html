@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RJ Native — Design A: Dark-first</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: #0a0a0f;
+  color: #e5e7eb;
+  min-height: 100vh;
+}
+
+.page { max-width: 1240px; margin: 0 auto; padding: 20px 24px 60px; }
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.toolbar-left { display: flex; align-items: center; gap: 12px; }
+.toolbar-title { font-size: 15px; font-weight: 700; color: #fff; }
+.badge {
+  font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+}
+.badge.progress { background: rgba(99,102,241,0.15); color: #818cf8; }
+.badge.ok { background: rgba(16,185,129,0.15); color: #34d399; }
+.toolbar-right { display: flex; gap: 8px; align-items: center; }
+.toolbar-meta {
+  font-size: 11px; color: #4b5563; font-family: 'JetBrains Mono', monospace;
+}
+.btn {
+  font-size: 11px; padding: 7px 14px; border-radius: 8px; font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.05);
+  color: #9ca3af; cursor: pointer; font-family: inherit;
+  transition: all 0.15s ease;
+}
+.btn:hover { background: rgba(255,255,255,0.08); color: #e5e7eb; border-color: rgba(255,255,255,0.12); }
+.btn.primary { background: #6366f1; color: #fff; border-color: #6366f1; }
+.btn.primary:hover { background: #5558e6; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex; gap: 3px; padding: 3px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+}
+.tab {
+  flex: 1; text-align: center; padding: 9px 14px;
+  font-size: 11.5px; font-weight: 600; color: #4b5563;
+  border-radius: 9px; cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  border: none; background: transparent; font-family: inherit;
+}
+.tab:hover { color: #9ca3af; background: rgba(255,255,255,0.03); }
+.tab.active {
+  background: rgba(99,102,241,0.15); color: #a5b4fc;
+  box-shadow: 0 0 0 1px rgba(99,102,241,0.25);
+}
+.tab .dot {
+  display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  margin-left: 6px; vertical-align: middle;
+}
+.dot.green { background: #34d399; }
+.dot.amber { background: #fbbf24; }
+
+/* ── Main layout ── */
+.main { display: flex; gap: 16px; }
+.content { flex: 1; min-width: 0; }
+
+/* ── Cards ── */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 14px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.card-title { font-size: 13px; font-weight: 700; color: #fff; }
+.card-desc { font-size: 11px; color: #4b5563; margin-top: 2px; }
+.section-label {
+  font-size: 10px; font-weight: 700; color: #4b5563;
+  text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px;
+}
+
+/* ── Form fields ── */
+.form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+.field { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.field label {
+  font-size: 10px; font-weight: 600; color: #6b7280;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.field input, .field select {
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  font-size: 13px; color: #e5e7eb; font-family: inherit;
+  outline: none; transition: border-color 0.15s;
+}
+.field input:focus { border-color: rgba(99,102,241,0.5); box-shadow: 0 0 0 2px rgba(99,102,241,0.1); }
+.field input.mono { font-family: 'JetBrains Mono', monospace; text-align: right; }
+
+/* ── Table ── */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+}
+th {
+  padding: 8px 12px; text-align: left;
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.5px; color: #4b5563;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+th:not(:first-child) { text-align: right; }
+td {
+  padding: 7px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  color: #9ca3af;
+}
+td:first-child { font-weight: 600; color: #e5e7eb; }
+td:not(:first-child) { text-align: right; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+td input {
+  width: 100%; padding: 6px 10px; text-align: right;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px; color: #e5e7eb; font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; outline: none;
+}
+td input:focus { border-color: rgba(99,102,241,0.5); }
+
+/* ── Livecard (floating) ── */
+.livecard {
+  position: fixed; top: 24px; right: 24px; width: 340px; z-index: 100;
+  background: #14171f; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3);
+}
+.livecard-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.livecard-label { font-size: 10px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.8px; }
+.livecard-controls { display: flex; gap: 4px; }
+.livecard-btn {
+  width: 22px; height: 22px; border-radius: 5px; border: none;
+  background: transparent; color: #4b5563; cursor: pointer; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+}
+.livecard-btn:hover { background: rgba(255,255,255,0.06); color: #9ca3af; }
+.livecard-hero { padding: 18px 16px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.livecard-dc {
+  font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700;
+  color: #34d399; line-height: 1.2;
+}
+.livecard-dc.err { color: #f87171; }
+.livecard-dc.warn { color: #fbbf24; }
+.livecard-verdict { font-size: 11px; font-weight: 600; color: #34d399; margin-top: 4px; }
+.livecard-section { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.livecard-row {
+  display: flex; justify-content: space-between; padding: 4px 0;
+  font-size: 11px;
+}
+.livecard-row .label { color: #6b7280; }
+.livecard-row .value { color: #e5e7eb; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+.livecard-footer {
+  padding: 10px 16px; font-size: 10px; color: #374151;
+  display: flex; justify-content: space-between;
+}
+
+/* ── Upload zone ── */
+.upload-zone {
+  border: 1px dashed rgba(255,255,255,0.1);
+  border-radius: 10px; padding: 20px; text-align: center;
+  color: #4b5563; font-size: 12px; cursor: pointer;
+  transition: all 0.15s ease;
+}
+.upload-zone:hover { border-color: rgba(99,102,241,0.3); color: #6366f1; background: rgba(99,102,241,0.03); }
+
+/* ── Summary checks ── */
+.check {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; margin-bottom: 8px;
+}
+.check.ok { border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.05); }
+.check.err { border-color: rgba(248,113,113,0.2); background: rgba(248,113,113,0.05); }
+.check-icon { font-size: 16px; width: 24px; text-align: center; }
+.check-label { flex: 1; font-size: 12px; font-weight: 600; }
+.check-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
+
+/* ── DueBack rows ── */
+.dueback-row {
+  display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
+}
+.dueback-row input {
+  padding: 8px 12px; background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 7px;
+  font-size: 13px; color: #e5e7eb; outline: none; font-family: inherit;
+}
+.dueback-row input:focus { border-color: rgba(99,102,241,0.5); }
+.dueback-row input.name { flex: 2; }
+.dueback-row input.amount { flex: 1; text-align: right; font-family: 'JetBrains Mono', monospace; }
+.dueback-remove {
+  width: 28px; height: 28px; border-radius: 50%; border: none;
+  background: rgba(248,113,113,0.1); color: #f87171;
+  cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center;
+}
+.add-row {
+  display: flex; align-items: center; gap: 6px; padding: 8px 16px;
+  border: 1px dashed rgba(255,255,255,0.08); border-radius: 8px;
+  background: transparent; color: #4b5563; font-size: 11px;
+  cursor: pointer; font-family: inherit; margin-top: 8px;
+}
+.add-row:hover { border-color: rgba(99,102,241,0.3); color: #6366f1; }
+
+/* ── Autosave ── */
+.autosave {
+  font-size: 10px; font-family: 'JetBrains Mono', monospace;
+  color: #374151; display: flex; align-items: center; gap: 4px;
+}
+.autosave.saved { color: #34d399; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="toolbar-left">
+      <span class="toolbar-title">Rapport Journalier</span>
+      <span class="badge progress">En cours</span>
+      <span class="autosave saved">&#10003; Sauvegardé</span>
+    </div>
+    <div class="toolbar-right">
+      <span class="toolbar-meta">21 mars 2026</span>
+      <button class="btn">Importer RJ</button>
+      <button class="btn">Aperçu</button>
+      <button class="btn primary">Exporter .xls</button>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active">&#9881; Setup</button>
+    <button class="tab">1 &middot; DueBack <span class="dot green"></span></button>
+    <button class="tab">2 &middot; SD <span class="dot green"></span></button>
+    <button class="tab">3 &middot; Recap <span class="dot amber"></span></button>
+    <button class="tab">4 &middot; Transelect</button>
+    <button class="tab">5 &middot; GEAC</button>
+    <button class="tab" style="font-weight:700;">6 &middot; Jour</button>
+    <button class="tab">Sommaire</button>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main">
+    <div class="content">
+
+      <!-- Setup card -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Configuration de la session</div>
+            <div class="card-desc">Sélectionnez la date et l'auditeur pour commencer</div>
+          </div>
+          <button class="btn primary" style="font-size:12px;">Nouveau jour</button>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Date d'audit</label>
+            <input type="date" value="2026-03-21">
+          </div>
+          <div class="field">
+            <label>Auditeur</label>
+            <input type="text" value="Souleymane Camara" placeholder="Nom de l'auditeur">
+          </div>
+          <div class="field">
+            <label>Chambres occupées</label>
+            <input type="number" class="mono" value="187">
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload zone -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Documents sources</div>
+            <div class="card-desc">Glissez vos fichiers PDF ici — ils seront parsés automatiquement</div>
+          </div>
+        </div>
+        <div class="upload-zone">
+          &#128206; Cliquez ou glissez un fichier ici (PDF, XLS, TXT)
+        </div>
+        <div style="display:flex; gap:6px; margin-top:12px; flex-wrap:wrap;">
+          <span class="badge ok">&#10003; sales_journal.txt</span>
+          <span class="badge ok">&#10003; daily_revenue.pdf</span>
+          <span class="badge ok">&#10003; ar_summary.pdf</span>
+          <span class="badge progress">&#10003; hp.xlsx</span>
+        </div>
+      </div>
+
+      <!-- Recap tab preview -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Recap</div>
+            <div class="card-desc">Sommaire des encaissements et remboursements</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn" style="font-size:10px; color:#f87171; border-color:rgba(248,113,113,0.2);">Effacer</button>
+            <button class="btn" style="font-size:10px;">Envoie dans Jour</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40%;">Description</th>
+                <th>Lecture</th>
+                <th>Corr.</th>
+                <th>Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Comptant Lightspeed</td>
+                <td><input value="1,234.56"></td>
+                <td><input value="0.00"></td>
+                <td style="color:#34d399; font-weight:700;">$1,234.56</td>
+              </tr>
+              <tr>
+                <td>Comptant PosiTouch</td>
+                <td><input value="229.34"></td>
+                <td><input value="0.00"></td>
+                <td style="color:#34d399; font-weight:700;">$229.34</td>
+              </tr>
+              <tr>
+                <td>Chèque AR</td>
+                <td><input value="0.00"></td>
+                <td><input value="0.00"></td>
+                <td>$0.00</td>
+              </tr>
+              <tr>
+                <td>Remb. gratuité</td>
+                <td><input value="-156.80"></td>
+                <td><input value="0.00"></td>
+                <td style="color:#f87171; font-weight:700;">-$156.80</td>
+              </tr>
+              <tr>
+                <td>DueBack Réception</td>
+                <td><input value="2,450.00" style="background:rgba(99,102,241,0.08); border-color:rgba(99,102,241,0.2);"></td>
+                <td><input value="0.00"></td>
+                <td style="color:#a5b4fc; font-weight:700;">$2,450.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DueBack preview -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">DueBack — Enveloppes caissières</div>
+            <div class="card-desc">Montants des enveloppes de caisse par réceptionniste</div>
+          </div>
+        </div>
+        <div class="dueback-row">
+          <input class="name" value="Debby" placeholder="Nom">
+          <input class="amount" value="450.00" placeholder="Précédent">
+          <input class="amount" value="580.00" placeholder="Nouveau">
+          <button class="dueback-remove">&times;</button>
+        </div>
+        <div class="dueback-row">
+          <input class="name" value="Josée" placeholder="Nom">
+          <input class="amount" value="320.00" placeholder="Précédent">
+          <input class="amount" value="410.50" placeholder="Nouveau">
+          <button class="dueback-remove">&times;</button>
+        </div>
+        <div class="dueback-row">
+          <input class="name" value="Isabelle" placeholder="Nom">
+          <input class="amount" value="280.00" placeholder="Précédent">
+          <input class="amount" value="350.00" placeholder="Nouveau">
+          <button class="dueback-remove">&times;</button>
+        </div>
+        <button class="add-row">+ Ajouter une réceptionniste</button>
+      </div>
+
+      <!-- Summary checks -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Sommaire de vérification</div>
+          </div>
+        </div>
+        <div class="check ok">
+          <span class="check-icon">&#10003;</span>
+          <span class="check-label">Recap équilibré</span>
+          <span class="check-val" style="color:#34d399;">$0.00</span>
+        </div>
+        <div class="check ok">
+          <span class="check-icon">&#10003;</span>
+          <span class="check-label">Transelect balancé</span>
+          <span class="check-val" style="color:#34d399;">$0.00</span>
+        </div>
+        <div class="check err">
+          <span class="check-icon">&#10007;</span>
+          <span class="check-label">GEAC A/R variance</span>
+          <span class="check-val" style="color:#f87171;">-$2.51</span>
+        </div>
+        <div class="check ok">
+          <span class="check-icon">&#10003;</span>
+          <span class="check-label">Diff. Caisse = 0</span>
+          <span class="check-val" style="color:#34d399;">$0.00</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FLOATING LIVECARD -->
+  <div class="livecard">
+    <div class="livecard-header">
+      <span class="livecard-label">Diff. Caisse</span>
+      <div class="livecard-controls">
+        <button class="livecard-btn" title="Pin">&#128204;</button>
+        <button class="livecard-btn" title="Minimize">&ndash;</button>
+        <button class="livecard-btn" title="Hide">&times;</button>
+      </div>
+    </div>
+    <div class="livecard-hero">
+      <div class="livecard-dc">$0.00</div>
+      <div class="livecard-verdict">&#10003; Équilibré</div>
+    </div>
+    <div class="livecard-section">
+      <div class="livecard-row">
+        <span class="label">Transelect X20</span>
+        <span class="value">-$2,165.35</span>
+      </div>
+      <div class="livecard-row">
+        <span class="label">GEAC col 41</span>
+        <span class="value">-$6,173.54</span>
+      </div>
+      <div class="livecard-row" style="margin-top:6px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.04);">
+        <span class="label">Résiduel</span>
+        <span class="value" style="color:#34d399;">$0.00</span>
+      </div>
+    </div>
+    <div class="livecard-footer">
+      <span>Souleymane Camara</span>
+      <span>21 mars 2026</span>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

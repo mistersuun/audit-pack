@@ -52,38 +52,76 @@
        ============================================================ -->
   <div class="rj-tabs-container">
     <div class="rj-tabs-nav" id="rj-tabs-nav" role="tablist">
+      <!-- PRIMARY WORKFLOW: What the auditor actually uses -->
       <button class="rj-tab-btn tab-config active" data-tab="nouveau-jour" onclick="switchRJTab('nouveau-jour')" role="tab">
         <span class="tab-step">⚙</span>
-        <span class="tab-label">Nouveau Jour</span>
+        <span class="tab-label">Setup</span>
+      </button>
+      <button class="rj-tab-btn tab-auto" data-tab="import-docs" onclick="switchRJTab('import-docs')" role="tab" style="background:linear-gradient(135deg,#f59e0b,#d97706); color:white; border-color:#d97706;">
+        <span class="tab-step">1</span>
+        <span class="tab-label">Import</span>
       </button>
       <button class="rj-tab-btn" data-tab="sd" onclick="switchRJTab('sd')" role="tab">
-        <span class="tab-step">1</span>
-        <span class="tab-label">SD</span>
-      </button>
-      <button class="rj-tab-btn" data-tab="depot" onclick="switchRJTab('depot')" role="tab">
         <span class="tab-step">2</span>
-        <span class="tab-label">Dépôt</span>
+        <span class="tab-label">SD</span>
       </button>
       <button class="rj-tab-btn" data-tab="dueback" onclick="switchRJTab('dueback')" role="tab">
         <span class="tab-step">3</span>
         <span class="tab-label">DueBack</span>
       </button>
-      <button class="rj-tab-btn" data-tab="recap" onclick="switchRJTab('recap')" role="tab">
+      <button class="rj-tab-btn" data-tab="manual-entry" onclick="switchRJTab('manual-entry')" role="tab" style="background:linear-gradient(135deg,#059669,#10b981); color:white; border-color:#059669;">
         <span class="tab-step">4</span>
-        <span class="tab-label">Recap</span>
+        <span class="tab-label">Saisies</span>
       </button>
-      <button class="rj-tab-btn" data-tab="transelect" onclick="switchRJTab('transelect')" role="tab">
+      <button class="rj-tab-btn" data-tab="balance" onclick="switchRJTab('balance')" role="tab" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8); color:white; border-color:#3b82f6;">
         <span class="tab-step">5</span>
-        <span class="tab-label">Transelect</span>
+        <span class="tab-label">Balance</span>
       </button>
-      <button class="rj-tab-btn" data-tab="geac" onclick="switchRJTab('geac')" role="tab">
+      <button class="rj-tab-btn tab-preview" data-tab="preview" onclick="switchRJTab('preview')" role="tab">
         <span class="tab-step">6</span>
-        <span class="tab-label">GEAC/UX</span>
+        <span class="tab-label">Aperçu</span>
       </button>
-      <button class="rj-tab-btn tab-auto" data-tab="import-docs" onclick="switchRJTab('import-docs')" role="tab">
-        <span class="tab-step">⚡</span>
-        <span class="tab-label">Import Auto</span>
+
+      <!-- DETAIL TABS: Hidden by default, toggle with button -->
+      <button onclick="toggleDetailTabs()" class="rj-tab-btn" style="background:#f1f5f9; color:#64748b; border-color:#e2e8f0; font-size:11px;" title="Voir les onglets détaillés (Recap, Transelect, GEAC, Dépôt)">
+        <span class="tab-step" style="font-size:10px;">⋯</span>
+        <span class="tab-label">Détail</span>
       </button>
+      <div id="detail-tabs" style="display:none; contents;">
+        <button class="rj-tab-btn" data-tab="recap" onclick="switchRJTab('recap')" role="tab" style="opacity:0.7; font-size:11px;">
+          <span class="tab-label">Recap</span>
+        </button>
+        <button class="rj-tab-btn" data-tab="transelect" onclick="switchRJTab('transelect')" role="tab" style="opacity:0.7; font-size:11px;">
+          <span class="tab-label">Transelect</span>
+        </button>
+        <button class="rj-tab-btn" data-tab="geac" onclick="switchRJTab('geac')" role="tab" style="opacity:0.7; font-size:11px;">
+          <span class="tab-label">GEAC</span>
+        </button>
+        <button class="rj-tab-btn" data-tab="depot" onclick="switchRJTab('depot')" role="tab" style="opacity:0.7; font-size:11px;">
+          <span class="tab-label">Dépôt</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Persistent Balance Bar — visible on ALL tabs -->
+    <div id="rj-balance-bar" style="display:none; padding: 8px 16px; margin: 0 0 4px 0; border-radius: 8px; font-size: 13px; font-family: 'SF Mono', monospace; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; background: #f8f9fa; border: 1px solid #e2e8f0;">
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="font-weight:600; color:#64748b;">DC:</span>
+        <span id="bb-dc" style="font-weight:700; padding:2px 8px; border-radius:4px;">—</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="color:#64748b;">Recap:</span>
+        <span id="bb-recap" style="padding:2px 6px; border-radius:4px;">—</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="color:#64748b;">Transelect:</span>
+        <span id="bb-transelect" style="padding:2px 6px; border-radius:4px;">—</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span style="color:#64748b;">GEAC:</span>
+        <span id="bb-geac" style="padding:2px 6px; border-radius:4px;">—</span>
+      </div>
+      <div id="bb-errors" style="margin-left:auto; color:#dc2626; font-size:12px; display:none;"></div>
     </div>
 
     <!-- Tab Contents -->
@@ -134,7 +172,16 @@ let rjFileLoaded = false;
 // TAB CACHING & LAZY LOADING
 // ============================================================================
 const tabCache = {};
-const VALID_TABS = ['nouveau-jour', 'sd', 'dueback', 'recap', 'depot', 'transelect', 'geac', 'import-docs'];
+const VALID_TABS = ['nouveau-jour', 'sd', 'dueback', 'recap', 'depot', 'transelect', 'geac', 'import-docs', 'manual-entry', 'balance', 'preview'];
+
+function toggleDetailTabs() {
+  const el = document.getElementById('detail-tabs');
+  if (el.style.display === 'none' || !el.style.display) {
+    el.style.display = 'contents';
+  } else {
+    el.style.display = 'none';
+  }
+}
 
 // Invalidate cached tabs so next switch re-fetches fresh data
 function invalidateTabCache(...tabIds) {
@@ -370,7 +417,50 @@ switchRJTab = async function(tabId) {
   if (rjFileLoaded && typeof refreshProgress === 'function') {
     refreshProgress();
   }
+  updateBalanceBar();
 };
+
+// Persistent balance bar — updates from NAS session data
+async function updateBalanceBar() {
+  const bar = document.getElementById('rj-balance-bar');
+  if (!bar) return;
+  // Try to get balance data from session
+  const auditDate = (typeof SESSION !== 'undefined' && SESSION.audit_date) || '';
+  if (!auditDate) { bar.style.display = 'none'; return; }
+  try {
+    const resp = await fetch(`/api/rj/native/preview/${auditDate}`);
+    if (!resp.ok) { bar.style.display = 'none'; return; }
+    const data = await resp.json();
+    if (!data.success) { bar.style.display = 'none'; return; }
+    bar.style.display = 'flex';
+    const bal = data.summary.balance || {};
+    const setStatus = (id, ok) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (ok === true) { el.textContent = '$0.00'; el.style.background = '#dcfce7'; el.style.color = '#166534'; }
+      else if (ok === false) { el.textContent = 'Erreur'; el.style.background = '#fee2e2'; el.style.color = '#991b1b'; }
+      else { el.textContent = '—'; el.style.background = '#f1f5f9'; el.style.color = '#64748b'; }
+    };
+    setStatus('bb-recap', bal.recap);
+    setStatus('bb-transelect', bal.transelect);
+    setStatus('bb-geac', bal.ar);
+    // DC
+    const dcEl = document.getElementById('bb-dc');
+    if (bal.fully_balanced) {
+      dcEl.textContent = '$0.00'; dcEl.style.background = '#dcfce7'; dcEl.style.color = '#166534';
+    } else {
+      dcEl.textContent = 'Non equilibre'; dcEl.style.background = '#fee2e2'; dcEl.style.color = '#991b1b';
+    }
+    // Errors count
+    const errEl = document.getElementById('bb-errors');
+    const sheetsWithData = data.summary.sheets_with_data || 0;
+    errEl.textContent = `${sheetsWithData}/38 feuilles remplies`;
+    errEl.style.display = 'block';
+    errEl.style.color = sheetsWithData > 15 ? '#059669' : '#d97706';
+  } catch(e) { bar.style.display = 'none'; }
+}
+// Auto-update balance bar every 30 seconds if session active
+setInterval(() => { if (typeof SESSION !== 'undefined' && SESSION.audit_date) updateBalanceBar(); }, 30000);
 </script>
 {% endblock %}
 

@@ -416,6 +416,20 @@ class CashierSummaryParser(BaseParser):
                         dept_key = dept_line['dept_key']
                         allowances_by_dept[dept_key] = allowances_by_dept.get(dept_key, 0) + allow
 
+        # Per-cashier list for DUBACK# + SetD — flat, JSON-ready.
+        # Skips the aggregated "ALL_CASHIERS" grand-total block.
+        dueback_entries = [
+            {
+                'cashier':    name,
+                'cash_drop':  round(data.get('cash_drop', 0.0), 2),
+                'settlements_total': round(
+                    data.get('settlements', {}).get('total', 0.0), 2
+                ),
+            }
+            for name, data in self.cashiers.items()
+            if not data.get('is_grand_total')
+        ]
+
         self.extracted_data = {
             'report_type': self.report_type,
             'total_amex': totals['amex'],
@@ -431,6 +445,7 @@ class CashierSummaryParser(BaseParser):
             'total_cash_drop': totals['total_cash_drop'],
             'num_cashiers': len(self.cashiers),
             'cashier_details': self.cashiers,
+            'dueback_entries': dueback_entries,
             # Add grand_totals dict for card types (for convenience)
             'grand_totals': {
                 'AX': totals['amex'],

@@ -56,46 +56,14 @@ def _audit_date_default():
 
 
 # ==============================================================================
-# THRESHOLD ENGINE — Configurable rules that generate recommendations
+# THRESHOLD ENGINE — Dynamic DoW baselines + operational static thresholds
 # ==============================================================================
 
-# Thresholds are (metric, operator, value, severity, message_template, action)
-# Severity: critical, warning, info, success
-# Action: actionable suggestion
+# French day names for alert messages (0=Monday..6=Sunday)
+_DOW_NAMES = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche']
 
-THRESHOLDS = {
-    'occupation': [
-        ('occupancy_rate', '<', 45, 'critical',
-         "Occupation critique à {value}% — bien en dessous du seuil rentable",
-         "Activer promotions OTA d'urgence, contacter groupes locaux, offrir tarif walk-in agressif"),
-        ('occupancy_rate', '<', 60, 'warning',
-         "Occupation basse à {value}% (moy. {avg}%)",
-         "Considérer pricing walk-in promotionnel, vérifier les OTA, appeler les no-shows potentiels"),
-        ('occupancy_rate', '>', 90, 'success',
-         "Excellent taux d'occupation à {value}%!",
-         "Maximiser l'upsell suites/chambres premium, activer le pricing dynamique à la hausse"),
-    ],
-    'adr': [
-        ('adr', 'below_avg_pct', 15, 'warning',
-         "ADR à {value}$ — {gap}% sous la moyenne de {avg}$",
-         "Revoir la stratégie de pricing pour ce jour de semaine, vérifier les tarifs corporate"),
-        ('adr', 'above_avg_pct', 15, 'success',
-         "ADR excellent à {value}$ — {gap}% au-dessus de la moyenne!",
-         "Maintenir le positionnement, surveiller l'impact sur l'occupation"),
-    ],
-    'revpar': [
-        ('revpar', 'below_avg_pct', 20, 'warning',
-         "RevPAR faible à {value}$ (moy. {avg}$)",
-         "Le RevPAR combine ADR et occupation — identifier lequel des deux tire vers le bas"),
-    ],
-    'fb': [
-        ('fb_per_client', '<', 12, 'warning',
-         "F&B par client bas à {value}$ (cible >15$)",
-         "Revoir le menu, former le personnel sur l'upsell boissons, proposer des combos"),
-        ('fb_per_client', '>', 25, 'success',
-         "Excellent F&B par client à {value}$!",
-         "Analyser quels plats/boissons performent pour répliquer"),
-    ],
+# Static operational thresholds (not DoW-dependent)
+OPERATIONAL_THRESHOLDS = {
     'cash': [
         ('quasimodo_variance', 'abs>', 10, 'critical',
          "Variance Quasimodo élevée: {value}$ (seuil ±5$)",
@@ -137,9 +105,27 @@ THRESHOLDS = {
 }
 
 
-def evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data, card_data):
+def _fmt_dollar(amount):
+    """Format dollar amount with thousands separator: -$1,234 or $1,234."""
+    sign = '-' if amount < 0 else ''
+    return f"{sign}${abs(amount):,.0f}"
+
+
+def evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data, card_data,
+                        dow_baselines=None):
     """
-    Evaluate all thresholds against current data.
+    Evaluate thresholds against current data using dynamic day-of-week baselines
+    for revenue/occupancy metrics and static thresholds for operational metrics.
+
+    Parameters:
+        today_data: dict with today's KPIs (occupancy_rate, adr, revpar, etc.)
+        avg_data: dict with rolling averages (fallback when no DoW baseline)
+        trend_data: dict with trend metrics (occ_trend_3d, adr_trend_7d, etc.)
+        cash_data: dict with cash recon data (quasimodo_variance, surplus_deficit)
+        labor_data: dict with labor data (labor_pct)
+        card_data: dict with card mix data (amex_pct)
+        dow_baselines: optional dict from get_dow_baselines(), keyed by weekday int
+
     Returns list of {severity, category, message, action, metric, value}.
     """
     alerts = []
@@ -157,70 +143,169 @@ def evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data,
     if not today_data:
         return alerts
 
-    # --- Occupation ---
+    # Resolve day-of-week baseline for today's date
+    today_date_str = today_data.get('date', '')
+    try:
+        from datetime import datetime as dt
+        parsed_date = dt.strptime(today_date_str, '%Y-%m-%d').date()
+        dow = parsed_date.weekday()  # 0=Mon..6=Sun
+    except (ValueError, TypeError):
+        dow = date.today().weekday()
+
+    dow_name = _DOW_NAMES[dow]
+    baseline = (dow_baselines or {}).get(dow, {})
+
+    # =====================================================================
+    # DoW-BASED ALERTS: Occupation, ADR, RevPAR, F&B
+    # =====================================================================
+
+    # --- Occupation (DoW baseline) ---
     occ = today_data.get('occupancy_rate', 0)
-    occ_avg = avg_data.get('occupancy_rate', 70)
-    for _, op, threshold, sev, msg, action in THRESHOLDS['occupation']:
-        if op == '<' and occ < threshold:
-            add_alert(sev, 'occupation', msg.format(value=_r2(occ), avg=_r2(occ_avg)),
-                       action, 'occupancy_rate', occ)
-            break
-        elif op == '>' and occ > threshold:
-            add_alert(sev, 'occupation', msg.format(value=_r2(occ), avg=_r2(occ_avg)),
-                       action, 'occupancy_rate', occ)
-            break
+    occ_expected = baseline.get('occupancy_rate', 0) if baseline else 0
+    expected_room_rev = baseline.get('room_revenue', 0) if baseline else 0
 
-    # --- ADR ---
+    if occ_expected > 0:
+        occ_delta = occ - occ_expected  # negative = below expected
+
+        if occ_delta <= -25:
+            rooms_lost = round(abs(occ_delta) / 100 * 252)
+            impact = round(rooms_lost * (baseline.get('adr', 150)))
+            add_alert('critical', 'occupation',
+                      f"Occupation à {_r2(occ)}% — attendu {occ_expected}% pour un {dow_name}. "
+                      f"Écart de {_r2(occ_delta)}pts. "
+                      f"Impact estimé: {_fmt_dollar(-impact)} de revenu chambre.",
+                      f"Vérifier annulations groupe, activer promotions OTA, tarif walk-in ${round(baseline.get('adr', 150) * 0.85)}.",
+                      'occupancy_rate', occ)
+        elif occ_delta <= -15:
+            rooms_lost = round(abs(occ_delta) / 100 * 252)
+            impact = round(rooms_lost * (baseline.get('adr', 150)))
+            add_alert('warning', 'occupation',
+                      f"Occupation à {_r2(occ)}% — attendu {occ_expected}% pour un {dow_name}. "
+                      f"Écart de {_r2(occ_delta)}pts. "
+                      f"Impact estimé: {_fmt_dollar(-impact)} de revenu chambre.",
+                      f"Considérer pricing walk-in promotionnel, vérifier OTA, appeler les no-shows potentiels.",
+                      'occupancy_rate', occ)
+        elif occ_delta >= 10:
+            rooms_extra = round(occ_delta / 100 * 252)
+            impact = round(rooms_extra * (baseline.get('adr', 150)))
+            add_alert('success', 'occupation',
+                      f"Occupation à {_r2(occ)}% — {_r2(occ_delta)}pts au-dessus de la normale "
+                      f"du {dow_name} ({occ_expected}%). "
+                      f"Revenu additionnel estimé: {_fmt_dollar(impact)}.",
+                      "Maximiser l'upsell suites/chambres premium, activer le pricing dynamique à la hausse.",
+                      'occupancy_rate', occ)
+    else:
+        # No DoW baseline available — fall back to simple thresholds
+        if occ < 45:
+            add_alert('critical', 'occupation',
+                      f"Occupation critique à {_r2(occ)}% — bien en dessous du seuil rentable.",
+                      "Activer promotions OTA d'urgence, contacter groupes locaux, offrir tarif walk-in agressif.",
+                      'occupancy_rate', occ)
+        elif occ < 60:
+            add_alert('warning', 'occupation',
+                      f"Occupation basse à {_r2(occ)}%.",
+                      "Considérer pricing walk-in promotionnel, vérifier les OTA, appeler les no-shows potentiels.",
+                      'occupancy_rate', occ)
+        elif occ > 90:
+            add_alert('success', 'occupation',
+                      f"Excellent taux d'occupation à {_r2(occ)}%!",
+                      "Maximiser l'upsell suites/chambres premium, activer le pricing dynamique à la hausse.",
+                      'occupancy_rate', occ)
+
+    # --- ADR (DoW baseline) ---
     adr = today_data.get('adr', 0)
-    adr_avg = avg_data.get('adr', 150)
-    if adr_avg > 0:
-        gap_pct = _r2(abs(adr - adr_avg) / adr_avg * 100)
-        for _, op, threshold, sev, msg, action in THRESHOLDS['adr']:
-            if op == 'below_avg_pct' and adr < adr_avg and gap_pct >= threshold:
-                add_alert(sev, 'adr', msg.format(value=_r2(adr), avg=_r2(adr_avg), gap=gap_pct),
-                           action, 'adr', adr)
-                break
-            elif op == 'above_avg_pct' and adr > adr_avg and gap_pct >= threshold:
-                add_alert(sev, 'adr', msg.format(value=_r2(adr), avg=_r2(adr_avg), gap=gap_pct),
-                           action, 'adr', adr)
-                break
+    adr_expected = baseline.get('adr', 0) if baseline else 0
 
-    # --- RevPAR ---
+    if adr_expected > 0 and adr > 0:
+        adr_gap_pct = _r2((adr - adr_expected) / adr_expected * 100)
+        rooms_sold = today_data.get('rooms_sold', 0) or (occ / 100 * 252) if occ > 0 else 0
+        adr_impact = round(abs(adr - adr_expected) * rooms_sold)
+
+        if adr_gap_pct <= -12:
+            add_alert('warning', 'adr',
+                      f"ADR à {_r2(adr)}$ — attendu {adr_expected}$ pour un {dow_name}. "
+                      f"Écart de {adr_gap_pct}%. "
+                      f"Impact estimé: {_fmt_dollar(-adr_impact)} sur le revenu chambre.",
+                      f"Revoir la stratégie de pricing pour le {dow_name}, vérifier les tarifs corporate et les surclassements gratuits.",
+                      'adr', adr)
+        elif adr_gap_pct >= 12:
+            add_alert('success', 'adr',
+                      f"ADR à {_r2(adr)}$ — +{adr_gap_pct}% vs normale du {dow_name} ({adr_expected}$). "
+                      f"Revenu additionnel: {_fmt_dollar(adr_impact)}.",
+                      "Maintenir le positionnement, surveiller l'impact sur l'occupation.",
+                      'adr', adr)
+
+    # --- RevPAR (DoW baseline) ---
     revpar = today_data.get('revpar', 0)
-    revpar_avg = avg_data.get('revpar', 100)
-    if revpar_avg > 0:
-        gap_pct = _r2(abs(revpar - revpar_avg) / revpar_avg * 100)
-        for _, op, threshold, sev, msg, action in THRESHOLDS['revpar']:
-            if op == 'below_avg_pct' and revpar < revpar_avg and gap_pct >= threshold:
-                add_alert(sev, 'revpar', msg.format(value=_r2(revpar), avg=_r2(revpar_avg)),
-                           action, 'revpar', revpar)
-                break
+    revpar_expected = baseline.get('revpar', 0) if baseline else 0
 
-    # --- F&B per client ---
+    if revpar_expected > 0 and revpar > 0:
+        revpar_gap_pct = _r2((revpar - revpar_expected) / revpar_expected * 100)
+        revpar_impact = round(abs(revpar - revpar_expected) * 252)
+
+        if revpar_gap_pct <= -20:
+            add_alert('warning', 'revpar',
+                      f"RevPAR à {_r2(revpar)}$ — attendu {revpar_expected}$ pour un {dow_name}. "
+                      f"Écart de {revpar_gap_pct}%. "
+                      f"Impact estimé: {_fmt_dollar(-revpar_impact)} vs journée normale.",
+                      "Le RevPAR combine ADR et occupation — identifier lequel des deux tire vers le bas et agir en conséquence.",
+                      'revpar', revpar)
+
+    # --- F&B per client (DoW baseline) ---
     fb_pc = today_data.get('fb_per_client', 0)
-    for _, op, threshold, sev, msg, action in THRESHOLDS['fb']:
-        if op == '<' and fb_pc > 0 and fb_pc < threshold:
-            add_alert(sev, 'fb', msg.format(value=_r2(fb_pc)), action, 'fb_per_client', fb_pc)
-            break
-        elif op == '>' and fb_pc > threshold:
-            add_alert(sev, 'fb', msg.format(value=_r2(fb_pc)), action, 'fb_per_client', fb_pc)
-            break
+    fb_pc_expected = baseline.get('fb_per_client', 0) if baseline else 0
+    nb_clients = today_data.get('nb_clients', 0)
+
+    if fb_pc_expected > 0 and fb_pc > 0:
+        fb_delta = fb_pc - fb_pc_expected
+        fb_impact = round(abs(fb_delta) * nb_clients) if nb_clients > 0 else 0
+
+        if fb_delta <= -5:
+            add_alert('warning', 'fb',
+                      f"F&B par client à {_r2(fb_pc)}$ — attendu {fb_pc_expected}$ pour un {dow_name}. "
+                      f"Écart de {_fmt_dollar(fb_delta)}/client. "
+                      f"Impact estimé: {_fmt_dollar(-fb_impact)} sur le revenu F&B.",
+                      "Revoir le menu, former le personnel sur l'upsell boissons, proposer des combos.",
+                      'fb_per_client', fb_pc)
+        elif fb_delta >= 5:
+            add_alert('success', 'fb',
+                      f"F&B par client à {_r2(fb_pc)}$ — +{_fmt_dollar(fb_delta)}/client vs normale "
+                      f"du {dow_name} ({fb_pc_expected}$). "
+                      f"Revenu additionnel: {_fmt_dollar(fb_impact)}.",
+                      "Analyser quels plats/boissons performent pour répliquer.",
+                      'fb_per_client', fb_pc)
+    elif fb_pc > 0:
+        # Fallback: no DoW baseline
+        if fb_pc < 12:
+            add_alert('warning', 'fb',
+                      f"F&B par client bas à {_r2(fb_pc)}$ (cible >15$).",
+                      "Revoir le menu, former le personnel sur l'upsell boissons, proposer des combos.",
+                      'fb_per_client', fb_pc)
+        elif fb_pc > 25:
+            add_alert('success', 'fb',
+                      f"Excellent F&B par client à {_r2(fb_pc)}$!",
+                      "Analyser quels plats/boissons performent pour répliquer.",
+                      'fb_per_client', fb_pc)
+
+    # =====================================================================
+    # OPERATIONAL ALERTS: Cash, Labor, Cards, Trends (static thresholds)
+    # =====================================================================
 
     # --- Cash/Recon ---
     if cash_data:
         quasi = cash_data.get('quasimodo_variance', 0)
         surplus = cash_data.get('surplus_deficit', 0)
-        for _, op, threshold, sev, msg, action in THRESHOLDS['cash']:
-            metric_val = quasi if 'quasimodo' in _ else surplus
+        for metric_name, op, threshold, sev, msg, action in OPERATIONAL_THRESHOLDS['cash']:
+            metric_val = quasi if 'quasimodo' in metric_name else surplus
             if op == 'abs>' and abs(metric_val) > threshold:
                 add_alert(sev, 'cash', msg.format(value=_r2(metric_val)),
-                           action, _, metric_val)
+                           action, metric_name, metric_val)
                 break
 
     # --- Labor ---
     if labor_data:
         labor_pct = labor_data.get('labor_pct', 0)
-        for _, op, threshold, sev, msg, action in THRESHOLDS['labor']:
+        for _, op, threshold, sev, msg, action in OPERATIONAL_THRESHOLDS['labor']:
             if op == '>' and labor_pct > threshold:
                 add_alert(sev, 'labor', msg.format(value=_r2(labor_pct)),
                            action, 'labor_pct', labor_pct)
@@ -229,7 +314,7 @@ def evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data,
     # --- Card mix ---
     if card_data:
         amex_pct = card_data.get('amex_pct', 0)
-        for _, op, threshold, sev, msg, action in THRESHOLDS['cards']:
+        for _, op, threshold, sev, msg, action in OPERATIONAL_THRESHOLDS['cards']:
             if op == '>' and amex_pct > threshold:
                 add_alert(sev, 'cards', msg.format(value=_r2(amex_pct)),
                            action, 'amex_pct', amex_pct)
@@ -237,7 +322,7 @@ def evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data,
 
     # --- Trend alerts ---
     if trend_data:
-        for metric, op, threshold, sev, msg, action in THRESHOLDS['trends']:
+        for metric, op, threshold, sev, msg, action in OPERATIONAL_THRESHOLDS['trends']:
             val = trend_data.get(metric, 0)
             if op == '<' and val < threshold:
                 add_alert(sev, 'trends', msg.format(value=_r2(val)),
@@ -488,9 +573,12 @@ def smart_dashboard():
         }
 
     # =========================================================================
-    # 7. THRESHOLD ALERTS
+    # 7. THRESHOLD ALERTS (dynamic DoW baselines)
     # =========================================================================
-    alerts = evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data, card_data)
+    from utils.analytics import get_dow_baselines
+    dow_baselines = get_dow_baselines()
+    alerts = evaluate_thresholds(today_data, avg_data, trend_data, cash_data, labor_data, card_data,
+                                 dow_baselines=dow_baselines)
 
     # Sort: critical first, then warning, info, success
     severity_order = {'critical': 0, 'warning': 1, 'info': 2, 'success': 3}
@@ -600,6 +688,49 @@ def smart_dashboard():
             'on_track': variance >= 0,
         }
 
+    # =========================================================================
+    # 12. TOMORROW PREVIEW (DoW-based forecast)
+    # =========================================================================
+    tomorrow_preview = None
+    if dow_baselines:
+        tomorrow_dow = (latest_date + timedelta(days=1)).weekday()
+        tb = dow_baselines.get(tomorrow_dow)
+        if tb:
+            tomorrow_preview = {
+                'day_name': tb.get('day_name', ''),
+                'expected_occupancy': tb.get('avg_occupancy', 0),
+                'expected_adr': tb.get('avg_adr', 0),
+                'expected_revenue': tb.get('avg_revenue', 0),
+                'expected_rooms': tb.get('avg_rooms_sold', 0),
+                'suggestion': '',
+            }
+            occ = tb.get('avg_occupancy', 0)
+            if occ >= 88:
+                tomorrow_preview['suggestion'] = f"Forte demande attendue — tarif premium recommandé, staff complet"
+            elif occ < 50:
+                tomorrow_preview['suggestion'] = f"Faible demande — tarif promotionnel, effectif réduit"
+            else:
+                tomorrow_preview['suggestion'] = f"Demande normale — maintenir tarifs et effectifs"
+
+    # =========================================================================
+    # 13. SAVINGS SNAPSHOT (top 3 levers)
+    # =========================================================================
+    savings_snapshot = None
+    try:
+        from utils.analytics import get_savings_calculator
+        savings = get_savings_calculator()
+        if savings.get('has_data'):
+            levers = savings.get('levers', [])[:3]
+            savings_snapshot = {
+                'total_annual': savings.get('total_annual_savings', 0),
+                'top_levers': [{
+                    'name': l['name'],
+                    'amount': l['annual_savings'],
+                } for l in levers],
+            }
+    except Exception:
+        pass
+
     return jsonify({
         'success': True,
         'has_data': True,
@@ -614,6 +745,8 @@ def smart_dashboard():
         'labor': labor_data,
         'mtd': mtd_data,
         'budget': budget_data,
+        'tomorrow': tomorrow_preview,
+        'savings': savings_snapshot,
         'meta': {
             'total_days': total_days,
             'date_from': date_range[0].isoformat() if date_range[0] else None,

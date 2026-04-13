@@ -57,7 +57,15 @@ class ARSummaryParser(BaseParser):
                 'ar_credit_card_charges': self._extract_ar_credit_card_charges(),
                 'service_charges': self._extract_service_charges(),
                 'ar_balance_end_of_day': self._extract_ar_balance_end_of_day(),
+                # Hidden GEAC formula inputs (forensic Phase 3):
+                'ar_stored_balance': self._extract_stored_balance(),
             }
+            # Derived: stored_variance = stored - computed (0 when in sync)
+            eod = self.extracted_data.get('ar_balance_end_of_day') or 0
+            stored = self.extracted_data.get('ar_stored_balance') or 0
+            self.extracted_data['ar_stored_variance'] = (
+                round(stored - eod, 2) if (stored and eod) else 0.0
+            )
 
             # Add validation and RJ mapping
             self.extracted_data['balanced'] = self._validate_balance()
@@ -341,6 +349,28 @@ class ARSummaryParser(BaseParser):
     def _extract_ar_balance_end_of_day(self):
         """Extract A/R Ledger Balance - End of Day."""
         return self._find_value('A/R', 'Ledger', 'Balance', 'End', 'of', 'Day')
+
+    def _extract_stored_balance(self):
+        """Extract the "stored balance for today" value from the warning line.
+
+        Warning line format:
+            Note - Ending balance does not agree with stored balance for today of 19,094,379.88
+
+        Only present when the AR system's stored balance disagrees with the
+        computed end-of-day. Returns 0.0 when the line is absent (normal days).
+        """
+        import re
+        m = re.search(
+            r'stored balance for today of\s+([\d,]+\.\d{2})',
+            self.text_normalized or '',
+            re.IGNORECASE,
+        )
+        if not m:
+            return 0.0
+        try:
+            return float(m.group(1).replace(',', ''))
+        except ValueError:
+            return 0.0
 
     def _validate_balance(self):
         """

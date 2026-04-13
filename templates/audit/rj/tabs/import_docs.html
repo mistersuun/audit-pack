@@ -149,14 +149,18 @@
       <!-- Manual Inputs Section -->
       <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; margin-bottom:1.5rem;">
         <h5 style="margin:0 0 1rem 0; font-size:0.95rem; color:#334155;">Valeurs manuelles</h5>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:1rem; margin-bottom:1rem;">
+          <div>
+            <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">G4 — Forfait chambres ($)</label>
+            <input type="number" id="manual-g4" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;" title="Montant G4: déduit de Chambres (col 36), ajouté à Diff Forfait (col 57)">
+          </div>
           <div>
             <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Club Lounge ($)</label>
-            <input type="number" id="manual-club-lounge" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;">
+            <input type="number" id="manual-club-lounge" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;" title="Déduit de Piazza Nourr (col 9)">
           </div>
           <div>
             <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Deposit on Hand ($)</label>
-            <input type="number" id="manual-deposit-on-hand" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;">
+            <input type="number" id="manual-deposit-on-hand" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;" title="Pour le calcul Bal_Ferm (col 3)">
           </div>
         </div>
 
@@ -607,6 +611,7 @@ async function fillAllSheets() {
       formData.append('doc_type', docType);
       formData.append('file', file);
 
+      formData.append('g4', document.getElementById('manual-g4').value);
       formData.append('club_lounge', document.getElementById('manual-club-lounge').value);
       formData.append('deposit_on_hand', document.getElementById('manual-deposit-on-hand').value);
 
@@ -761,6 +766,7 @@ async function fillJourSheet() {
 
     // Manual values
     const manualValues = {
+      g4: parseFloat(document.getElementById('manual-g4').value) || 0,
       club_lounge: parseFloat(document.getElementById('manual-club-lounge').value) || 0,
       deposit_on_hand: parseFloat(document.getElementById('manual-deposit-on-hand').value) || 0,
     };
@@ -949,6 +955,7 @@ async function clearAllImports() {
 
   document.getElementById('import-results').style.display = 'none';
   document.getElementById('import-status-banner').style.display = 'none';
+  document.getElementById('manual-g4').value = '0';
   document.getElementById('manual-club-lounge').value = '0';
   document.getElementById('manual-deposit-on-hand').value = '0';
 

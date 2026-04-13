@@ -190,6 +190,7 @@ class DailyRevenueParser(BaseParser):
             'nettoyeur': self._get_today(ar_text, 'Nettoyeur-Dry Cleani'),
             'sonifi': self._get_today(ar_text, 'Sonifi'),
             'lit_pliant': self._get_today(ar_text, 'Lit Pliant'),
+            'fax': self._get_today(ar_text, 'Fax & Photocopies') if ar_text else 0.0,
             'machine_distributrice': self._get_today(ar_text, 'MACHINE DISTRIBUTRIC'),
             'total': self._get_section_total(text12, 'Autres Revenus'),
         }
@@ -272,14 +273,62 @@ class DailyRevenueParser(BaseParser):
         }
 
         # Club Lounge
-        cl_text = self._get_between(non_rev_text, 'Club Lounge', 'Do Not Use')
+        cl_text = self._get_between(non_rev_text, 'Club Lounge', 'DO NOT USE')
         if not cl_text:
             cl_text = self._get_between(non_rev_text, 'Club Lounge', 'Restaurant')
         non_revenue['club_lounge'] = {
             'total': self._get_section_total(non_rev_text, 'Club Lounge'),
         }
 
-        # Debourse
+        # ── F&B Restaurant tax sections (pages 3-4) ────────────────────────
+        # These sections contain TPS/TVQ for each F&B department.
+        # Use page-level text to avoid matching Revenue-section headers.
+        nr_pages34 = p3 + "\n" + p4
+
+        # Restaurant Piazza
+        piaz_text = self._get_between(nr_pages34, 'Restaurant Piazza', 'Bar Cupola')
+        if not piaz_text:
+            piaz_text = self._get_between(non_rev_text, 'Restaurant Piazza', 'Bar Cupola')
+        non_revenue['restaurant_piazza'] = {
+            'tps': self._get_today(piaz_text, 'TPS Rest Piazza') if piaz_text else 0.0,
+            'tvq': self._get_today(piaz_text, 'TVQ Rest Piazza') if piaz_text else 0.0,
+            'total': self._get_section_total(nr_pages34, 'Restaurant Piazza') if piaz_text else 0.0,
+        }
+
+        # Services Aux Chambres (Room Service)
+        servch_text = self._get_between(nr_pages34, 'SERVICES AUX CHAMBRES', 'BANQUET')
+        if not servch_text:
+            servch_text = self._get_between(non_rev_text, 'SERVICES AUX CHAMBRES', 'BANQUET')
+        non_revenue['services_chambres'] = {
+            'tps': self._get_today(servch_text, 'TPS Serv Chamb') if servch_text else 0.0,
+            'tvq': self._get_today(servch_text, 'TVQ Serv Chamb') if servch_text else 0.0,
+            'total': self._get_section_total(nr_pages34, 'SERVICES AUX CHAMBRES') if servch_text else 0.0,
+        }
+
+        # Banquet
+        bqt_text = self._get_between(nr_pages34, 'BANQUET', 'La Spesa')
+        if not bqt_text:
+            bqt_text = self._get_between(non_rev_text, 'BANQUET', 'La Spesa')
+        non_revenue['banquet'] = {
+            'tps': self._get_today(bqt_text, 'TPS Bqt') if bqt_text else 0.0,
+            'tvq': self._get_today(bqt_text, 'TVQ Bqt') if bqt_text else 0.0,
+            'equipement_audio': self._get_today(bqt_text, 'Equipement Audio') if bqt_text else 0.0,
+            'equipement_divers': self._get_today(bqt_text, 'Equipement Divers') if bqt_text else 0.0,
+            'location_salle': self._get_today(bqt_text, 'Location De Salle') if bqt_text else 0.0,
+            'total': self._get_section_total(nr_pages34, 'BANQUET') if bqt_text else 0.0,
+        }
+
+        # La Spesa
+        spesa_text = self._get_between(nr_pages34, 'La Spesa', 'TELEPHONES')
+        if not spesa_text:
+            spesa_text = self._get_between(non_rev_text, 'La Spesa', 'TELEPHONES')
+        non_revenue['la_spesa'] = {
+            'tps': self._get_today(spesa_text, 'Tps- La Spesa') if spesa_text else 0.0,
+            'tvq': self._get_today(spesa_text, 'Tvq - La Spesa') if spesa_text else 0.0,
+            'total': self._get_section_total(nr_pages34, 'La Spesa') if spesa_text else 0.0,
+        }
+
+        # ── Debourse ────────────────────────────────────────────────────────
         deb_text = self._get_between(non_rev_text, 'Debourse', 'Package')
         non_revenue['debourse'] = {
             'debourse': self._get_today(deb_text, 'Debourse'),
@@ -287,38 +336,54 @@ class DailyRevenueParser(BaseParser):
             'total': self._get_section_total(non_rev_text, 'Debourse'),
         }
 
-        # Autres Revenus tax section in non-revenue (pages 3-5): TVQ/TPS on misc revenue items
-        # Key names match daily_rev_jour_mapping.py accumulator fields: non_revenue.autres_tax.tvq_autres
-        ar_nr_text = self._get_between(non_rev_text, 'Autres Revenus', 'Internet')
+        # ── Autres Revenus tax section (page 5) ────────────────────────────
+        # Use page 5 text specifically to avoid matching the Revenue "Autres Revenus" on p1-2
+        nr_page5 = p5
+        ar_nr_text = self._get_between(nr_page5, 'AUTRES REVENUS', 'Internet')
+        if not ar_nr_text:
+            # Fallback: search in full non-rev text (after the F&B sections)
+            ar_nr_text = self._get_between(non_rev_text, 'AUTRES REVENUS', 'Internet')
         non_revenue['autres_tax'] = {
-            'tvq_autres': self._get_today(ar_nr_text, 'TVQ') if ar_nr_text else 0.0,
-            'tps_autres': self._get_today(ar_nr_text, 'TPS') if ar_nr_text else 0.0,
+            'tvq_autres': self._get_today(ar_nr_text, 'TVQ Autres') if ar_nr_text else 0.0,
+            'tps_autres': self._get_today(ar_nr_text, 'TPS Autres') if ar_nr_text else 0.0,
         }
 
-        # Internet tax section in non-revenue: TVQ/TPS on internet charges
-        # Key names match: non_revenue.internet_nonrev.tvq / tps
-        int_nr_text = self._get_between(non_rev_text, 'Internet', 'Comptabilite')
+        # Internet tax section in non-revenue (page 5)
+        int_nr_text = self._get_between(nr_page5, 'Internet', 'Comptabilite')
+        if not int_nr_text:
+            int_nr_text = self._get_between(non_rev_text, 'Internet', 'Comptabilite')
         non_revenue['internet_nonrev'] = {
-            'tvq': self._get_today(int_nr_text, 'TVQ') if int_nr_text else 0.0,
-            'tps': self._get_today(int_nr_text, 'TPS') if int_nr_text else 0.0,
+            'tvq': self._get_today(int_nr_text, 'TVQ Internet') if int_nr_text else 0.0,
+            'tps': self._get_today(int_nr_text, 'TPS Internet') if int_nr_text else 0.0,
         }
 
-        # Comptabilite tax section in non-revenue: TVQ/TPS on GL adjustments (not in mapping, informational)
-        comp_nr_text = self._get_between(non_rev_text, 'Comptabilite', 'Debourse')
+        # Comptabilite tax section in non-revenue (page 5)
+        comp_nr_text = self._get_between(nr_page5, 'Comptabilite', 'Debourse')
+        if not comp_nr_text:
+            comp_nr_text = self._get_between(non_rev_text, 'Comptabilite', 'Debourse')
         non_revenue['comptabilite_nonrev'] = {
-            'tvq': self._get_today(comp_nr_text, 'TVQ') if comp_nr_text else 0.0,
-            'tps': self._get_today(comp_nr_text, 'TPS') if comp_nr_text else 0.0,
+            'tvq': self._get_today(comp_nr_text, 'Tvq') if comp_nr_text else 0.0,
+            'tps': self._get_today(comp_nr_text, 'Tps') if comp_nr_text else 0.0,
         }
 
         # Combined tax totals — convenience aggregate for test pipeline and quick reads
+        # Includes ALL departments: chambres + F&B restaurants + autres + internet + comptabilite
         non_revenue['total_tvq'] = (
             non_revenue.get('chambres_tax', {}).get('tvq', 0) +
+            non_revenue.get('restaurant_piazza', {}).get('tvq', 0) +
+            non_revenue.get('services_chambres', {}).get('tvq', 0) +
+            non_revenue.get('banquet', {}).get('tvq', 0) +
+            non_revenue.get('la_spesa', {}).get('tvq', 0) +
             non_revenue.get('autres_tax', {}).get('tvq_autres', 0) +
             non_revenue.get('internet_nonrev', {}).get('tvq', 0) +
             non_revenue.get('comptabilite_nonrev', {}).get('tvq', 0)
         )
         non_revenue['total_tps'] = (
             non_revenue.get('chambres_tax', {}).get('tps', 0) +
+            non_revenue.get('restaurant_piazza', {}).get('tps', 0) +
+            non_revenue.get('services_chambres', {}).get('tps', 0) +
+            non_revenue.get('banquet', {}).get('tps', 0) +
+            non_revenue.get('la_spesa', {}).get('tps', 0) +
             non_revenue.get('autres_tax', {}).get('tps_autres', 0) +
             non_revenue.get('internet_nonrev', {}).get('tps', 0) +
             non_revenue.get('comptabilite_nonrev', {}).get('tps', 0)

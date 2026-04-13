@@ -674,6 +674,21 @@ class RJFiller:
             'columns': 'BI/BJ/BK/BL/BM/BN'
         }
 
+    # NOTE on cell-note (Excel comment) writing:
+    # xlwt has no API for adding new cell notes/comments (only
+    # `write`, `write_rich_text`, `write_merge`). Comments PRESENT in the
+    # previous-day template ARE preserved by `xlutils.copy` because it
+    # copies the full BIFF record stream including the NOTE records — but
+    # we cannot add new ones from the webapp.
+    #
+    # The Phase 3 flow works around this by returning the auto-generated
+    # DC cell-note text in the balance-check API response (`dc_note_text`).
+    # The frontend displays it next to the export button with a "Copy"
+    # affordance; the auditor pastes it into the DC cell comment manually
+    # after opening the exported .xls in Excel. A proper fix requires
+    # migrating the export layer to `openpyxl` (.xlsx), which is out of
+    # scope for Phase 3.
+
     def fill_jour_day(self, day, jour_values):
         """
         Write computed values to the jour sheet for a specific day.

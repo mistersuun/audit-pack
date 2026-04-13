@@ -1,0 +1,11 @@
+{
+  "dc_current": -1500.00,
+  "dc_decomposition": {
+    "classes": { "x20_transelect": -1000, "geac_bottom": -500 },
+    "declared_sum": -1500,
+    "unexplained_residual": 0
+  },
+  "checklist": [{ "item": "DC reconciled", "status": "pass" }],
+  "auditor": "Test Auditor",
+  "audit_date": "2026-04-10"
+}

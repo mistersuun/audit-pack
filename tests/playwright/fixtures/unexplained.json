@@ -1,0 +1,14 @@
+{
+  "dc_current": -2170.37,
+  "dc_decomposition": {
+    "classes": { "x20_transelect": -2165.35, "panne_lien_hotel": -2.51 },
+    "declared_sum": -2167.86,
+    "unexplained_residual": -2.51
+  },
+  "checklist": [
+    { "item": "Diff. Caisse = 0", "status": "fail" },
+    { "item": "Résiduel inexpliqué", "status": "fail" }
+  ],
+  "auditor": "Test Auditor",
+  "audit_date": "2026-04-10"
+}

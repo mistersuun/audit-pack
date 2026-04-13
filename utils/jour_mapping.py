@@ -66,8 +66,11 @@ JOUR_NAS_TO_COL = {
 
     # Other F&B items
     'jour_pourboires': 29,          # Col AD: Pourboires (tips)
+    'jour_equip_audio': 30,         # Col AE: Equipement Audio Visuel (banquet + piazza)
+    'jour_equip_divers': 31,        # Col AF: Divers (banquet equipment misc)
     'jour_tabagie': 35,             # Col AJ: Tabagie (tobacco/retail)
     'jour_location_salle': 32,      # Col AG: Location de Salles (room rental)
+    'jour_vestiaire': 53,           # Col BB: Vestiaire (banquet cloakroom)
 
     # ────── ROOMS & TELEPHONES ──────
     'jour_room_revenue': 36,        # Col AK: Chambres (room revenue)
@@ -79,6 +82,7 @@ JOUR_NAS_TO_COL = {
     'jour_autres_gl': 44,           # Col AS: Autres Grand Livre (General Ledger misc)
     'jour_nettoyeur': 40,           # Col AO: Nettoyeur (dry cleaning)
     'jour_machine_distrib': 41,     # Col AP: Machine Distributrice (vending machines)
+    'jour_fax': 42,                 # Col AQ: Fax & Photocopies
     'jour_sonifi': 45,              # Col AT: Sonifi (in-room entertainment)
     'jour_lit_pliant': 46,          # Col AU: Lit pliant (cot rental)
     'jour_boutique': 47,            # Col AV: Location De Boutique (shop rental)
@@ -322,8 +326,11 @@ def list_jour_columns_by_category():
         ],
         'other_fb': [
             {'col_idx': 29, 'nas_field': 'jour_pourboires', 'description': 'Pourboires'},
+            {'col_idx': 30, 'nas_field': 'jour_equip_audio', 'description': 'Equipement Audio Visuel'},
+            {'col_idx': 31, 'nas_field': 'jour_equip_divers', 'description': 'Divers (Equipement)'},
             {'col_idx': 32, 'nas_field': 'jour_location_salle', 'description': 'Location Salle'},
             {'col_idx': 35, 'nas_field': 'jour_tabagie', 'description': 'Tabagie'},
+            {'col_idx': 53, 'nas_field': 'jour_vestiaire', 'description': 'Vestiaire'},
         ],
         'rooms_and_tel': [
             {'col_idx': 36, 'nas_field': 'jour_room_revenue', 'description': 'Chambres'},
@@ -334,6 +341,7 @@ def list_jour_columns_by_category():
         'autres_revenus': [
             {'col_idx': 40, 'nas_field': 'jour_nettoyeur', 'description': 'Nettoyeur'},
             {'col_idx': 41, 'nas_field': 'jour_machine_distrib', 'description': 'Machine Distributrice'},
+            {'col_idx': 42, 'nas_field': 'jour_fax', 'description': 'Fax & Photocopies'},
             {'col_idx': 44, 'nas_field': 'jour_autres_gl', 'description': 'Autres G/L'},
             {'col_idx': 45, 'nas_field': 'jour_sonifi', 'description': 'Sonifi'},
             {'col_idx': 46, 'nas_field': 'jour_lit_pliant', 'description': 'Lit pliant'},

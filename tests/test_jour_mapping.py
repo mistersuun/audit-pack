@@ -11,7 +11,7 @@ class TestJourMappingConstants:
     """Test mapping constants."""
 
     def test_nas_to_col_has_entries(self):
-        assert len(JOUR_NAS_TO_COL) == 54
+        assert len(JOUR_NAS_TO_COL) == 58
 
     def test_col_to_nas_is_reverse(self):
         """Every NAS→COL entry should have a reverse COL→NAS entry."""

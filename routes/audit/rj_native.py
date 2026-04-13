@@ -953,6 +953,331 @@ def _import_excel_to_nas(reader, nas, source_day):
     return summary
 
 
+# ═══════════════════════════════════════
+# API — 38-SHEET PREVIEW
+# ═══════════════════════════════════════
+
+@rj_native_bp.route('/api/rj/native/preview/<audit_date>')
+@auth_required
+def preview_rj(audit_date):
+    """Preview all 38 sheets as they would appear in exported Excel."""
+    try:
+        d = datetime.strptime(audit_date, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'success': False, 'error': 'Date invalide'}), 400
+
+    nas = NightAuditSession.query.filter_by(audit_date=d).first()
+    if not nas:
+        return jsonify({'success': False, 'error': 'Aucune session pour cette date'}), 404
+
+    sheets = []
+
+    # 1. CONTROLE
+    controle_cells = []
+    field_map = {
+        'B2': nas.auditor_name,
+        'B3': d.day,
+        'B4': d.month,
+        'B5': d.year,
+        'B6': nas.temperature,
+        'B7': nas.weather_condition,
+        'B9': nas.chambres_refaire,
+    }
+    for cell, val in field_map.items():
+        if val is not None:
+            controle_cells.append({'cell': cell, 'value': val, 'status': 'filled'})
+    sheets.append({'name': 'controle', 'cells': controle_cells, 'filled': len(controle_cells), 'total': 20})
+
+    # 2. RECAP
+    recap_cells = []
+    recap_fields = {
+        'B6': nas.cash_ls_lecture, 'C6': nas.cash_ls_corr,
+        'B7': nas.cash_pos_lecture, 'C7': nas.cash_pos_corr,
+        'B8': nas.cheque_ar_lecture, 'C8': nas.cheque_ar_corr,
+        'B9': nas.cheque_dr_lecture, 'C9': nas.cheque_dr_corr,
+        'B11': nas.remb_gratuite_lecture, 'C11': nas.remb_gratuite_corr,
+        'B12': nas.remb_client_lecture, 'C12': nas.remb_client_corr,
+        'B16': nas.dueback_reception_lecture, 'C16': nas.dueback_reception_corr,
+        'B17': nas.dueback_nb_lecture, 'C17': nas.dueback_nb_corr,
+        'B19': getattr(nas, 'surplus_deficit_lecture', None),
+        'B24': getattr(nas, 'argent_recu', None),
+    }
+    for cell, val in recap_fields.items():
+        status = 'filled' if val and val != 0 else 'empty'
+        recap_cells.append({'cell': cell, 'value': val or 0, 'status': status})
+    recap_cells.append({
+        'cell': 'D23', 'value': nas.recap_balance or 0,
+        'status': 'ok' if abs(nas.recap_balance or 999) < 0.02 else 'error',
+        'label': 'BALANCE FINALE'
+    })
+    sheets.append({
+        'name': 'Recap', 'cells': recap_cells,
+        'filled': sum(1 for c in recap_cells if c['status'] == 'filled'),
+        'total': 17, 'balanced': abs(nas.recap_balance or 999) < 0.02
+    })
+
+    # 3. TRANSELECT — from JSON
+    trans_cells = []
+    trans_rest = json.loads(nas.transelect_restaurant) if nas.transelect_restaurant else {}
+    trans_rec = json.loads(nas.transelect_reception) if nas.transelect_reception else {}
+    trans_filled = 0
+    for card in ['debit', 'visa', 'mc', 'amex', 'discover']:
+        rest_val = trans_rest.get(card, {})
+        if isinstance(rest_val, dict):
+            for term, val in rest_val.items():
+                if term != 'esc_pct' and val and val != 0:
+                    trans_cells.append({'cell': f'rest_{card}_{term}', 'value': val, 'status': 'filled'})
+                    trans_filled += 1
+        rec_val = trans_rec.get(card, {})
+        if isinstance(rec_val, dict):
+            for term, val in rec_val.items():
+                if term != 'esc_pct' and val and val != 0:
+                    trans_cells.append({'cell': f'rec_{card}_{term}', 'value': val, 'status': 'filled'})
+                    trans_filled += 1
+    trans_cells.append({
+        'cell': 'variance', 'value': nas.transelect_variance or 0,
+        'status': 'ok' if abs(nas.transelect_variance or 999) < 1 else 'error'
+    })
+    sheets.append({
+        'name': 'transelect', 'cells': trans_cells, 'filled': trans_filled,
+        'total': 30, 'balanced': abs(nas.transelect_variance or 999) < 1
+    })
+
+    # 4. GEAC_UX — from JSON + scalars
+    geac_cells = []
+    geac_co = json.loads(nas.geac_cashout) if nas.geac_cashout else {}
+    geac_dr = json.loads(nas.geac_daily_rev) if nas.geac_daily_rev else {}
+    geac_bs = json.loads(nas.geac_balance_sheet) if nas.geac_balance_sheet else {}
+    for k, v in geac_co.items():
+        if v and v != 0:
+            geac_cells.append({'cell': f'cashout_{k}', 'value': v, 'status': 'filled'})
+    for k, v in geac_dr.items():
+        if v and v != 0:
+            geac_cells.append({'cell': f'dailyrev_{k}', 'value': v, 'status': 'filled'})
+    for k, v in geac_bs.items():
+        if v and v != 0:
+            geac_cells.append({'cell': f'balance_{k}', 'value': v, 'status': 'filled'})
+    geac_cells.append({
+        'cell': 'ar_variance', 'value': nas.geac_ar_variance or 0,
+        'status': 'ok' if abs(nas.geac_ar_variance or 999) < 0.02 else 'error'
+    })
+    sheets.append({
+        'name': 'geac_ux', 'cells': geac_cells,
+        'filled': len([c for c in geac_cells if c['status'] == 'filled']),
+        'total': 21, 'balanced': abs(nas.geac_ar_variance or 999) < 0.02
+    })
+
+    # 5. DUBACK# — from JSON
+    dueback_entries = json.loads(nas.dueback_entries) if nas.dueback_entries else []
+    dueback_cells = [
+        {'cell': f'entry_{i}', 'value': f"{e.get('name')}: prev={e.get('previous',0)} new={e.get('nouveau',0)}", 'status': 'filled'}
+        for i, e in enumerate(dueback_entries)
+        if e.get('nouveau', 0) != 0 or e.get('previous', 0) != 0
+    ]
+    sheets.append({'name': 'DUBACK#', 'cells': dueback_cells, 'filled': len(dueback_cells), 'total': 23})
+
+    # 6. SetD — from JSON
+    setd_entries = json.loads(nas.setd_personnel) if nas.setd_personnel else []
+    setd_cells = [
+        {'cell': f'{e.get("column_letter", "?")}', 'value': e.get('amount', 0), 'status': 'filled', 'label': e.get('name')}
+        for e in setd_entries if e.get('amount', 0) != 0
+    ]
+    setd_cells.append({'cell': 'B', 'value': nas.setd_rj_balance or 0, 'status': 'filled', 'label': 'RJ Balance'})
+    sheets.append({'name': 'SetD', 'cells': setd_cells, 'filled': len(setd_cells), 'total': 135})
+
+    # 7. depot — from JSON
+    depot = json.loads(nas.depot_data) if nas.depot_data else {}
+    depot_cells = []
+    for client_key in ['client6', 'client8']:
+        client = depot.get(client_key, {})
+        amounts = client.get('amounts', [])
+        for i, a in enumerate(amounts):
+            if a and a != 0:
+                depot_cells.append({'cell': f'{client_key}_row{i}', 'value': a, 'status': 'filled'})
+    depot_cells.append({'cell': 'total', 'value': nas.depot_total or 0, 'status': 'filled'})
+    sheets.append({'name': 'depot', 'cells': depot_cells, 'filled': len(depot_cells), 'total': 20})
+
+    # 8. JOUR — all jour_* fields mapped to columns
+    jour_cells = []
+    JOUR_FIELD_MAP = {
+        'E': 'jour_cafe_nourriture', 'F': 'jour_cafe_boisson',
+        'J': 'jour_piazza_nourriture', 'K': 'jour_piazza_boisson', 'L': 'jour_piazza_bieres', 'M': 'jour_piazza_mineraux', 'N': 'jour_piazza_vins',
+        'O': 'jour_spesa_nourriture',
+        'T': 'jour_chambres_svc_nourriture',
+        'Y': 'jour_banquet_nourriture', 'Z': 'jour_banquet_boisson', 'AA': 'jour_banquet_bieres', 'AB': 'jour_banquet_mineraux', 'AC': 'jour_banquet_vins',
+        'AD': 'jour_pourboires', 'AE': 'jour_equip_audio', 'AF': 'jour_equip_divers',
+        'AG': 'jour_location_salle', 'AJ': 'jour_tabagie',
+        'AK': 'jour_room_revenue',
+        'AL': 'jour_tel_local', 'AM': 'jour_tel_interurbain',
+        'AO': 'jour_nettoyeur', 'AP': 'jour_machine_distrib', 'AQ': 'jour_fax',
+        'AS': 'jour_autres_gl', 'AT': 'jour_sonifi', 'AU': 'jour_lit_pliant',
+        'AV': 'jour_boutique', 'AW': 'jour_internet',
+        'AX': 'jour_tvq', 'AY': 'jour_tps', 'AZ': 'jour_taxe_hebergement',
+        'BA': 'jour_massage', 'BB': 'jour_vestiaire',
+    }
+    jour_filled = 0
+    for col, field in JOUR_FIELD_MAP.items():
+        val = getattr(nas, field, None)
+        status = 'filled' if val and val != 0 else 'empty'
+        jour_cells.append({'cell': col, 'value': round(val, 2) if val else 0, 'status': status, 'label': field.replace('jour_', '')})
+        if status == 'filled':
+            jour_filled += 1
+
+    # Add calculated jour fields
+    for label, field in [('Total F&B', 'jour_total_fb'), ('Total Revenue', 'jour_total_revenue'), ('ADR', 'jour_adr'), ('RevPAR', 'jour_revpar'), ('Occupancy', 'jour_occupancy_rate')]:
+        val = getattr(nas, field, None)
+        jour_cells.append({'cell': label, 'value': round(val, 2) if val else 0, 'status': 'calculated', 'label': label})
+
+    sheets.append({'name': 'jour', 'cells': jour_cells, 'filled': jour_filled, 'total': 117})
+
+    # 9-38. Minor sheets from JSON fields
+    json_sheets = {
+        'EJ': ('ej_entries', 'ej_total'),
+        'salaires': ('salaires_data', 'salaires_total_montant'),
+        'Diff.Caisse#': ('diff_caisse_entries', 'diff_caisse_total'),
+        'Nettoyeur': ('nettoyeur_entries', 'nettoyeur_total'),
+        'somm_nettoyeur': ('somm_nettoyeur_data', None),
+        'Massage': ('massage_entries', 'massage_total_revenue'),
+        'Vestiaire#': ('vestiaire_entries', 'vestiaire_total_revenue'),
+        'SOCAN': (None, 'socan_charge'),
+        'Sonifi': (None, 'sonifi_cd_352'),
+        'Internet': (None, 'internet_ls_361'),
+        'Rapp_p1': ('rapp_p1_data', None),
+        'Rapp_p2': ('rapp_p2_data', None),
+        'Rapp_p3': ('rapp_p3_data', None),
+        'Etat rev': ('etat_rev_data', None),
+        'Budget': ('budget_data', None),
+        'Ristourne': ('ristourne_entries', 'ristourne_total'),
+        'Analyse 101100': ('analyse_101100_entries', 'gl_101100_new_balance'),
+        'Analyse 100401': ('analyse_100401_entries', 'gl_100401_new_balance'),
+        'autre GL': ('autre_gl_data', None),
+        'Auditeur': ('auditeur_list', None),
+        'rj': ('rj_stats_data', 'rj_total_revenus'),
+        'AD': (None, None),
+        'diff_forfait': (None, 'jour_diff_forfait'),
+        'resonne': ('resonne_entries', 'resonne_total'),
+    }
+
+    for sheet_name, (json_field, total_field) in json_sheets.items():
+        cells = []
+        filled = 0
+
+        if json_field and hasattr(nas, json_field):
+            raw = getattr(nas, json_field)
+            if raw:
+                try:
+                    data = json.loads(raw) if isinstance(raw, str) else raw
+                    if isinstance(data, list):
+                        filled = len(data)
+                        cells.append({'cell': 'entries', 'value': f'{filled} entrees', 'status': 'filled' if filled > 0 else 'empty'})
+                    elif isinstance(data, dict):
+                        filled = sum(1 for v in data.values() if v)
+                        cells.append({'cell': 'data', 'value': f'{filled} champs', 'status': 'filled' if filled > 0 else 'empty'})
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+        if total_field and hasattr(nas, total_field):
+            val = getattr(nas, total_field)
+            if val and val != 0:
+                cells.append({'cell': 'total', 'value': round(float(val), 2), 'status': 'filled'})
+                filled = max(filled, 1)
+
+        sheets.append({'name': sheet_name, 'cells': cells, 'filled': filled, 'total': 0})
+
+    # Summary stats
+    total_filled = sum(s['filled'] for s in sheets)
+    total_sheets_with_data = sum(1 for s in sheets if s['filled'] > 0)
+    balance_status = {
+        'recap': abs(nas.recap_balance or 999) < 0.02,
+        'transelect': abs(nas.transelect_variance or 999) < 1,
+        'ar': abs(nas.geac_ar_variance or 999) < 0.02,
+        'fully_balanced': nas.is_fully_balanced or False,
+    }
+
+    return jsonify({
+        'success': True,
+        'audit_date': d.isoformat(),
+        'auditor': nas.auditor_name,
+        'status': nas.status,
+        'sheets': sheets,
+        'summary': {
+            'total_sheets': len(sheets),
+            'sheets_with_data': total_sheets_with_data,
+            'total_fields_filled': total_filled,
+            'balance': balance_status,
+        }
+    })
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# BALANCE CHECK — Compare actual vs expected, find errors, suggest fixes
+# ═══════════════════════════════════════════════════════════════════════
+
+@rj_native_bp.route('/api/rj/native/balance-check/<audit_date>', methods=['GET', 'POST'])
+@auth_required
+def balance_check(audit_date):
+    """Run balance check: compare NAS values vs calculated expected values."""
+    try:
+        d = datetime.strptime(audit_date, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Date invalide'}), 400
+
+    nas = NightAuditSession.query.filter_by(audit_date=d).first()
+    if not nas:
+        return jsonify({'success': False, 'error': 'Aucune session pour cette date'}), 404
+
+    try:
+        from utils.rj_balancer import BalancerService
+        from io import BytesIO
+
+        # Collect uploaded source files (optional)
+        files = {}
+        if request.method == 'POST':
+            for doc_type in ['sales_journal', 'daily_revenue', 'ar_summary', 'hp_excel', 'advance_deposit']:
+                f = request.files.get(doc_type)
+                if f:
+                    files[doc_type] = BytesIO(f.read())
+
+        result = BalancerService.check_balance(nas, files=files, day=d.day)
+        return jsonify({'success': True, **result})
+
+    except Exception as e:
+        import traceback
+        return jsonify({'success': False, 'error': str(e), 'trace': traceback.format_exc()}), 500
+
+
+@rj_native_bp.route('/api/rj/native/auto-fix/<audit_date>', methods=['POST'])
+@auth_required
+def auto_fix(audit_date):
+    """Apply calculated fixes to NightAuditSession."""
+    try:
+        d = datetime.strptime(audit_date, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Date invalide'}), 400
+
+    nas = NightAuditSession.query.filter_by(audit_date=d).first()
+    if not nas:
+        return jsonify({'success': False, 'error': 'Aucune session pour cette date'}), 404
+
+    try:
+        from utils.rj_balancer import BalancerService
+
+        data = request.get_json() or {}
+        errors = data.get('errors', [])
+
+        if not errors:
+            return jsonify({'success': False, 'error': 'Aucune erreur à corriger'}), 400
+
+        result = BalancerService.auto_fix(nas, errors)
+        nas.calculate_all()
+        db.session.commit()
+
+        return jsonify({'success': True, **result})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @rj_native_bp.route('/api/rj/native/export/rj-filled/<audit_date>', methods=['GET'])
 @auth_required
 def export_rj_filled(audit_date):
@@ -1626,6 +1951,8 @@ def _apply_parsed_to_nas(doc_type, result, nas, day):
         'sales_journal': _fill_from_sales_journal,
         'sd_deposit': _fill_from_sd_deposit,
         'cashier_summary': _fill_from_cashier_summary,
+        'house_totals': _fill_from_house_totals,
+        'debourse': _fill_from_debourse,
     }
 
     mapper_fn = mappers.get(doc_type)
@@ -2317,6 +2644,69 @@ def _fill_from_cashier_summary(data, nas, day):
     }
 
 
+# ─── HOUSE TOTALS ─── (Lightspeed SJR PAYMENT TOTALS → Recap Comptant + Remb Grat)
+def _fill_from_house_totals(data, nas, day):
+    """Fill Recap Comptant Positouch + Remb Gratuité from house_totals.txt.
+
+    Formula (verified Apr 06 2026):
+        comptant_positouch = |PAIDOUTS| + EXPECTED_DEPOSIT
+        remb_gratuite      = -|PAIDOUTS|
+    """
+    count = [0]
+    sections = set()
+
+    _safe_set(nas, 'cash_pos_lecture',      data.get('comptant_positouch'), count)
+    _safe_set(nas, 'remb_gratuite_lecture', data.get('remb_gratuite'), count)
+    if count[0] > 0:
+        sections.add('recap')
+
+    return {
+        'count': count[0],
+        'sections': list(sections),
+        'details': {
+            'doc_type': 'house_totals',
+            'expected_deposit': data.get('expected_deposit'),
+            'paidouts': data.get('paidouts'),
+            'total_sales_tax': data.get('total_sales_tax'),
+            'cash_tickets': data.get('cash_tickets'),
+        },
+    }
+
+
+# ─── DEBOURSE (90.2) ─── (Dept 90 Debourse total → Recap Remb Client + Due Back)
+def _fill_from_debourse(data, nas, day):
+    """Fill Recap Remb Client + Due Back Réception from house_90_2 PDF.
+
+    Per master doc Part 7: the dept 90 total is both the Remboursement Client
+    (credit side of Recap) and the Due Back Réception (offsetting entry).
+    """
+    count = [0]
+    sections = set()
+
+    total = data.get('debourse_total')
+    if total is not None and float(total) != 0:
+        abs_total = abs(float(total))
+        # Recap r11 Moins Remb Client — stored NEGATIVE per DR dispatcher convention.
+        _safe_set(nas, 'remb_client_lecture',       -abs_total, count)
+        # Recap r15 Due Back Réception — same magnitude, positive.
+        _safe_set(nas, 'dueback_reception_lecture',  abs_total, count)
+        # NOTE: dueback_nb_lecture is populated from DR's "Due Back Nourriture"
+        # line (_fill_from_daily_revenue), NOT from the debourse total. Writing
+        # it here would corrupt the Nourriture/Boisson distinction.
+        sections.add('recap')
+
+    return {
+        'count': count[0],
+        'sections': list(sections),
+        'details': {
+            'doc_type': 'debourse',
+            'debourse_total': total,
+            'ticket_count': data.get('ticket_count', 0),
+            'tickets': data.get('tickets', []),
+        },
+    }
+
+
 # ═══════════════════════════════════════
 # API — SAVE SECTIONS
 # ═══════════════════════════════════════
@@ -2710,11 +3100,12 @@ def save_jour():
         'jour_spesa_nourriture', 'jour_spesa_boisson', 'jour_spesa_bieres', 'jour_spesa_mineraux', 'jour_spesa_vins',
         'jour_chambres_svc_nourriture', 'jour_chambres_svc_boisson', 'jour_chambres_svc_bieres', 'jour_chambres_svc_mineraux', 'jour_chambres_svc_vins',
         'jour_banquet_nourriture', 'jour_banquet_boisson', 'jour_banquet_bieres', 'jour_banquet_mineraux', 'jour_banquet_vins',
-        'jour_pourboires', 'jour_tabagie', 'jour_location_salle',
+        'jour_pourboires', 'jour_equip_audio', 'jour_equip_divers',
+        'jour_tabagie', 'jour_location_salle', 'jour_vestiaire',
         'jour_adj_cafe', 'jour_adj_piazza', 'jour_adj_spesa',
         'jour_adj_chambres_svc', 'jour_adj_banquet', 'jour_adj_tabagie',
         'jour_room_revenue', 'jour_tel_local', 'jour_tel_interurbain', 'jour_tel_publics',
-        'jour_nettoyeur', 'jour_machine_distrib', 'jour_autres_gl', 'jour_sonifi',
+        'jour_nettoyeur', 'jour_fax', 'jour_machine_distrib', 'jour_autres_gl', 'jour_sonifi',
         'jour_lit_pliant', 'jour_boutique', 'jour_internet', 'jour_massage',
         'jour_diff_forfait', 'jour_forfait_sj', 'g4_montant',
         'jour_tvq', 'jour_tps', 'jour_taxe_hebergement',
@@ -5739,6 +6130,27 @@ def upload_zip():
         # Map extracted data to NightAuditSession fields
         updated_fields = _apply_parsed_data_to_session(nas, all_extracted_data, audit_dt)
 
+        # Apply manual values from form data (G4, Club Lounge, Deposit on Hand)
+        g4_val = request.form.get('g4')
+        cl_val = request.form.get('club_lounge')
+        doh_val = request.form.get('deposit_on_hand')
+        if g4_val and float(g4_val) != 0:
+            nas.g4_montant = round(float(g4_val), 2)
+            updated_fields.append('g4_montant')
+        if cl_val and float(cl_val) != 0:
+            nas.jour_club_lounge = round(float(cl_val), 2)
+            # Deduct Club Lounge from Piazza Nourr
+            if nas.jour_piazza_nourriture:
+                nas.jour_piazza_nourriture = round(nas.jour_piazza_nourriture - abs(float(cl_val)), 2)
+            updated_fields.append('jour_club_lounge')
+        if doh_val and float(doh_val) != 0:
+            nas.jour_deposit_on_hand = round(float(doh_val), 2)
+            updated_fields.append('jour_deposit_on_hand')
+
+        # Apply G4 to Chambres: jour_room_revenue -= G4
+        if nas.g4_montant and nas.jour_room_revenue:
+            nas.jour_room_revenue = round(nas.jour_room_revenue - abs(nas.g4_montant), 2)
+
         # Run calculate_all() to propagate cross-tab data
         # (Transelect → Quasimodo, Jour → DBRS/Internet/Sonifi, etc.)
         nas.calculate_all()
@@ -5763,6 +6175,56 @@ def upload_zip():
         logger.error(f"ZIP upload error: {e}", exc_info=True)
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def _parse_report_date(raw):
+    """Parse a parser-extracted report_date string into a date object.
+
+    Returns None if unparseable. Handles the formats the parsers produce:
+      - "Wednesday March 04, 2026"
+      - "March 04, 2026"
+      - "04-MAR-2026"
+      - "2026-03-04"
+      - "03/04/2026"
+    """
+    if not raw or not isinstance(raw, str):
+        return None
+    s = raw.strip()
+    # Strip day-of-week prefix if present
+    for dow in ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'):
+        if s.lower().startswith(dow.lower()):
+            s = s[len(dow):].lstrip(', ').strip()
+            break
+    for fmt in ('%B %d, %Y', '%d-%b-%Y', '%d-%B-%Y', '%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y'):
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _validate_file_date(parsed_data, audit_dt):
+    """Return (ok, error_message) tuple.
+
+    Compares the parser-extracted report_date to the expected audit_dt.
+    Returns ok=True when they match (or when parser didn't expose a date).
+    Returns ok=False with a user-facing message when they diverge by >1 day.
+    """
+    if not isinstance(parsed_data, dict):
+        return True, None
+    raw = parsed_data.get('report_date') or parsed_data.get('date')
+    file_date = _parse_report_date(raw)
+    if file_date is None:
+        return True, None  # parser didn't expose a date; skip silently
+    delta_days = abs((file_date - audit_dt).days)
+    if delta_days <= 1:
+        return True, None
+    msg = (
+        f"Date du fichier ({file_date.isoformat()}) ne correspond pas "
+        f"à la date d'audit ({audit_dt.isoformat()}). "
+        f"Vérifiez que vous téléversez le bon fichier."
+    )
+    return False, msg
 
 
 @rj_native_bp.route('/api/rj/native/upload-file', methods=['POST'])
@@ -5814,6 +6276,17 @@ def upload_single_file():
 
         if not result['success']:
             return jsonify(result), 400
+
+        # Validate file date matches the audit date (catches stale files — e.g.,
+        # a February AR Summary uploaded into a March session).
+        ok, date_err = _validate_file_date(result.get('data'), audit_dt)
+        if not ok:
+            return jsonify({
+                'success': False,
+                'error': 'date_mismatch',
+                'detail': date_err,
+                'doc_type': doc_type,
+            }), 400
 
         # Get or create session
         nas = NightAuditSession.query.filter_by(audit_date=audit_dt).first()
@@ -5930,25 +6403,48 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
         _set_field('jour_spesa_nourriture', _safe_abs(spesa.get('nourriture')))
 
         # --- Additional Jour fields from SJ ---
-        # Pourboires = tips from piazza + banquet
+        # Pourboires = tips from piazza + banquet + spesa
         pourb_piazza = _safe_abs(piazza.get('pourboire_a_payer')) or 0
         pourb_banquet = _safe_abs(banquet.get('pourboire_a_payer')) or 0
-        total_pourb = pourb_piazza + pourb_banquet
+        pourb_spesa = _safe_abs(spesa.get('pourboire_a_payer')) or 0
+        total_pourb = pourb_piazza + pourb_banquet + pourb_spesa
         if total_pourb > 0:
             _set_field('jour_pourboires', total_pourb)
 
-        # Location salle = room rental from piazza + banquet
+        # Location salle = room rental from piazza + banquet (SJ only — DR portion added later)
         loc_piazza = _safe_abs(piazza.get('location_salle')) or 0
         loc_banquet = _safe_abs(banquet.get('location_salle')) or 0
         total_loc = loc_piazza + loc_banquet
         if total_loc > 0:
             _set_field('jour_location_salle', total_loc)
 
-        # Tabagie (tobacco) from Spesa department
-        _set_field('jour_tabagie', _safe_abs(spesa.get('tabagie')))
+        # Tabagie (tobacco) from Spesa + Piazza
+        piaz_tab = _safe_abs(piazza.get('tabagie')) or 0
+        spesa_tab = _safe_abs(spesa.get('tabagie')) or 0
+        if piaz_tab + spesa_tab > 0:
+            _set_field('jour_tabagie', piaz_tab + spesa_tab)
 
-        # Forfait from SJ adjustments
-        _set_field('jour_forfait_sj', _safe_float(adjustments.get('forfait')))
+        # Pause Spesa (col 4) — from Piazza + Banquet pause_spesa
+        piaz_pause = _safe_abs(piazza.get('pause_spesa')) or 0
+        bqt_pause = _safe_abs(banquet.get('pause_spesa')) or 0
+        if piaz_pause + bqt_pause > 0:
+            _set_field('jour_cafe_nourriture', piaz_pause + bqt_pause)  # Maps to col 4
+
+        # Chambres boisson/mineraux/vins from SJ
+        _set_field('jour_chambres_svc_boisson', _safe_abs(chambres.get('boisson')))
+        _set_field('jour_chambres_svc_mineraux', _safe_abs(chambres.get('mineraux')))
+        _set_field('jour_chambres_svc_vins', _safe_abs(chambres.get('vins')))
+
+        # Spesa boisson/bieres/mineraux/vins
+        _set_field('jour_spesa_boisson', _safe_abs(spesa.get('boisson')))
+        _set_field('jour_spesa_bieres', _safe_abs(spesa.get('bieres')))
+        _set_field('jour_spesa_mineraux', _safe_abs(spesa.get('mineraux')))
+        _set_field('jour_spesa_vins', _safe_abs(spesa.get('vins')))
+
+        # Forfait from SJ adjustments (negative value)
+        forfait = _safe_float(adjustments.get('forfait'))
+        if forfait:
+            _set_field('jour_forfait_sj', -abs(forfait))  # Store as negative
 
         # --- Taxes from SJ (POS F&B taxes) ---
         _set_field('jour_tps', _safe_float(taxes.get('tps')))
@@ -6152,13 +6648,192 @@ def _apply_parsed_data_to_session(nas, all_data, audit_dt):
                 _set_field('cash_pos_lecture', cash_val)
 
     # =====================================================================
-    # 8. HP EXCEL → HP Admin entries
+    # 8. HP EXCEL → HP Admin entries + Jour F&B deductions + Tips
     # =====================================================================
     hp = all_data.get('hp_excel', {})
     if hp:
         hp_entries = hp.get('daily_entries', [])
         if hp_entries and hasattr(nas, 'hp_admin_entries'):
             _set_json('hp_admin_entries', hp_entries)
+
+        # --- Apply HP food deductions to Jour F&B columns ---
+        # HP deductions reduce F&B revenue (comped meals/drinks)
+        jour_deductions = hp.get('jour_deductions', {})
+        if jour_deductions:
+            # Map jour column indices to NAS field names
+            HP_COL_TO_FIELD = {
+                '9': 'jour_piazza_nourriture',
+                '10': 'jour_piazza_boisson',
+                '11': 'jour_piazza_bieres',
+                '12': 'jour_piazza_mineraux',
+                '13': 'jour_piazza_vins',
+                '14': 'jour_spesa_nourriture',
+                '35': 'jour_tabagie',
+            }
+            for col_str, hp_amount in jour_deductions.items():
+                if not hp_amount:
+                    continue
+                field = HP_COL_TO_FIELD.get(col_str)
+                if field and hasattr(nas, field):
+                    current = getattr(nas, field) or 0
+                    new_val = current - abs(float(hp_amount))
+                    setattr(nas, field, round(new_val, 2))
+                    if field not in updated:
+                        updated.append(field)
+
+        # --- HP Tips → cols 68/69 ---
+        bq_tips = hp.get('bq_tips')
+        br_tips = hp.get('br_tips')
+        if bq_tips and hasattr(nas, 'hp_admin_entries'):
+            # BQ tips stored in hp_admin_entries, auto-deducted via calculate_all()
+            pass
+        if br_tips and hasattr(nas, 'hp_admin_entries'):
+            pass
+
+    # =====================================================================
+    # 9. AR SUMMARY → GEAC A/R fields
+    # =====================================================================
+    ar = all_data.get('ar_summary', {})
+    if ar:
+        _set_field('geac_ar_previous', _safe_float(ar.get('ar_balance_previous')))
+        # Charges = front office transfers total
+        fo_transfers = ar.get('front_office_transfers', {})
+        if isinstance(fo_transfers, dict):
+            _set_field('geac_ar_charges', _safe_float(fo_transfers.get('total')))
+        else:
+            _set_field('geac_ar_charges', _safe_float(fo_transfers))
+        _set_field('geac_ar_payments', _safe_float(ar.get('payments')))
+        _set_field('geac_ar_new_balance', _safe_float(ar.get('ar_balance_end_of_day')))
+
+    # =====================================================================
+    # 10. DAILY REVENUE DETAIL → Additional Jour fields
+    # =====================================================================
+    if dr:
+        revenue = dr.get('revenue', {})
+        non_revenue = dr.get('non_revenue', {})
+        settlements = dr.get('settlements', {})
+
+        # --- Autres Revenus → Jour columns ---
+        autres = revenue.get('autres_revenus', {})
+        if autres:
+            _set_field('jour_nettoyeur', _safe_float(autres.get('nettoyeur')))
+            _set_field('jour_sonifi', _safe_float(autres.get('sonifi')))
+            _set_field('jour_boutique', _safe_float(autres.get('location_boutique')))
+            _set_field('jour_lit_pliant', _safe_float(autres.get('lit_pliant')))
+            _set_field('jour_machine_distrib', _safe_float(autres.get('machine_distributrice')))
+            _set_field('jour_massage', _safe_float(autres.get('massage')))
+            # Fax & Photocopies
+            fax_val = _safe_float(autres.get('fax'))
+            if fax_val and fax_val != 0:
+                _set_field('jour_fax', fax_val)
+
+        # --- Location Salle from DR (add to SJ value) ---
+        dr_loc_salle = _safe_float(autres.get('location_salle_forfait')) if autres else None
+        if dr_loc_salle and dr_loc_salle != 0:
+            current_loc = nas.jour_location_salle or 0
+            nas.jour_location_salle = round(current_loc + dr_loc_salle, 2)
+            if 'jour_location_salle' not in updated:
+                updated.append('jour_location_salle')
+
+        # --- Internet from DR (revenue.internet.total, NOT from autres_revenus) ---
+        internet_rev = revenue.get('internet', {})
+        internet_val = _safe_float(internet_rev.get('total'))
+        if internet_val is not None:
+            _set_field('jour_internet', internet_val)  # Keep sign as-is
+
+        # --- Comptabilite / GL ---
+        comptab = revenue.get('comptabilite', {})
+        if comptab:
+            gl_val = _safe_float(comptab.get('autres_grand_livre'))
+            gl_t_val = _safe_float(comptab.get('autres_grand_livre_t'))
+            if gl_val is not None:
+                total_gl = (gl_val or 0) + (gl_t_val or 0)
+                _set_field('jour_autres_gl', total_gl)
+
+        # --- Telephones ---
+        telephones = revenue.get('telephones', {})
+        if telephones:
+            _set_field('jour_tel_local', _safe_float(telephones.get('local')))
+            _set_field('jour_tel_interurbain', _safe_float(telephones.get('interurbain')))
+
+        # --- Club Lounge (for deduction from Piazza Nourr) ---
+        cl = non_revenue.get('club_lounge', {})
+        if cl:
+            cl_total = _safe_float(cl.get('total')) or 0
+            if cl_total != 0:
+                _set_field('jour_club_lounge', cl_total)
+
+        # --- Banquet equipment from DR non-revenue (cols 30, 31) ---
+        bqt_nr = non_revenue.get('banquet', {})
+        if bqt_nr:
+            equip_audio = _safe_float(bqt_nr.get('equipement_audio'))
+            if equip_audio:
+                _set_field('jour_equip_audio', equip_audio)
+            equip_divers = _safe_float(bqt_nr.get('equipement_divers'))
+            if equip_divers:
+                _set_field('jour_equip_divers', equip_divers)
+
+        # --- Gift cards / Settlements ---
+        if settlements:
+            givex_val = _safe_float(revenue.get('givex', {}).get('total'))
+            bon_achat = _safe_float(settlements.get('bon_dachat'))
+            gift_card = _safe_float(settlements.get('gift_card'))
+            total_gifts = (givex_val or 0) + (bon_achat or 0) + (gift_card or 0)
+            if total_gifts != 0:
+                _set_field('jour_gift_cards', total_gifts)
+
+        # --- Facture Direct (for col 83 / GEAC AR reference) ---
+        facture_direct = _safe_float(settlements.get('facture_direct') if settlements else None)
+        if facture_direct is not None:
+            # Facture direct is negative in DR, store absolute value
+            _set_field('jour_ar_misc', abs(facture_direct))
+
+        # --- DR Taxes: ADD to existing SJ taxes (cols 49/50) ---
+        # CRITICAL: SJ taxes ALREADY INCLUDE F&B restaurant taxes (piazza, banquet, spesa, chambres)
+        # So we only add: DR Chambres taxes + DR Autres taxes + DR Internet taxes
+        # Do NOT add: restaurant_piazza, banquet, la_spesa, services_chambres (already in SJ)
+        dr_taxes = non_revenue or {}
+        chambres_tax = dr_taxes.get('chambres_tax', {})
+        autres_tax = dr_taxes.get('autres_tax', {})
+        internet_tax = dr_taxes.get('internet_nonrev', {})
+
+        dr_tps = (
+            (_safe_float(chambres_tax.get('tps')) or 0) +
+            (_safe_float(autres_tax.get('tps_autres')) or _safe_float(autres_tax.get('tps')) or 0) +
+            (_safe_float(internet_tax.get('tps')) or 0)
+        )
+        dr_tvq = (
+            (_safe_float(chambres_tax.get('tvq')) or 0) +
+            (_safe_float(autres_tax.get('tvq_autres')) or _safe_float(autres_tax.get('tvq')) or 0) +
+            (_safe_float(internet_tax.get('tvq')) or 0)
+        )
+
+        if dr_tps != 0 or dr_tvq != 0:
+            # Add DR taxes to existing SJ taxes
+            current_tps = nas.jour_tps or 0
+            current_tvq = nas.jour_tvq or 0
+            nas.jour_tps = round(current_tps + dr_tps, 2)
+            nas.jour_tvq = round(current_tvq + dr_tvq, 2)
+            if 'jour_tps' not in updated: updated.append('jour_tps')
+            if 'jour_tvq' not in updated: updated.append('jour_tvq')
+
+    # =====================================================================
+    # 11. ADVANCE DEPOSIT → Deposit on Hand for Jour col D
+    # =====================================================================
+    if ad:
+        dep_on_hand = _safe_float(ad.get('deposit_on_hand'))
+        if dep_on_hand is not None:
+            _set_field('jour_deposit_on_hand', dep_on_hand)
+        # Also fill GEAC Advance Deposit Applied (row 44)
+        adv_applied = _safe_float(ad.get('adv_dep_applied') or ad.get('applied'))
+        if adv_applied is not None and hasattr(nas, 'geac_balance_sheet'):
+            try:
+                bs = json.loads(nas.geac_balance_sheet) if isinstance(nas.geac_balance_sheet, str) else (nas.geac_balance_sheet or {})
+                bs['advdep_dr'] = round(adv_applied, 2)
+                bs['advdep_ad'] = round(adv_applied, 2)
+                _set_json('geac_balance_sheet', bs)
+            except (json.JSONDecodeError, TypeError):
+                pass
 
     # =====================================================================
     # Mark session as in_progress if any data was applied

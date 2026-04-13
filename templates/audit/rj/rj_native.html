@@ -3,33 +3,40 @@
 
 {% block head %}
 <style>
+/* Body background for the RJ page — matches the .rjn wrapper */
+body { background: #fafafa; }
+[data-theme="dark"] body { background: #0a0a0f; }
+
 /* ═══════════════════════════════════════
-   RJ NATIVE — Design Tokens
+   RJ NATIVE — Design Tokens (light default, dark via toggle)
    ═══════════════════════════════════════ */
 .rjn{
-  --primary:#6366f1;--primary-bg:rgba(99,102,241,0.1);
-  --emerald:#10b981;--emerald-bg:rgba(16,185,129,0.1);
-  --rose:#ef4444;--rose-bg:rgba(239,68,68,0.1);
-  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.1);
-  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.1);
+  --primary:#6366f1;--primary-bg:rgba(99,102,241,0.08);
+  --emerald:#10b981;--emerald-bg:rgba(16,185,129,0.08);
+  --rose:#ef4444;--rose-bg:rgba(239,68,68,0.08);
+  --amber:#f59e0b;--amber-bg:rgba(245,158,11,0.08);
+  --blue:#3b82f6;--blue-bg:rgba(59,130,246,0.08);
   --violet:#8b5cf6;
-  --card:#fff;--bg:#f8f9fb;--border:#e5e7eb;--border-focus:rgba(99,102,241,0.3);
+  --card:#fff;--card-solid:#fff;--bg:#fafafa;
+  --border:#e5e7eb;--border-focus:rgba(99,102,241,0.3);
   --text:#1a1a2e;--text-sec:#6b7280;--text-muted:#9ca3af;
-  --radius:12px;--radius-sm:8px;--radius-xs:5px;
+  --input-bg:#fff;--input-border:#e5e7eb;
+  --radius:12px;--radius-sm:8px;--radius-xs:6px;
   --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:0 4px 12px rgba(0,0,0,0.06);
   --mono:'JetBrains Mono',monospace;
   --ease:cubic-bezier(0.16,1,0.3,1);
-  padding:1.5rem 2rem 3rem;max-width:1200px;margin:0 auto;
+  padding:1.5rem 2rem 3rem;max-width:1240px;margin:0 auto;
+  background:var(--bg);color:var(--text);
 }
 /* Toolbar */
 .rjn-toolbar{
   display:flex;align-items:center;justify-content:space-between;
-  padding:12px 20px;background:var(--card);border:1px solid var(--border);
+  padding:14px 20px;background:var(--card);border:1px solid var(--border);
   border-radius:var(--radius);margin-bottom:16px;box-shadow:var(--shadow);
 }
 .rjn-toolbar-left{display:flex;align-items:center;gap:12px}
-.rjn-toolbar-left h1{font-size:1.15rem;font-weight:700;color:var(--text);margin:0}
+.rjn-toolbar-left h1{font-size:15px;font-weight:700;color:var(--text);margin:0}
 .rjn-status{
   display:inline-flex;align-items:center;gap:6px;
   font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;
@@ -42,31 +49,37 @@
 .rjn-status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
 .rjn-actions{display:flex;gap:8px}
 .rjn-btn{
-  padding:7px 16px;border:1px solid var(--border);border-radius:var(--radius-sm);
-  font-size:12px;font-weight:600;cursor:pointer;background:var(--card);
-  color:var(--text-sec);transition:all .2s var(--ease);font-family:inherit;
+  padding:7px 14px;border:1px solid var(--input-border);border-radius:var(--radius-sm);
+  font-size:11px;font-weight:600;cursor:pointer;background:var(--input-bg);
+  color:var(--text-sec);transition:all .15s var(--ease);font-family:inherit;
   display:inline-flex;align-items:center;gap:6px;
 }
-.rjn-btn:hover{border-color:var(--border-focus);box-shadow:var(--shadow)}
+.rjn-btn:hover{border-color:var(--border-focus);color:var(--text);background:var(--card)}
 .rjn-btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
 .rjn-btn.primary:hover{opacity:.9}
 .rjn-btn:disabled{opacity:.4;cursor:not-allowed}
+[data-theme="dark"] .rjn-btn{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.08)}
+[data-theme="dark"] .rjn-btn:hover{background:rgba(255,255,255,0.08);color:#e5e7eb;border-color:rgba(255,255,255,0.12)}
 
 /* Tabs */
 .rjn-tabs{
-  display:flex;gap:4px;background:var(--card);border:1px solid var(--border);
-  border-radius:var(--radius);padding:4px;margin-bottom:16px;box-shadow:var(--shadow);
+  display:flex;gap:3px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:3px;margin-bottom:16px;box-shadow:var(--shadow);
   overflow-x:auto;
 }
 .rjn-tab{
-  flex:1;padding:10px 14px;border:none;border-radius:var(--radius-sm);
-  font-size:12.5px;font-weight:600;cursor:pointer;background:transparent;
-  color:var(--text-sec);transition:all .2s var(--ease);
+  flex:1;padding:9px 14px;border:none;border-radius:9px;
+  font-size:11.5px;font-weight:600;cursor:pointer;background:transparent;
+  color:var(--text-muted);transition:all .15s var(--ease);
   display:flex;align-items:center;justify-content:center;gap:6px;
   white-space:nowrap;font-family:inherit;
 }
-.rjn-tab:hover{background:var(--bg)}
+.rjn-tab:hover{background:#f1f5f9;color:var(--text-sec)}
 .rjn-tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,0.3)}
+[data-theme="dark"] .rjn-tabs{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.06)}
+[data-theme="dark"] .rjn-tab{color:#4b5563}
+[data-theme="dark"] .rjn-tab:hover{background:rgba(255,255,255,0.03);color:#9ca3af}
+[data-theme="dark"] .rjn-tab.active{background:rgba(99,102,241,0.15);color:#a5b4fc;box-shadow:0 0 0 1px rgba(99,102,241,0.25)}
 
 /* DueBack autocomplete */
 .dueback-suggestions{
@@ -88,27 +101,30 @@
 .rjn-section.active{display:block}
 .rjn-card{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
-  padding:24px;margin-bottom:14px;box-shadow:var(--shadow);
+  padding:22px;margin-bottom:14px;box-shadow:var(--shadow);
 }
-.rjn-card-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
-.rjn-card-desc{font-size:12px;color:var(--text-muted);margin-bottom:18px}
+.rjn-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.rjn-card-desc{font-size:11px;color:var(--text-muted);margin-bottom:18px}
+[data-theme="dark"] .rjn-card{background:rgba(255,255,255,0.03);border-color:rgba(255,255,255,0.06)}
 
 /* Excel-like table */
 .rjn-table{width:100%;border-collapse:collapse;font-size:13px}
 .rjn-table th{
   padding:8px 12px;text-align:center;font-size:10.5px;font-weight:600;
   text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);
-  border-bottom:2px solid var(--border);background:var(--bg);
+  border-bottom:1px solid var(--border);background:var(--bg);
 }
+[data-theme="dark"] .rjn-table th{background:rgba(255,255,255,0.02)}
 .rjn-table th:first-child{text-align:left}
 .rjn-table td{padding:6px 8px;border-bottom:1px solid var(--border)}
 .rjn-table td:first-child{font-weight:600;color:var(--text-sec);font-size:12.5px}
 .rjn-table input[type="number"]{
-  width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-xs);
-  font-size:13px;font-family:var(--mono);text-align:right;background:var(--card);color:var(--text);
+  width:100%;padding:6px 8px;border:1px solid var(--input-border);border-radius:var(--radius-xs);
+  font-size:13px;font-family:var(--mono);text-align:right;background:var(--input-bg);color:var(--text);
   transition:border-color .2s;outline:none;
 }
 .rjn-table input[type="number"]:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-bg)}
+[data-theme="dark"] .rjn-table input[type="number"]:focus{border-color:rgba(99,102,241,0.5);box-shadow:0 0 0 2px rgba(99,102,241,0.1)}
 .rjn-table .net-cell{
   font-family:var(--mono);font-weight:700;text-align:right;padding-right:12px;
 }
@@ -125,14 +141,15 @@
 .rjn-balance.warn{background:var(--amber-bg);color:var(--amber);border:1px solid rgba(245,158,11,0.2)}
 
 /* DueBack dynamic rows */
-.rjn-dueback-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.rjn-dueback-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .rjn-dueback-row input[type="text"]{
-  flex:2;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);
-  font-size:13px;outline:none;
+  flex:2;padding:8px 12px;border:1px solid var(--input-border);border-radius:var(--radius-xs);
+  font-size:13px;outline:none;background:var(--input-bg);color:var(--text);
 }
 .rjn-dueback-row input[type="number"]{
-  flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  flex:1;padding:8px 12px;border:1px solid var(--input-border);border-radius:var(--radius-xs);
   font-size:13px;font-family:var(--mono);text-align:right;outline:none;
+  background:var(--input-bg);color:var(--text);
 }
 .rjn-dueback-row input:focus{border-color:var(--primary)}
 .rjn-dueback-remove{
@@ -141,40 +158,43 @@
 }
 .rjn-add-row{
   display:flex;align-items:center;gap:6px;padding:8px 16px;margin-top:8px;
-  border:1px dashed var(--border);border-radius:var(--radius-sm);background:transparent;
-  color:var(--text-sec);font-size:12px;cursor:pointer;font-family:inherit;
+  border:1px dashed var(--input-border);border-radius:var(--radius-sm);background:transparent;
+  color:var(--text-muted);font-size:11px;cursor:pointer;font-family:inherit;
 }
-.rjn-add-row:hover{border-color:var(--primary);color:var(--primary)}
+.rjn-add-row:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
 
 .rjn-print-btn{
   display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
-  border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg);
+  border:1px solid var(--input-border);border-radius:var(--radius-sm);background:var(--input-bg);
   color:var(--text-sec);font-size:11px;cursor:pointer;font-family:inherit;font-weight:500;
 }
-.rjn-print-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--card-bg)}
+.rjn-print-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg)}
 
 /* Summary check cards */
 .rjn-check{
-  display:flex;align-items:center;gap:14px;padding:14px 18px;
-  border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:8px;
-  transition:all .2s var(--ease);
+  display:flex;align-items:center;gap:12px;padding:12px 16px;
+  border:1px solid var(--border);border-radius:10px;margin-bottom:8px;
+  transition:all .15s var(--ease);
 }
-.rjn-check.ok{border-color:rgba(16,185,129,0.3);background:var(--emerald-bg)}
-.rjn-check.err{border-color:rgba(239,68,68,0.3);background:var(--rose-bg)}
-.rjn-check.warn{border-color:rgba(245,158,11,0.3);background:var(--warning-bg,rgba(245,158,11,0.08))}
-.rjn-check-icon{font-size:20px;width:28px;text-align:center}
-.rjn-check-label{flex:1;font-size:13px;font-weight:600;color:var(--text)}
-.rjn-check-val{font-family:var(--mono);font-size:14px;font-weight:700}
+.rjn-check.ok{border-color:rgba(16,185,129,0.2);background:var(--emerald-bg)}
+.rjn-check.err{border-color:rgba(239,68,68,0.2);background:var(--rose-bg)}
+.rjn-check.warn{border-color:rgba(245,158,11,0.2);background:var(--amber-bg)}
+.rjn-check-icon{font-size:16px;width:24px;text-align:center}
+.rjn-check-label{flex:1;font-size:12px;font-weight:600;color:var(--text)}
+.rjn-check-val{font-family:var(--mono);font-size:13px;font-weight:700}
+[data-theme="dark"] .rjn-check.ok{border-color:rgba(16,185,129,0.2);background:rgba(16,185,129,0.05)}
+[data-theme="dark"] .rjn-check.err{border-color:rgba(248,113,113,0.2);background:rgba(248,113,113,0.05)}
 
 /* Date & session picker */
 .rjn-setup{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
 .rjn-field{display:flex;flex-direction:column;gap:4px}
-.rjn-field label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.rjn-field label{font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
 .rjn-field input,.rjn-field select{
-  padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-xs);
+  padding:9px 14px;border:1px solid var(--input-border);border-radius:var(--radius-xs);
   font-size:13px;outline:none;font-family:inherit;
+  background:var(--input-bg);color:var(--text);transition:border-color .15s;
 }
-.rjn-field input:focus,.rjn-field select:focus{border-color:var(--primary)}
+.rjn-field input:focus,.rjn-field select:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-bg)}
 
 /* Autosave indicator */
 .rjn-autosave{
@@ -196,14 +216,16 @@
    DARK MODE OVERRIDES
    ═══════════════════════════════════════ */
 [data-theme="dark"] .rjn{
-  --card:#14171f;--bg:#0c0f14;--border:#1e2230;--border-focus:rgba(99,102,241,0.4);
+  --card:rgba(255,255,255,0.03);--card-solid:#14171f;--bg:#0a0a0f;
+  --border:rgba(255,255,255,0.06);--border-focus:rgba(99,102,241,0.4);
   --text:#e5e7eb;--text-sec:#9ca3af;--text-muted:#4b5563;
+  --input-bg:rgba(255,255,255,0.04);--input-border:rgba(255,255,255,0.08);
   --shadow:0 1px 3px rgba(0,0,0,0.25),0 1px 2px rgba(0,0,0,0.15);
   --shadow-md:0 4px 12px rgba(0,0,0,0.3);
-  --emerald-bg:rgba(16,185,129,0.12);
-  --rose-bg:rgba(239,68,68,0.12);
-  --amber-bg:rgba(245,158,11,0.12);
-  --blue-bg:rgba(59,130,246,0.12);
+  --emerald:#34d399;--emerald-bg:rgba(16,185,129,0.12);
+  --rose:#f87171;--rose-bg:rgba(248,113,113,0.12);
+  --amber:#fbbf24;--amber-bg:rgba(245,158,11,0.12);
+  --blue:#60a5fa;--blue-bg:rgba(59,130,246,0.12);
   --primary-bg:rgba(99,102,241,0.12);
 }
 
@@ -228,6 +250,438 @@
 [data-theme="dark"] .rjn-btn:hover{border-color:var(--primary);color:#e5e7eb}
 
 [data-theme="dark"] .rjn-tab:hover{background:#181c26}
+
+/* ═══════════════════════════════════════
+   LIVE BALANCE PANEL — right sidebar
+   ═══════════════════════════════════════ */
+.rjn-livepanel{
+  position:fixed; top:90px; right:16px; width:300px; z-index:40;
+  background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow-md); padding:16px; font-size:12px;
+  max-height:calc(100vh - 110px); overflow-y:auto;
+  transition:transform .3s var(--ease);
+}
+.rjn-livepanel.collapsed{transform:translateX(calc(100% + 24px))}
+.rjn-livepanel-toggle{
+  position:fixed; top:90px; right:16px; z-index:41;
+  width:44px; height:44px; border-radius:50%; border:1px solid var(--border);
+  background:var(--card); box-shadow:var(--shadow-md); cursor:pointer;
+  display:none; align-items:center; justify-content:center;
+  font-size:18px; color:var(--primary);
+}
+.rjn-livepanel h3{
+  font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
+  color:var(--text-muted); margin:0 0 8px; padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+/* Reuses .rjn-balance base (line 117) for color/status — only size override here. */
+.rjn-livepanel .rjn-balance{
+  font-size:22px; padding:10px; margin:0 0 12px; border-radius:var(--radius-sm);
+}
+.rjn-livepanel .variance-row{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:4px 0; font-family:var(--mono); font-size:11.5px;
+}
+.rjn-livepanel .variance-row .label{color:var(--text-sec); font-weight:600; font-family:inherit}
+.rjn-livepanel .variance-row .value{color:var(--text); font-weight:700}
+.rjn-livepanel .variance-row.zero{opacity:.35}
+.rjn-livepanel .variance-row.residual{
+  border-top:1px dashed var(--border); margin-top:4px; padding-top:6px;
+  font-weight:800;
+}
+.rjn-livepanel .variance-row.residual.ok .value{color:var(--emerald)}
+.rjn-livepanel .variance-row.residual.err .value{color:var(--rose)}
+.rjn-livepanel .checklist{margin-top:14px}
+.rjn-livepanel .check-item{
+  display:flex; align-items:flex-start; gap:8px; padding:5px 0;
+  font-size:11px; line-height:1.3; border-bottom:1px solid var(--border);
+}
+.rjn-livepanel .check-item:last-child{border-bottom:none}
+.rjn-livepanel .check-item .ic{width:14px; flex-shrink:0; text-align:center; font-size:13px}
+.rjn-livepanel .check-item.pass .ic{color:var(--emerald)}
+.rjn-livepanel .check-item.fail .ic{color:var(--rose)}
+.rjn-livepanel .check-item.warn .ic{color:var(--amber)}
+.rjn-livepanel .check-item .txt{flex:1; color:var(--text-sec)}
+.rjn-livepanel .check-item .detail{font-family:var(--mono); font-size:10px; color:var(--text-muted); margin-top:2px}
+.rjn-livepanel .autonote{
+  margin-top:12px; padding:10px; background:var(--bg); border-radius:var(--radius-sm);
+  border:1px solid var(--border); font-family:var(--mono); font-size:10.5px;
+  white-space:pre-wrap; color:var(--text-sec);
+}
+
+@media(max-width:1500px){
+  .rjn-livepanel{transform:translateX(calc(100% + 24px))}
+  .rjn-livepanel.open{transform:translateX(0)}
+  .rjn-livepanel-toggle{display:flex}
+}
+
+[data-theme="dark"] .rjn-livepanel{background:#14171f; border-color:#1e2230}
+[data-theme="dark"] .rjn-livepanel-toggle{background:#14171f; border-color:#1e2230}
+[data-theme="dark"] .rjn-livepanel .autonote{background:#0c0f14; border-color:#1e2230}
+</style>
+<style id="livecard-styles">
+/* === LIVECARD (Phase 4) ======================================
+   Floating draggable balance card. Coexists with legacy
+   .rjn-livepanel during migration — hidden by default until
+   localStorage.rjn_ui_mode === 'livecard'.
+   ============================================================ */
+
+.livecard-hidden-mode { display: none !important; }
+
+.livecard {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  width: 380px;
+  z-index: 100;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+  font-family: inherit;
+  color: var(--text);
+  user-select: none;
+  transition: width 260ms var(--ease), height 260ms var(--ease),
+              transform 260ms var(--ease), opacity 200ms var(--ease);
+}
+
+[data-theme="dark"] .livecard {
+  background: #14171f;
+  border-color: #1e2230;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45), 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.livecard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: grab;
+  border-bottom: 1px solid var(--border);
+}
+.livecard-header:active { cursor: grabbing; }
+[data-theme="dark"] .livecard-header { border-bottom-color: #1e2230; }
+
+.livecard-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.livecard-controls {
+  display: flex;
+  gap: 4px;
+}
+.livecard-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: background 120ms var(--ease), color 120ms var(--ease);
+}
+.livecard-btn:hover { background: var(--border); color: var(--text); }
+.livecard-btn.active { color: var(--emerald); }
+
+.livecard-body {
+  padding: 0;
+}
+
+.livecard-hero {
+  padding: 18px 18px 14px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="dark"] .livecard-hero { border-bottom-color: #1e2230; }
+
+.livecard-dc {
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--emerald);
+  transition: color 400ms var(--ease), transform 200ms var(--ease);
+}
+.livecard-dc.warn { color: var(--amber); }
+.livecard-dc.err  { color: var(--rose); }
+
+.livecard-verdict {
+  margin-top: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--emerald);
+  transition: color 400ms var(--ease);
+}
+.livecard-verdict.warn { color: var(--amber); }
+.livecard-verdict.err  { color: var(--rose); }
+
+.livecard-section {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+}
+[data-theme="dark"] .livecard-section { border-bottom-color: #1e2230; }
+.livecard-section:last-child { border-bottom: none; }
+
+.livecard-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.livecard-var-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  font-size: 12px;
+  transition: background 400ms var(--ease);
+}
+.livecard-var-row .label { color: var(--text-sec); font-weight: 600; }
+.livecard-var-row .value { color: var(--text); font-weight: 700; font-family: var(--mono); }
+.livecard-var-row.residual.err .value { color: var(--rose); }
+.livecard-var-row.residual.ok .value { color: var(--emerald); }
+.livecard-var-row[data-just-updated="true"] { background: var(--amber-bg); }
+
+.livecard-checklist-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.livecard-checklist-score {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+.livecard-checklist-score.ok  { color: var(--emerald); }
+.livecard-checklist-score.err { color: var(--rose); }
+.livecard-checklist-items {
+  display: none;
+  margin-top: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.livecard-section.expanded .livecard-checklist-items { display: block; }
+
+.livecard-check-item {
+  display: flex;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.35;
+}
+[data-theme="dark"] .livecard-check-item { border-bottom-color: #1e2230; }
+.livecard-check-item:last-child { border-bottom: none; }
+.livecard-check-item .ic { width: 14px; text-align: center; flex-shrink: 0; }
+.livecard-check-item.pass .ic { color: var(--emerald); }
+.livecard-check-item.fail .ic { color: var(--rose); }
+.livecard-check-item.warn .ic { color: var(--amber); }
+.livecard-check-item .txt { flex: 1; color: var(--text-sec); }
+.livecard-check-item .detail { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+.livecard-autonote {
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--text);
+  max-height: 120px;
+  overflow-y: auto;
+}
+[data-theme="dark"] .livecard-autonote { background: #0c0f14; border-color: #1e2230; }
+
+.livecard-autonote-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.livecard-autonote-copy {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-sec);
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 150ms var(--ease);
+}
+.livecard-autonote-copy:hover { border-color: var(--emerald); color: var(--emerald); }
+.livecard-autonote-copy.copied { background: var(--emerald-bg); color: var(--emerald); border-color: var(--emerald); }
+
+.livecard-footer {
+  padding: 10px 18px;
+  font-size: 10px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border);
+}
+[data-theme="dark"] .livecard-footer { border-top-color: #1e2230; }
+
+.livecard.pill {
+  width: 190px;
+  overflow: hidden;
+}
+.livecard.pill .livecard-body { display: none; }
+.livecard.pill .livecard-header { border-bottom: none; padding: 10px 14px; }
+.livecard.pill .livecard-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--text);
+}
+.livecard.pill .livecard-title::before {
+  content: '●';
+  margin-right: 6px;
+  color: var(--emerald);
+}
+.livecard.pill.warn .livecard-title::before { color: var(--amber); }
+.livecard.pill.err  .livecard-title::before { color: var(--rose); }
+
+.livecard.hidden-state { display: none; }
+
+/* Edge tab (shown when card is hidden) */
+.livecard-edge-tab {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 48px;
+  background: var(--emerald);
+  border-radius: 6px 0 0 6px;
+  cursor: pointer;
+  z-index: 100;
+  transition: width 180ms var(--ease), background 180ms var(--ease);
+}
+.livecard-edge-tab:hover { width: 14px; }
+.livecard-edge-tab.warn { background: var(--amber); }
+.livecard-edge-tab.err  { background: var(--rose); }
+@keyframes livecard-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--amber); background: var(--amber-bg); }
+  70%  { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; background: transparent; }
+}
+.livecard-var-row.livecard-pulsing {
+  animation: livecard-pulse 600ms var(--ease);
+  border-radius: 4px;
+}
+@keyframes livecard-success-glow {
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+  40%  { box-shadow: 0 0 40px 8px rgba(16,185,129,0.6); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+@keyframes livecard-dc-bounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+.livecard.success-moment {
+  animation: livecard-success-glow 1600ms var(--ease);
+}
+.livecard.success-moment .livecard-dc {
+  animation: livecard-dc-bounce 200ms var(--ease) 100ms;
+}
+.livecard-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 0;
+  background: var(--emerald);
+  border-radius: 12px 12px 0 0;
+  transition: width 300ms var(--ease), opacity 200ms var(--ease), background 200ms var(--ease);
+  opacity: 0;
+  pointer-events: none;
+}
+.livecard-progress.active { opacity: 1; }
+.livecard-progress.warn { background: var(--amber); }
+.livecard-progress.err { background: var(--rose); }
+.livecard { position: fixed; }  /* make sure children can position relative — override from above */
+
+@keyframes livecard-spin {
+  to { transform: rotate(360deg); }
+}
+.livecard.pill.loading .livecard-title::before {
+  width: 8px;
+  height: 8px;
+  border: 1.5px solid var(--emerald);
+  border-top-color: transparent;
+  border-radius: 50%;
+  content: '';
+  display: inline-block;
+  animation: livecard-spin 600ms linear infinite;
+  margin-right: 6px;
+}
+
+@keyframes livecard-shimmer {
+  0%   { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+}
+.livecard-skeleton-row {
+  height: 14px;
+  background: linear-gradient(90deg, var(--border) 0%, var(--bg) 50%, var(--border) 100%);
+  background-size: 200px 100%;
+  animation: livecard-shimmer 1200ms linear infinite;
+  border-radius: 4px;
+  margin: 6px 0;
+}
+
+.livecard-stale {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 16px;
+  cursor: pointer;
+  display: none;
+}
+.livecard.stale .livecard-stale { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  .livecard,
+  .livecard-dc,
+  .livecard-verdict {
+    transition: color 100ms linear, background 100ms linear !important;
+  }
+  .livecard.success-moment,
+  .livecard.success-moment .livecard-dc,
+  .livecard-var-row.livecard-pulsing,
+  .livecard-skeleton-row,
+  .livecard.pill.loading .livecard-title::before {
+    animation: none !important;
+  }
+  .livecard-edge-tab { transition: none !important; }
+}
 </style>
 {% endblock %}
 
@@ -241,6 +695,13 @@
       <span class="rjn-autosave" id="autosave-ind"></span>
     </div>
     <div class="rjn-actions">
+      <button class="rjn-btn" onclick="toggleTheme()" id="btn-theme" title="Changer le thème" style="padding:7px 10px;">
+        <i data-feather="moon" style="width:14px;height:14px" id="theme-icon-dark"></i>
+        <i data-feather="sun" style="width:14px;height:14px;display:none" id="theme-icon-light"></i>
+      </button>
+      <button class="rjn-btn" onclick="openFullPreview()" id="btn-preview">
+        <i data-feather="eye" style="width:14px;height:14px"></i> Aperçu RJ
+      </button>
       <button class="rjn-btn" onclick="exportPDF()" id="btn-export-pdf" disabled>
         <i data-feather="file-text" style="width:14px;height:14px"></i> Exporter PDF
       </button>
@@ -256,110 +717,135 @@
     </div>
   </div>
 
-  <!-- TABS -->
+  <!-- LIVE BALANCE PANEL — right sidebar (auto-refreshed on every save) -->
+  <button class="rjn-livepanel-toggle" id="livepanel-toggle" onclick="toggleLivePanel()" title="Afficher le panneau d'équilibrage">⚖</button>
+  <aside class="rjn-livepanel" id="livepanel" aria-label="Panneau d'équilibrage en direct">
+    <h3>Diff. Caisse</h3>
+    <div class="rjn-balance ok" id="live-dc">—</div>
+
+    <h3>Variances déclarées</h3>
+    <div id="live-variances">
+      <div style="color:var(--text-muted); font-size:11px; text-align:center; padding:10px 0">
+        Aucune session chargée
+      </div>
+    </div>
+
+    <div class="checklist" id="live-checklist-wrap" style="display:none">
+      <h3>Checklist 21 points <span id="live-checklist-score" style="color:var(--text-muted); font-weight:600"></span></h3>
+      <div id="live-checklist"></div>
+    </div>
+
+    <div id="live-autonote-wrap" style="display:none">
+      <h3>Note auto-générée
+        <button type="button" onclick="copyAutoNote()" id="live-autonote-copy"
+                class="rjn-btn" style="font-size:10px;padding:2px 8px;margin-left:6px;float:right">
+          Copier
+        </button>
+      </h3>
+      <div class="autonote" id="live-autonote"></div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:6px;line-height:1.3">
+        À coller dans le commentaire de la cellule DC (col C) du jour, après
+        l'export Excel.
+      </div>
+    </div>
+  </aside>
+
+  <!-- LIVECARD (Phase 4 — floating draggable balance card, feature-flagged) -->
+<aside class="livecard livecard-hidden-mode" id="livecard" aria-label="Carte d'équilibrage">
+    <div class="livecard-progress" id="livecard-progress"></div>
+    <div class="livecard-stale" id="livecard-stale" role="button" title="Rafraîchir (données obsolètes)">!</div>
+  <header class="livecard-header" id="livecard-header">
+    <span class="livecard-title">Diff. Caisse</span>
+    <div class="livecard-controls">
+      <button type="button" class="livecard-btn" id="livecard-pin"
+              title="Épingler (empêche l'auto-ouverture)">📌</button>
+      <button type="button" class="livecard-btn" id="livecard-min"
+              title="Réduire">–</button>
+      <button type="button" class="livecard-btn" id="livecard-hide"
+              title="Masquer sur le bord">×</button>
+    </div>
+  </header>
+  <div class="livecard-body" id="livecard-body">
+    <!-- Content rendered by window.livecard.render() -->
+  </div>
+</aside>
+<div class="livecard-edge-tab livecard-hidden-mode" id="livecard-edge-tab"
+     role="button" aria-label="Afficher la carte d'équilibrage"></div>
+
+  <!-- TABS — Primary workflow + collapsible detail -->
   <div class="rjn-tabs" id="tab-nav">
-    <button class="rjn-tab active" data-tab="controle" onclick="switchTab('controle')">
-      <span>&#9881;</span> Nouveau Jour
+    <!-- PRIMARY: What the auditor actually works on -->
+    <button class="rjn-tab active" data-tab="controle" onclick="switchTab('controle')" style="font-weight:700;">
+      ⚙ Setup
     </button>
     <button class="rjn-tab" data-tab="dueback" onclick="switchTab('dueback')">
-      1 &middot; DueBack <span class="rjn-tab-badge" id="badge-dueback"></span>
-    </button>
-    <button class="rjn-tab" data-tab="recap" onclick="switchTab('recap')">
-      2 &middot; Recap <span class="rjn-tab-badge" id="badge-recap"></span>
-    </button>
-    <button class="rjn-tab" data-tab="transelect" onclick="switchTab('transelect')">
-      3 &middot; Transelect <span class="rjn-tab-badge" id="badge-transelect"></span>
-    </button>
-    <button class="rjn-tab" data-tab="geac" onclick="switchTab('geac')">
-      4 &middot; GEAC <span class="rjn-tab-badge" id="badge-geac"></span>
+      1 · DueBack <span class="rjn-tab-badge" id="badge-dueback"></span>
     </button>
     <button class="rjn-tab" data-tab="sd" onclick="switchTab('sd')">
-      5 &middot; SD / Dépôt <span class="rjn-tab-badge" id="badge-sd"></span>
+      2 · SD <span class="rjn-tab-badge" id="badge-sd"></span>
     </button>
-    <button class="rjn-tab" data-tab="setd" onclick="switchTab('setd')">
-      6 &middot; SetD <span class="rjn-tab-badge" id="badge-setd"></span>
+    <button class="rjn-tab" data-tab="recap" onclick="switchTab('recap')">
+      3 · Recap <span class="rjn-tab-badge" id="badge-recap"></span>
     </button>
-    <button class="rjn-tab" data-tab="hpadmin" onclick="switchTab('hpadmin')">
-      7 &middot; HP/Admin <span class="rjn-tab-badge" id="badge-hpadmin"></span>
+    <button class="rjn-tab" data-tab="transelect" onclick="switchTab('transelect')">
+      4 · Transelect <span class="rjn-tab-badge" id="badge-transelect"></span>
     </button>
-    <button class="rjn-tab" data-tab="jour" onclick="switchTab('jour')">
-      8 &middot; Jour <span class="rjn-tab-badge" id="badge-jour"></span>
+    <button class="rjn-tab" data-tab="geac" onclick="switchTab('geac')">
+      5 · GEAC <span class="rjn-tab-badge" id="badge-geac"></span>
+    </button>
+    <button class="rjn-tab" data-tab="jour" onclick="switchTab('jour')" style="font-weight:700;">
+      6 · Jour <span class="rjn-tab-badge" id="badge-jour"></span>
     </button>
     <button class="rjn-tab" data-tab="quasimodo" onclick="switchTab('quasimodo')">
-      9 &middot; Quasimodo <span class="rjn-tab-badge" id="badge-quasimodo"></span>
+      7 · Quasimodo <span class="rjn-tab-badge" id="badge-quasimodo"></span>
     </button>
-    <button class="rjn-tab" data-tab="dbrs" onclick="switchTab('dbrs')">
-      10 &middot; DBRS <span class="rjn-tab-badge" id="badge-dbrs"></span>
+    <button class="rjn-tab" data-tab="resume" onclick="switchTab('resume')" style="font-weight:700;">
+      Sommaire <span class="rjn-tab-badge" id="badge-resume"></span>
     </button>
-    <button class="rjn-tab" data-tab="analyse_gl" onclick="switchTab('analyse_gl')">
-      11 &middot; Analyse GL <span class="rjn-tab-badge" id="badge-analyse_gl"></span>
+
+    <!-- TOGGLE for secondary tabs -->
+    <button onclick="document.getElementById('secondary-tabs').style.display=document.getElementById('secondary-tabs').style.display==='none'?'flex':'none'" class="rjn-tab" style="opacity:0.6;font-size:11px;" title="Autres onglets">
+      ⋯ Plus
     </button>
-    <button class="rjn-tab" data-tab="diff_caisse" onclick="switchTab('diff_caisse')">
-      12 &middot; Diff.Caisse <span class="rjn-tab-badge" id="badge-diff_caisse"></span>
+  </div>
+
+  <!-- SECONDARY: Auto-filled or rarely used — hidden by default -->
+  <div class="rjn-tabs" id="secondary-tabs" style="display:none; margin-top:-12px; padding-top:0; border-top:none; opacity:0.8;">
+    <button class="rjn-tab" data-tab="setd" onclick="switchTab('setd')" style="font-size:11px;">
+      SetD <span class="rjn-tab-badge" id="badge-setd"></span>
     </button>
-    <button class="rjn-tab" data-tab="socan" onclick="switchTab('socan')">
-      13 &middot; SOCAN <span class="rjn-tab-badge" id="badge-socan"></span>
+    <button class="rjn-tab" data-tab="hpadmin" onclick="switchTab('hpadmin')" style="font-size:11px;">
+      HP <span class="rjn-tab-badge" id="badge-hpadmin"></span>
     </button>
-    <button class="rjn-tab" data-tab="resonne" onclick="switchTab('resonne')">
-      14 &middot; Résonne <span class="rjn-tab-badge" id="badge-resonne"></span>
+    <button class="rjn-tab" data-tab="dbrs" onclick="switchTab('dbrs')" style="font-size:11px;">
+      DBRS <span class="rjn-tab-badge" id="badge-dbrs"></span>
     </button>
-    <button class="rjn-tab" data-tab="vestiaire" onclick="switchTab('vestiaire')">
-      15 &middot; Vestiaire <span class="rjn-tab-badge" id="badge-vestiaire"></span>
+    <button class="rjn-tab" data-tab="analyse_gl" onclick="switchTab('analyse_gl')" style="font-size:11px;">
+      GL <span class="rjn-tab-badge" id="badge-analyse_gl"></span>
     </button>
-    <button class="rjn-tab" data-tab="admin_ad" onclick="switchTab('admin_ad')">
-      16 &middot; AD <span class="rjn-tab-badge" id="badge-admin_ad"></span>
+    <button class="rjn-tab" data-tab="diff_caisse" onclick="switchTab('diff_caisse')" style="font-size:11px;">
+      Diff.Caisse <span class="rjn-tab-badge" id="badge-diff_caisse"></span>
     </button>
-    <button class="rjn-tab" data-tab="massage" onclick="switchTab('massage')">
-      17 &middot; Massage <span class="rjn-tab-badge" id="badge-massage"></span>
-    </button>
-    <button class="rjn-tab" data-tab="ristourne" onclick="switchTab('ristourne')">
-      18 &middot; Ristourne <span class="rjn-tab-badge" id="badge-ristourne"></span>
-    </button>
-    <button class="rjn-tab" data-tab="ej" onclick="switchTab('ej')">
-      19 &middot; EJ
-    </button>
-    <button class="rjn-tab" data-tab="rj_rapport" onclick="switchTab('rj_rapport')">
-      20 &middot; RJ
-    </button>
-    <button class="rjn-tab" data-tab="salaires" onclick="switchTab('salaires')">
-      21 &middot; Salaires
-    </button>
-    <button class="rjn-tab" data-tab="nettoyeur" onclick="switchTab('nettoyeur')">
-      22 &middot; Nettoyeur
-    </button>
-    <button class="rjn-tab" data-tab="somm_nettoyeur" onclick="switchTab('somm_nettoyeur')">
-      23 &middot; Somm.Nett.
-    </button>
-    <button class="rjn-tab" data-tab="auditeur_ref" onclick="switchTab('auditeur_ref')">
-      24 &middot; Auditeur
-    </button>
-    <button class="rjn-tab" data-tab="rapp_p1" onclick="switchTab('rapp_p1')">
-      25 &middot; Rapp P1
-    </button>
-    <button class="rjn-tab" data-tab="rapp_p2" onclick="switchTab('rapp_p2')">
-      26 &middot; Rapp P2
-    </button>
-    <button class="rjn-tab" data-tab="rapp_p3" onclick="switchTab('rapp_p3')">
-      27 &middot; Rapp P3
-    </button>
-    <button class="rjn-tab" data-tab="etat_rev" onclick="switchTab('etat_rev')">
-      28 &middot; État Rev.
-    </button>
-    <button class="rjn-tab" data-tab="budget_rj" onclick="switchTab('budget_rj')">
-      29 &middot; Budget
-    </button>
-    <button class="rjn-tab" data-tab="analyse_101100" onclick="switchTab('analyse_101100')">
-      30 &middot; An.101100
-    </button>
-    <button class="rjn-tab" data-tab="analyse_100401" onclick="switchTab('analyse_100401')">
-      31 &middot; An.100401
-    </button>
-    <button class="rjn-tab" data-tab="autre_gl" onclick="switchTab('autre_gl')">
-      32 &middot; Autre GL
-    </button>
-    <button class="rjn-tab" data-tab="resume" onclick="switchTab('resume')">
-      33 &middot; Sommaire <span class="rjn-tab-badge" id="badge-resume"></span>
-    </button>
+    <button class="rjn-tab" data-tab="socan" onclick="switchTab('socan')" style="font-size:11px;">SOCAN</button>
+    <button class="rjn-tab" data-tab="resonne" onclick="switchTab('resonne')" style="font-size:11px;">Résonne</button>
+    <button class="rjn-tab" data-tab="vestiaire" onclick="switchTab('vestiaire')" style="font-size:11px;">Vestiaire</button>
+    <button class="rjn-tab" data-tab="admin_ad" onclick="switchTab('admin_ad')" style="font-size:11px;">AD</button>
+    <button class="rjn-tab" data-tab="massage" onclick="switchTab('massage')" style="font-size:11px;">Massage</button>
+    <button class="rjn-tab" data-tab="ristourne" onclick="switchTab('ristourne')" style="font-size:11px;">Ristourne</button>
+    <button class="rjn-tab" data-tab="ej" onclick="switchTab('ej')" style="font-size:11px;">EJ</button>
+    <button class="rjn-tab" data-tab="rj_rapport" onclick="switchTab('rj_rapport')" style="font-size:11px;">RJ</button>
+    <button class="rjn-tab" data-tab="salaires" onclick="switchTab('salaires')" style="font-size:11px;">Salaires</button>
+    <button class="rjn-tab" data-tab="nettoyeur" onclick="switchTab('nettoyeur')" style="font-size:11px;">Nettoyeur</button>
+    <button class="rjn-tab" data-tab="somm_nettoyeur" onclick="switchTab('somm_nettoyeur')" style="font-size:11px;">Somm.Nett.</button>
+    <button class="rjn-tab" data-tab="auditeur_ref" onclick="switchTab('auditeur_ref')" style="font-size:11px;">Auditeur</button>
+    <button class="rjn-tab" data-tab="rapp_p1" onclick="switchTab('rapp_p1')" style="font-size:11px;">P1</button>
+    <button class="rjn-tab" data-tab="rapp_p2" onclick="switchTab('rapp_p2')" style="font-size:11px;">P2</button>
+    <button class="rjn-tab" data-tab="rapp_p3" onclick="switchTab('rapp_p3')" style="font-size:11px;">P3</button>
+    <button class="rjn-tab" data-tab="etat_rev" onclick="switchTab('etat_rev')" style="font-size:11px;">État Rev.</button>
+    <button class="rjn-tab" data-tab="budget_rj" onclick="switchTab('budget_rj')" style="font-size:11px;">Budget</button>
+    <button class="rjn-tab" data-tab="analyse_101100" onclick="switchTab('analyse_101100')" style="font-size:11px;">101100</button>
+    <button class="rjn-tab" data-tab="analyse_100401" onclick="switchTab('analyse_100401')" style="font-size:11px;">100401</button>
+    <button class="rjn-tab" data-tab="autre_gl" onclick="switchTab('autre_gl')" style="font-size:11px;">Autre GL</button>
   </div>
 
   <!-- ═══════════════ TAB: CONTROLE ═══════════════ -->
@@ -395,7 +881,7 @@
       <div id="session-info" style="margin-top:14px;font-size:12px;color:var(--text-muted)"></div>
 
       <!-- ═══ IMPORT RJ EXCEL — Upload yesterday's RJ ═══ -->
-      <div id="import-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+      <div id="import-panel" style="margin-top:18px;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
           <i data-feather="upload" style="width:14px;height:14px;vertical-align:-2px"></i> Importer le RJ de la veille
         </div>
@@ -410,21 +896,21 @@
       </div>
 
       <!-- ═══ MACROS — Emulates Excel VBA clear buttons ═══ -->
-      <div id="macro-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+      <div id="macro-panel" style="margin-top:18px;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
           <i data-feather="zap" style="width:14px;height:14px;vertical-align:-2px"></i> Macros — Effacement
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="rjn-btn" onclick="clearMacro('recap')" style="background:#dc3545;color:#fff;font-size:12px;padding:6px 12px">
+          <button class="rjn-btn" onclick="clearMacro('recap')" style="background:var(--rose-bg);color:var(--rose);font-size:11px;padding:6px 12px;border-color:var(--rose)">
             <i data-feather="trash-2" style="width:12px;height:12px"></i> Effacer Recap
           </button>
-          <button class="rjn-btn" onclick="clearMacro('transelect')" style="background:#dc3545;color:#fff;font-size:12px;padding:6px 12px">
+          <button class="rjn-btn" onclick="clearMacro('transelect')" style="background:var(--rose-bg);color:var(--rose);font-size:11px;padding:6px 12px;border-color:var(--rose)">
             <i data-feather="trash-2" style="width:12px;height:12px"></i> Effacer Transelect
           </button>
-          <button class="rjn-btn" onclick="clearMacro('geac')" style="background:#dc3545;color:#fff;font-size:12px;padding:6px 12px">
+          <button class="rjn-btn" onclick="clearMacro('geac')" style="background:var(--rose-bg);color:var(--rose);font-size:11px;padding:6px 12px;border-color:var(--rose)">
             <i data-feather="trash-2" style="width:12px;height:12px"></i> Effacer GEAC
           </button>
-          <button class="rjn-btn" onclick="clearMacro('all-daily')" style="background:#b91c1c;color:#fff;font-size:12px;padding:6px 14px;font-weight:700">
+          <button class="rjn-btn" onclick="clearMacro('all-daily')" style="background:var(--rose);color:#fff;font-size:11px;padding:6px 14px;font-weight:700;border-color:var(--rose)">
             <i data-feather="zap" style="width:12px;height:12px"></i> Tout effacer (Recap+Trans+GEAC)
           </button>
         </div>
@@ -432,14 +918,14 @@
       </div>
 
       <!-- ═══ ZIP UPLOAD — Upload all reports at once ═══ -->
-      <div id="zip-upload-panel" style="margin-top:18px;padding:14px;background:linear-gradient(135deg,var(--bg-card),#1a2744);border:2px dashed var(--blue);border-radius:8px">
+      <div id="zip-upload-panel" style="margin-top:18px;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
         <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--blue)">
           <i data-feather="package" style="width:16px;height:16px;vertical-align:-2px"></i> Dépôt rapide — Fichier ZIP
         </div>
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
           Déposez un fichier <strong>.zip</strong> contenant tous vos rapports de nuit. Les fichiers seront automatiquement identifiés et les données extraites dans les bons onglets.
         </div>
-        <div id="zip-dropzone" style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;transition:all .2s"
+        <div id="zip-dropzone" style="border:1px dashed var(--input-border);border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:all .15s"
              ondragover="event.preventDefault();this.style.borderColor='var(--blue)';this.style.background='rgba(59,130,246,0.1)'"
              ondragleave="this.style.borderColor='var(--border)';this.style.background='transparent'"
              ondrop="handleZipDrop(event)"
@@ -458,7 +944,7 @@
       </div>
 
       <!-- ═══ AUTO-FILL — Upload Lightspeed reports ═══ -->
-      <div id="autofill-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+      <div id="autofill-panel" style="margin-top:18px;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text)">
           <i data-feather="cpu" style="width:14px;height:14px;vertical-align:-2px"></i> Auto-remplissage — Rapports individuels
         </div>
@@ -466,60 +952,70 @@
           Ou déposez vos rapports un par un pour remplir automatiquement les champs correspondants.
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
-          <button class="rjn-btn" onclick="uploadReport('daily_revenue')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('daily_revenue')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="file-text" style="width:12px;height:12px;color:var(--blue)"></i>
             <strong>Daily Revenue</strong> <small style="color:var(--text-muted)">.pdf</small><br>
             <small style="color:var(--text-muted)">→ Recap, GEAC, Jour</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('sales_journal')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('sales_journal')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="file-text" style="width:12px;height:12px;color:var(--emerald)"></i>
             <strong>Sales Journal</strong> <small style="color:var(--text-muted)">.rtf</small><br>
             <small style="color:var(--text-muted)">→ Jour F&B, Recap, Transelect</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('freedompay')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('freedompay')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="credit-card" style="width:12px;height:12px;color:var(--amber)"></i>
             <strong>FreedomPay</strong> <small style="color:var(--text-muted)">.xls</small><br>
             <small style="color:var(--text-muted)">→ GEAC cashout, Transelect</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('ar_summary')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('ar_summary')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="file-text" style="width:12px;height:12px;color:var(--purple)"></i>
             <strong>AR Summary</strong> <small style="color:var(--text-muted)">.pdf</small><br>
             <small style="color:var(--text-muted)">→ GEAC Balance Sheet</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('advance_deposit')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('advance_deposit')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="file-text" style="width:12px;height:12px;color:var(--teal)"></i>
             <strong>Advance Deposit</strong> <small style="color:var(--text-muted)">.pdf</small><br>
             <small style="color:var(--text-muted)">→ GEAC dépôts</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('hp_excel')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('hp_excel')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="grid" style="width:12px;height:12px;color:var(--red)"></i>
             <strong>HP Admin</strong> <small style="color:var(--text-muted)">.xls</small><br>
             <small style="color:var(--text-muted)">→ HP/Admin, Jour</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('sd_deposit')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('sd_deposit')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="grid" style="width:12px;height:12px;color:var(--orange)"></i>
             <strong>Suivi Dépôts (SD)</strong> <small style="color:var(--text-muted)">.xls</small><br>
             <small style="color:var(--text-muted)">→ SD, SetD</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('market_segment')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('market_segment')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="pie-chart" style="width:12px;height:12px;color:var(--indigo)"></i>
             <strong>Market Segment</strong> <small style="color:var(--text-muted)">.pdf</small><br>
             <small style="color:var(--text-muted)">→ DBRS segments</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('cashier_summary')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('cashier_summary')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="users" style="width:12px;height:12px;color:var(--cyan)"></i>
             <strong>Cashier Summary</strong> <small style="color:var(--text-muted)">.pdf</small><br>
             <small style="color:var(--text-muted)">→ GEAC cashout</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('transaction_summary')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('transaction_summary')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="credit-card" style="width:12px;height:12px;color:var(--pink)"></i>
             <strong>Transactions Cartes</strong> <small style="color:var(--text-muted)">.xlsx</small><br>
             <small style="color:var(--text-muted)">→ Transelect réception</small>
           </button>
-          <button class="rjn-btn" onclick="uploadReport('recap_text')" style="text-align:left;padding:8px 12px;font-size:11px;background:var(--bg);border:1px solid var(--border)">
+          <button class="rjn-btn" onclick="uploadReport('recap_text')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
             <i data-feather="list" style="width:12px;height:12px;color:var(--lime)"></i>
             <strong>Recap Serveurs</strong> <small style="color:var(--text-muted)">.txt</small><br>
             <small style="color:var(--text-muted)">→ Transelect restaurant</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('house_totals')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
+            <i data-feather="dollar-sign" style="width:12px;height:12px;color:var(--emerald)"></i>
+            <strong>House Totals</strong> <small style="color:var(--text-muted)">.txt</small><br>
+            <small style="color:var(--text-muted)">→ Recap Comptant + Remb Gratuité</small>
+          </button>
+          <button class="rjn-btn" onclick="uploadReport('debourse')" style="text-align:left;padding:10px 14px;font-size:11px;background:var(--input-bg);border:1px solid var(--input-border)">
+            <i data-feather="clipboard" style="width:12px;height:12px;color:var(--amber)"></i>
+            <strong>Débourse 90.2</strong> <small style="color:var(--text-muted)">.pdf</small><br>
+            <small style="color:var(--text-muted)">→ Recap Remb Client + Due Back</small>
           </button>
         </div>
         <input type="file" id="file-report-upload" style="display:none">
@@ -527,7 +1023,7 @@
       </div>
 
       <!-- ═══ ARCHIVES — Browse historical RJ files ═══ -->
-      <div id="archives-panel" style="margin-top:18px;padding:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:8px">
+      <div id="archives-panel" style="margin-top:18px;padding:18px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <div style="font-size:13px;font-weight:700;color:var(--text)">
             <i data-feather="archive" style="width:14px;height:14px;vertical-align:-2px"></i> Archives RJ historiques
@@ -576,7 +1072,10 @@
     <div class="rjn-card">
       <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>Recap — Reconciliation Comptant</span>
-        <button class="rjn-print-btn" onclick="printReport('recap')" title="Imprimer Recap"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+        <div style="display:flex;gap:6px;">
+          <button class="rjn-print-btn" onclick="previewExcelSheet('Recap')" title="Aperçu Excel"><i data-feather="eye" style="width:14px;height:14px"></i> Excel</button>
+          <button class="rjn-print-btn" onclick="printReport('recap')" title="Imprimer Recap"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+        </div>
       </div>
       <div class="rjn-card-desc">Entrez les montants. Les depots sont calcules automatiquement depuis le SD.</div>
       <table class="rjn-table">
@@ -628,13 +1127,24 @@
       </table>
       <div class="rjn-balance err" id="recap-balance">BALANCE: $0.00</div>
     </div>
+
+    <!-- Macro: Send Recap to Jour -->
+    <div style="margin-top:12px; padding:12px; background:linear-gradient(135deg,#f0fdf4,#dcfce7); border:1px solid #86efac; border-radius:10px; display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-size:12px; color:#166534;"><strong>Envoyer dans Jour</strong> — Copie les valeurs Recap (H19:N19) vers la feuille Jour</div>
+      <button class="rjn-btn primary" onclick="runMacro('envoie_jour')" style="padding:8px 20px; font-size:12px; background:#059669;">
+        Recap → Jour
+      </button>
+    </div>
   </div>
 
   <!-- ═══════════════ TAB: TRANSELECT ═══════════════ -->
   <div class="rjn-section" id="sec-transelect">
     <!-- RESTAURANT — Layout Excel: cartes en Y, terminaux en X -->
     <div class="rjn-card">
-      <div class="rjn-card-title">Transelect — Restaurant / Bar / Spesa</div>
+      <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Transelect — Restaurant / Bar / Spesa</span>
+        <button class="rjn-print-btn" onclick="previewExcelSheet('transelect')" title="Aperçu Excel"><i data-feather="eye" style="width:14px;height:14px"></i> Excel</button>
+      </div>
       <div class="rjn-card-desc">Identique au Excel RJ. 8 terminaux POS (BAR A/B/C, SPESA, ROOM, 3 EXTRA) → TOTAL 1 + 12 terminaux Banquet → TOTAL 2. Ajoutez/retirez des terminaux au besoin.</div>
       <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
         <button class="rjn-btn" onclick="addRestTerminal('pos')" style="font-size:11px;padding:4px 10px"><i data-feather="plus" style="width:12px;height:12px"></i> Terminal POS</button>
@@ -683,14 +1193,23 @@
       <div class="rjn-balance err" id="transelect-variance">VARIANCE RÉCEPTION: $0.00</div>
     </div>
 
-    <!-- MACROS -->
-    <div class="rjn-card">
-      <div class="rjn-card-title">Macros automatiques</div>
-      <div class="rjn-card-desc">Ces opérations se font automatiquement à la soumission. Vous pouvez aussi les exécuter manuellement.</div>
+    <!-- Macro: Send Transelect to Jour -->
+    <div style="margin-top:12px; padding:12px; background:linear-gradient(135deg,#eff6ff,#dbeafe); border:1px solid #93c5fd; border-radius:10px; display:flex; align-items:center; justify-content:space-between;">
+      <div style="font-size:12px; color:#1e40af;"><strong>Envoyer cartes dans Jour</strong> — Copie les totaux cartes (row 37) vers Jour (BI-BN)</div>
+      <button class="rjn-btn primary" onclick="runMacro('calcul_carte')" style="padding:8px 20px; font-size:12px; background:#2563eb;">
+        Transelect → Jour
+      </button>
+    </div>
+
+    <!-- MACROS — All in one place -->
+    <div class="rjn-card" style="margin-top:12px; background:linear-gradient(135deg,#faf5ff,#f3e8ff); border-color:#c4b5fd;">
+      <div class="rjn-card-title" style="color:#6d28d9;">Toutes les macros</div>
+      <div class="rjn-card-desc">Ces opérations copient les valeurs vers le Jour. Elles s'exécutent aussi automatiquement à la soumission.</div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="rjn-btn" onclick="runMacro('envoie_jour')"><i data-feather="send" style="width:14px;height:14px"></i> Envoie dans Jour (Recap→Jour)</button>
-        <button class="rjn-btn" onclick="runMacro('calcul_carte')"><i data-feather="credit-card" style="width:14px;height:14px"></i> Calcul Carte (Transelect→Jour)</button>
-        <button class="rjn-btn" onclick="runMacro('sync_setd')"><i data-feather="refresh-cw" style="width:14px;height:14px"></i> Sync DueBack→SetD</button>
+        <button class="rjn-btn" onclick="runMacro('envoie_jour')" style="border-color:#8b5cf6;color:#7c3aed;">Recap → Jour</button>
+        <button class="rjn-btn" onclick="runMacro('calcul_carte')" style="border-color:#3b82f6;color:#2563eb;">Transelect → Jour</button>
+        <button class="rjn-btn" onclick="runMacro('sync_setd')" style="border-color:#10b981;color:#059669;">DueBack → SetD</button>
+        <button class="rjn-btn primary" onclick="runMacro('envoie_jour');runMacro('calcul_carte');runMacro('sync_setd')" style="background:linear-gradient(135deg,#7c3aed,#6d28d9);">Tout exécuter</button>
       </div>
       <div id="macro-result" style="margin-top:10px;font-size:12px;color:var(--text-muted)"></div>
     </div>
@@ -704,7 +1223,10 @@
     <div class="rjn-card">
       <div class="rjn-card-title" style="display:flex;align-items:center;justify-content:space-between">
         <span>GEAC — Daily Cash Out vs Daily Revenue</span>
-        <button class="rjn-print-btn" onclick="printReport('geac')" title="Imprimer GEAC"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+        <div style="display:flex;gap:6px;">
+          <button class="rjn-print-btn" onclick="previewExcelSheet('geac_ux')" title="Aperçu Excel"><i data-feather="eye" style="width:14px;height:14px"></i> Excel</button>
+          <button class="rjn-print-btn" onclick="printReport('geac')" title="Imprimer GEAC"><i data-feather="printer" style="width:14px;height:14px"></i> Imprimer</button>
+        </div>
       </div>
       <div class="rjn-card-desc">2 lignes de Cash Out par carte (du rapport GEAC). Le TOTAL et la Variance se calculent automatiquement.</div>
       <table class="rjn-table" style="font-size:12px">
@@ -866,6 +1388,14 @@
       </div>
       <div class="rjn-balance ok" id="geac-bs-balance" style="margin-top:8px">BALANCE SHEET: $0.00 ✓</div>
       <div style="margin-top:8px;font-size:10px;color:var(--text-muted)">Night Audit Date: <span id="geac-bs-date" style="font-weight:600">—</span> &nbsp;|&nbsp; Hotel Contact: Mandy Le &nbsp;|&nbsp; GEAC Support: 1-800-434-9990</div>
+    </div>
+
+    <!-- GEAC compensation info -->
+    <div style="margin-top:12px; padding:12px; background:linear-gradient(135deg,#fefce8,#fef9c3); border:1px solid #fde047; border-radius:10px;">
+      <div style="font-size:12px; color:#854d0e;">
+        <strong>Compensation GEAC (col AP/41):</strong> Si FD ≠ AR dans le Balance Sheet, la compensation = -(FD - AR) doit être inscrite en col 41 du Jour.
+        Si les deux valeurs sont égales, col 41 = 0.
+      </div>
     </div>
   </div>
 
@@ -1629,6 +2159,39 @@
 {% block scripts %}
 <script>
 // ═══════════════════════════════════════
+// THEME TOGGLE
+// ═══════════════════════════════════════
+(function initTheme() {
+  const saved = localStorage.getItem('rjn_theme');
+  // Default to light if no preference saved (matches webapp convention)
+  const theme = saved || 'light';
+  document.documentElement.setAttribute('data-theme', theme);
+  // Update icon visibility after feather replaces icons
+  setTimeout(function() {
+    const darkIcon = document.getElementById('theme-icon-dark');
+    const lightIcon = document.getElementById('theme-icon-light');
+    if (darkIcon && lightIcon) {
+      // In dark mode show moon (switch to light), in light mode show sun (switch to dark)
+      darkIcon.style.display = theme === 'dark' ? '' : 'none';
+      lightIcon.style.display = theme === 'light' ? '' : 'none';
+    }
+  }, 100);
+})();
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('rjn_theme', next);
+  const darkIcon = document.getElementById('theme-icon-dark');
+  const lightIcon = document.getElementById('theme-icon-light');
+  if (darkIcon && lightIcon) {
+    darkIcon.style.display = next === 'dark' ? '' : 'none';
+    lightIcon.style.display = next === 'light' ? '' : 'none';
+  }
+}
+
+// ═══════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════
 let SESSION = null;
@@ -1666,6 +2229,7 @@ async function startSession() {
     SESSION = d.session;
     loadSessionToForm(SESSION);
     updateStatus();
+    if (typeof refreshChecklist === 'function') refreshChecklist();
     // Show macro panel once session is active
     document.getElementById('macro-panel').style.display = 'block';
     document.getElementById('autofill-panel').style.display = 'block';
@@ -1840,6 +2404,8 @@ const _reportExtensions = {
   'cashier_summary': '.pdf',
   'transaction_summary': '.xlsx',
   'recap_text': '.txt',
+  'house_totals': '.txt',
+  'debourse': '.pdf,.dat',
 };
 
 function uploadReport(docType) {
@@ -1867,6 +2433,8 @@ document.getElementById('file-report-upload').addEventListener('change', async (
     'cashier_summary': 'Cashier Summary',
     'transaction_summary': 'Transactions Cartes',
     'recap_text': 'Recap Serveurs',
+    'house_totals': 'House Totals',
+    'debourse': 'Débourse 90.2',
   };
   const label = docLabels[_currentDocType] || _currentDocType;
   statusEl.innerHTML = `<span style="color:var(--blue)">Parsing ${label}: "${file.name}"...</span>`;
@@ -1884,9 +2452,17 @@ document.getElementById('file-report-upload').addEventListener('change', async (
     const d = await r.json();
 
     if (!d.success) {
-      statusEl.innerHTML = `<span style="color:var(--red)">${d.error || 'Erreur de parsing'}</span>`;
-      if (d.warnings && d.warnings.length) {
-        statusEl.innerHTML += `<br><small>${d.warnings.join(', ')}</small>`;
+      // Highlight date mismatches prominently — they're the "wrong file" error
+      if (d.error === 'date_mismatch' && d.detail) {
+        statusEl.innerHTML =
+          `<div style="background:var(--red);color:white;padding:10px;border-radius:6px;font-weight:600">` +
+          `⚠ Fichier rejeté — mauvaise date<br>` +
+          `<small style="font-weight:400">${d.detail}</small></div>`;
+      } else {
+        statusEl.innerHTML = `<span style="color:var(--red)">${d.error || 'Erreur de parsing'}</span>`;
+        if (d.warnings && d.warnings.length) {
+          statusEl.innerHTML += `<br><small>${d.warnings.join(', ')}</small>`;
+        }
       }
       return;
     }
@@ -1897,6 +2473,10 @@ document.getElementById('file-report-upload').addEventListener('change', async (
     if (sessionD.session) {
       SESSION = sessionD.session;
       loadSessionToForm(SESSION);
+      if (window.livecard && window.livecard.mode === 'livecard') window.livecard.onUploadSuccess(d);
+      // Refresh live DC widget + checklist after auto-fill
+      if (typeof recalcDC === 'function') recalcDC();
+      if (typeof refreshChecklist === 'function') refreshChecklist();
     }
 
     const conf = d.confidence ? ` (confiance: ${Math.round(d.confidence * 100)}%)` : '';
@@ -2273,6 +2853,9 @@ function loadSessionToForm(s) {
 
   // Load new tabs (14 additional sheets)
   if(typeof loadNewTabs === 'function') loadNewTabs(s);
+  // NOTE: refreshChecklist() is not called here. Callers that load a fresh
+  // session (startSession, upload handler) trigger it explicitly; tab-switch
+  // reloads and macros get a free refresh via saveSection's post-save call.
 }
 
 function updateStatus() {
@@ -2308,7 +2891,7 @@ function _attachAutocomplete(input, suggestions, saveSection) {
   input._acAttached = true;
   const dropdown = document.createElement('div');
   dropdown.className = 'dueback-suggestions';
-  dropdown.style.cssText = 'display:none;position:absolute;z-index:999;background:#fff;border:1px solid var(--border);border-radius:var(--radius-xs);max-height:160px;overflow-y:auto;box-shadow:var(--shadow-md);width:200px;left:0;top:100%';
+  dropdown.style.cssText = 'display:none;position:absolute;z-index:999;background:var(--card-solid);border:1px solid var(--border);border-radius:var(--radius-xs);max-height:160px;overflow-y:auto;box-shadow:var(--shadow-md);width:200px;left:0;top:100%';
   input.parentElement.style.position = 'relative';
   input.parentElement.appendChild(dropdown);
 
@@ -3822,6 +4405,735 @@ async function saveSection(section) {
     ind.textContent = 'Erreur!';
     ind.className = 'rjn-autosave';
   }
+  // After any save, refresh the live balance panel
+  if (typeof refreshChecklist === 'function') refreshChecklist();
+}
+
+// ═══════════════════════════════════════
+// LIVE BALANCE PANEL — 21-point checklist + 10-class DC decomposition
+// Calls /api/rj/native/balance-check/<date> and renders the response.
+// ═══════════════════════════════════════
+let _checklistTimer = null;
+
+function toggleLivePanel(){
+  const panel = document.getElementById('livepanel');
+  if (panel) panel.classList.toggle('open');
+}
+
+async function copyAutoNote(){
+  const noteEl = document.getElementById('live-autonote');
+  const btn = document.getElementById('live-autonote-copy');
+  if (!noteEl || !btn || !noteEl.textContent) return;
+  try {
+    await navigator.clipboard.writeText(noteEl.textContent);
+    const original = btn.textContent;
+    btn.textContent = '✓ Copié';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  } catch (err) {
+    // Older browsers without clipboard API — fall back to textarea trick
+    const ta = document.createElement('textarea');
+    ta.value = noteEl.textContent;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(_) {}
+    document.body.removeChild(ta);
+  }
+}
+
+function fmtMoney(v){
+  if (v === null || v === undefined || isNaN(v)) return '—';
+  const n = Number(v);
+  const sign = n < 0 ? '−' : (n > 0 ? '+' : '');
+  return `${sign}${Math.abs(n).toFixed(2)}`;
+}
+
+// _build_checklist emits 'pass' | 'fail' | 'warn' | 'skip'. Any other value
+// (including legacy 'ok' | 'ecart') falls through to the warn sentinel.
+const CHECK_META = {
+  pass: ['pass', '✓'],
+  fail: ['fail', '✗'],
+  warn: ['warn', '!'],
+  skip: ['warn', '–'],
+};
+function _checkMeta(status){
+  return CHECK_META[(status || '').toLowerCase()] || CHECK_META.warn;
+}
+
+// Master doc Part 3: residual ≤ $0.15 acceptable.
+const DC_OK_THRESHOLD = 0.16;
+
+function renderLivePanel(result){
+  const dcEl = document.getElementById('live-dc');
+  const varEl = document.getElementById('live-variances');
+  const clWrap = document.getElementById('live-checklist-wrap');
+  const clEl = document.getElementById('live-checklist');
+  const clScore = document.getElementById('live-checklist-score');
+  const noteWrap = document.getElementById('live-autonote-wrap');
+  const noteEl = document.getElementById('live-autonote');
+  // All DOM refs required — fail fast if template is incomplete
+  if (!dcEl || !varEl || !clWrap || !clEl || !clScore || !noteWrap || !noteEl) return;
+
+  // DC big number
+  const dc = Number(result.dc_current ?? result.dc_calculated ?? 0);
+  dcEl.textContent = fmtMoney(dc);
+  dcEl.classList.remove('ok','warn','err');
+  if (Math.abs(dc) < DC_OK_THRESHOLD) dcEl.classList.add('ok');
+  else if (Math.abs(dc) < 10) dcEl.classList.add('warn');
+  else dcEl.classList.add('err');
+
+  // Variance classes (10-class decomposition)
+  const decomp = result.dc_decomposition || {};
+  const classes = decomp.classes || {};
+  const rows = [
+    ['Transelect X20',    classes.x20_transelect],
+    ['GEAC col 41',       classes.geac_bottom],
+    ['InterHotel XferIn', classes.interhotel_xferin],
+    ['PANNE LIEN',        classes.panne_lien_hotel],
+    ['Chambres annul.',   classes.chambres_annulation],
+    ['Correction veille', classes.prior_day_correction],
+    ['Poste caissier',    classes.cashier_misposting],
+    ['Dépôt resto',       classes.depot_resto_pas_ferme],
+  ];
+  const nonzero = rows.filter(r => Math.abs(Number(r[1] || 0)) >= 0.01);
+  const variancesHtml = [];
+  if (nonzero.length === 0) {
+    variancesHtml.push(`<div class="variance-row zero"><span class="label">Aucune variance déclarée</span><span class="value">—</span></div>`);
+  } else {
+    for (const [label, val] of nonzero) {
+      variancesHtml.push(`<div class="variance-row"><span class="label">${label}</span><span class="value">${fmtMoney(val)}</span></div>`);
+    }
+  }
+  const declared = Number(decomp.declared_sum || 0);
+  const residual = Number(decomp.unexplained_residual || 0);
+  variancesHtml.push(`<div class="variance-row"><span class="label">Somme déclarées</span><span class="value">${fmtMoney(declared)}</span></div>`);
+  const resOk = Math.abs(residual) < DC_OK_THRESHOLD;
+  variancesHtml.push(
+    `<div class="variance-row residual ${resOk ? 'ok' : 'err'}">` +
+    `<span class="label">Résiduel inexpliqué</span>` +
+    `<span class="value">${fmtMoney(residual)}</span></div>`
+  );
+  varEl.innerHTML = variancesHtml.join('');
+
+  // 21-point checklist
+  const checks = result.checklist || [];
+  if (checks.length > 0) {
+    clWrap.style.display = 'block';
+    const pass = checks.filter(c => _checkMeta(c.status)[0] === 'pass').length;
+    clScore.textContent = `${pass}/${checks.length}`;
+    clEl.innerHTML = checks.map(c => {
+      const [cls, icon] = _checkMeta(c.status);
+      const detail = c.detail ? `<div class="detail">${c.detail}</div>` : '';
+      return `<div class="check-item ${cls}">` +
+             `<span class="ic">${icon}</span>` +
+             `<div class="txt">${c.item || 'Item'}${detail}</div>` +
+             `</div>`;
+    }).join('');
+  } else {
+    clWrap.style.display = 'none';
+  }
+
+  // Auto-generated cell note text. Prefer the server-built version
+  // (uses real auditor name + master doc conventions); fall back to
+  // client-side assembly if the server didn't send one.
+  const serverNote = typeof result.dc_note_text === 'string' ? result.dc_note_text : '';
+  if (Math.abs(dc) >= DC_OK_THRESHOLD && resOk && (serverNote || nonzero.length > 0)) {
+    if (serverNote) {
+      noteEl.textContent = serverNote;
+    } else {
+      const noteLines = ['Auditeur De Nuit:'];
+      for (const [label, val] of nonzero) {
+        noteLines.push(`${label}: ${Math.abs(Number(val)).toFixed(2)}`);
+      }
+      noteEl.textContent = noteLines.join('\n');
+    }
+    noteWrap.style.display = 'block';
+  } else {
+    noteWrap.style.display = 'none';
+  }
+}
+
+// === LIVECARD feature flag + IIFE (Phase 4) ===
+(function() {
+  'use strict';
+
+  const LS_MODE = 'rjn_ui_mode';
+  const LS_STATE = 'rjn_livecard_state';
+
+  const mode = localStorage.getItem(LS_MODE) || 'legacy';
+  const isLivecard = mode === 'livecard';
+
+  const legacyPanel = document.getElementById('livepanel');
+  const legacyToggle = document.getElementById('livepanel-toggle');
+  const card = document.getElementById('livecard');
+  const edgeTab = document.getElementById('livecard-edge-tab');
+
+  if (isLivecard) {
+    if (legacyPanel) legacyPanel.classList.add('livecard-hidden-mode');
+    if (legacyToggle) legacyToggle.classList.add('livecard-hidden-mode');
+    if (card) card.classList.remove('livecard-hidden-mode');
+  }
+
+  // ---------- Rendering ----------
+  const DC_OK_THRESHOLD = 0.16;
+
+  function fmtMoneyLocal(v) {
+    const n = Number(v || 0);
+    return (n < 0 ? '-' : '') + '$' + Math.abs(n).toFixed(2);
+  }
+
+  function classifyDC(dc) {
+    const abs = Math.abs(dc);
+    if (abs < DC_OK_THRESHOLD) return 'ok';
+    if (abs < 10) return 'warn';
+    return 'err';
+  }
+
+  function verdictText(klass, residualOk) {
+    if (klass === 'ok') return 'Équilibré ✓';
+    if (residualOk) return 'Réconcilié';
+    return 'À investiguer';
+  }
+
+  const VARIANCE_ROWS = [
+    ['Transelect X20',    'x20_transelect'],
+    ['GEAC col 41',       'geac_bottom'],
+    ['InterHotel XferIn', 'interhotel_xferin'],
+    ['PANNE LIEN',        'panne_lien_hotel'],
+    ['Chambres annul.',   'chambres_annulation'],
+    ['Correction veille', 'prior_day_correction'],
+    ['Poste caissier',    'cashier_misposting'],
+    ['Dépôt resto',       'depot_resto_pas_ferme'],
+    ['Recap surplus',     'recap_surplus'],
+    ['Recap déficit',     'recap_deficit'],
+  ];
+
+  function _buildClientNote(variances, auditor) {
+    const lines = [`Auditeur De Nuit: ${auditor || ''}`];
+    // Reparse from data-var-key-labeled rows if present
+    const rows = variances.html.match(/data-var-key="([^"]+)">[\s\S]*?value">([^<]+)/g) || [];
+    rows.forEach(r => {
+      const m = r.match(/data-var-key="([^"]+)">[\s\S]*?value">([^<]+)/);
+      if (m) lines.push(`${m[1]}: ${m[2]}`);
+    });
+    return lines.join('\n');
+  }
+
+  function attachAutoNoteCopy() {
+    const btn = document.getElementById('livecard-autonote-copy');
+    const note = document.getElementById('livecard-autonote');
+    if (!btn || !note) return;
+    btn.addEventListener('click', () => {
+      const text = note.textContent || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          btn.textContent = 'Copié ✓';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = 'Copier';
+            btn.classList.remove('copied');
+          }, 1500);
+        }).catch(() => { /* silent */ });
+      }
+    });
+  }
+
+  // ---------- Refresh + diff gate ----------
+  function _hash(s) {
+    // Tiny FNV-1a — fast and collision-safe enough for response dedup
+    let h = 2166136261;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h.toString(16);
+  }
+
+  let staleTimer = null;
+  function setProgress(pct, klass) {
+    const bar = document.getElementById('livecard-progress');
+    if (!bar) return;
+    bar.classList.remove('warn', 'err');
+    if (klass) bar.classList.add(klass);
+    bar.classList.add('active');
+    bar.style.width = pct + '%';
+  }
+  function clearProgress() {
+    const bar = document.getElementById('livecard-progress');
+    if (!bar) return;
+    setTimeout(() => {
+      bar.classList.remove('active');
+      setTimeout(() => { bar.style.width = '0'; }, 200);
+    }, 150);
+  }
+  function markStale() {
+    if (card) card.classList.add('stale');
+  }
+  function clearStale() {
+    if (card) card.classList.remove('stale');
+  }
+
+  // ---------- Attention gate ----------
+  let animationGate = Promise.resolve();
+  function _animate(fn, durationMs) {
+    animationGate = animationGate.then(async () => {
+      try { fn(); } catch (e) { /* swallow */ }
+      await new Promise(r => setTimeout(r, durationMs));
+    });
+    return animationGate;
+  }
+
+  // Track previous variance values for pulse detection
+  const prevVariances = {};
+
+  function pulseChangedVariances(decomp) {
+    const classes = decomp.classes || {};
+    const changed = [];
+    for (const [label, key] of VARIANCE_ROWS) {
+      const v = Number(classes[key] || 0);
+      if (prevVariances[label] !== undefined && Math.abs(prevVariances[label] - v) >= 0.01) {
+        changed.push(label);
+      }
+      prevVariances[label] = v;
+    }
+    for (const label of changed) {
+      const row = document.querySelector(`.livecard-var-row[data-var-key="${label}"]`);
+      if (row) {
+        _animate(() => {
+          row.classList.add('livecard-pulsing');
+          setTimeout(() => row.classList.remove('livecard-pulsing'), 650);
+        }, 650);
+      }
+    }
+  }
+
+  function playSuccessMoment() {
+    if (!card) return;
+    _animate(() => {
+      card.classList.add('success-moment');
+    }, 2200);
+    _animate(() => {
+      card.classList.remove('success-moment');
+    }, 0);
+  }
+
+  function checkSuccessTransition(dc, residualOk) {
+    const nowBalanced = Math.abs(dc) < DC_OK_THRESHOLD;
+    const trigger = (
+      (state.prevWasBalanced === false && nowBalanced) ||
+      (state.prevResidualOk === false && residualOk && !nowBalanced)
+    );
+    state.prevWasBalanced = nowBalanced;
+    state.prevResidualOk = residualOk;
+    return trigger;
+  }
+
+  async function refresh(data) {
+    if (!card) return;
+    let payload = data;
+    if (!payload) {
+      const session = window.SESSION;
+      if (!session || !session.audit_date) return;
+      setProgress(30);
+      if (state.minimized) card.classList.add('loading');
+      try {
+        setProgress(70);
+        const r = await fetch(`/api/rj/native/balance-check/${session.audit_date}`);
+        setProgress(95);
+        if (!r.ok) {
+          setProgress(100, 'err');
+          clearProgress();
+          markStale();
+          return;
+        }
+        payload = await r.json();
+        clearStale();
+      } catch (e) {
+        setProgress(100, 'err');
+        clearProgress();
+        markStale();
+        return;
+      } finally {
+        card.classList.remove('loading');
+      }
+    }
+    const hash = _hash(JSON.stringify(payload));
+    if (hash === state.lastResponseHash) {
+      setProgress(100);
+      clearProgress();
+      return;
+    }
+    state.lastResponseHash = hash;
+    renderInto(payload);
+    setProgress(100);
+    clearProgress();
+  }
+
+  function _checkMetaLocal(status) {
+    if (status === 'pass') return ['pass', '✓'];
+    if (status === 'fail') return ['fail', '✗'];
+    return ['warn', '!'];
+  }
+
+  function buildVariancesHtml(decomp) {
+    const classes = decomp.classes || {};
+    const nonzero = VARIANCE_ROWS
+      .map(([label, key]) => [label, Number(classes[key] || 0)])
+      .filter(([, v]) => Math.abs(v) >= 0.01);
+
+    const lines = [];
+    if (nonzero.length === 0) {
+      lines.push(`<div class="livecard-var-row"><span class="label">Aucune variance</span><span class="value">—</span></div>`);
+    } else {
+      for (const [label, val] of nonzero) {
+        lines.push(`<div class="livecard-var-row" data-var-key="${label}"><span class="label">${label}</span><span class="value">${fmtMoneyLocal(val)}</span></div>`);
+      }
+    }
+    const declared = Number(decomp.declared_sum || 0);
+    const residual = Number(decomp.unexplained_residual || 0);
+    lines.push(`<div class="livecard-var-row"><span class="label">Somme déclarées</span><span class="value">${fmtMoneyLocal(declared)}</span></div>`);
+    const resOk = Math.abs(residual) < DC_OK_THRESHOLD;
+    lines.push(
+      `<div class="livecard-var-row residual ${resOk ? 'ok' : 'err'}">` +
+      `<span class="label">Résiduel</span>` +
+      `<span class="value">${fmtMoneyLocal(residual)}</span></div>`
+    );
+    return { html: lines.join(''), nonzeroCount: nonzero.length };
+  }
+
+  function buildChecklistHtml(checks) {
+    if (!checks || checks.length === 0) return { html: '', score: '', klass: '' };
+    const pass = checks.filter(c => _checkMetaLocal(c.status)[0] === 'pass').length;
+    const scoreKlass = (pass === checks.length) ? 'ok' : 'err';
+    const itemsHtml = checks.map(c => {
+      const [cls, icon] = _checkMetaLocal(c.status);
+      const detail = c.detail ? `<div class="detail">${c.detail}</div>` : '';
+      return `<div class="livecard-check-item ${cls}">` +
+             `<span class="ic">${icon}</span>` +
+             `<div class="txt">${c.item || 'Item'}${detail}</div></div>`;
+    }).join('');
+    return { html: itemsHtml, score: `${pass}/${checks.length}`, klass: scoreKlass };
+  }
+
+  function renderInto(data) {
+    const body = document.getElementById('livecard-body');
+    if (!body) return;
+    const checks = data.checklist || [];
+    const failedCount = checks.filter(c => c.status === 'fail').length;
+    const newBucket = classifyDC(Number(data.dc_current ?? data.dc_calculated ?? 0));
+    const shouldAutoExpand = (
+      !state.pinned &&
+      !state.hidden &&
+      state.minimized &&
+      (
+        (state.prevFailedCount !== null && failedCount > state.prevFailedCount) ||
+        (state.prevDcBucket === 'warn' && newBucket === 'err') ||
+        (state.prevDcBucket === 'ok' && newBucket !== 'ok')
+      )
+    );
+    state.prevFailedCount = failedCount;
+    state.prevDcBucket = newBucket;
+    if (shouldAutoExpand) {
+      setMinimized(false);
+    }
+    const dc = Number(data.dc_current ?? data.dc_calculated ?? 0);
+    const decomp = data.dc_decomposition || {};
+    const residual = Number(decomp.unexplained_residual || 0);
+    const residualOk = Math.abs(residual) < DC_OK_THRESHOLD;
+    const klass = classifyDC(dc);
+    const verdictKlass = (klass === 'ok') ? 'ok' : (residualOk ? 'warn' : 'err');
+
+    const variances = buildVariancesHtml(decomp);
+    const checklist = buildChecklistHtml(data.checklist || []);
+
+    const serverNote = typeof data.dc_note_text === 'string' ? data.dc_note_text : '';
+    const showNote = Math.abs(dc) >= DC_OK_THRESHOLD && residualOk && (serverNote || variances.nonzeroCount > 0);
+    const auditor = data.auditor || (window.SESSION && window.SESSION.auditor) || '—';
+    const auditDate = data.audit_date || (window.SESSION && window.SESSION.audit_date) || '';
+    const formattedDate = auditDate ? new Date(auditDate).toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
+    body.innerHTML = `
+      <div class="livecard-hero">
+        <div class="livecard-dc ${klass === 'ok' ? '' : klass}" id="livecard-dc">${fmtMoneyLocal(dc)}</div>
+        <div class="livecard-verdict ${verdictKlass === 'ok' ? '' : verdictKlass}" id="livecard-verdict">${verdictText(klass, residualOk)}</div>
+      </div>
+      ${variances.nonzeroCount > 0 || Math.abs(dc) >= DC_OK_THRESHOLD ? `
+        <div class="livecard-section">
+          <div class="livecard-section-title">Variances déclarées</div>
+          ${variances.html}
+        </div>` : ''}
+      ${checklist.html ? `
+        <div class="livecard-section" id="livecard-checklist-section">
+          <div class="livecard-checklist-summary" id="livecard-checklist-summary">
+            <div class="livecard-section-title" style="margin-bottom:0">Checklist 21 points</div>
+            <div class="livecard-checklist-score ${checklist.klass}">${checklist.score}</div>
+          </div>
+          <div class="livecard-checklist-items">${checklist.html}</div>
+        </div>` : ''}
+      ${showNote ? `
+        <div class="livecard-section" id="livecard-autonote-section">
+          <div class="livecard-section-title">Note auto-générée</div>
+          <div class="livecard-autonote" id="livecard-autonote">${serverNote || _buildClientNote(variances, auditor)}</div>
+          <div class="livecard-autonote-actions">
+            <span>À coller dans la cellule DC (col C)</span>
+            <button type="button" class="livecard-autonote-copy" id="livecard-autonote-copy">Copier</button>
+          </div>
+        </div>` : ''}
+      <div class="livecard-footer">
+        <span>${auditor}</span>
+        <span>${formattedDate}</span>
+      </div>
+    `;
+
+    // Checklist expand/collapse
+    const sum = document.getElementById('livecard-checklist-summary');
+    const sec = document.getElementById('livecard-checklist-section');
+    if (sum && sec) {
+      sum.addEventListener('click', () => sec.classList.toggle('expanded'));
+    }
+    attachAutoNoteCopy();
+
+    // Pill title mirror
+    const titleEl = card ? card.querySelector('.livecard-title') : null;
+    if (titleEl && state.minimized) {
+      titleEl.textContent = fmtMoneyLocal(dc);
+    } else if (titleEl) {
+      titleEl.textContent = 'Diff. Caisse';
+    }
+    if (card) {
+      card.classList.toggle('warn', klass === 'warn');
+      card.classList.toggle('err', klass === 'err');
+    }
+    if (edgeTab) {
+      edgeTab.classList.toggle('warn', klass === 'warn');
+      edgeTab.classList.toggle('err', klass === 'err');
+    }
+    if (checkSuccessTransition(dc, residualOk)) playSuccessMoment();
+    pulseChangedVariances(decomp);
+  }
+
+  // Public API — bound in later tasks
+  window.livecard = {
+    mode: mode,
+    init: function() {
+      loadState();
+      applyPosition();
+      applyVisibility();
+      setPinned(state.pinned);
+      attachDrag();
+      attachControls();
+      // First-load skeleton
+      const body = document.getElementById('livecard-body');
+      if (body) {
+        body.innerHTML = `
+          <div class="livecard-hero">
+            <div class="livecard-dc" style="color: var(--text-muted)">—</div>
+            <div class="livecard-verdict" style="color: var(--text-muted)">Calcul en cours…</div>
+          </div>
+          <div class="livecard-section">
+            <div class="livecard-skeleton-row"></div>
+            <div class="livecard-skeleton-row" style="width: 70%"></div>
+            <div class="livecard-skeleton-row" style="width: 85%"></div>
+          </div>
+        `;
+      }
+      const staleEl = document.getElementById('livecard-stale');
+      if (staleEl) staleEl.addEventListener('click', () => { clearStale(); refresh(); });
+    },
+    refresh: function(data) { return refresh(data); },
+    onUploadSuccess: function(d) {
+      // Auto-expand from pill state unless pinned
+      if (state.minimized && !state.pinned && !state.hidden) {
+        setMinimized(false);
+      }
+      if (d && d.date_mismatch) {
+        // Loud toast handled by main-thread hook; just flash the card
+        if (card) {
+          card.classList.add('err');
+          setTimeout(() => card.classList.remove('err'), 1200);
+        }
+        return;
+      }
+      // Refresh now, bypassing the 300ms debounce by calling refresh() directly
+      refresh();
+    },
+    render: function(data) {
+      if (!card || !data) return;
+      renderInto(data);
+    },
+  };
+
+  window.setLivecard = function(enabled) {
+    localStorage.setItem(LS_MODE, enabled ? 'livecard' : 'legacy');
+    location.reload();
+  };
+
+  // ---------- State + persistence ----------
+  const state = {
+    pinned: false,
+    minimized: false,
+    hidden: false,
+    pos: null,
+    lastResponseHash: null,
+    prevFailedCount: null,
+    prevDcBucket: null,
+    prevWasBalanced: null,
+    prevResidualOk: null,
+  };
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(LS_STATE);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (saved && typeof saved === 'object') {
+        if (typeof saved.pinned === 'boolean') state.pinned = saved.pinned;
+        if (typeof saved.minimized === 'boolean') state.minimized = saved.minimized;
+        if (typeof saved.hidden === 'boolean') state.hidden = saved.hidden;
+        if (saved.pos && typeof saved.pos.x === 'number') state.pos = saved.pos;
+      }
+    } catch (e) { /* corrupt localStorage — ignore */ }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(LS_STATE, JSON.stringify({
+        pinned: state.pinned,
+        minimized: state.minimized,
+        hidden: state.hidden,
+        pos: state.pos,
+      }));
+    } catch (e) { /* quota exceeded — ignore */ }
+  }
+
+  function applyPosition() {
+    if (!card) return;
+    if (state.pos) {
+      card.style.top = state.pos.y + 'px';
+      card.style.left = state.pos.x + 'px';
+      card.style.right = 'auto';
+    } else {
+      card.style.top = '24px';
+      card.style.right = '24px';
+      card.style.left = 'auto';
+    }
+  }
+
+  function clampPosition(x, y) {
+    const rect = card.getBoundingClientRect();
+    const margin = 20;
+    const maxX = window.innerWidth - rect.width - margin;
+    const maxY = window.innerHeight - rect.height - margin;
+    return {
+      x: Math.max(margin, Math.min(x, maxX)),
+      y: Math.max(margin, Math.min(y, maxY)),
+    };
+  }
+
+  // ---------- Drag ----------
+  function attachDrag() {
+    const header = document.getElementById('livecard-header');
+    if (!header) return;
+    let dragging = false;
+    let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+    header.addEventListener('mousedown', (e) => {
+      // Ignore clicks on buttons inside the header
+      if (e.target.closest('.livecard-btn')) return;
+      dragging = true;
+      const rect = card.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+      card.style.transition = 'none';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      const clamped = clampPosition(startLeft + dx, startTop + dy);
+      state.pos = clamped;
+      applyPosition();
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      card.style.transition = '';
+      saveState();
+    });
+  }
+
+  // ---------- Visibility states ----------
+  function applyVisibility() {
+    if (!card || !edgeTab) return;
+    card.classList.toggle('pill', state.minimized && !state.hidden);
+    card.classList.toggle('hidden-state', state.hidden);
+    edgeTab.classList.toggle('livecard-hidden-mode', !state.hidden);
+  }
+
+  function setMinimized(flag) {
+    state.minimized = !!flag;
+    if (flag) state.hidden = false;
+    applyVisibility();
+    saveState();
+  }
+
+  function setHidden(flag) {
+    state.hidden = !!flag;
+    applyVisibility();
+    saveState();
+  }
+
+  function setPinned(flag) {
+    state.pinned = !!flag;
+    const btn = document.getElementById('livecard-pin');
+    if (btn) btn.classList.toggle('active', state.pinned);
+    saveState();
+  }
+
+  function attachControls() {
+    const minBtn = document.getElementById('livecard-min');
+    const hideBtn = document.getElementById('livecard-hide');
+    const pinBtn = document.getElementById('livecard-pin');
+    if (minBtn) minBtn.addEventListener('click', () => setMinimized(!state.minimized));
+    if (hideBtn) hideBtn.addEventListener('click', () => setHidden(true));
+    if (pinBtn) pinBtn.addEventListener('click', () => setPinned(!state.pinned));
+    if (edgeTab) edgeTab.addEventListener('click', () => setHidden(false));
+    // Clicking the pill header (not a button) restores the expanded card
+    const header = document.getElementById('livecard-header');
+    if (header) {
+      header.addEventListener('click', (e) => {
+        if (e.target.closest('.livecard-btn')) return;
+        if (state.minimized) setMinimized(false);
+      });
+    }
+  }
+
+  if (isLivecard && card) {
+    window.livecard.init();
+  }
+})();
+
+async function refreshChecklist(){
+  if (!SESSION || !SESSION.audit_date) return;
+  clearTimeout(_checklistTimer);
+  _checklistTimer = setTimeout(async () => {
+    try {
+      const r = await fetch(`/api/rj/native/balance-check/${SESSION.audit_date}`);
+      if (!r.ok) return;
+      const d = await r.json();
+      if (window.livecard && window.livecard.mode === 'livecard') {
+        window.livecard.refresh(d);
+      } else {
+        renderLivePanel(d);
+      }
+    } catch(e) {
+      // Silent — checklist is non-critical
+    }
+  }, 300);
 }
 
 // ═══════════════════════════════════════
@@ -3834,6 +5146,147 @@ function printReport(type) {
   }
   const url = `/api/rj/native/print/${type}?date=${SESSION.audit_date}`;
   window.open(url, '_blank', 'width=850,height=1100');
+}
+
+async function openFullPreview() {
+  if (!SESSION || !SESSION.audit_date) { alert('Aucune session chargée'); return; }
+  try {
+    const resp = await fetch(`/api/rj/native/preview/${SESSION.audit_date}`);
+    const data = await resp.json();
+    if (!data.success) { alert(data.error || 'Erreur'); return; }
+
+    const sheets = data.sheets || [];
+    const summary = data.summary || {};
+    const bal = summary.balance || {};
+
+    let html = `<html><head><title>Aperçu RJ Complet — ${SESSION.audit_date}</title>
+    <style>
+      *{box-sizing:border-box;margin:0;padding:0;}
+      body{font-family:'DM Sans',system-ui,sans-serif;background:#f8f9fb;color:#1a1a2e;}
+      .header{background:#fff;border-bottom:1px solid #e5e7eb;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+      .header h1{font-size:1.2rem;font-weight:700;}
+      .header .stats{font-size:12px;color:#6b7280;display:flex;gap:16px;}
+      .header .badge{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;}
+      .badge.ok{background:#dcfce7;color:#166534;} .badge.err{background:#fee2e2;color:#991b1b;}
+      .tabs{display:flex;gap:2px;padding:8px 24px;background:#fff;border-bottom:1px solid #e5e7eb;overflow-x:auto;position:sticky;top:56px;z-index:9;}
+      .tab{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:#6b7280;white-space:nowrap;}
+      .tab:hover{background:#f1f5f9;} .tab.active{background:#6366f1;color:#fff;}
+      .tab .cnt{font-size:10px;opacity:0.7;margin-left:3px;}
+      .content{padding:24px;max-width:1000px;margin:0 auto;}
+      .sheet{display:none;} .sheet.active{display:block;}
+      .sheet h2{font-size:15px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+      .sheet h2 .fill{font-size:11px;color:#6b7280;font-weight:400;}
+      table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
+      th{background:#f8f9fb;padding:6px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#94a3b8;border:1px solid #e5e7eb;}
+      td{padding:5px 10px;border:1px solid #e5e7eb;}
+      .filled{background:#f0fdf4;} .error{background:#fef2f2;color:#991b1b;font-weight:600;} .calculated{background:#eff6ff;color:#1e40af;} .empty{color:#d1d5db;}
+      .mono{font-family:'JetBrains Mono','SF Mono',monospace;}
+      @media print{.tabs,.header{position:static;} .sheet{display:block!important;page-break-after:always;}}
+    </style></head><body>
+    <div class="header">
+      <h1>Aperçu RJ — ${data.audit_date} (${data.auditor || ''})</h1>
+      <div class="stats">
+        <span>${summary.sheets_with_data}/${summary.total_sheets} feuilles</span>
+        <span>${summary.total_fields_filled} champs</span>
+        <span class="badge ${bal.recap?'ok':'err'}">Recap ${bal.recap?'✓':'✗'}</span>
+        <span class="badge ${bal.transelect?'ok':'err'}">Trans ${bal.transelect?'✓':'✗'}</span>
+        <span class="badge ${bal.ar?'ok':'err'}">AR ${bal.ar?'✓':'✗'}</span>
+        <button onclick="window.print()" style="padding:4px 12px;border:1px solid #d1d5db;border-radius:6px;background:#fff;cursor:pointer;font-size:11px;">Imprimer</button>
+      </div>
+    </div>
+    <div class="tabs" id="sheet-tabs">`;
+
+    sheets.forEach((s, i) => {
+      const cls = i === 0 ? 'active' : '';
+      const cnt = s.filled > 0 ? s.filled : '';
+      html += `<button class="tab ${cls}" onclick="showSheet(${i})" id="stab-${i}">${s.name}${cnt ? '<span class=cnt>'+cnt+'</span>' : ''}</button>`;
+    });
+
+    html += `</div><div class="content">`;
+
+    sheets.forEach((s, i) => {
+      const cls = i === 0 ? 'active' : '';
+      const balBadge = s.balanced === true ? '<span class="badge ok">Équilibré</span>' : (s.balanced === false ? '<span class="badge err">Non équilibré</span>' : '');
+      html += `<div class="sheet ${cls}" id="sheet-${i}">
+        <h2>${s.name} ${balBadge} <span class="fill">${s.filled} valeur(s)</span></h2>`;
+
+      if (s.cells && s.cells.length > 0) {
+        html += `<table><thead><tr><th>Cellule</th><th>Valeur</th><th>Status</th></tr></thead><tbody>`;
+        for (const cell of s.cells) {
+          const cls = cell.status || 'empty';
+          const val = typeof cell.value === 'number'
+            ? cell.value.toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2})
+            : (cell.value || '—');
+          const label = cell.label ? ` <span style="color:#94a3b8;font-size:10px;">(${cell.label})</span>` : '';
+          html += `<tr class="${cls}"><td class="mono">${cell.cell}${label}</td><td class="mono" style="text-align:right;">${val}</td><td style="font-size:10px;">${cls}</td></tr>`;
+        }
+        html += `</tbody></table>`;
+      } else {
+        html += `<div style="padding:40px;text-align:center;color:#d1d5db;">Aucune donnée</div>`;
+      }
+      html += `</div>`;
+    });
+
+    html += `</div>
+    <script>
+    function showSheet(idx) {
+      document.querySelectorAll('.sheet').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('sheet-'+idx).classList.add('active');
+      document.getElementById('stab-'+idx).classList.add('active');
+    }
+    <\/script><\/body><\/html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+  } catch(e) { alert('Erreur: ' + e.message); }
+}
+
+async function previewExcelSheet(sheetName) {
+  if (!SESSION || !SESSION.audit_date) {
+    alert('Aucune session chargée');
+    return;
+  }
+  try {
+    const resp = await fetch(`/api/rj/native/preview/${SESSION.audit_date}`);
+    const data = await resp.json();
+    if (!data.success) { alert(data.error || 'Erreur'); return; }
+
+    const sheet = data.sheets.find(s => s.name === sheetName || s.name.toLowerCase() === sheetName.toLowerCase());
+    if (!sheet) { alert(`Feuille "${sheetName}" non trouvée`); return; }
+
+    // Build preview popup
+    let html = `<html><head><title>Aperçu Excel — ${sheetName}</title>
+      <style>
+        body{font-family:'SF Mono',monospace;font-size:12px;padding:20px;background:#fff;}
+        h2{font-size:16px;margin:0 0 12px;}
+        table{border-collapse:collapse;width:100%;}
+        th{background:#f1f5f9;padding:6px 10px;text-align:left;border:1px solid #e2e8f0;font-size:11px;}
+        td{padding:5px 10px;border:1px solid #e2e8f0;}
+        .filled{background:#f0fdf4;color:#166534;}
+        .empty{background:#fafafa;color:#d1d5db;}
+        .error{background:#fef2f2;color:#991b1b;}
+        .calculated{background:#eff6ff;color:#1e40af;}
+        .ok{background:#dcfce7;color:#166534;font-weight:bold;}
+      </style></head><body>
+      <h2>${sheetName} — ${sheet.filled} valeurs remplies</h2>
+      <table><thead><tr><th>Cellule</th><th>Valeur</th><th>Status</th></tr></thead><tbody>`;
+
+    for (const cell of sheet.cells || []) {
+      const cls = cell.status || 'empty';
+      const val = typeof cell.value === 'number' ? cell.value.toLocaleString('fr-CA', {minimumFractionDigits:2, maximumFractionDigits:2}) : (cell.value || '—');
+      const label = cell.label ? ` (${cell.label})` : '';
+      html += `<tr class="${cls}"><td>${cell.cell}${label}</td><td style="text-align:right;">${val}</td><td>${cls}</td></tr>`;
+    }
+
+    html += `<\/tbody><\/table><\/body><\/html>`;
+    const win = window.open('', '_blank', 'width=600,height=800');
+    win.document.write(html);
+    win.document.close();
+  } catch(e) {
+    alert('Erreur: ' + e.message);
+  }
 }
 
 function refreshSummary() {
@@ -4176,7 +5629,7 @@ async function viewArchive(archiveId) {
     const dateStr = data.audit_date || '';
 
     let html = `<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center" onclick="if(event.target===this)this.remove()">
-      <div style="background:var(--bg-card);border-radius:10px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
+      <div style="background:var(--card);border-radius:10px;padding:20px;max-width:600px;width:90%;max-height:80vh;overflow-y:auto;box-shadow:0 10px 40px rgba(0,0,0,0.3)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <h3 style="margin:0;font-size:15px">📋 ${fname} — ${dateStr}</h3>
           <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted)">✕</button>

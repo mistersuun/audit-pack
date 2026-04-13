@@ -1,0 +1,15 @@
+{
+  "dc_current": -2167.86,
+  "dc_note_text": "Auditeur De Nuit: Test Auditor\nTranselect X20: 2167.86",
+  "dc_decomposition": {
+    "classes": { "x20_transelect": -2167.86 },
+    "declared_sum": -2167.86,
+    "unexplained_residual": 0
+  },
+  "checklist": [
+    { "item": "Diff. Caisse = 0", "status": "fail", "detail": "DC=-2167.86" },
+    { "item": "Transelect balancé", "status": "pass" }
+  ],
+  "auditor": "Test Auditor",
+  "audit_date": "2026-04-10"
+}

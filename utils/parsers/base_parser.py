@@ -93,3 +93,43 @@ class BaseParser(ABC):
             return float(value)
         except (ValueError, TypeError):
             return default
+
+    def _decode_bytes(self):
+        """Decode self.file_bytes as text, falling back across common encodings.
+
+        Galaxy/Lightspeed text dumps are emitted in CP1252 or latin-1; PDFs
+        exported to text sometimes land as utf-8. Tries each in order and
+        ultimately falls back to utf-8 with replacement characters so the
+        parser never raises on a single bad byte.
+        """
+        raw = self.file_bytes
+        if isinstance(raw, str):
+            return raw
+        for encoding in ('utf-8', 'latin-1', 'cp1252'):
+            try:
+                return raw.decode(encoding)
+            except UnicodeDecodeError:
+                continue
+        return raw.decode('utf-8', errors='replace')
+
+    def _extract_pdf_text(self):
+        """Extract concatenated text from all pages of a PDF in self.file_bytes.
+
+        Returns '' (not None) and appends a validation error if pdfplumber is
+        missing or the PDF can't be opened. Accepts raw bytes or a BytesIO.
+        """
+        try:
+            import pdfplumber
+        except ImportError:
+            self.validation_errors.append("pdfplumber not installed")
+            return ""
+        import io
+        buf = self.file_bytes
+        if isinstance(buf, bytes):
+            buf = io.BytesIO(buf)
+        try:
+            with pdfplumber.open(buf) as pdf:
+                return "\n".join((page.extract_text() or "") for page in pdf.pages)
+        except Exception as e:
+            self.validation_errors.append(f"PDF extraction failed: {e}")
+            return ""

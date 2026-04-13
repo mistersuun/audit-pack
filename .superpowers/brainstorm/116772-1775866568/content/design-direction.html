@@ -1,0 +1,111 @@
+<h2>RJ Native — Design Direction</h2>
+<p class="subtitle">Which aesthetic direction should the redesign follow? The current page uses grey backgrounds, generic borders, and a dated card layout.</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#0a0a0f; padding:24px; border-radius:8px 8px 0 0;">
+      <!-- Linear/Notion-inspired dark-first design -->
+      <div style="font-family:system-ui; color:#e5e7eb;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); border-radius:10px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:14px; font-weight:700; color:#fff;">Rapport Journalier</span>
+            <span style="font-size:10px; padding:3px 10px; background:rgba(99,102,241,0.15); color:#818cf8; border-radius:20px; font-weight:600;">En cours</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <span style="font-size:11px; padding:5px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); border-radius:6px; color:#9ca3af;">Exporter</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:3px; padding:3px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; margin-bottom:12px;">
+          <span style="flex:1; text-align:center; padding:8px 12px; font-size:11px; font-weight:600; background:rgba(99,102,241,0.2); color:#a5b4fc; border-radius:7px;">Setup</span>
+          <span style="flex:1; text-align:center; padding:8px 12px; font-size:11px; color:#6b7280; border-radius:7px;">DueBack</span>
+          <span style="flex:1; text-align:center; padding:8px 12px; font-size:11px; color:#6b7280; border-radius:7px;">SD</span>
+          <span style="flex:1; text-align:center; padding:8px 12px; font-size:11px; color:#6b7280; border-radius:7px;">Recap</span>
+          <span style="flex:1; text-align:center; padding:8px 12px; font-size:11px; color:#6b7280; border-radius:7px;">Jour</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:20px;">
+          <div style="font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Configuration</div>
+          <div style="display:flex; gap:12px;">
+            <div style="flex:1; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; font-size:12px; color:#9ca3af;">2026-03-21</div>
+            <div style="flex:1; padding:8px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; font-size:12px; color:#9ca3af;">Souleymane Camara</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Dark-first (Linear/Notion)</h3>
+      <p>Near-black backgrounds, very subtle borders (rgba white 6%), muted purple accents. Feels like a developer tool. The grey goes away completely — replaced by deep charcoal.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fafafa; padding:24px; border-radius:8px 8px 0 0;">
+      <!-- Stripe-inspired clean white design -->
+      <div style="font-family:system-ui; color:#1a1a2e;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 18px; background:#fff; border-bottom:1px solid #eaeaea; margin-bottom:14px;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:15px; font-weight:700;">Rapport Journalier</span>
+            <span style="font-size:10px; padding:3px 10px; background:#dbeafe; color:#2563eb; border-radius:20px; font-weight:600;">En cours</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <span style="font-size:11px; padding:6px 14px; background:#635bff; color:#fff; border-radius:6px; font-weight:600;">Exporter</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:0; border-bottom:1px solid #eaeaea; margin-bottom:14px; padding:0 18px;">
+          <span style="padding:10px 16px; font-size:12px; font-weight:600; color:#635bff; border-bottom:2px solid #635bff;">Setup</span>
+          <span style="padding:10px 16px; font-size:12px; color:#6b7280;">DueBack</span>
+          <span style="padding:10px 16px; font-size:12px; color:#6b7280;">SD</span>
+          <span style="padding:10px 16px; font-size:12px; color:#6b7280;">Recap</span>
+          <span style="padding:10px 16px; font-size:12px; color:#6b7280;">Jour</span>
+        </div>
+        <div style="background:#fff; border:1px solid #eaeaea; border-radius:8px; padding:20px; margin:0 18px;">
+          <div style="font-size:12px; font-weight:600; color:#6b7280; margin-bottom:12px;">Configuration</div>
+          <div style="display:flex; gap:12px;">
+            <div style="flex:1; padding:9px 14px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; color:#374151;">2026-03-21</div>
+            <div style="flex:1; padding:9px 14px; border:1px solid #e5e7eb; border-radius:6px; font-size:13px; color:#374151;">Souleymane Camara</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Light & clean (Stripe)</h3>
+      <p>Pure white cards on barely-there grey (#fafafa). Bottom-border tabs instead of pill tabs. Stripe purple (#635bff) accents. Professional, minimal, no "grey zone" — just white surfaces with thin borders.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding:24px; border-radius:8px 8px 0 0;">
+      <!-- Vercel-inspired minimal dark -->
+      <div style="font-family:system-ui; color:#e5e7eb;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.1); margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:15px; font-weight:700; color:#fff;">Rapport Journalier</span>
+            <span style="width:6px; height:6px; border-radius:50%; background:#3b82f6;"></span>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <span style="font-size:12px; padding:6px 16px; background:#fff; color:#000; border-radius:6px; font-weight:500;">Exporter</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:4px; margin-bottom:16px;">
+          <span style="padding:7px 16px; font-size:12px; font-weight:500; background:rgba(255,255,255,0.1); color:#fff; border-radius:999px;">Setup</span>
+          <span style="padding:7px 16px; font-size:12px; color:#6b7280; border-radius:999px;">DueBack</span>
+          <span style="padding:7px 16px; font-size:12px; color:#6b7280; border-radius:999px;">SD</span>
+          <span style="padding:7px 16px; font-size:12px; color:#6b7280; border-radius:999px;">Recap</span>
+          <span style="padding:7px 16px; font-size:12px; color:#6b7280; border-radius:999px;">Jour</span>
+        </div>
+        <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:10px; padding:20px;">
+          <div style="font-size:11px; font-weight:600; color:#64748b; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:12px;">Configuration</div>
+          <div style="display:flex; gap:12px;">
+            <div style="flex:1; padding:9px 14px; background:#0f172a; border:1px solid rgba(255,255,255,0.1); border-radius:6px; font-size:13px; color:#94a3b8;">2026-03-21</div>
+            <div style="flex:1; padding:9px 14px; background:#0f172a; border:1px solid rgba(255,255,255,0.1); border-radius:6px; font-size:13px; color:#94a3b8;">Souleymane Camara</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Vercel minimal</h3>
+      <p>Slate gradient background, pill tabs with frosted glass, stark white export button. Extremely minimal — no decorative elements. The background is dark but warmer than Linear. Status is just a colored dot.</p>
+    </div>
+  </div>
+
+</div>
