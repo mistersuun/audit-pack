@@ -143,6 +143,29 @@ class DailyRevenueParser(BaseParser):
         if property_match:
             self.extracted_data['property'] = property_match.group(1).strip()
 
+        # Check for pre-audit timestamp
+        ts_match = re.search(r'(\d{2}-\w{3}-\d{4}\s+\d{1,2}:\d{2}\s+[AP]M)', self.raw_text)
+        if ts_match:
+            self.extracted_data['report_timestamp'] = ts_match.group(1)
+            self._check_timestamp_validity(ts_match.group(1))
+
+    def _check_timestamp_validity(self, timestamp_str):
+        """Warn if DR was run before 3:00 AM (pre-audit, missing room charges).
+
+        A pre-audit DR will be missing ~$50K+ of room charges, taxes, and
+        balance data. See docs/RJ_AUTOFILL_MASTER.md section 1b.
+        """
+        try:
+            dt = datetime.strptime(timestamp_str.strip(), "%d-%b-%Y %I:%M %p")
+            if dt.hour < 3:
+                self.validation_warnings.append(
+                    f"PRE-AUDIT WARNING: DR timestamp {timestamp_str} is before 3:00 AM. "
+                    f"Room charges, taxes, and balance data may be incomplete. "
+                    f"Request the post-audit version."
+                )
+        except (ValueError, AttributeError):
+            pass
+
     # ── Revenue Departments (Pages 1-2) ──────────────────────────────────────
 
     def _parse_revenue_departments(self):
