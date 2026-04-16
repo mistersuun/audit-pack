@@ -116,6 +116,24 @@ class SalesJournalParser(BaseParser):
                 'rj_mapping': self._build_rj_mapping(departments, taxes, payments, adjustments),
             }
 
+            # PANNE amounts tracked separately
+            pannes_raw = adjustments
+            self.extracted_data['pannes'] = {
+                'visa': pannes_raw.get('panne_visa', 0),
+                'mastercard': pannes_raw.get('panne_master', 0),
+                'amex': pannes_raw.get('panne_amex', 0),
+                'interac': pannes_raw.get('panne_interact', 0),
+                'lien_hotel': pannes_raw.get('panne_lien_hotel', 0),
+            }
+
+            # POSITOUCH totals = card payment + matching PANNE per card type
+            self.extracted_data['positouch_totals'] = {
+                'visa': payments.get('visa', 0) + pannes_raw.get('panne_visa', 0),
+                'mastercard': payments.get('mastercard', 0) + pannes_raw.get('panne_master', 0),
+                'amex': payments.get('amex', 0) + pannes_raw.get('panne_amex', 0),
+                'interac': payments.get('interac', 0) + pannes_raw.get('panne_interact', 0),
+            }
+
             # Calculate confidence score
             self.confidence = 0.95 if self.report_date else 0.5
             self._parsed = True
@@ -386,6 +404,23 @@ class SalesJournalParser(BaseParser):
             match = re.search(pattern, page2)
             if match:
                 adjustments[key] = float(match.group(1))
+
+        # PANNE amounts — failed terminal transactions still in POS
+        panne_items = {
+            'panne_visa': r'PANNE VISA\s+(\d[\d,]*\.\d+)',
+            'panne_master': r'PANNE MASTER\s+(\d[\d,]*\.\d+)',
+            'panne_amex': r'PANNE AMEX\s+(\d[\d,]*\.\d+)',
+            'panne_interact': r'PANNE INTERACT\s+(\d[\d,]*\.\d+)',
+            'panne_lien_hotel': r'PANNE LIEN HOTEL\s+(\d[\d,]*\.\d+)',
+        }
+
+        for key, pattern in panne_items.items():
+            # Search page 2 first, then full text
+            match = re.search(pattern, page2)
+            if not match:
+                match = re.search(pattern, text)
+            if match:
+                adjustments[key] = float(match.group(1).replace(',', ''))
 
         return adjustments
 
