@@ -2,6 +2,13 @@
 Utility to fill RJ Excel file with form data.
 """
 
+# ╔══════════════════════════════════════════════════════════════════════════════╗
+# ║ WARNING: xlutils.copy() DESTROYS Excel formulas, tab colors, and macros.   ║
+# ║ This is a KNOWN BUG. The RJ .xls files lose ~470KB of formula data.       ║
+# ║ For production use, migrate to pywin32 Excel COM (Windows) or openpyxl     ║
+# ║ (.xlsx). See docs/XLUTILS_WARNING.md and docs/RJ_AUTOFILL_MASTER.md §4.  ║
+# ╚══════════════════════════════════════════════════════════════════════════════╝
+
 import xlrd
 from xlrd import open_workbook
 from xlutils.copy import copy as copy_workbook
