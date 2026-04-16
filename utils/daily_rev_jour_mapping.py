@@ -924,6 +924,56 @@ DAILY_REV_TO_JOUR = {
         'description': 'Total beverages (alcool + bières + minéraux + vins)',
         'sign_handling': 'keep_sign'
     },
+
+    # =========================================================================
+    # ROOM STATISTICS (from Market Segment report)
+    # =========================================================================
+    'CK': {
+        'column_index': 88,
+        'label_en': 'Simple (rooms)',
+        'label_fr': 'SIMPLE',
+        'source_page': 'Market Segment',
+        'source_line': 'TOTAL Rooms - Suites',
+        'operation': 'room_formula',
+        'formula': '=total_rooms-CM[row]',
+        'base_field': 'market_segment.total_rooms_today',
+        'description': 'CK = Market Segment total rooms sold minus suites (CM). CK is a FORMULA in Excel: =rooms-CM[row].',
+        'sign_handling': 'keep_sign',
+        'note': 'CK is a FORMULA cell. Write =248-CM17 style, not a static value.'
+    },
+    'CN': {
+        'column_index': 91,
+        'label_en': 'Complimentary rooms',
+        'label_fr': 'COMP.',
+        'source_page': 'Market Segment',
+        'source_line': 'T62 Complimentary Rooms today',
+        'operation': 'direct',
+        'base_field': 'market_segment.complimentary_rooms_today',
+        'description': 'Complimentary rooms count from Market Segment T62 line.',
+        'sign_handling': 'keep_sign'
+    },
+    'CO': {
+        'column_index': 92,
+        'label_en': 'Number of clients',
+        'label_fr': '# CLIENT',
+        'source_page': 'Market Segment',
+        'source_line': 'TOTAL Guests today',
+        'operation': 'direct',
+        'base_field': 'market_segment.total_guests_today',
+        'description': 'Total guest count from Market Segment TOTAL line.',
+        'sign_handling': 'keep_sign'
+    },
+    'CP': {
+        'column_index': 93,
+        'label_en': 'Out of order rooms',
+        'label_fr': "HORS D'USAGE",
+        'source_page': 'DBRS',
+        'source_line': 'OOO column',
+        'operation': 'direct',
+        'base_field': 'dbrs.ooo_rooms',
+        'description': 'Out of order rooms from DBRS report OOO column. Default 0 if not available.',
+        'sign_handling': 'keep_sign'
+    },
 }
 
 
@@ -1156,6 +1206,7 @@ COLUMNS_BY_CATEGORY = {
     'CREDIT_CARDS': ['BI', 'BJ', 'BK', 'BL', 'BM', 'BN'],
     'HP_DEDUCTIONS': ['BQ'],
     'POS_TOTALS': ['DG', 'DH', 'DI', 'DJ', 'DK', 'DM'],
+    'ROOM_STATISTICS': ['CK', 'CN', 'CO', 'CP'],
 }
 
 

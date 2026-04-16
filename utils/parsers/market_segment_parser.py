@@ -167,9 +167,20 @@ class MarketSegmentParser(BaseParser):
             self.extracted_data['mtd_revenue'] = self._safe_float(match.group(8))
             self.extracted_data['mtd_avg_rate'] = self._safe_float(match.group(9))
             self.extracted_data['mtd_occupancy'] = self._safe_float(match.group(10))
+            # Aliases used by Jour column mappings (CK, CO)
+            self.extracted_data['total_rooms_today'] = self.extracted_data['today_rooms']
+            self.extracted_data['total_guests_today'] = self.extracted_data['today_guests']
         else:
             # Fallback: calculate from segments (should not happen with proper PDF)
             self._calculate_totals_from_segments()
+
+        # T62 Complimentary: "T62 Complimentar <guests> <rooms> ..."
+        # Used by Jour column CN (complimentary rooms)
+        comp_match = re.search(r'T62\s+Complimentar\w*\s+(\d+)\s+(\d+)', self.raw_text)
+        if comp_match:
+            self.extracted_data['complimentary_rooms_today'] = int(comp_match.group(2))
+        else:
+            self.extracted_data['complimentary_rooms_today'] = 0
 
     def _calculate_totals_from_segments(self):
         """Calculate totals by summing all segment values."""
@@ -189,6 +200,9 @@ class MarketSegmentParser(BaseParser):
         self.extracted_data['mtd_guests'] = mtd_guests
         self.extracted_data['mtd_rooms'] = mtd_rooms
         self.extracted_data['mtd_revenue'] = round(mtd_revenue, 2)
+        # Aliases used by Jour column mappings (CK, CO)
+        self.extracted_data['total_rooms_today'] = today_rooms
+        self.extracted_data['total_guests_today'] = today_guests
 
         # Calculate average rates
         if today_rooms > 0:

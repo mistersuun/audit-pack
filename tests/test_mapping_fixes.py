@@ -35,3 +35,15 @@ def test_aw_has_three_components():
     assert aw['operation'] == 'accumulate'
     fields = aw.get('accumulator_fields', [])
     assert len(fields) == 3
+
+
+def test_room_stats_columns_mapped():
+    """CK, CN, CO, CP must be mapped for room statistics."""
+    assert 'CK' in DAILY_REV_TO_JOUR
+    assert DAILY_REV_TO_JOUR['CK']['column_index'] == 88
+    assert 'CN' in DAILY_REV_TO_JOUR
+    assert DAILY_REV_TO_JOUR['CN']['column_index'] == 91
+    assert 'CO' in DAILY_REV_TO_JOUR
+    assert DAILY_REV_TO_JOUR['CO']['column_index'] == 92
+    assert 'CP' in DAILY_REV_TO_JOUR
+    assert DAILY_REV_TO_JOUR['CP']['column_index'] == 93
