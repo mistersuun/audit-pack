@@ -16,6 +16,8 @@ from utils.parsers.market_segment_parser import MarketSegmentParser
 from utils.parsers.cashier_summary_parser import CashierSummaryParser
 from utils.parsers.transaction_summary_parser import TransactionSummaryParser
 from utils.parsers.recap_text_parser import RecapTextParser
+from utils.parsers.house_totals_parser import HouseTotalsParser
+from utils.parsers.debourse_parser import DebourseParser
 
 
 class ParserFactory:
@@ -33,6 +35,8 @@ class ParserFactory:
         'cashier_summary': CashierSummaryParser,
         'transaction_summary': TransactionSummaryParser,
         'recap_text': RecapTextParser,
+        'house_totals': HouseTotalsParser,
+        'debourse': DebourseParser,
     }
 
     ACCEPTED_EXTENSIONS = {
@@ -47,18 +51,30 @@ class ParserFactory:
         'cashier_summary': ['.pdf', '.txt'],
         'transaction_summary': ['.xlsx'],
         'recap_text': ['.txt'],
+        'house_totals': ['.txt'],
+        'debourse': ['.pdf', '.dat'],  # .dat is a PDF with wrong extension
     }
 
     # Auto-detection rules: map filename patterns to parser types
     FILENAME_PATTERNS = [
-        # Order matters — more specific patterns first
+        # Order matters — more specific patterns first.
+        # house_totals and 90.2/debourse BEFORE generic 'house' to catch them.
+        ('house_totals', 'house_totals'),
+        ('house_90_2', 'debourse'),
+        ('90_2', 'debourse'),
+        ('90.2', 'debourse'),
+        ('debourse', 'debourse'),
         ('daily_rev', 'daily_revenue'),
         ('dlyrev', 'daily_revenue'),
         ('advance_deposit', 'advance_deposit'),
+        ('adv_dep', 'advance_deposit'),
+        ('deposit_balance', 'advance_deposit'),
         ('market_segment', 'market_segment'),
         ('mktsegprd', 'market_segment'),
         ('transactionsummary', 'transaction_summary'),
+        ('transaction_summary', 'transaction_summary'),
         ('freedompay', 'freedompay'),
+        ('fusebox', 'transaction_summary'),
         ('cashier_cashout', 'cashier_summary'),
         ('cashier_details', None),  # informational only, no parser yet
         ('4_28_cashier', None),  # F&B cashier details, no parser yet
@@ -66,15 +82,25 @@ class ParserFactory:
         ('cshsum', 'cashier_summary'),
         ('cshout', 'cashier_summary'),
         ('sales_journal', 'sales_journal'),
+        # AR Summary — multiple naming conventions used by hotels
+        ('ar_summary', 'ar_summary'),
+        ('arsummary', 'ar_summary'),
+        ('ar summary', 'ar_summary'),
+        ('arsum', 'ar_summary'),
+        ('receivable', 'ar_summary'),
+        ('recevable', 'ar_summary'),
         ('recap', 'recap_text'),
         ('guest_ledger', None),  # informational only
         ('guestledger', None),
         ('chambres_pannes', None),  # informational only
+        ('quasimodo', None),  # reconciliation sheet — handled via /api/rj/quasimodo
+        ('quasi', None),
         ('hp', 'hp_excel'),
         ('pod0', None),  # POD payroll — informational
         ('dbr', None),  # DBRS master — informational
         ('rj ', None),  # RJ workbook — handled separately
         ('sd.', 'sd_deposit'),
+        ('sd ', 'sd_deposit'),
     ]
 
     @classmethod
@@ -172,5 +198,17 @@ class ParserFactory:
                 'description_fr': 'Rapport Recap par serveur — Transelect restaurant + cash',
                 'target_sheet': 'Recap',
                 'extensions': ['.txt'],
+            },
+            'house_totals': {
+                'label_fr': 'House Totals (TXT)',
+                'description_fr': 'Sales Journal Report for Entire house — PAYMENT TOTALS (Comptant Positouch + Remb Gratuité)',
+                'target_sheet': 'Recap',
+                'extensions': ['.txt'],
+            },
+            'debourse': {
+                'label_fr': 'Débourse 90.2 (PDF)',
+                'description_fr': 'Cashier Detail Dept 90 Sub 90.2 — Remboursement Serveur + Due Back Réception',
+                'target_sheet': 'Recap',
+                'extensions': ['.pdf', '.dat'],
             },
         }

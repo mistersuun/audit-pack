@@ -23,6 +23,7 @@
         </button>
       </div>
       <button class="cl-btn-icon" onclick="loadData()" title="Actualiser"><i data-feather="refresh-cw"></i></button>
+      <button class="cl-btn-icon" onclick="resetChecklist()" title="Réinitialiser toutes les tâches" style="color:#ef4444;"><i data-feather="rotate-ccw"></i></button>
     </div>
   </div>
 
@@ -1428,6 +1429,19 @@ async function completeShift() {
 // ═══════════════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════════════
+
+async function resetChecklist() {
+  if (!confirm('Réinitialiser toutes les tâches cochées? Cette action ne peut pas être annulée.')) return;
+  try {
+    const r = await fetch('/api/shifts/reset', {method:'POST'});
+    const d = await r.json();
+    if (d.success) {
+      completions.clear();
+      renderAll();
+      alert(d.message || 'Checklist réinitialisée');
+    }
+  } catch(e) { alert('Erreur: ' + e.message); }
+}
 
 loadData();
 </script>

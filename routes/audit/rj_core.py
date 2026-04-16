@@ -246,7 +246,7 @@ def get_rj_tab(tab_id):
     Returns:
         HTML fragment for the requested tab
     """
-    valid_tabs = ['nouveau-jour', 'sd', 'depot', 'dueback', 'recap', 'transelect', 'geac', 'import-docs']
+    valid_tabs = ['nouveau-jour', 'sd', 'depot', 'dueback', 'recap', 'transelect', 'geac', 'import-docs', 'manual-entry', 'balance', 'preview']
     if tab_id not in valid_tabs:
         return jsonify({'success': False, 'error': f'Invalid tab: {tab_id}'}), 404
 
@@ -254,8 +254,8 @@ def get_rj_tab(tab_id):
     session_id = get_session_id()
     rj_loaded = session_id in RJ_FILES
 
-    # import-docs tab can work without RJ, all others require it
-    requires_rj = tab_id != 'import-docs'
+    # import-docs and preview tabs can work without RJ, all others require it
+    requires_rj = tab_id not in ('import-docs', 'preview')
 
     template_name = tab_id.replace('-', '_')
     try:

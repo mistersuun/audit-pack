@@ -28,6 +28,11 @@ def migrate():
         ('daily_jour_metrics', 'property_id', 'INTEGER'),
         ('monthly_budget', 'property_id', 'INTEGER'),
         ('night_audit_sessions', 'property_id', 'INTEGER'),
+        # Jour F&B extra columns (cols 30, 31, 42, 53)
+        ('night_audit_sessions', 'jour_equip_audio', 'REAL DEFAULT 0'),
+        ('night_audit_sessions', 'jour_equip_divers', 'REAL DEFAULT 0'),
+        ('night_audit_sessions', 'jour_fax', 'REAL DEFAULT 0'),
+        ('night_audit_sessions', 'jour_vestiaire', 'REAL DEFAULT 0'),
     ]
 
     print("=== Migration de la base de données ===\n")

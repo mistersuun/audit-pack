@@ -1,0 +1,14 @@
+{
+  "dc_current": 0,
+  "dc_decomposition": {
+    "classes": {},
+    "declared_sum": 0,
+    "unexplained_residual": 0
+  },
+  "checklist": [
+    { "item": "Item 1", "status": "pass" },
+    { "item": "Item 2", "status": "fail", "detail": "Nouveau problème détecté" }
+  ],
+  "auditor": "Test Auditor",
+  "audit_date": "2026-04-10"
+}

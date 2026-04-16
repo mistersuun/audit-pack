@@ -26,6 +26,7 @@ from routes.lightspeed import lightspeed_bp
 from routes.properties import properties_bp
 from routes.portfolio import portfolio_bp
 from routes.compset import compset_bp
+from routes.balancer import balancer_bp
 from utils.auth_decorators import get_current_user, ROLE_LABELS_FR
 from utils.csrf import get_csrf_token
 from utils.email_service import EmailService
@@ -72,6 +73,7 @@ def create_app():
     app.register_blueprint(properties_bp)
     app.register_blueprint(portfolio_bp)
     app.register_blueprint(compset_bp)
+    app.register_blueprint(balancer_bp)
 
     # Create tables + auto-seed if empty
     with app.app_context():

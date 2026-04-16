@@ -1,0 +1,322 @@
+<!-- PREVIEW TAB FRAGMENT — 38-sheet RJ preview -->
+{% from 'audit/rj/tabs/_macros.html' import no_rj_placeholder %}
+
+<div class="rj-card" id="preview-container">
+  <div class="forms">
+    <div class="form-tile">
+      <h4>Apercu RJ - 38 feuilles</h4>
+      <p style="font-size:0.875rem; color:var(--text-secondary); margin-bottom:1rem;">
+        Vue d'ensemble de toutes les feuilles du RJ telles qu'elles apparaitront dans l'export Excel.
+      </p>
+
+      <!-- Summary Bar -->
+      <div id="preview-summary" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:0.75rem; margin-bottom:1.5rem;">
+        <div class="preview-stat" style="background:#f0f9ff; border:2px solid #bae6fd; border-radius:10px; padding:1rem; text-align:center;">
+          <div style="font-size:0.75rem; font-weight:600; color:#0369a1; text-transform:uppercase; letter-spacing:0.5px;">Feuilles</div>
+          <div id="stat-sheets" style="font-size:1.75rem; font-weight:700; color:#0c4a6e; font-family:'Courier New',monospace;">--/38</div>
+          <div style="font-size:0.7rem; color:#0369a1;">avec donnees</div>
+        </div>
+        <div class="preview-stat" style="background:#f0fdf4; border:2px solid #bbf7d0; border-radius:10px; padding:1rem; text-align:center;">
+          <div style="font-size:0.75rem; font-weight:600; color:#15803d; text-transform:uppercase; letter-spacing:0.5px;">Champs</div>
+          <div id="stat-fields" style="font-size:1.75rem; font-weight:700; color:#14532d; font-family:'Courier New',monospace;">--</div>
+          <div style="font-size:0.7rem; color:#15803d;">remplis</div>
+        </div>
+        <div class="preview-stat" id="stat-recap-box" style="background:#fefce8; border:2px solid #fde68a; border-radius:10px; padding:1rem; text-align:center;">
+          <div style="font-size:0.75rem; font-weight:600; color:#a16207; text-transform:uppercase; letter-spacing:0.5px;">Recap</div>
+          <div id="stat-recap" style="font-size:1.75rem; font-weight:700; color:#78350f; font-family:'Courier New',monospace;">--</div>
+          <div style="font-size:0.7rem; color:#a16207;">balance</div>
+        </div>
+        <div class="preview-stat" id="stat-trans-box" style="background:#fefce8; border:2px solid #fde68a; border-radius:10px; padding:1rem; text-align:center;">
+          <div style="font-size:0.75rem; font-weight:600; color:#a16207; text-transform:uppercase; letter-spacing:0.5px;">Transelect</div>
+          <div id="stat-trans" style="font-size:1.75rem; font-weight:700; color:#78350f; font-family:'Courier New',monospace;">--</div>
+          <div style="font-size:0.7rem; color:#a16207;">variance</div>
+        </div>
+        <div class="preview-stat" id="stat-ar-box" style="background:#fefce8; border:2px solid #fde68a; border-radius:10px; padding:1rem; text-align:center;">
+          <div style="font-size:0.75rem; font-weight:600; color:#a16207; text-transform:uppercase; letter-spacing:0.5px;">A/R GEAC</div>
+          <div id="stat-ar" style="font-size:1.75rem; font-weight:700; color:#78350f; font-family:'Courier New',monospace;">--</div>
+          <div style="font-size:0.7rem; color:#a16207;">variance</div>
+        </div>
+      </div>
+
+      <!-- Sheet Selector -->
+      <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1rem;">
+        <label for="sheet-selector" style="font-weight:600; font-size:0.875rem; white-space:nowrap;">Feuille :</label>
+        <select id="sheet-selector" onchange="showSheet(this.value)" style="flex:1; padding:0.5rem 0.75rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.875rem; background:#fff;">
+          <option value="__all__">-- Toutes les feuilles (grille) --</option>
+        </select>
+        <button onclick="loadPreview()" style="padding:0.5rem 1rem; background:#3b82f6; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:0.875rem; font-weight:600;">
+          Rafraichir
+        </button>
+      </div>
+
+      <!-- Sheet Overview Grid (all sheets) -->
+      <div id="sheets-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:0.75rem; margin-bottom:1.5rem;">
+        <div style="grid-column:1/-1; text-align:center; padding:3rem; color:#9ca3af;">
+          Chargement de l'apercu...
+        </div>
+      </div>
+
+      <!-- Single Sheet Detail View -->
+      <div id="sheet-detail" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem;">
+          <h5 id="sheet-detail-title" style="margin:0; font-size:1.1rem;"></h5>
+          <div id="sheet-detail-stats" style="font-size:0.8rem; color:#6b7280;"></div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table id="sheet-detail-table" style="width:100%; border-collapse:collapse; font-size:0.8rem; font-family:'Courier New',monospace;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:0.5rem 0.75rem; text-align:left; border-bottom:2px solid #d1d5db; font-size:0.75rem; color:#374151;">Cellule</th>
+                <th style="padding:0.5rem 0.75rem; text-align:left; border-bottom:2px solid #d1d5db; font-size:0.75rem; color:#374151;">Label</th>
+                <th style="padding:0.5rem 0.75rem; text-align:right; border-bottom:2px solid #d1d5db; font-size:0.75rem; color:#374151;">Valeur</th>
+                <th style="padding:0.5rem 0.75rem; text-align:center; border-bottom:2px solid #d1d5db; font-size:0.75rem; color:#374151;">Statut</th>
+              </tr>
+            </thead>
+            <tbody id="sheet-detail-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// PREVIEW TAB — 38-Sheet Preview
+// ============================================================================
+let previewData = null;
+
+async function loadPreview() {
+  const container = document.getElementById('sheets-grid');
+  container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#9ca3af;"><div class="rj-spinner"></div><br>Chargement...</div>';
+
+  // Get audit date from the global SESSION object (set by nouveau-jour tab)
+  let auditDate = null;
+  if (typeof SESSION !== 'undefined' && SESSION && SESSION.audit_date) {
+    auditDate = SESSION.audit_date;
+  }
+  // Fallback: try from the date input field
+  if (!auditDate) {
+    const dateInput = document.getElementById('inp-date');
+    if (dateInput) auditDate = dateInput.value;
+  }
+  if (!auditDate) {
+    container.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#ef4444;">Aucune date d\'audit trouvee. Ouvrez l\'onglet "Nouveau Jour" d\'abord.</div>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/rj/native/preview/${auditDate}`);
+    const data = await res.json();
+    if (!data.success) {
+      container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#ef4444;">${data.error || 'Erreur'}</div>`;
+      return;
+    }
+
+    previewData = data;
+    renderSummary(data.summary);
+    populateSelector(data.sheets);
+    renderGrid(data.sheets);
+  } catch(err) {
+    container.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#ef4444;">Erreur: ${err.message}</div>`;
+  }
+}
+
+function renderSummary(summary) {
+  document.getElementById('stat-sheets').textContent = `${summary.sheets_with_data}/${summary.total_sheets}`;
+  document.getElementById('stat-fields').textContent = summary.total_fields_filled;
+
+  const bal = summary.balance;
+
+  // Recap
+  const recapEl = document.getElementById('stat-recap');
+  const recapBox = document.getElementById('stat-recap-box');
+  if (bal.recap) {
+    recapEl.textContent = 'OK';
+    recapBox.style.background = '#f0fdf4';
+    recapBox.style.borderColor = '#bbf7d0';
+    recapEl.style.color = '#14532d';
+  } else {
+    recapEl.textContent = 'NON';
+    recapBox.style.background = '#fef2f2';
+    recapBox.style.borderColor = '#fecaca';
+    recapEl.style.color = '#7f1d1d';
+  }
+
+  // Transelect
+  const transEl = document.getElementById('stat-trans');
+  const transBox = document.getElementById('stat-trans-box');
+  if (bal.transelect) {
+    transEl.textContent = 'OK';
+    transBox.style.background = '#f0fdf4';
+    transBox.style.borderColor = '#bbf7d0';
+    transEl.style.color = '#14532d';
+  } else {
+    transEl.textContent = 'NON';
+    transBox.style.background = '#fef2f2';
+    transBox.style.borderColor = '#fecaca';
+    transEl.style.color = '#7f1d1d';
+  }
+
+  // A/R
+  const arEl = document.getElementById('stat-ar');
+  const arBox = document.getElementById('stat-ar-box');
+  if (bal.ar) {
+    arEl.textContent = 'OK';
+    arBox.style.background = '#f0fdf4';
+    arBox.style.borderColor = '#bbf7d0';
+    arEl.style.color = '#14532d';
+  } else {
+    arEl.textContent = 'NON';
+    arBox.style.background = '#fef2f2';
+    arBox.style.borderColor = '#fecaca';
+    arEl.style.color = '#7f1d1d';
+  }
+}
+
+function populateSelector(sheets) {
+  const sel = document.getElementById('sheet-selector');
+  // Keep the "all" option, clear the rest
+  while (sel.options.length > 1) sel.remove(1);
+  sheets.forEach((s, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    const indicator = s.filled > 0 ? '\u2705' : '\u2b1c';
+    opt.textContent = `${indicator} ${s.name} (${s.filled}${s.total ? '/' + s.total : ''})`;
+    sel.appendChild(opt);
+  });
+}
+
+function renderGrid(sheets) {
+  const container = document.getElementById('sheets-grid');
+  container.innerHTML = '';
+
+  sheets.forEach((sheet, idx) => {
+    const pct = sheet.total > 0 ? Math.round((sheet.filled / sheet.total) * 100) : (sheet.filled > 0 ? 100 : 0);
+    const isBalanced = sheet.balanced;
+    const hasBalance = typeof sheet.balanced !== 'undefined';
+
+    // Color based on fill level
+    let borderColor = '#e5e7eb';
+    let bgColor = '#fff';
+    let barColor = '#d1d5db';
+
+    if (pct >= 80) {
+      borderColor = '#86efac';
+      bgColor = '#f0fdf4';
+      barColor = '#22c55e';
+    } else if (pct >= 40) {
+      borderColor = '#fde68a';
+      bgColor = '#fffbeb';
+      barColor = '#f59e0b';
+    } else if (sheet.filled > 0) {
+      borderColor = '#fed7aa';
+      bgColor = '#fff7ed';
+      barColor = '#f97316';
+    }
+
+    // Override for balance sheets with errors
+    if (hasBalance && !isBalanced && sheet.filled > 0) {
+      borderColor = '#fca5a5';
+      bgColor = '#fef2f2';
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = `border:2px solid ${borderColor}; background:${bgColor}; border-radius:10px; padding:0.75rem; cursor:pointer; transition:all 0.15s; position:relative;`;
+    card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'; };
+    card.onmouseleave = () => { card.style.transform = 'none'; card.style.boxShadow = 'none'; };
+    card.onclick = () => {
+      document.getElementById('sheet-selector').value = idx;
+      showSheet(idx);
+    };
+
+    let balanceBadge = '';
+    if (hasBalance) {
+      balanceBadge = isBalanced
+        ? '<span style="position:absolute; top:6px; right:8px; font-size:0.65rem; background:#dcfce7; color:#15803d; padding:1px 6px; border-radius:4px; font-weight:600;">OK</span>'
+        : '<span style="position:absolute; top:6px; right:8px; font-size:0.65rem; background:#fee2e2; color:#991b1b; padding:1px 6px; border-radius:4px; font-weight:600;">ERR</span>';
+    }
+
+    card.innerHTML = `
+      ${balanceBadge}
+      <div style="font-size:0.8rem; font-weight:700; color:#1f2937; margin-bottom:0.25rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:calc(100% - 40px);">${sheet.name}</div>
+      <div style="font-size:0.7rem; color:#6b7280; margin-bottom:0.5rem;">${sheet.filled}${sheet.total ? ' / ' + sheet.total : ''} champs</div>
+      <div style="height:6px; background:#e5e7eb; border-radius:3px; overflow:hidden;">
+        <div style="height:100%; width:${pct}%; background:${barColor}; border-radius:3px; transition:width 0.3s;"></div>
+      </div>
+      <div style="font-size:0.65rem; color:#9ca3af; margin-top:0.25rem; text-align:right;">${pct}%</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function showSheet(value) {
+  const grid = document.getElementById('sheets-grid');
+  const detail = document.getElementById('sheet-detail');
+
+  if (value === '__all__') {
+    grid.style.display = 'grid';
+    detail.style.display = 'none';
+    return;
+  }
+
+  if (!previewData) return;
+
+  const idx = parseInt(value);
+  const sheet = previewData.sheets[idx];
+  if (!sheet) return;
+
+  grid.style.display = 'none';
+  detail.style.display = 'block';
+
+  document.getElementById('sheet-detail-title').textContent = sheet.name;
+  const pct = sheet.total > 0 ? Math.round((sheet.filled / sheet.total) * 100) : (sheet.filled > 0 ? 100 : 0);
+  document.getElementById('sheet-detail-stats').textContent = `${sheet.filled}${sheet.total ? '/' + sheet.total : ''} champs remplis (${pct}%)`;
+
+  const tbody = document.getElementById('sheet-detail-body');
+  tbody.innerHTML = '';
+
+  if (sheet.cells.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:2rem; text-align:center; color:#9ca3af;">Aucune donnee dans cette feuille</td></tr>';
+    return;
+  }
+
+  const statusColors = {
+    'filled':     { bg: '#dcfce7', text: '#15803d', label: 'Rempli' },
+    'ok':         { bg: '#dcfce7', text: '#15803d', label: 'OK' },
+    'empty':      { bg: '#f3f4f6', text: '#9ca3af', label: 'Vide' },
+    'error':      { bg: '#fee2e2', text: '#991b1b', label: 'Erreur' },
+    'calculated': { bg: '#dbeafe', text: '#1e40af', label: 'Calcule' },
+  };
+
+  sheet.cells.forEach(cell => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #f3f4f6';
+
+    const sc = statusColors[cell.status] || statusColors['empty'];
+
+    let displayVal = cell.value;
+    if (typeof displayVal === 'number') {
+      displayVal = displayVal % 1 !== 0 ? displayVal.toFixed(2) : displayVal;
+      // Format as currency if it looks like a dollar amount
+      if (typeof cell.value === 'number' && Math.abs(cell.value) >= 0.01 && !cell.label?.match(/occupancy|adr|revpar/i)) {
+        displayVal = '$' + parseFloat(displayVal).toLocaleString('en-CA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      }
+    }
+
+    tr.innerHTML = `
+      <td style="padding:0.4rem 0.75rem; font-weight:600; color:#374151;">${cell.cell}</td>
+      <td style="padding:0.4rem 0.75rem; color:#6b7280;">${cell.label || ''}</td>
+      <td style="padding:0.4rem 0.75rem; text-align:right; font-weight:500; color:#1f2937;">${displayVal}</td>
+      <td style="padding:0.4rem 0.75rem; text-align:center;">
+        <span style="display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:600; background:${sc.bg}; color:${sc.text};">${sc.label}</span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Auto-load on tab activation
+loadPreview();
+</script>

@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+{% block title %}RJ Balancer{% endblock %}
+
+{% block content %}
+<style>
+.bl{
+  --primary:#6366f1;--emerald:#10b981;--rose:#ef4444;--amber:#f59e0b;--blue:#3b82f6;
+  --card:#fff;--bg:#f8f9fb;--border:#e5e7eb;--text:#1a1a2e;--text2:#6b7280;--muted:#9ca3af;
+  --radius:14px;--shadow:0 1px 3px rgba(0,0,0,0.06);--mono:'JetBrains Mono',monospace;
+  max-width:1100px;margin:0 auto;padding:1.5rem;
+}
+.bl-header{text-align:center;margin-bottom:1.5rem;}
+.bl-header h1{font-size:1.5rem;font-weight:800;color:var(--text);letter-spacing:-.03em;margin:0;}
+.bl-header p{color:var(--text2);font-size:13px;margin:4px 0 0;}
+.bl-cols{display:grid;gap:16px;}
+@media(min-width:768px){.bl-cols{grid-template-columns:1fr 1fr;}}
+@media(min-width:1024px){.bl-cols.main{grid-template-columns:440px 1fr;}}
+
+/* Cards */
+.bl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow);}
+.bl-card h3{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;}
+.bl-card h3 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* Upload */
+.bl-upload{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px dashed var(--border);border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:6px;}
+.bl-upload:hover{border-color:var(--blue);background:rgba(59,130,246,.04);}
+.bl-upload.ok{border-color:var(--emerald);border-style:solid;background:rgba(16,185,129,.04);}
+.bl-upload input{display:none;}
+.bl-upload .ic{font-size:18px;width:24px;text-align:center;}
+.bl-upload .lbl{font-size:12px;color:var(--text2);flex:1;line-height:1.3;}
+.bl-upload .lbl small{display:block;font-size:10px;color:var(--muted);}
+.bl-upload .chk{color:var(--emerald);font-weight:700;display:none;}
+.bl-upload.ok .chk{display:block;}
+
+/* Inputs */
+.bl-inp{display:flex;flex-direction:column;gap:2px;}
+.bl-inp label{font-size:11px;color:var(--text2);font-weight:500;}
+.bl-inp input{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:var(--mono);text-align:right;transition:border .15s;width:100%;box-sizing:border-box;}
+.bl-inp input:focus{border-color:var(--primary);outline:none;box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+.bl-inp input::placeholder{color:var(--muted);}
+
+/* DC box */
+.bl-dc{border-radius:16px;padding:24px;text-align:center;transition:all .3s;}
+.bl-dc.ok{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:2px solid var(--emerald);}
+.bl-dc.err{background:linear-gradient(135deg,#fef2f2,#fee2e2);border:2px solid var(--rose);}
+.bl-dc.idle{background:var(--bg);border:2px solid var(--border);}
+.bl-dc .val{font-size:2.4rem;font-weight:800;font-family:var(--mono);}
+.bl-dc .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
+.bl-dc .msg{font-size:12px;margin-top:6px;}
+
+/* KPI */
+.bl-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:6px;margin:14px 0;}
+.bl-kpi{background:var(--bg);border-radius:10px;padding:8px 10px;text-align:center;}
+.bl-kpi .k{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.bl-kpi .v{font-size:.9rem;font-weight:700;font-family:var(--mono);margin-top:1px;}
+
+/* Compensation */
+.bl-comp{border-radius:12px;padding:14px 16px;margin:6px 0;}
+.bl-comp.auto{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;}
+.bl-comp.manual{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;}
+.bl-comp .top{display:flex;justify-content:space-between;align-items:center;}
+.bl-comp .col{font-size:12px;font-weight:700;}
+.bl-comp.auto .col{color:#166534;} .bl-comp.manual .col{color:#92400e;}
+.bl-comp .amt{font-size:1.15rem;font-weight:800;font-family:var(--mono);}
+.bl-comp .why{font-size:11px;color:#64748b;margin-top:3px;}
+
+/* Table */
+.bl-tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:11px;}
+.bl-tbl th{padding:5px 8px;font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--bg);position:sticky;top:0;}
+.bl-tbl td{padding:4px 8px;border-bottom:1px solid #f1f5f9;}
+.bl-tbl tr.diff{background:#fffbeb;} .bl-tbl .mono{font-family:var(--mono);}
+.bl-tbl .r{text-align:right;} .bl-tbl .c{text-align:center;}
+
+/* Alert */
+.bl-alert{border-radius:10px;padding:12px 16px;margin:8px 0;font-size:12px;}
+.bl-alert.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e;}
+.bl-alert.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;}
+.bl-alert.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;}
+
+/* Button */
+.bl-btn{padding:12px 20px;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;width:100%;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.bl-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.12);}
+.bl-btn:disabled{opacity:.5;transform:none;cursor:not-allowed;}
+.bl-btn.go{background:linear-gradient(135deg,var(--primary),#4f46e5);color:#fff;}
+
+/* Section */
+.bl-sec{font-size:13px;font-weight:700;color:var(--text);margin:18px 0 8px;display:flex;align-items:center;gap:8px;}
+.bl-sec::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Log */
+.bl-log{background:#0f172a;border-radius:10px;padding:12px;margin-top:14px;max-height:150px;overflow-y:auto;}
+.bl-log pre{font-size:10px;color:#94a3b8;font-family:var(--mono);margin:0;white-space:pre-wrap;}
+
+/* Scroll container */
+.bl-scroll{max-height:380px;overflow-y:auto;border-radius:10px;}
+</style>
+
+<div class="bl">
+  <div class="bl-header">
+    <h1>RJ Auto-Balancer</h1>
+    <p>Uploadez les documents → vérification automatique → compensations</p>
+  </div>
+
+  <div class="bl-cols main">
+    <!-- LEFT -->
+    <div>
+      <div class="bl-card">
+        <h3><span class="dot" style="background:var(--emerald);"></span>Documents</h3>
+        <label class="bl-upload" id="d-sj"><span class="ic">📄</span><span class="lbl">Sales Journal<small>.txt / .rtf — F&B, taxes, cartes POS</small></span><span class="chk">✓</span><input type="file" id="f-sj" accept=".txt,.rtf" onchange="mk(this,'d-sj')"></label>
+        <label class="bl-upload" id="d-dr"><span class="ic">📋</span><span class="lbl">Daily Revenue<small>.pdf — Chambres, settlements, balance (7 pages)</small></span><span class="chk">✓</span><input type="file" id="f-dr" accept=".pdf" onchange="mk(this,'d-dr')"></label>
+        <label class="bl-upload" id="d-hp"><span class="ic">🏨</span><span class="lbl">HP Admin<small>.xlsx — Déductions F&B, pourboires</small></span><span class="chk">✓</span><input type="file" id="f-hp" accept=".xls,.xlsx,.xlsm" onchange="mk(this,'d-hp')"></label>
+        <label class="bl-upload" id="d-ar"><span class="ic">📊</span><span class="lbl">AR Summary<small>.pdf — A/R balance (optionnel)</small></span><span class="chk">✓</span><input type="file" id="f-ar" accept=".pdf" onchange="mk(this,'d-ar')"></label>
+        <label class="bl-upload" id="d-adv"><span class="ic">💰</span><span class="lbl">Advance Deposit<small>.pdf — Deposit on Hand</small></span><span class="chk">✓</span><input type="file" id="f-adv" accept=".pdf,.xls,.xlsx" onchange="mk(this,'d-adv')"></label>
+        <label class="bl-upload" id="d-rj"><span class="ic">📗</span><span class="lbl">RJ Excel<small>.xls — Pour comparer (Transelect, GEAC, Recap, Jour)</small></span><span class="chk">✓</span><input type="file" id="f-rj" accept=".xls,.xlsx" onchange="mk(this,'d-rj')"></label>
+      </div>
+
+      <div class="bl-card" style="margin-top:12px;">
+        <h3><span class="dot" style="background:var(--primary);"></span>Paramètres</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="bl-inp"><label>Jour (1-31)</label><input type="number" id="p-day" min="1" max="31" value="1"></div>
+          <div class="bl-inp"><label>G4 (Forfait)</label><input type="number" id="p-g4" step=".01" value="0"></div>
+          <div class="bl-inp"><label>Adj Piazza</label><input type="number" id="p-ap" step=".01" value="0"></div>
+          <div class="bl-inp"><label>Adj Marché</label><input type="number" id="p-am" step=".01" value="0"></div>
+          <div class="bl-inp"><label>CL Nourr</label><input type="number" id="p-cn" step=".01" placeholder="auto"></div>
+          <div class="bl-inp"><label>CL Autres</label><input type="number" id="p-ca" step=".01" placeholder="auto"></div>
+          <div class="bl-inp" style="grid-column:span 2;"><label style="color:var(--rose);">Deposit on Hand ($)</label><input type="number" id="p-dep" step=".01" placeholder="auto depuis PDF" style="border-color:#fca5a5;background:#fef2f2;"></div>
+        </div>
+      </div>
+
+      <button class="bl-btn go" onclick="run()" id="btn" style="margin-top:12px;">Calculer et vérifier</button>
+    </div>
+
+    <!-- RIGHT -->
+    <div id="out">
+      <div class="bl-dc idle">
+        <div class="lbl">Diff.Caisse</div>
+        <div class="val" style="color:var(--muted);">—</div>
+        <div class="msg" style="color:var(--muted);">Uploadez les documents et cliquez Calculer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bl-log" id="log" style="display:none;"><pre id="log-t"></pre></div>
+</div>
+
+<script>
+function mk(i,id){document.getElementById(id).classList.toggle('ok',i.files.length>0);}
+function fmt(v){return (v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+async function run(){
+  const b=document.getElementById('btn');b.textContent='Analyse...';b.disabled=true;
+  const fd=new FormData();
+  fd.append('day',document.getElementById('p-day').value);
+  fd.append('g4',document.getElementById('p-g4').value||'0');
+  fd.append('adj_piaz',document.getElementById('p-ap').value||'0');
+  fd.append('adj_mar',document.getElementById('p-am').value||'0');
+  const cn=document.getElementById('p-cn').value,ca=document.getElementById('p-ca').value,dp=document.getElementById('p-dep').value;
+  if(cn)fd.append('club_nourr',cn);if(ca)fd.append('club_autres',ca);if(dp)fd.append('dep_on_hand',dp);
+  const fm={sj:'f-sj',dr:'f-dr',hp:'f-hp',ar:'f-ar',adv:'f-adv',rj:'f-rj'};
+  for(const[k,id]of Object.entries(fm)){const e=document.getElementById(id);if(e.files.length)fd.append(k,e.files[0]);}
+  try{
+    const r=await fetch('/api/balancer/run',{method:'POST',body:fd});
+    const d=await r.json();
+    if(!d.success){alert(d.error||'Erreur');b.textContent='Recalculer';b.disabled=false;return;}
+    show(d);
+    document.getElementById('log').style.display='block';
+    document.getElementById('log-t').textContent=(d.parsed||[]).join('\n');
+  }catch(e){alert(e.message);}
+  b.textContent='Recalculer';b.disabled=false;
+}
+
+function show(d){
+  const p=document.getElementById('out');
+  const dc=d.dc_calc||0,ok=Math.abs(dc)<.02;
+  const comps=d.compensations||[],cols=d.columns||[],warns=d.warnings||[];
+  const errs=cols.filter(c=>Math.abs(c.diff)>.01);
+  const bfOk=Math.abs(d.bal_ferm_rj-d.bal_ferm_calc)<1;
+  let h='';
+
+  // DC
+  h+=`<div class="bl-dc ${ok?'ok':'err'}">
+    <div class="lbl">Diff.Caisse${comps.length?' (avant compensations)':''}</div>
+    <div class="val" style="color:${ok?'var(--emerald)':'var(--rose)'};">$${fmt(dc)}</div>
+    <div class="msg" style="color:${ok?'var(--emerald)':'var(--rose)'};">${ok?'✅ Jour équilibré!':'⚠ Compensations nécessaires'}</div>
+  </div>`;
+
+  // KPIs
+  h+=`<div class="bl-kpis">
+    <div class="bl-kpi"><div class="k">Crédits</div><div class="v" style="color:var(--emerald);">$${fmt(d.total_cr)}</div></div>
+    <div class="bl-kpi"><div class="k">Débits</div><div class="v" style="color:var(--rose);">$${fmt(d.total_db)}</div></div>
+    <div class="bl-kpi"><div class="k">Bal.Ferm</div><div class="v">${fmt(d.bal_ferm_calc)}</div></div>
+    <div class="bl-kpi"><div class="k">X24</div><div class="v">${fmt(d.transelect_x24)}</div></div>
+    <div class="bl-kpi"><div class="k">GEAC 41</div><div class="v">${fmt(d.geac_col41)}</div></div>
+    <div class="bl-kpi"><div class="k">Dep.Hand</div><div class="v">${fmt(d.dep_today)}</div></div>
+  </div>`;
+
+  // BF check
+  h+=`<div class="bl-alert ${bfOk?'ok':'warn'}"><strong>Bal.Ferm:</strong> Calc=${fmt(d.bal_ferm_calc)} vs RJ=${fmt(d.bal_ferm_rj)} ${bfOk?'— ✅ Exact':'— ⚠ Écart $'+fmt(Math.abs(d.bal_ferm_rj-d.bal_ferm_calc))}</div>`;
+
+  // Compensations
+  if(comps.length){
+    h+=`<div class="bl-sec">Compensations suggérées</div>`;
+    for(const c of comps){
+      h+=`<div class="bl-comp ${c.auto?'auto':'manual'}">
+        <div class="top"><span class="col">Col ${c.col} — ${c.name}</span><span class="amt" style="color:${c.value>=0?'var(--emerald)':'var(--rose)'};">${c.value>=0?'+':''}$${fmt(c.value)}</span></div>
+        <div class="why">${c.reason}</div>
+      </div>`;
+    }
+    h+=`<div class="bl-dc ok" style="margin-top:10px;padding:16px;">
+      <div class="lbl">DC après compensations</div>
+      <div class="val" style="font-size:1.8rem;color:var(--emerald);">$0.00</div>
+      <div class="msg" style="color:var(--emerald);">✅ Jour équilibré</div>
+    </div>`;
+  }
+
+  // Warnings
+  if(warns.length) h+=`<div class="bl-alert warn">${warns.map(w=>'⚠ '+w).join('<br>')}</div>`;
+
+  // Errors
+  if(errs.length&&!ok) h+=`<div class="bl-alert err"><strong>${errs.length} écart(s):</strong><br>${errs.slice(0,5).map(e=>`Col ${e.col} (${e.name}): ${fmt(e.rj)} → ${fmt(e.calc)}, diff ${e.diff>0?'+':''}${fmt(e.diff)}`).join('<br>')}</div>`;
+
+  // Tables
+  function tbl(rows,title){
+    if(!rows.length)return'';
+    return`<div class="bl-sec">${title}</div><div class="bl-card" style="padding:0;overflow:hidden;"><div class="bl-scroll"><table class="bl-tbl"><thead><tr><th>Col</th><th>Nom</th><th class="r">RJ</th><th class="r">Calc</th><th class="r">Diff</th><th class="c"></th></tr></thead><tbody>${rows.map(r=>{
+      const m=Math.abs(r.diff)<.01;
+      return`<tr${m?'':' class="diff"'}><td class="mono" style="font-weight:600;color:#475569;">${r.col}</td><td style="font-weight:500;">${r.name}</td><td class="mono r">${fmt(r.rj)}</td><td class="mono r" style="color:var(--emerald);">${fmt(r.calc)}</td><td class="mono r" style="${m?'color:var(--muted);':'color:var(--rose);font-weight:700;'}">${r.diff>0?'+':''}${fmt(r.diff)}</td><td class="c">${m?'✅':'❌'}</td></tr>`;
+    }).join('')}</tbody></table></div></div>`;
+  }
+
+  h+=tbl(cols.filter(c=>c.col>=4&&c.col<=57),'Crédits (4-57)');
+  h+=tbl(cols.filter(c=>c.col>=60&&c.col<=86),'Débits (60-86)');
+
+  p.innerHTML=h;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{
+  "dc_current": 5.25,
+  "dc_decomposition": {
+    "classes": {},
+    "declared_sum": 0,
+    "unexplained_residual": 5.25
+  },
+  "checklist": [
+    { "item": "DC < $10", "status": "warn" }
+  ],
+  "auditor": "Test Auditor",
+  "audit_date": "2026-04-10"
+}

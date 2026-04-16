@@ -575,6 +575,27 @@ def complete_shift():
     return jsonify({'error': 'No shift found'}), 404
 
 
+@checklist_bp.route('/api/shifts/reset', methods=['POST'])
+@login_required
+def reset_shift():
+    """Réinitialiser toutes les tâches du quart actuel."""
+    today = _audit_date()
+    shift = Shift.query.filter_by(date=today).first()
+    if not shift:
+        return jsonify({'success': True, 'message': 'Aucun quart à réinitialiser'})
+
+    # Delete all completions for this shift
+    count = TaskCompletion.query.filter_by(shift_id=shift.id).delete()
+    shift.completed_at = None  # Unmark shift as completed
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'message': f'{count} tâche(s) réinitialisée(s)',
+        'deleted': count
+    })
+
+
 # ── ETL / Historique ──────────────────────────────────────────────
 @checklist_bp.route('/api/history')
 @login_required

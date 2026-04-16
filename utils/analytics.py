@@ -1708,3 +1708,489 @@ def _empty_kpis_static():
         'total_cards': 0, 'total_taxes': 0,
         'total_tps': 0, 'total_tvq': 0, 'total_tvh': 0,
     }
+
+
+# =============================================================================
+# DAY-OF-WEEK BASELINES — computes historical averages per weekday
+# =============================================================================
+
+def get_dow_baselines(lookback_weeks=12):
+    """
+    Compute day-of-week baselines from the last `lookback_weeks` weeks of data.
+
+    Returns a dict keyed by weekday (0=Monday..6=Sunday), each containing:
+      - occupancy_rate: avg occupancy for that DoW
+      - adr: avg ADR
+      - revpar: avg RevPAR
+      - room_revenue: avg room revenue
+      - fb_revenue: avg F&B revenue
+      - fb_per_client: avg F&B per client
+      - total_revenue: avg total revenue
+      - nb_clients: avg guest count
+      - sample_count: number of data points used
+    """
+    from database.models import DailyJourMetrics, db
+    from sqlalchemy import func, extract
+    from datetime import date as date_cls, timedelta
+
+    cutoff = date_cls.today() - timedelta(weeks=lookback_weeks)
+
+    rows = db.session.query(
+        extract('dow', DailyJourMetrics.date).label('dow'),
+        func.avg(DailyJourMetrics.occupancy_rate).label('avg_occ'),
+        func.avg(DailyJourMetrics.adr).label('avg_adr'),
+        func.avg(DailyJourMetrics.revpar).label('avg_revpar'),
+        func.avg(DailyJourMetrics.room_revenue).label('avg_room_rev'),
+        func.avg(DailyJourMetrics.fb_revenue).label('avg_fb_rev'),
+        func.avg(DailyJourMetrics.total_revenue).label('avg_total_rev'),
+        func.avg(DailyJourMetrics.nb_clients).label('avg_clients'),
+        func.count(DailyJourMetrics.id).label('cnt'),
+    ).filter(
+        DailyJourMetrics.date >= cutoff,
+        DailyJourMetrics.occupancy_rate > 0,
+    ).group_by('dow').all()
+
+    baselines = {}
+    for r in rows:
+        dow = int(r.dow)
+        avg_clients = r.avg_clients or 0
+        avg_fb = r.avg_fb_rev or 0
+        baselines[dow] = {
+            'occupancy_rate': round(r.avg_occ or 0, 1),
+            'adr': round(r.avg_adr or 0, 2),
+            'revpar': round(r.avg_revpar or 0, 2),
+            'room_revenue': round(r.avg_room_rev or 0, 2),
+            'fb_revenue': round(avg_fb, 2),
+            'fb_per_client': round(avg_fb / avg_clients, 2) if avg_clients > 0 else 0,
+            'total_revenue': round(r.avg_total_rev or 0, 2),
+            'nb_clients': round(avg_clients, 1),
+            'sample_count': r.cnt,
+        }
+
+    # SQLite: strftime('%w', date) -> 0=Sun, 1=Mon, ... 6=Sat
+    # Python: date.weekday() -> 0=Mon, 1=Tue, ... 6=Sun
+    # Remap: DB_dow -> python_dow = (DB_dow - 1) % 7
+    remapped = {}
+    for db_dow, data in baselines.items():
+        py_dow = (db_dow - 1) % 7
+        remapped[py_dow] = data
+    return remapped
+
+# =============================================================================
+# ACTIONABLE INTELLIGENCE — Data-driven recommendations
+# =============================================================================
+
+def get_dow_baselines(lookback_days=90):
+    """
+    Calculate day-of-week baselines from actual hotel data.
+    Returns dict keyed by weekday (0=Mon, 6=Sun) with avg metrics.
+    Used to replace hardcoded thresholds with data-driven ones.
+    """
+    from database.models import DailyJourMetrics
+    from datetime import date, timedelta
+    from sqlalchemy import func
+
+    end = DailyJourMetrics.query.order_by(DailyJourMetrics.date.desc()).first()
+    if not end:
+        return {}
+
+    start = end.date - timedelta(days=lookback_days)
+    metrics = DailyJourMetrics.query.filter(
+        DailyJourMetrics.date.between(start, end.date)
+    ).all()
+
+    if not metrics:
+        return {}
+
+    from collections import defaultdict
+    by_dow = defaultdict(list)
+    DOW_NAMES = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+
+    for m in metrics:
+        dow = m.date.weekday()  # 0=Mon, 6=Sun
+        by_dow[dow].append(m)
+
+    baselines = {}
+    for dow in range(7):
+        days = by_dow.get(dow, [])
+        if not days:
+            continue
+        n = len(days)
+        avg_occ = sum(d.occupancy_rate or 0 for d in days) / n
+        avg_adr = sum(d.adr or 0 for d in days) / n
+        avg_revpar = sum(d.revpar or 0 for d in days) / n
+        avg_revenue = sum(d.total_revenue or 0 for d in days) / n
+        avg_fb = sum(d.fb_revenue or 0 for d in days) / n
+        avg_rooms = sum(d.total_rooms_sold or 0 for d in days) / n
+        avg_clients = sum(d.nb_clients or 0 for d in days) / n
+        fb_per_client = avg_fb / avg_clients if avg_clients > 0 else 0
+
+        baselines[dow] = {
+            'day_name': DOW_NAMES[dow],
+            'days_sampled': n,
+            'avg_occupancy': round(avg_occ, 1),
+            'avg_adr': round(avg_adr, 2),
+            'avg_revpar': round(avg_revpar, 2),
+            'avg_revenue': round(avg_revenue, 2),
+            'avg_fb_revenue': round(avg_fb, 2),
+            'avg_rooms_sold': round(avg_rooms, 0),
+            'avg_clients': round(avg_clients, 0),
+            'avg_fb_per_client': round(fb_per_client, 2),
+        }
+
+    return baselines
+
+
+def get_staffing_guide():
+    """
+    Generate staffing recommendations by day-of-week based on actual occupancy patterns.
+    Returns a list of 7 entries with recommended staffing levels relative to baseline.
+    """
+    from database.models import TOTAL_ROOMS
+
+    baselines = get_dow_baselines()
+    if not baselines:
+        return {'has_data': False}
+
+    # Calculate overall average occupancy as baseline reference
+    all_occ = [b['avg_occupancy'] for b in baselines.values()]
+    overall_avg_occ = sum(all_occ) / len(all_occ) if all_occ else 70
+
+    guide = []
+    for dow in range(7):
+        b = baselines.get(dow)
+        if not b:
+            continue
+
+        occ = b['avg_occupancy']
+        ratio = occ / overall_avg_occ if overall_avg_occ > 0 else 1.0
+
+        # Staffing level determination
+        if occ < 45:
+            level = 'Minimum'
+            level_fr = 'Minimum'
+            adjust_pct = round((1 - ratio) * -100)
+            color = 'red'
+        elif occ < 65:
+            level = 'Reduced'
+            level_fr = 'Réduit'
+            adjust_pct = round((1 - ratio) * -100)
+            color = 'orange'
+        elif occ < 80:
+            level = 'Normal'
+            level_fr = 'Normal'
+            adjust_pct = 0
+            color = 'blue'
+        elif occ < 90:
+            level = 'Normal+'
+            level_fr = 'Normal+'
+            adjust_pct = round((ratio - 1) * 100)
+            color = 'green'
+        else:
+            level = 'Full + Events'
+            level_fr = 'Complet + Événements'
+            adjust_pct = round((ratio - 1) * 100)
+            color = 'green'
+
+        # Estimate housekeeping needs (roughly 1 housekeeper per 14 rooms)
+        est_rooms = round(TOTAL_ROOMS * occ / 100)
+        est_housekeepers = max(2, round(est_rooms / 14))
+        # Front desk: 1 agent per ~80 rooms occupied, min 1
+        est_front_desk = max(1, round(est_rooms / 80))
+
+        guide.append({
+            'dow': dow,
+            'day_name': b['day_name'],
+            'avg_occupancy': occ,
+            'avg_rooms': est_rooms,
+            'level': level,
+            'level_fr': level_fr,
+            'adjust_pct': adjust_pct,
+            'color': color,
+            'est_housekeepers': est_housekeepers,
+            'est_front_desk': est_front_desk,
+            'avg_revenue': b['avg_revenue'],
+        })
+
+    # Find best/worst days
+    best = max(guide, key=lambda x: x['avg_occupancy'])
+    worst = min(guide, key=lambda x: x['avg_occupancy'])
+
+    return {
+        'has_data': True,
+        'guide': guide,
+        'overall_avg_occupancy': round(overall_avg_occ, 1),
+        'best_day': best['day_name'],
+        'worst_day': worst['day_name'],
+        'occ_swing': round(best['avg_occupancy'] - worst['avg_occupancy'], 1),
+        'insight': f"Écart de {round(best['avg_occupancy'] - worst['avg_occupancy'], 0)}pts entre {best['day_name']} ({best['avg_occupancy']:.0f}%) et {worst['day_name']} ({worst['avg_occupancy']:.0f}%). Ajuster effectifs en conséquence.",
+    }
+
+
+def get_pricing_guide():
+    """
+    Generate pricing recommendations by day-of-week based on occupancy vs ADR patterns.
+    Identifies days where you're leaving money on the table.
+    """
+    from database.models import TOTAL_ROOMS
+
+    baselines = get_dow_baselines()
+    if not baselines:
+        return {'has_data': False}
+
+    all_adr = [b['avg_adr'] for b in baselines.values() if b['avg_adr'] > 0]
+    overall_avg_adr = sum(all_adr) / len(all_adr) if all_adr else 200
+
+    guide = []
+    total_annual_opportunity = 0
+
+    for dow in range(7):
+        b = baselines.get(dow)
+        if not b:
+            continue
+
+        occ = b['avg_occupancy']
+        adr = b['avg_adr']
+
+        # Pricing logic based on demand (occupancy) patterns
+        if occ >= 90:
+            # High demand — should charge premium
+            suggested_adr = round(overall_avg_adr * 1.15, 2)  # +15%
+            if adr < suggested_adr:
+                strategy = 'Augmenter'
+                strategy_detail = f"Forte demande ({occ:.0f}% occ) → augmenter à ${suggested_adr:.0f}"
+                annual_opp = round((suggested_adr - adr) * b['avg_rooms_sold'] * 52, 2)
+            else:
+                strategy = 'Maintenir'
+                strategy_detail = f"Bon positionnement à ${adr:.0f} avec {occ:.0f}% occ"
+                annual_opp = 0
+                suggested_adr = adr
+        elif occ >= 75:
+            # Solid demand — hold price
+            strategy = 'Maintenir'
+            strategy_detail = f"Demande solide ({occ:.0f}% occ) — maintenir ${adr:.0f}"
+            suggested_adr = adr
+            annual_opp = 0
+        elif occ >= 55:
+            # Moderate — slight discount to drive volume
+            suggested_adr = round(overall_avg_adr * 0.92, 2)  # -8%
+            strategy = 'Léger rabais'
+            rooms_gap = round(TOTAL_ROOMS * 0.75 - TOTAL_ROOMS * occ / 100)
+            strategy_detail = f"Demande modérée ({occ:.0f}%) — rabais léger à ${suggested_adr:.0f} pour remplir {rooms_gap} chambres de plus"
+            annual_opp = round(rooms_gap * suggested_adr * 52, 2) if rooms_gap > 0 else 0
+        else:
+            # Low demand — aggressive discount + promotions
+            suggested_adr = round(overall_avg_adr * 0.80, 2)  # -20%
+            rooms_gap = round(TOTAL_ROOMS * 0.55 - TOTAL_ROOMS * occ / 100)
+            strategy = 'Rabais agressif'
+            strategy_detail = f"Faible demande ({occ:.0f}%) — tarif promotionnel ${suggested_adr:.0f}, activer OTAs, packages"
+            annual_opp = round(rooms_gap * suggested_adr * 52, 2) if rooms_gap > 0 else 0
+
+        total_annual_opportunity += max(0, annual_opp)
+
+        guide.append({
+            'dow': dow,
+            'day_name': b['day_name'],
+            'avg_occupancy': occ,
+            'current_adr': adr,
+            'suggested_adr': round(suggested_adr, 2),
+            'adr_delta': round(suggested_adr - adr, 2),
+            'strategy': strategy,
+            'strategy_detail': strategy_detail,
+            'annual_opportunity': max(0, round(annual_opp)),
+        })
+
+    # Key insight: find the biggest money-on-table day
+    biggest_opp = max(guide, key=lambda x: x['annual_opportunity'])
+
+    return {
+        'has_data': True,
+        'guide': guide,
+        'overall_avg_adr': round(overall_avg_adr, 2),
+        'total_annual_opportunity': round(total_annual_opportunity),
+        'biggest_opportunity': biggest_opp['day_name'],
+        'insight': f"Opportunité annuelle estimée: ${total_annual_opportunity:,.0f}. Plus gros levier: {biggest_opp['day_name']} ({biggest_opp['strategy_detail']})",
+    }
+
+
+def get_savings_calculator():
+    """
+    Calculate concrete dollar savings from 5 optimization levers using actual hotel data.
+    Each lever shows current state, target, and annualized savings.
+    """
+    from database.models import DailyJourMetrics, DailyCardMetrics, TOTAL_ROOMS
+    from sqlalchemy import func
+
+    end_row = DailyJourMetrics.query.order_by(DailyJourMetrics.date.desc()).first()
+    if not end_row:
+        return {'has_data': False}
+
+    end_date = end_row.date
+    from datetime import timedelta
+    start_date = end_date - timedelta(days=90)
+
+    metrics = DailyJourMetrics.query.filter(
+        DailyJourMetrics.date.between(start_date, end_date)
+    ).all()
+
+    if len(metrics) < 7:
+        return {'has_data': False}
+
+    n = len(metrics)
+    avg_adr = sum(m.adr or 0 for m in metrics) / n
+    avg_occ = sum(m.occupancy_rate or 0 for m in metrics) / n
+    avg_rooms = sum(m.total_rooms_sold or 0 for m in metrics) / n
+    avg_clients = sum(m.nb_clients or 0 for m in metrics) / n
+    avg_fb = sum(m.fb_revenue or 0 for m in metrics) / n
+    avg_fb_per_client = avg_fb / avg_clients if avg_clients > 0 else 0
+    avg_comp = sum(m.rooms_comp or 0 for m in metrics) / n
+    avg_oos = sum(m.rooms_hors_usage or 0 for m in metrics) / n
+
+    levers = []
+    total_savings = 0
+
+    # --- LEVER 1: Sunday fill strategy ---
+    baselines = get_dow_baselines()
+    if baselines:
+        sunday = baselines.get(6)  # 6 = Sunday
+        if sunday and sunday['avg_occupancy'] < avg_occ - 15:
+            current_rooms = round(TOTAL_ROOMS * sunday['avg_occupancy'] / 100)
+            target_occ = min(sunday['avg_occupancy'] + 15, avg_occ)
+            target_rooms = round(TOTAL_ROOMS * target_occ / 100)
+            gap = target_rooms - current_rooms
+            discount_adr = round(avg_adr * 0.80, 2)
+            annual = round(gap * discount_adr * 52)
+            levers.append({
+                'name': 'Remplissage dimanche',
+                'name_en': 'Sunday Fill Strategy',
+                'current': f"{sunday['avg_occupancy']:.0f}% occ ({current_rooms} chambres)",
+                'target': f"{target_occ:.0f}% occ ({target_rooms} chambres)",
+                'action': f"Tarif promotionnel ${discount_adr:.0f} (-20%), packages weekend, OTA push",
+                'annual_savings': annual,
+                'category': 'revenue',
+            })
+            total_savings += annual
+
+    # --- LEVER 2: Card fee optimization ---
+    # Get card volume breakdown
+    cards = DailyCardMetrics.query.filter(
+        DailyCardMetrics.date.between(start_date, end_date)
+    ).all()
+    if cards:
+        by_type = {}
+        for c in cards:
+            by_type.setdefault(c.card_type, 0)
+            by_type[c.card_type] = by_type[c.card_type] + (c.pos_total or 0)
+
+        total_vol = sum(by_type.values())
+        amex_vol = by_type.get('AMEX', 0)
+        amex_pct = amex_vol / total_vol * 100 if total_vol > 0 else 0
+
+        if amex_pct > 10:
+            # If 5% of AMEX shifts to Visa/Debit
+            shift_amount = amex_vol * 0.30  # 30% of AMEX could shift
+            fee_diff = 0.01  # 1% fee difference (AMEX 2.5% vs Visa 1.5%)
+            annual_savings = round(shift_amount / n * 365 * fee_diff)
+            levers.append({
+                'name': 'Optimisation frais cartes',
+                'name_en': 'Card Fee Optimization',
+                'current': f"AMEX = {amex_pct:.0f}% du volume (${amex_vol/n*365:,.0f}/an)",
+                'target': f"Réduire AMEX de 30% → shift vers Visa/Débit",
+                'action': "Encourager Visa/MC/Débit au check-in, signalétique aux caisses",
+                'annual_savings': annual_savings,
+                'category': 'cost',
+            })
+            total_savings += annual_savings
+
+    # --- LEVER 3: Comp room policy ---
+    if avg_comp > 0.5:
+        target_comp = 0.5  # Max 0.5/day average
+        saved_rooms = (avg_comp - target_comp)
+        annual = round(saved_rooms * avg_adr * 365)
+        levers.append({
+            'name': 'Politique chambres gratuites',
+            'name_en': 'Comp Room Policy',
+            'current': f"{avg_comp:.1f} chambres comp/jour (${avg_comp * avg_adr * 365:,.0f}/an perdu)",
+            'target': f"Max {target_comp:.1f} comp/jour",
+            'action': "Politique d'approbation GM pour comps, suivi mensuel par département",
+            'annual_savings': annual,
+            'category': 'revenue',
+        })
+        total_savings += annual
+
+    # --- LEVER 4: OOS room recovery ---
+    # Cap OOS at realistic max (>15 likely includes rooms-to-clean, not true OOS)
+    realistic_oos = min(avg_oos, 10)  # Cap at 10 — beyond that it's data quality
+    target_oos = 2
+    if realistic_oos > target_oos:
+        recovered = realistic_oos - target_oos
+        annual = round(recovered * avg_adr * (avg_occ / 100) * 365)
+        levers.append({
+            'name': 'Réduction chambres hors service',
+            'name_en': 'OOS Room Recovery',
+            'current': f"{realistic_oos:.0f} chambres OOS/jour" + (" (données indiquent {:.0f}, probablement inclut ch. à refaire)".format(avg_oos) if avg_oos > 10 else ""),
+            'target': f"Max {target_oos} chambres OOS/jour",
+            'action': "Accélérer les réparations, prioriser la maintenance préventive, vérifier données OOS vs ch. à refaire",
+            'annual_savings': annual,
+            'category': 'revenue',
+        })
+        total_savings += annual
+
+    # --- LEVER 5: F&B upsell on low-F&B days ---
+    if baselines and avg_fb_per_client > 0:
+        # Identify days with genuinely LOW F&B per client (exclude banquet-heavy days)
+        # Banquet days have F&B/client >$150 — those aren't upsell opportunities
+        low_fb_days = [b for b in baselines.values()
+                       if b['avg_fb_per_client'] < 80 and b['avg_fb_per_client'] > 0]
+        if low_fb_days:
+            avg_low_fb_pc = sum(b['avg_fb_per_client'] for b in low_fb_days) / len(low_fb_days)
+            # Realistic target: +$15/client through menu upsell, combos, happy hour
+            target_fb_pc = avg_low_fb_pc + 15
+            uplift = 15.0  # $15/client is achievable via training + promotions
+            avg_low_clients = sum(b['avg_clients'] for b in low_fb_days) / len(low_fb_days)
+            annual = round(uplift * avg_low_clients * len(low_fb_days) * 52)
+            low_day_names = ', '.join(b['day_name'] for b in low_fb_days)
+            levers.append({
+                'name': 'Upsell F&B jours faibles',
+                'name_en': 'F&B Upsell Low-Spend Days',
+                'current': f"${avg_low_fb_pc:.0f}/client les {low_day_names}",
+                'target': f"${target_fb_pc:.0f}/client (+$15 via upsell)",
+                'action': "Happy hour, combos repas+boisson, formation upsell serveurs, menu du jour",
+                'annual_savings': annual,
+                'category': 'revenue',
+            })
+            total_savings += annual
+
+    # --- LEVER 6: High-demand day pricing premium ---
+    if baselines:
+        high_occ_days = [b for b in baselines.values() if b['avg_occupancy'] >= 88]
+        if high_occ_days:
+            underpriced = [b for b in high_occ_days if b['avg_adr'] < avg_adr * 1.10]
+            if underpriced:
+                premium = avg_adr * 0.12  # 12% premium
+                rooms_affected = sum(b['avg_rooms_sold'] for b in underpriced) / len(underpriced)
+                # Only ~40% of rooms are at BAR (rest are corporate/group/OTA contracted)
+                bar_rooms = rooms_affected * 0.40
+                annual = round(premium * bar_rooms * len(underpriced) * 52)
+                day_names = ', '.join(b['day_name'] for b in underpriced)
+                levers.append({
+                    'name': 'Premium jours forte demande',
+                    'name_en': 'High-Demand Pricing Premium',
+                    'current': f"ADR moyen ${avg_adr:.0f} même les jours à >88% occ ({day_names})",
+                    'target': f"ADR +12% (${avg_adr * 1.12:.0f}) les jours de forte demande",
+                    'action': f"Pricing dynamique: augmenter tarif {day_names} de ${premium:.0f}",
+                    'annual_savings': annual,
+                    'category': 'revenue',
+                })
+                total_savings += annual
+
+    # Sort by biggest impact
+    levers.sort(key=lambda x: x['annual_savings'], reverse=True)
+
+    return {
+        'has_data': True,
+        'levers': levers,
+        'total_annual_savings': round(total_savings),
+        'data_period_days': n,
+        'insight': f"{len(levers)} leviers identifiés pour ${total_savings:,.0f}/an d'économies et revenus additionnels.",
+    }

@@ -248,6 +248,43 @@ def revenue_opportunities():
 
 
 # ==============================================================================
+# ACTIONABLE INTELLIGENCE — Staffing, Pricing, Savings
+# ==============================================================================
+
+@crm_bp.route('/api/crm/staffing-guide')
+@login_required
+def staffing_guide():
+    """Day-of-week staffing recommendations based on actual occupancy patterns."""
+    from utils.analytics import get_staffing_guide
+    return jsonify(get_staffing_guide())
+
+
+@crm_bp.route('/api/crm/pricing-guide')
+@login_required
+def pricing_guide():
+    """Day-of-week pricing recommendations based on demand patterns."""
+    from utils.analytics import get_pricing_guide
+    return jsonify(get_pricing_guide())
+
+
+@crm_bp.route('/api/crm/savings-calculator')
+@login_required
+def savings_calculator():
+    """Concrete dollar savings from optimization levers."""
+    from utils.analytics import get_savings_calculator
+    return jsonify(get_savings_calculator())
+
+
+@crm_bp.route('/api/crm/dow-baselines')
+@login_required
+def dow_baselines():
+    """Day-of-week performance baselines from actual data."""
+    from utils.analytics import get_dow_baselines
+    baselines = get_dow_baselines()
+    return jsonify({'has_data': bool(baselines), 'baselines': baselines})
+
+
+# ==============================================================================
 # HISTORICAL DATA — Import & Status
 # ==============================================================================
 

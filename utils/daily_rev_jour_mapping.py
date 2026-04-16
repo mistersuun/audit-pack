@@ -137,15 +137,16 @@ DAILY_REV_TO_JOUR = {
     },
     'AP': {
         'column_index': 41,
-        'label_en': 'Machine Distributrice',
-        'label_fr': 'MACHINE DISTRIBUTRICE',
-        'source_page': 'PAGE 2',
-        'source_line': 'MACHINE DISTRIBUTRICE',
-        'operation': 'direct',
-        'base_field': 'revenue.autres_revenus.machine_distributrice',
-        'expected_value': 0.00,
-        'description': 'Vending machine revenue',
-        'sign_handling': 'keep_sign'
+        'label_en': 'GEAC Compensation (Mch/Liqueur)',
+        'label_fr': 'Compensation GEAC',
+        'source_page': 'GEAC_UX + AR Summary',
+        'source_line': '-(Facture Direct - AR Guest Folios)',
+        'operation': 'geac_compensation',
+        'formula': '-(facture_direct - ar_guest_folios)',
+        'base_field': 'derived.geac_compensation',
+        'description': 'GEAC compensation: -(DR Facture Direct - AR Guest Folios). Zero if FD = AR. Positive if FD < AR.',
+        'sign_handling': 'keep_sign',
+        'note': 'Requires both DR Facture Direct and AR Summary Guest Folios'
     },
     'AS': {
         'column_index': 44,
@@ -198,15 +199,21 @@ DAILY_REV_TO_JOUR = {
     },
     'AW': {
         'column_index': 48,
-        'label_en': 'Internet',
-        'label_fr': 'Internet',
-        'source_page': 'PAGE 2',
-        'source_line': 'Internet',
-        'operation': 'direct',
-        'base_field': 'revenue.internet.total',
-        'expected_value': -0.46,
-        'description': 'Internet service revenue',
-        'sign_handling': 'keep_sign'
+        'label_en': 'Internet (3 components)',
+        'label_fr': 'Internet (3 composantes)',
+        'source_page': 'PAGE 2 + Sales Journal + PAGE 7',
+        'source_line': 'DR Internet + SJ Bqt Internet + InterHotel XferIn',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'revenue.internet.total',
+            'sales_journal.banquet.internet',
+            'balance.interhotel_xferin',
+        ],
+        'description': 'AW = DR Internet (signed, often negative!) + SJ Banquet Internet + '
+                       'DR InterHotel XferIn (p.7). All 3 components every time. '
+                       'Real example Apr 15: -17.38 + 460 + 19.98 = 462.60',
+        'sign_handling': 'keep_sign',
+        'note': 'DR Internet can be negative (corrections). InterHotel often $9.99 weekday, $49.95 Sunday.'
     },
     'BA': {
         'column_index': 52,
@@ -262,11 +269,7 @@ DAILY_REV_TO_JOUR = {
             'non_revenue.telephones_tax.tps_interurbain',
             'non_revenue.autres_tax.tps_autres',
             'non_revenue.internet_nonrev.tps',
-            # DR Restaurant/F&B taxes
-            'non_revenue.restaurant_piazza.tps',
-            'non_revenue.banquet.tps',
-            'non_revenue.la_spesa.tps',
-            'non_revenue.services_chambres.tps',
+            # NOTE: F&B OPERA taxes (Piazza/Bqt/Spesa/ServCh) deliberately excluded — already in sales_journal.taxes.tps
             # Sales Journal POS taxes
             'sales_journal.taxes.tps',
         ],
@@ -288,11 +291,7 @@ DAILY_REV_TO_JOUR = {
             'non_revenue.telephones_tax.tvq_interurbain',
             'non_revenue.autres_tax.tvq_autres',
             'non_revenue.internet_nonrev.tvq',
-            # DR Restaurant/F&B taxes
-            'non_revenue.restaurant_piazza.tvq',
-            'non_revenue.banquet.tvq',
-            'non_revenue.la_spesa.tvq',
-            'non_revenue.services_chambres.tvq',
+            # NOTE: F&B OPERA taxes (Piazza/Bqt/Spesa/ServCh) deliberately excluded — already in sales_journal.taxes.tvq
             # Sales Journal POS taxes
             'sales_journal.taxes.tvq',
         ],
@@ -353,20 +352,22 @@ DAILY_REV_TO_JOUR = {
     },
     'CF': {
         'column_index': 83,
-        'label_en': 'A/R Misc & Front Office Transfers',
-        'label_fr': 'A/R Misc & Front Office Transfers',
-        'source_page': 'PAGES 2, 7',
-        'source_line': 'A/R Misc Total and Front Office Transfers',
-        'operation': 'combined',
-        'formula': '-(total_transfers - payments)',
+        'label_en': 'Transfer to A/R',
+        'label_fr': 'Transfer to A/R',
+        'source_page': 'AR Summary + PAGE 2',
+        'source_line': 'AR Guest Folios - AR Payments - DR AR Misc',
+        'operation': 'cf_transfer',
+        'formula': 'ar_guest_folios - ar_payments - dr_ar_misc',
         'accumulator_fields': [
-            'non_revenue.ar_activity.total',
-            'balance.front_office_transfers'
+            'balance.front_office_transfers',
+            '-balance.ar_payments',
+            '-non_revenue.ar_activity.total',
         ],
-        'expected_value': 0.00,
-        'description': 'A/R Misc (always negative) + Front Office Transfers (Total Transfers - Payments)',
-        'sign_handling': 'always_negative',
-        'note': 'ALWAYS negative for both sources'
+        'description': 'CF = AR Summary Guest Folios - AR Summary Payments - DR p.2 AR Misc. '
+                       'From Jour cell header: "Total Transfers (AR summary Report) '
+                       '- Payments (AR summary Report) - AR Misc (Daily Revenue Report page 2)"',
+        'sign_handling': 'keep_sign',
+        'note': 'When Guest Folios = DR FD and Payments = 0 and AR Misc = 0, CF simplifies to DR FD.'
     },
 
     # =========================================================================
