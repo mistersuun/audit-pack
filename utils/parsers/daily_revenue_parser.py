@@ -491,6 +491,7 @@ class DailyRevenueParser(BaseParser):
         last_page = self._pages_text[-1] if self._pages_text else ""
         # Fallback: search entire text
         text = last_page if 'Balance Today' in last_page else self.raw_text
+        p7 = self._pages_text[6] if len(self._pages_text) > 6 else ""
 
         def _bal(label):
             m = re.search(rf'{re.escape(label)}\s+([\d,]+\.?\d*)(-?)', text, re.IGNORECASE)
@@ -508,6 +509,10 @@ class DailyRevenueParser(BaseParser):
             'hotel_moved_out': _bal('Today Hotel Moved Out'),
             'new_balance': _bal('New Balance'),
         }
+
+        # InterHotel XferIn (page 7) — needed for AW (Internet) column
+        balance['interhotel_xferin'] = self._get_today(p7, 'InterHotel XferIn')
+
         self.extracted_data['balance'] = balance
 
     # ── RJ Mapping ────────────────────────────────────────────────────────────
