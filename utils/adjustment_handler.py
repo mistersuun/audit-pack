@@ -6,9 +6,9 @@ that must be subtracted from Sales Journal values before writing to the jour she
 
 Each department maps to a specific jour column:
 - Piazza: J(9), K(10), L(11), M(12), N(13)
-- Banquet: O(14), P(15)
-- Spesa: Q(16), R(17)
-- Tabagie: S(18)
+- Spesa:  O(14), P(15)
+- Banquet: Y(24), Z(25)
+- Tabagie: AJ(35)
 """
 
 import logging
@@ -23,11 +23,11 @@ DEPARTMENT_COLUMNS = {
     'piazza_bieres': 11,        # L
     'piazza_non_alcool': 12,    # M
     'piazza_vins': 13,          # N
-    'banquet_nourriture': 14,   # O
-    'banquet_boissons': 15,     # P
-    'spesa_nourriture': 16,     # Q
-    'spesa_boissons': 17,       # R
-    'tabagie': 18,              # S
+    'spesa_nourriture': 14,     # O
+    'spesa_boissons': 15,       # P
+    'banquet_nourriture': 24,   # Y
+    'banquet_boissons': 25,     # Z
+    'tabagie': 35,              # AJ
 }
 
 # French labels for UI display
@@ -102,6 +102,6 @@ def apply_adjustments(jour_values, adjustments):
         else:
             # Skip: no base value exists for this department column.
             # Applying an adjustment without a base would create misleading negative values.
-            logger.info(f"Skipping adjustment for column {col_idx} — no base value in jour sheet.")
+            logger.info('Skipping adjustment for column %d — no base value in jour sheet.', col_idx)
 
     return jour_values

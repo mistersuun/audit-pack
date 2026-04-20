@@ -147,7 +147,7 @@ def fill_dueback():
     if session_id not in RJ_FILES:
         return jsonify({'success': False, 'error': 'No RJ file uploaded'}), 400
 
-    data = request.get_json()
+    data = request.get_json() or {}
 
     required_fields = ['day', 'receptionist', 'amount']
     if not all(field in data for field in required_fields):
@@ -581,11 +581,12 @@ def update_controle():
         save_and_store(session_id, rj_filler)
 
         # Format date for message
-        date_str = f"{vjour:02d}"
+        date_parts = [f"{vjour:02d}"]
         if mois:
-            date_str = f"{vjour:02d}/{mois:02d}"
+            date_parts.append(f"{mois:02d}")
         if annee:
-            date_str = f"{vjour:02d}/{annee}"
+            date_parts.append(str(annee))
+        date_str = "/".join(date_parts)
 
         msg = f'Contrôle mis à jour: Jour {date_str}'
         if prepare_par:
@@ -899,9 +900,8 @@ def fill_all():
 
         # ---- Get audit day ----
         if not day:
-            with open(tmp_path, 'rb') as f:
-                reader = RJReader(f)
-                day = reader.get_current_audit_day()
+            reader = RJReader(io.BytesIO(raw_bytes))
+            day = reader.get_current_audit_day()
         if not day or day < 1 or day > 31:
             return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
 

@@ -228,11 +228,11 @@ const DEPARTMENTS = [
   { key: 'piazza_bieres', label: 'Piazza Bières', col: 11 },
   { key: 'piazza_non_alcool', label: 'Piazza Non-Alcool (Minéraux)', col: 12 },
   { key: 'piazza_vins', label: 'Piazza Vins', col: 13 },
-  { key: 'banquet_nourriture', label: 'Banquet Nourriture', col: 14 },
-  { key: 'banquet_boissons', label: 'Banquet Boissons', col: 15 },
-  { key: 'spesa_nourriture', label: 'Marché Spesa Nourriture', col: 16 },
-  { key: 'spesa_boissons', label: 'Marché Spesa Boissons', col: 17 },
-  { key: 'tabagie', label: 'Tabagie', col: 18 },
+  { key: 'spesa_nourriture', label: 'Marché Spesa Nourriture', col: 14 },
+  { key: 'spesa_boissons', label: 'Marché Spesa Boissons', col: 15 },
+  { key: 'banquet_nourriture', label: 'Banquet Nourriture', col: 24 },
+  { key: 'banquet_boissons', label: 'Banquet Boissons', col: 25 },
+  { key: 'tabagie', label: 'Tabagie', col: 35 },
 ];
 
 let adjustmentCounter = 0;
@@ -473,7 +473,7 @@ function processFile(file, docType) {
   const status = document.getElementById('status-' + docType);
   status.style.display = 'block';
   status.style.color = '#2563eb';
-  status.innerHTML = '<strong>' + file.name + '</strong> (' + (file.size / 1024).toFixed(1) + ' KB)';
+  status.innerHTML = '<strong>' + escapeHtml(file.name) + '</strong> (' + (file.size / 1024).toFixed(1) + ' KB)';
 
   updateButtonStates();
 }
@@ -951,8 +951,12 @@ function buildResultPreview(docType, result) {
   return html;
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function kvLine(label, value) {
-  return '<div style="color:#64748b;">' + label + ':</div><div style="font-weight:500;">' + value + '</div>';
+  return '<div style="color:#64748b;">' + escapeHtml(label) + ':</div><div style="font-weight:500;">' + escapeHtml(value) + '</div>';
 }
 
 async function clearAllImports() {

@@ -108,7 +108,7 @@ class TestGeacCompensation:
             daily_rev_data={
                 'revenue': {'comptabilite': {'facture_direct': 45000.0}},
             },
-            ar_summary_data={'guest_folios': 45000.0},
+            ar_summary_data={'front_office_transfers': {'guest_folios': 45000.0}},
         )
         result = mapper.compute_all()
         assert result.get(41) == pytest.approx(0.0)
@@ -119,7 +119,7 @@ class TestGeacCompensation:
             daily_rev_data={
                 'revenue': {'comptabilite': {'facture_direct': 45000.0}},
             },
-            ar_summary_data={'guest_folios': 46000.0},
+            ar_summary_data={'front_office_transfers': {'guest_folios': 46000.0}},
         )
         result = mapper.compute_all()
         assert result.get(41) == pytest.approx(1000.0)
@@ -130,7 +130,7 @@ class TestGeacCompensation:
             daily_rev_data={
                 'revenue': {'comptabilite': {'facture_direct': 50000.0}},
             },
-            ar_summary_data={'guest_folios': 49000.0},
+            ar_summary_data={'front_office_transfers': {'guest_folios': 49000.0}},
         )
         result = mapper.compute_all()
         assert result.get(41) == pytest.approx(-1000.0)
@@ -139,7 +139,7 @@ class TestGeacCompensation:
         """If facture_direct is missing, AP cannot be computed."""
         mapper = make_mapper(
             daily_rev_data={},
-            ar_summary_data={'guest_folios': 46000.0},
+            ar_summary_data={'front_office_transfers': {'guest_folios': 46000.0}},
         )
         result = mapper.compute_all()
         assert 41 not in result
@@ -284,8 +284,7 @@ class TestComputeAllIntegration:
                 'market_segment': {'total_rooms_today': 180},
             },
             ar_summary_data={
-                'guest_folios': 46000.0,
-                'front_office_transfers': {'guest_folios': 5000.0},
+                'front_office_transfers': {'guest_folios': 46000.0},
                 'payments': 1000.0,
             },
         )
@@ -293,8 +292,8 @@ class TestComputeAllIntegration:
 
         # AP = 46000 - 45000 = 1000
         assert result.get(41) == pytest.approx(1000.0)
-        # CF = 5000 - 1000 - 200 = 3800
-        assert result.get(83) == pytest.approx(3800.0)
+        # CF = 46000 - 1000 - 200 = 44800
+        assert result.get(83) == pytest.approx(44800.0)
         # CK = 180
         assert result.get(88) == 180
 
@@ -304,7 +303,7 @@ class TestComputeAllIntegration:
                 'revenue': {'comptabilite': {'facture_direct': 1000.0}},
                 'market_segment': {'total_rooms_today': 200},
             },
-            ar_summary_data={'guest_folios': 1000.0},
+            ar_summary_data={'front_office_transfers': {'guest_folios': 1000.0}},
         )
         mapper.compute_all()
         summary = mapper.get_summary()

@@ -119,8 +119,6 @@ class JourMapper:
             value = self._process_accumulate(config)
         elif operation == 'formula':
             value = self._process_formula(col_letter, config)
-        elif operation == 'combined':
-            value = self._process_combined(col_letter, config)
         elif operation == 'geac_compensation':
             value = self._process_geac_compensation(config)
         elif operation == 'cf_transfer':
@@ -185,38 +183,14 @@ class JourMapper:
         """
         Formula: evaluate a defined formula.
 
-        Handles special columns:
-        - D: -(balance.new_balance) - deposits.deposit_on_hand
-        - BF: -forfait + club_lounge_value
+        Only D and BF use this operation type.
         """
         if col_letter == 'D':
             return self._formula_column_d(config)
         elif col_letter == 'BF':
             return self._formula_column_bf(config)
         else:
-            # Generic formula - try base_field
-            base_value = self._resolve_field(config.get('base_field'))
-            return float(base_value) if base_value is not None else None
-
-    def _process_combined(self, col_letter, config):
-        """
-        Combined: chain multiple operations.
-
-        Handles:
-        - CF: -(total_transfers - payments) [always negative]
-        """
-        if col_letter == 'CF':
-            return self._formula_column_cf(config)
-        else:
-            # Fallback: try accumulating fields
-            fields = config.get('accumulator_fields', [])
-            if fields:
-                total = 0
-                for field_path in fields:
-                    value = self._resolve_field(field_path)
-                    if value is not None:
-                        total += float(value)
-                return total
+            self.warnings.append(f"Column {col_letter}: unhandled formula column")
             return None
 
     def _formula_column_d(self, config):
@@ -251,26 +225,6 @@ class JourMapper:
 
         return -forfait + club_lounge
 
-    def _formula_column_cf(self, config):
-        """
-        Column CF = A/R Misc + Front Office Transfers.
-
-        Sources: A/R Misc + Front Office Transfers.
-        Note: CF column values retain their original sign from source data.
-        Deductions and payments are already represented with appropriate signs in source data.
-        """
-        ar_misc = self._resolve_field('non_revenue.ar_activity.total')
-        fo_transfers = self._resolve_field('balance.front_office_transfers')
-
-        total = 0
-        if ar_misc is not None:
-            total += float(ar_misc)
-        if fo_transfers is not None:
-            total += float(fo_transfers)
-
-        # Preserve the sign as provided by source data
-        return total if total != 0 else 0
-
     def _process_geac_compensation(self, config):
         """
         GEAC Compensation: AP = -(facture_direct - ar_guest_folios).
@@ -284,7 +238,7 @@ class JourMapper:
         if facture_direct is None:
             return None
 
-        guest_folios = self._resolve_field('ar_summary.guest_folios')
+        guest_folios = self._resolve_field('ar_summary.front_office_transfers.guest_folios')
         if guest_folios is None:
             guest_folios = 0
 
@@ -388,7 +342,7 @@ class JourMapper:
                     jour_values[col_idx] -= abs(float(hp_amount))
             return
 
-        # Format 2: Legacy flat keys from mensuel sheet
+        # Format 2: Legacy flat keys from mensuel sheet (deprecated)
         hp_flat_mapping = {
             # flat_key → jour_column_index
             'piazza_nourr': 9,       # J
@@ -396,11 +350,11 @@ class JourMapper:
             'piazza_biere': 11,      # L
             'piazza_min': 12,        # M
             'piazza_vin': 13,        # N
-            'banquet_nourr': 14,     # O
-            'banquet_boisson': 15,   # P
-            'link_nourr': 16,        # Q
-            'link_boisson': 17,      # R
-            'tabagie_nourr': 18,     # S
+            'link_nourr': 14,        # O — Spesa/Cafe Link Nourriture
+            'link_boisson': 15,      # P — Spesa/Cafe Link Boisson
+            'banquet_nourr': 24,     # Y
+            'banquet_boisson': 25,   # Z
+            'tabagie_nourr': 35,     # AJ
         }
 
         for flat_key, col_idx in hp_flat_mapping.items():

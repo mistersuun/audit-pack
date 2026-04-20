@@ -278,4 +278,8 @@ class RJFillerCOM:
         self.excel.Calculate()
         time.sleep(0.1)
         value = ws.Cells(row, 3).Value  # col C = col 3
-        return float(value) if value is not None else 0.0
+        if value is None:
+            raise ValueError(
+                f'DC cell (jour row {row}, col C) returned None — possible formula error'
+            )
+        return float(value)
