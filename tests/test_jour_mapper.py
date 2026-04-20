@@ -106,7 +106,7 @@ class TestGeacCompensation:
         """When FD = AR Guest Folios, AP = 0."""
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {'comptabilite': {'facture_direct': 45000.0}},
+                'settlements': {'facture_direct': -45000.0},
             },
             ar_summary_data={'front_office_transfers': {'guest_folios': 45000.0}},
         )
@@ -117,7 +117,7 @@ class TestGeacCompensation:
         """When AR > FD, AP is positive."""
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {'comptabilite': {'facture_direct': 45000.0}},
+                'settlements': {'facture_direct': -45000.0},
             },
             ar_summary_data={'front_office_transfers': {'guest_folios': 46000.0}},
         )
@@ -128,7 +128,7 @@ class TestGeacCompensation:
         """When AR < FD, AP is negative."""
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {'comptabilite': {'facture_direct': 50000.0}},
+                'settlements': {'facture_direct': -50000.0},
             },
             ar_summary_data={'front_office_transfers': {'guest_folios': 49000.0}},
         )
@@ -148,7 +148,7 @@ class TestGeacCompensation:
         """If AR Guest Folios is missing, treat as 0."""
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {'comptabilite': {'facture_direct': 5000.0}},
+                'settlements': {'facture_direct': -5000.0},
             },
             ar_summary_data={},
         )
@@ -277,10 +277,8 @@ class TestComputeAllIntegration:
     def test_all_three_new_operations_together(self):
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {
-                    'comptabilite': {'facture_direct': 45000.0},
-                    'ar_activity': {'total': 200.0},
-                },
+                'settlements': {'facture_direct': -45000.0},
+                'revenue': {'ar_activity': {'total': 200.0}},
                 'market_segment': {'total_rooms_today': 180},
             },
             ar_summary_data={
@@ -300,7 +298,7 @@ class TestComputeAllIntegration:
     def test_summary_tracks_new_columns(self):
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {'comptabilite': {'facture_direct': 1000.0}},
+                'settlements': {'facture_direct': -1000.0},
                 'market_segment': {'total_rooms_today': 200},
             },
             ar_summary_data={'front_office_transfers': {'guest_folios': 1000.0}},

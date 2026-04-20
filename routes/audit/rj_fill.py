@@ -885,6 +885,11 @@ def fill_all():
     manual_values = data.get('manual_values', {})
     adjustments = data.get('adjustments', [])
     day = data.get('day')
+    if day is not None:
+        try:
+            day = int(day)
+        except (ValueError, TypeError):
+            return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
 
     tmp_path = None
     try:

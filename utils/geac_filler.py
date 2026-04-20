@@ -57,9 +57,11 @@ def compute_geac_data(dr_data, ar_data):
 
     # Facture Direct for B41 (parser key: settlements.facture_direct)
     # B41 = FD, G41 = AR Guest Folios.  They equal when no GEAC compensation.
-    facture_direct = abs(settlements.get('facture_direct', 0) or 0)
-    if facture_direct == 0:
-        # When FD unavailable, use guest_folios (assumes FD = AR)
+    fd_raw = settlements.get('facture_direct')
+    if fd_raw is not None:
+        facture_direct = abs(fd_raw)
+    else:
+        # FD not in parser output — fall back to guest_folios (assumes FD = AR)
         facture_direct = ar_guest_folios
 
     return {

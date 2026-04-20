@@ -234,15 +234,17 @@ class JourMapper:
         If facture_direct is None, cannot compute — return None.
         If guest_folios is None, treat as 0.
         """
-        facture_direct = self._resolve_field('revenue.comptabilite.facture_direct')
+        facture_direct = self._resolve_field('settlements.facture_direct')
         if facture_direct is None:
             return None
+        # Parser stores settlements as negative — use absolute value
+        facture_direct = abs(float(facture_direct))
 
         guest_folios = self._resolve_field('ar_summary.front_office_transfers.guest_folios')
         if guest_folios is None:
             guest_folios = 0
 
-        return float(guest_folios) - float(facture_direct)
+        return float(guest_folios) - facture_direct
 
     def _process_cf_transfer(self, config):
         """

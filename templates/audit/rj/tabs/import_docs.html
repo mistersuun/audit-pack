@@ -350,9 +350,9 @@ function autoDetectDocType(filename) {
     return null;
   }
 
-  // TXT files without journal/sales indicators
+  // TXT files — only route to sales_journal if name suggests it
   if (ext === 'txt') {
-    return 'sales_journal';
+    return null;
   }
 
   return null;

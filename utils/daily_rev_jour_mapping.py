@@ -345,7 +345,7 @@ DAILY_REV_TO_JOUR = {
         'operation': 'formula',
         'formula': '-(balance.new_balance) - deposits.deposit_on_hand',
         'base_field': 'balance.new_balance',
-        'expected_value': 3871908.19,
+        'expected_value': -3871908.19,
         'description': 'D = -|New Balance| - Deposit on Hand (always negative)',
         'sign_handling': 'keep_sign',
         'note': 'Result is always negative: -abs(new_balance) - deposit_on_hand'
