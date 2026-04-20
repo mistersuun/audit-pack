@@ -175,14 +175,16 @@ DAILY_REV_TO_JOUR = {
     },
     'AU': {
         'column_index': 46,
-        'label_en': 'Lit Pliant',
-        'label_fr': 'Lit Pliant',
-        'source_page': 'PAGE 2',
-        'source_line': 'Lit Pliant',
-        'operation': 'direct',
-        'base_field': 'revenue.autres_revenus.lit_pliant',
-        'expected_value': 0.00,
-        'description': 'Rollaway bed rental fee',
+        'label_en': 'Autres Revenus (Lit Pliant + Fr/Etage)',
+        'label_fr': 'Autres Rev',
+        'source_page': 'PAGE 2 + SALES JOURNAL',
+        'source_line': 'DR Lit Pliant + SJ Chambres fr_etage',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'revenue.autres_revenus.lit_pliant',
+            'sales_journal.chambres.fr_etage',
+        ],
+        'description': 'AU = DR rollaway bed + SJ room service delivery fee. Apr 19: =21+20',
         'sign_handling': 'keep_sign'
     },
     'AV': {
@@ -229,14 +231,16 @@ DAILY_REV_TO_JOUR = {
     },
     'AG': {
         'column_index': 32,
-        'label_en': 'Location Salle Forfait',
-        'label_fr': 'Location Salle Forfait',
-        'source_page': 'PAGE 2',
-        'source_line': 'Location Salle Forfa',
-        'operation': 'direct',
-        'base_field': 'revenue.autres_revenus.location_salle_forfait',
-        'expected_value': 1620.00,
-        'description': 'Banquet room rental (forfait)',
+        'label_en': 'Location Salle + Divers Bqt',
+        'label_fr': 'Location Salle + Divers',
+        'source_page': 'SALES JOURNAL + PAGE 2',
+        'source_line': 'SJ banquet.location_salle + DR location_salle_forfait',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'sales_journal.banquet.location_salle',
+            'revenue.autres_revenus.location_salle_forfait',
+        ],
+        'description': 'Banquet room rental from SJ + DR forfait/divers. Apr 19: =15300+40',
         'sign_handling': 'keep_sign'
     },
 
@@ -687,13 +691,13 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     'AD': {
         'column_index': 29,
-        'label_en': 'Pourboires',
-        'label_fr': 'Pourboires',
+        'label_en': 'Pourboires à Payer (Banquet)',
+        'label_fr': 'Pourboires à Payer',
         'source_page': 'SALES JOURNAL',
-        'source_line': 'Pourboires (gratuities)',
+        'source_line': 'Banquet pourboire_a_payer',
         'operation': 'direct',
-        'base_field': 'sales_journal.adjustments.pourboire_charge',
-        'description': 'Gratuity charges from Sales Journal',
+        'base_field': 'sales_journal.banquet.pourboire_a_payer',
+        'description': 'Banquet gratuity charges (pourboire_a_payer from SJ banquet department)',
         'sign_handling': 'keep_sign'
     },
     'AJ': {
@@ -781,28 +785,12 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     # HP DEDUCTIONS (from HP Excel parser)
     # =========================================================================
-    'BQ': {
-        'column_index': 68,
-        'label_en': 'H/P Administration 14',
-        'label_fr': 'H/P Administration 14',
-        'source_page': 'SALES JOURNAL',
-        'source_line': 'ADMINISTRATION total (page 2 adjustments)',
-        'operation': 'direct',
-        'base_field': 'sales_journal.adjustments.administration',
-        'description': 'HP administration total from Sales Journal page 2',
-        'sign_handling': 'keep_sign'
-    },
-    'BR': {
-        'column_index': 69,
-        'label_en': 'Hotel Promotion 15',
-        'label_fr': 'Hotel Promotion 15',
-        'source_page': 'SALES JOURNAL',
-        'source_line': 'HOTEL PROMOTION total (page 2 adjustments)',
-        'operation': 'direct',
-        'base_field': 'sales_journal.adjustments.hotel_promotion',
-        'description': 'Hotel promotion total from Sales Journal page 2',
-        'sign_handling': 'keep_sign'
-    },
+    # BQ/BR: HP Administration and Hotel Promotion tips.
+    # These come from HP Excel daily extraction (jour_deductions cols 68/69),
+    # NOT from SJ adjustments (which are period totals, not nightly values).
+    # The HP deduction pipeline (_apply_hp_deductions, HP_DIRECT_COLS) handles
+    # writing these when HP data is available. No DAILY_REV_TO_JOUR entry needed
+    # since they're written by the HP path, not by compute_all().
 
     # =========================================================================
     # POS SUMMARY TOTALS — Excel formula cells, NOT writable.
@@ -814,8 +802,17 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     # ROOM STATISTICS (from Market Segment report)
     # =========================================================================
-    # CK (col 88, 0-based) is a formula cell (=total_rooms-CM[row]) protected by
-    # FORMULA_COLUMNS — do not add an entry here. See rj_filler_com.py.
+    'CK': {
+        'column_index': 88,
+        'label_en': 'Simple (rooms sold)',
+        'label_fr': 'SIMPLE',
+        'source_page': 'Market Segment',
+        'source_line': 'TOTAL Rooms today',
+        'operation': 'direct',
+        'base_field': 'market_segment.total_rooms_today',
+        'description': 'Rooms sold from Market Segment. Written as integer value, overwriting the default formula.',
+        'sign_handling': 'keep_sign'
+    },
     'CN': {
         'column_index': 91,
         'label_en': 'Complimentary rooms',

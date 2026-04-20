@@ -49,7 +49,7 @@ class RJFillerCOM:
         2,    # B  — Bal_Ouv
         3,    # C  — DC
         60,   # BH — TOTAL CREDIT
-        89,   # CK — Simple rooms (=total_rooms-CM)
+        # CK (89) removed — auditor overwrites formula with actual room count
         101,  # CW — escompte AMEX
         102,  # CX — escompte Discover
         103,  # CY — escompte Master

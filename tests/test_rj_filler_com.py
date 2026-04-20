@@ -69,9 +69,9 @@ class TestFormulaColumnsSet:
         """BH (col 60) = TOTAL CREDIT sum formula."""
         assert 60 in self.FC
 
-    def test_col_CK_protected(self):
-        """CK (col 89) = =243-CM simple rooms formula."""
-        assert 89 in self.FC
+    def test_col_CK_writable(self):
+        """CK (col 89) is writable — auditor overwrites default formula with actual room count."""
+        assert 89 not in self.FC
 
     def test_col_CW_protected(self):
         """CW (col 101) = =ROUND(+BI*CS,2) AMEX escompte."""
@@ -115,8 +115,8 @@ class TestFormulaColumnsSet:
 
     def test_writable_columns_not_protected(self):
         """Spot-check that common writeable columns are NOT in the set."""
-        # D=4 (Nouveau Solde), AK=37 (Chambres), CF=84 (Transfer AR)
-        for col in (4, 37, 84):
+        # D=4 (Nouveau Solde), AK=37 (Chambres), CF=84 (Transfer AR), CK=89 (Rooms)
+        for col in (4, 37, 84, 89):
             assert col not in self.FC, (
                 f'Column {col} is incorrectly marked as a formula column'
             )
