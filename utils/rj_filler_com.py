@@ -35,7 +35,7 @@ class RJFillerCOM:
     #   B  (col  2): =D[prev_row]           — Bal_Ouv chained from prior day
     #   C  (col  3): =D-B-(SUM(E:BF)-SUM(BI:CI)) — DC auto-computes
     #   BH (col 60): SUM formula            — TOTAL CREDIT
-    #   CK (col 89): =243-CM               — Simple rooms = total - Suite
+    #   CK (col 89): =<total_rooms>-CM      — Simple rooms = total - Suite
     #   CW (col101): =ROUND(+BI*CS,2)      — net AMEX escompte
     #   CX (col102): =ROUND(+BJ*CT,2)      — net Discover escompte
     #   CY (col103): =ROUND(+BK*CU,2)      — net Master escompte

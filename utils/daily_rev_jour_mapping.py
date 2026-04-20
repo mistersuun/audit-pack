@@ -346,9 +346,9 @@ DAILY_REV_TO_JOUR = {
         'formula': '-(balance.new_balance) - deposits.deposit_on_hand',
         'base_field': 'balance.new_balance',
         'expected_value': 3871908.19,
-        'description': 'New Balance as negative, then subtract Deposit on Hand from Advance Deposit Balance Sheet',
-        'sign_handling': 'negate_result',
-        'note': 'Put in NEGATIVE, then subtract Deposit on Hand from Advance Deposit Balance Sheet'
+        'description': 'D = -|New Balance| - Deposit on Hand (always negative)',
+        'sign_handling': 'keep_sign',
+        'note': 'Result is always negative: -abs(new_balance) - deposit_on_hand'
     },
     'CF': {
         'column_index': 83,
@@ -1202,9 +1202,9 @@ COLUMNS_BY_CATEGORY = {
     'SALES_JOURNAL_SPESA': ['O', 'P', 'Q', 'R', 'S'],
     'SALES_JOURNAL_CHAMBRES': ['T', 'U', 'V', 'W', 'X'],
     'SALES_JOURNAL_BANQUET': ['Y', 'Z', 'AA', 'AB', 'AC'],
-    'SALES_JOURNAL_OTHER': ['AD', 'AJ', 'BR'],
+    'SALES_JOURNAL_OTHER': ['AD', 'AJ'],
     'CREDIT_CARDS': ['BI', 'BJ', 'BK', 'BL', 'BM', 'BN'],
-    'HP_DEDUCTIONS': ['BQ'],
+    'HP_TIPS': ['BQ', 'BR'],
     'POS_TOTALS': ['DG', 'DH', 'DI', 'DJ', 'DK', 'DM'],
     'ROOM_STATISTICS': ['CK', 'CN', 'CO', 'CP'],
 }

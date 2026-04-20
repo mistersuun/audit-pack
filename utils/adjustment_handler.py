@@ -92,6 +92,11 @@ def apply_adjustments(jour_values, adjustments):
     grouped = group_adjustments_by_column(adjustments)
 
     for col_idx, adj_amount in grouped.items():
+        if adj_amount < 0:
+            logger.warning(
+                'Negative adjustment %.2f for column %d — this adds to the value instead of deducting.',
+                adj_amount, col_idx,
+            )
         if col_idx in jour_values:
             jour_values[col_idx] -= adj_amount
         else:

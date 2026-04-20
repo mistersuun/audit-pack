@@ -212,6 +212,8 @@
 // DOCUMENT IMPORT SYSTEM
 // ============================================================================
 
+let parseTimeout = null;  // debounce for auto-parse after drop
+
 const importState = {
   files: {},      // { doc_type: File }
   results: {},    // { doc_type: parsed_data }
@@ -329,8 +331,8 @@ function autoDetectDocType(filename) {
     if (name.includes('deposit') || name.includes('advance') || name.includes('dépôt')) {
       return 'advance_deposit';
     }
-    // Default PDF → daily_revenue (most common)
-    return 'daily_revenue';
+    // Unrecognized PDF — don't guess, let user see it in the unrecognized list
+    return null;
   }
 
   // Excel files — distinguish between HP, FreedomPay, Quasimodo
@@ -344,8 +346,8 @@ function autoDetectDocType(filename) {
     if (name.includes('quasi') || name.includes('carte') || name.includes('card') || name.includes('cc') || name.includes('reconcil')) {
       return 'quasimodo';
     }
-    // Default Excel → hp_excel (most common Excel upload)
-    return 'hp_excel';
+    // Unrecognized Excel — don't guess
+    return null;
   }
 
   // TXT files without journal/sales indicators
@@ -431,8 +433,9 @@ function processMultipleFiles(files) {
       banner.style.color = '#1e40af';
       banner.textContent = detected.length + ' fichier(s) prêt(s). Cliquez "Extraire les données" ou le parsing démarre automatiquement...';
 
-      // Auto-parse after 2 seconds
-      setTimeout(() => parseAllDocuments(), 2000);
+      // Auto-parse after 2 seconds (debounced — multiple drops don't race)
+      clearTimeout(parseTimeout);
+      parseTimeout = setTimeout(() => parseAllDocuments(), 2000);
     }, 300);
   }
 }

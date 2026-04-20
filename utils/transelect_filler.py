@@ -37,14 +37,12 @@ def compute_transelect_data(sj_data, dr_data):
     mc_settle = abs(settlements.get('mastercard', 0))
     amex_settle = abs(settlements.get('american_express', 0))
 
-    if visa_settle > 0:
-        result[(21, 2)] = visa_settle     # B21 Bank Report VISA
-        result[(21, 16)] = visa_settle    # P21 Daily Revenue VISA
-    if mc_settle > 0:
-        result[(22, 2)] = mc_settle       # B22 Bank Report MASTER
-        result[(22, 16)] = mc_settle      # P22 Daily Revenue MASTER
-    if amex_settle > 0:
-        result[(24, 2)] = amex_settle     # B24 Bank Report AMEX
-        result[(24, 16)] = amex_settle    # P24 Daily Revenue AMEX
+    # Always write (even 0) to clear prior day's data
+    result[(21, 2)] = visa_settle     # B21 Bank Report VISA
+    result[(21, 16)] = visa_settle    # P21 Daily Revenue VISA
+    result[(22, 2)] = mc_settle       # B22 Bank Report MASTER
+    result[(22, 16)] = mc_settle      # P22 Daily Revenue MASTER
+    result[(24, 2)] = amex_settle     # B24 Bank Report AMEX
+    result[(24, 16)] = amex_settle    # P24 Daily Revenue AMEX
 
     return result

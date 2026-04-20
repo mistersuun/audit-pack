@@ -477,20 +477,15 @@ class TestComputeJour:
             f"Jour BF: expected -82.60, got {bf}"
 
     def test_jour_column_d(self, parsed_docs):
-        """Column D = -(new_balance) - deposit_on_hand, then negate.
+        """Column D = -|new_balance| - deposit_on_hand (always negative).
 
-        With pre-audit new_balance = -1482382.27:
-        Step 1: -(-1482382.27) - 397611.02 = 1482382.27 - 397611.02 = 1084771.25
-        Step 2 (negate_result): -1084771.25
-
-        This differs from post-audit ground truth (-1941131.27) because
-        the pre-audit new_balance is smaller.
+        With pre-audit |new_balance| = 1482382.27:
+        D = -1482382.27 - 397611.02 = -1879993.29
         """
         jour_values, _ = self._compute_jour(parsed_docs)
         col_d = jour_values.get(3)
         assert col_d is not None, "Jour D (col 3) missing from output"
-        # Pre-audit expected:
-        expected_d = -(BALANCE_NEW_PRE - MANUAL_VALUES['deposit_on_hand'])
+        expected_d = -BALANCE_NEW_PRE - MANUAL_VALUES['deposit_on_hand']
         print(f"\nJour D = {col_d:.2f} (expected {expected_d:.2f})")
         assert col_d == pytest.approx(expected_d, abs=TOL), \
             f"Jour D: expected {expected_d:.2f}, got {col_d}"

@@ -23,8 +23,12 @@ Usage:
     # jour_values = {36: 50906.60, 37: 0.00, 49: 5457.94, ...}
 """
 
-from utils.daily_rev_jour_mapping import DAILY_REV_TO_JOUR, ACCUMULATOR_COLUMNS
+import logging
+
+from utils.daily_rev_jour_mapping import DAILY_REV_TO_JOUR
 from utils.adjustment_handler import apply_adjustments, group_adjustments_by_column
+
+logger = logging.getLogger(__name__)
 
 
 class JourMapper:
@@ -217,25 +221,20 @@ class JourMapper:
 
     def _formula_column_d(self, config):
         """
-        Column D = -(New Balance) - Deposit on Hand.
+        Column D = -|New Balance| - Deposit on Hand.
 
-        New Balance comes from Daily Revenue parser.
-        Deposit on Hand comes from manual values (Advance Deposit Balance Sheet).
+        Always negative. New Balance from DR parser (usually negative),
+        Deposit on Hand from manual values.
         """
         new_balance = self._resolve_field('balance.new_balance')
         if new_balance is None:
             return None
 
-        new_balance = float(new_balance)
-
-        # Deposit on Hand from manual values
         deposit_on_hand = float(self.manual.get('deposit_on_hand', 0))
 
-        # Formula: negate new_balance, then subtract deposit
-        # If new_balance is -3,871,908.19, then -(-3,871,908.19) = 3,871,908.19
-        # Then subtract deposit_on_hand
-        result = -new_balance - deposit_on_hand
-        return result
+        # D = -abs(new_balance) - deposit_on_hand
+        # sign_handling is keep_sign, so this value is returned as-is.
+        return -abs(float(new_balance)) - deposit_on_hand
 
     def _formula_column_bf(self, config):
         """
@@ -379,6 +378,11 @@ class JourMapper:
                     continue
                 if col_idx in HP_DIRECT_COLS:
                     # Write directly — sign preserved as-is
+                    if col_idx in jour_values:
+                        logger.debug(
+                            'HP overwrites SJ value for col %d: %s -> %s',
+                            col_idx, jour_values[col_idx], hp_amount,
+                        )
                     jour_values[col_idx] = float(hp_amount)
                 elif col_idx in jour_values:
                     jour_values[col_idx] -= abs(float(hp_amount))
