@@ -87,9 +87,10 @@ def apply_adjustments(jour_values, adjustments):
         adjustments: list of dicts with 'department' and 'amount' keys
 
     Returns:
-        dict: same jour_values dict with adjustments applied
+        tuple: (jour_values dict, list of warning strings for skipped adjustments)
     """
     grouped = group_adjustments_by_column(adjustments)
+    warnings = []
 
     for col_idx, adj_amount in grouped.items():
         if adj_amount < 0:
@@ -100,8 +101,8 @@ def apply_adjustments(jour_values, adjustments):
         if col_idx in jour_values:
             jour_values[col_idx] -= adj_amount
         else:
-            # Skip: no base value exists for this department column.
-            # Applying an adjustment without a base would create misleading negative values.
-            logger.info('Skipping adjustment for column %d — no base value in jour sheet.', col_idx)
+            msg = f'Ajustement ignoré pour colonne {col_idx} — aucune valeur de base (document source manquant?)'
+            logger.warning(msg)
+            warnings.append(msg)
 
-    return jour_values
+    return jour_values, warnings

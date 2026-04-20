@@ -94,7 +94,8 @@ class JourMapper:
 
         # Apply per-department adjustments
         if self.adjustments:
-            apply_adjustments(jour_values, self.adjustments)
+            jour_values, adj_warnings = apply_adjustments(jour_values, self.adjustments)
+            self.warnings.extend(adj_warnings)
 
         return jour_values
 
@@ -123,8 +124,6 @@ class JourMapper:
             value = self._process_geac_compensation(config)
         elif operation == 'cf_transfer':
             value = self._process_cf_transfer(config)
-        elif operation == 'room_formula':
-            value = self._process_room_formula(config)
         else:
             self.warnings.append(f"Column {col_letter}: unknown operation '{operation}'")
             return None
@@ -241,10 +240,9 @@ class JourMapper:
         facture_direct = abs(float(facture_direct))
 
         guest_folios = self._resolve_field('ar_summary.front_office_transfers.guest_folios')
-        if guest_folios is None:
-            guest_folios = 0
+        guest_folios = abs(float(guest_folios)) if guest_folios is not None else 0
 
-        return float(guest_folios) - facture_direct
+        return guest_folios - facture_direct
 
     def _process_cf_transfer(self, config):
         """
@@ -275,24 +273,6 @@ class JourMapper:
 
         return total if found_any else None
 
-    def _process_room_formula(self, config):
-        """
-        Room formula: return the integer value of base_field.
-
-        CK is a formula cell in Excel (=248-CM[row]). JourMapper returns
-        the numeric total_rooms_today value; RJFillerCOM handles writing
-        the actual formula. Returns None if base_field is not available.
-        """
-        base_field = config.get('base_field')
-        if not base_field:
-            return None
-
-        value = self._resolve_field(base_field)
-        if value is None:
-            return None
-
-        return int(value)
-
     def _apply_sign_handling(self, value, config):
         """Apply sign handling rules."""
         sign = config.get('sign_handling', 'keep_sign')
@@ -300,7 +280,7 @@ class JourMapper:
         if sign == 'negate_result':
             return -value
         elif sign == 'always_negative':
-            return -abs(value) if value != 0 else 0
+            return -abs(value) if value != 0 else 0.0
         else:  # 'keep_sign'
             return value
 
@@ -330,7 +310,7 @@ class JourMapper:
         if jour_deductions:
             for col_idx_str, hp_amount in jour_deductions.items():
                 col_idx = int(col_idx_str)
-                if not hp_amount:
+                if not isinstance(hp_amount, (int, float)) or hp_amount == 0:
                     continue
                 if col_idx in HP_DIRECT_COLS:
                     # Write directly — sign preserved as-is

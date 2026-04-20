@@ -904,10 +904,12 @@ def fill_all():
         tmp_path = tmp.name
 
         # ---- Get audit day ----
+        if day is not None and (day < 1 or day > 31):
+            return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
         if not day:
             reader = RJReader(io.BytesIO(raw_bytes))
             day = reader.get_current_audit_day()
-        if not day or day < 1 or day > 31:
+        if not day:
             return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
 
         # ---- Compute data (pure Python, no COM) ----

@@ -829,7 +829,7 @@ async function fillJourSheet() {
 
       // Show warnings
       if (result.summary && result.summary.warnings && result.summary.warnings.length > 0) {
-        html += '<div style="margin-top:0.5rem; color:#92400e; font-size:0.8rem;">&#9888; ' + result.summary.warnings.join(', ') + '</div>';
+        html += '<div style="margin-top:0.5rem; color:#92400e; font-size:0.8rem;">&#9888; ' + escapeHtml(result.summary.warnings.join(', ')) + '</div>';
       }
 
       html += '</div>';
@@ -895,7 +895,7 @@ function buildResultPreview(docType, result) {
   html += ' <span style="color:#6b7280;">(' + (result.confidence * 100).toFixed(0) + '% confiance)</span>';
 
   if (result.warnings && result.warnings.length > 0) {
-    html += '<div style="color:#92400e; margin-top:0.25rem;">&#9888; ' + result.warnings.join(', ') + '</div>';
+    html += '<div style="color:#92400e; margin-top:0.25rem;">&#9888; ' + escapeHtml(result.warnings.join(', ')) + '</div>';
   }
 
   const data = result.data;

@@ -814,19 +814,8 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     # ROOM STATISTICS (from Market Segment report)
     # =========================================================================
-    'CK': {
-        'column_index': 88,
-        'label_en': 'Simple (rooms)',
-        'label_fr': 'SIMPLE',
-        'source_page': 'Market Segment',
-        'source_line': 'TOTAL Rooms - Suites',
-        'operation': 'room_formula',
-        'formula': '=total_rooms-CM[row]',
-        'base_field': 'market_segment.total_rooms_today',
-        'description': 'CK = Market Segment total rooms sold minus suites (CM). CK is a FORMULA in Excel: =rooms-CM[row].',
-        'sign_handling': 'keep_sign',
-        'note': 'CK is a FORMULA cell. Write =248-CM17 style, not a static value.'
-    },
+    # CK (col 88, 0-based) is a formula cell (=total_rooms-CM[row]) protected by
+    # FORMULA_COLUMNS — do not add an entry here. See rj_filler_com.py.
     'CN': {
         'column_index': 91,
         'label_en': 'Complimentary rooms',

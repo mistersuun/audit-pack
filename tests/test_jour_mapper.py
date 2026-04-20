@@ -228,43 +228,8 @@ class TestCfTransfer:
         assert result.get(83) == pytest.approx(0.0)
 
 
-# ============================================================================
-# Test new operation: room_formula (column CK, index 88)
-# ============================================================================
-
-class TestRoomFormula:
-    """
-    CK = total_rooms_today (integer). RJFillerCOM writes the formula;
-    JourMapper just provides the numeric value.
-    """
-
-    def test_returns_integer_value(self):
-        mapper = make_mapper(daily_rev_data={
-            'market_segment': {'total_rooms_today': 248},
-        })
-        result = mapper.compute_all()
-        assert result.get(88) == 248
-        assert isinstance(result.get(88), int)
-
-    def test_float_input_truncated_to_int(self):
-        mapper = make_mapper(daily_rev_data={
-            'market_segment': {'total_rooms_today': 248.0},
-        })
-        result = mapper.compute_all()
-        assert result.get(88) == 248
-        assert isinstance(result.get(88), int)
-
-    def test_no_market_segment_data_skipped(self):
-        mapper = make_mapper(daily_rev_data={})
-        result = mapper.compute_all()
-        assert 88 not in result
-
-    def test_zero_rooms(self):
-        mapper = make_mapper(daily_rev_data={
-            'market_segment': {'total_rooms_today': 0},
-        })
-        result = mapper.compute_all()
-        assert result.get(88) == 0
+# CK (room_formula) removed — CK is a formula cell protected by FORMULA_COLUMNS.
+# The mapping and handler were dead code (computed but never written).
 
 
 # ============================================================================
@@ -272,14 +237,13 @@ class TestRoomFormula:
 # ============================================================================
 
 class TestComputeAllIntegration:
-    """Verify that all 3 new operations work together in compute_all()."""
+    """Verify that geac_compensation + cf_transfer work together."""
 
-    def test_all_three_new_operations_together(self):
+    def test_geac_compensation_and_cf_together(self):
         mapper = make_mapper(
             daily_rev_data={
                 'settlements': {'facture_direct': -45000.0},
                 'revenue': {'ar_activity': {'total': 200.0}},
-                'market_segment': {'total_rooms_today': 180},
             },
             ar_summary_data={
                 'front_office_transfers': {'guest_folios': 46000.0},
@@ -292,21 +256,18 @@ class TestComputeAllIntegration:
         assert result.get(41) == pytest.approx(1000.0)
         # CF = 46000 - 1000 - 200 = 44800
         assert result.get(83) == pytest.approx(44800.0)
-        # CK = 180
-        assert result.get(88) == 180
 
-    def test_summary_tracks_new_columns(self):
+    def test_summary_tracks_computed_columns(self):
         mapper = make_mapper(
             daily_rev_data={
                 'settlements': {'facture_direct': -1000.0},
-                'market_segment': {'total_rooms_today': 200},
             },
             ar_summary_data={'front_office_transfers': {'guest_folios': 1000.0}},
         )
         mapper.compute_all()
         summary = mapper.get_summary()
         assert 'AP' in summary['values']
-        assert 'CK' in summary['values']
+        assert 'CF' in summary['values']
 
     def test_unknown_operation_generates_warning(self):
         """Ensure the fallback warning still works."""
