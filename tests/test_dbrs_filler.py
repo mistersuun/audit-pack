@@ -11,11 +11,15 @@ def test_dbrs_filler_class_exists():
 
 
 def test_dailyrev_rows_mapping():
-    """All room charge categories should be mapped."""
-    assert len(DBRSFiller.DAILYREV_ROWS) >= 29
+    """All room charge categories should be mapped including rows 31-40."""
+    assert len(DBRSFiller.DAILYREV_ROWS) >= 39  # rows 2-40
     assert DBRSFiller.DAILYREV_ROWS[2] == 'Room Chrg - Premium'
     assert DBRSFiller.DAILYREV_ROWS[23] == 'Room Chrg - Contract'
     assert DBRSFiller.DAILYREV_ROWS[29] == 'Guaranteed No Show'
+    # Rows 31-40 must be present (CRITICAL for DBRS ALLOWANCE/OTHER/NOSHOW formulas)
+    assert DBRSFiller.DAILYREV_ROWS[31] == 'Cancellation Fee-Tra'
+    assert DBRSFiller.DAILYREV_ROWS[38] == 'Guaranteed No Show-C'
+    assert DBRSFiller.DAILYREV_ROWS[40] == 'NA'
 
 
 def test_market_segment_rows_mapping():
@@ -28,12 +32,26 @@ def test_market_segment_rows_mapping():
 
 
 def test_dailyrev_rows_coverage():
-    """DailyRev mapping covers rows 2 through 30 with no gaps."""
+    """DailyRev mapping covers rows 2 through 40 with no gaps."""
     rows = DBRSFiller.DAILYREV_ROWS
     assert min(rows) == 2
-    assert max(rows) == 30
-    # Every integer from 2 to 30 must be present — no skipped data rows
-    assert set(rows.keys()) == set(range(2, 31))
+    assert max(rows) == 40
+    # Every integer from 2 to 40 must be present — no skipped data rows
+    assert set(rows.keys()) == set(range(2, 41))
+
+
+def test_dailyrev_special_rows():
+    """Special rows 44 (Allowance) and 47 (G4) must be defined."""
+    special = DBRSFiller.DAILYREV_SPECIAL_ROWS
+    assert 44 in special, 'Row 44 (Room Charge + Allowance) missing'
+    assert 47 in special, 'Row 47 (G4 Club Lounge) missing'
+
+
+def test_fill_dbrs_staging_accepts_g4():
+    """fill_dbrs_staging must accept g4 parameter."""
+    import inspect
+    sig = inspect.signature(DBRSFiller.fill_dbrs_staging)
+    assert 'g4' in sig.parameters, 'fill_dbrs_staging missing g4 parameter'
 
 
 def test_market_segment_rows_no_subtotal_rows():

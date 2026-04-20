@@ -6,12 +6,17 @@ from flask import Blueprint, request, jsonify, session
 from datetime import datetime
 import io
 import math
+import os
+import tempfile
+import logging
 from utils.auth_decorators import login_required
 from utils.rj_filler import RJFiller
 from utils.rj_reader import RJReader
 from utils.rj_mapper import CELL_MAPPINGS
 from utils.csrf import csrf_protect
-from .rj_core import RJ_FILES, get_session_id, get_or_create_filler, save_and_store
+from .rj_core import RJ_FILES, RJ_FILES_LOCK, get_session_id, get_or_create_filler, save_and_store, invalidate_rj_cache
+
+logger = logging.getLogger(__name__)
 
 
 # Configuration constants
@@ -833,3 +838,142 @@ def update_deposit():
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@rj_fill_bp.route('/api/rj/fill-all', methods=['POST'])
+@login_required
+@csrf_protect
+def fill_all():
+    """
+    Fill GEAC, Transelect, and Jour sheets in one COM session.
+
+    JSON body:
+        parsed_data: {
+            'daily_revenue': { ... },   # from DailyRevenueParser
+            'sales_journal': { ... },    # from SalesJournalParser
+            'ar_summary': { ... },       # from ARSummaryParser
+            'hp_excel': { ... },         # from HPExcelParser
+        }
+        manual_values: { 'g4': float, 'club_lounge': float, 'deposit_on_hand': float }
+        adjustments: [ { 'department': str, 'amount': float } ]
+        day: int (optional, reads from controle if missing)
+
+    Returns:
+        {
+            'success': true,
+            'geac_cells': N,
+            'transelect_cells': N,
+            'jour_cells': N,
+            'dc_value': float,
+            'dc_balanced': bool,
+            'day': int,
+            'jour_values': { col_letter: value },
+            'summary': { warnings, errors }
+        }
+    """
+    from utils.geac_filler import compute_geac_data
+    from utils.transelect_filler import compute_transelect_data
+    from utils.jour_mapper import JourMapper
+    from utils.daily_rev_jour_mapping import col_index_to_letter
+
+    session_id = get_session_id()
+    if session_id not in RJ_FILES:
+        return jsonify({'success': False, 'error': 'Aucun fichier RJ chargé'}), 400
+
+    data = request.get_json(silent=True) or {}
+    parsed_data = data.get('parsed_data', {})
+    manual_values = data.get('manual_values', {})
+    adjustments = data.get('adjustments', [])
+    day = data.get('day')
+
+    tmp_path = None
+    try:
+        # ---- Write RJ bytes to temp file for COM access ----
+        rj_bytes = RJ_FILES[session_id]
+        rj_bytes.seek(0)
+        tmp = tempfile.NamedTemporaryFile(suffix='.xls', delete=False)
+        tmp.write(rj_bytes.read())
+        tmp.close()
+        tmp_path = tmp.name
+
+        # ---- Get audit day ----
+        if not day:
+            with open(tmp_path, 'rb') as f:
+                reader = RJReader(f)
+                day = reader.get_current_audit_day()
+        if not day or day < 1 or day > 31:
+            return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
+
+        # ---- Compute data (pure Python, no COM) ----
+        dr = parsed_data.get('daily_revenue', {})
+        sj = parsed_data.get('sales_journal', {})
+        ar = parsed_data.get('ar_summary', {})
+
+        geac_data = compute_geac_data(dr, ar)
+        transelect_data = compute_transelect_data(sj, dr)
+
+        mapper = JourMapper(
+            daily_rev_data=dr,
+            sales_journal_data=sj,
+            ar_summary_data=ar,
+            hp_data=parsed_data.get('hp_excel', {}),
+            manual_values=manual_values,
+            adjustments=adjustments,
+        )
+        jour_values_0based = mapper.compute_all()
+        summary = mapper.get_summary()
+
+        # Convert JourMapper 0-based col indices to 1-based for COM
+        jour_values_1based = {col + 1: val for col, val in jour_values_0based.items()}
+
+        # ---- Write via COM ----
+        from utils.rj_filler_com import RJFillerCOM
+
+        with RJFillerCOM(tmp_path) as filler:
+            filler.write_geac(geac_data)
+            filler.write_transelect(transelect_data)
+            filler.write_jour_row(day, jour_values_1based)
+            dc_value = filler.get_dc(day)
+
+        # ---- Read file back to memory ----
+        with open(tmp_path, 'rb') as f:
+            output = io.BytesIO(f.read())
+        with RJ_FILES_LOCK:
+            RJ_FILES[session_id] = output
+        invalidate_rj_cache(session_id)
+
+        # ---- Build display values ----
+        values_display = {}
+        for col_idx, val in jour_values_0based.items():
+            letter = col_index_to_letter(int(col_idx))
+            values_display[letter] = round(val, 2) if isinstance(val, (int, float)) else val
+
+        return jsonify({
+            'success': True,
+            'geac_cells': len(geac_data),
+            'transelect_cells': len(transelect_data),
+            'jour_cells': len(jour_values_1based),
+            'dc_value': round(dc_value, 2),
+            'dc_balanced': abs(dc_value) < 0.01,
+            'day': day,
+            'jour_values': values_display,
+            'summary': summary,
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+    finally:
+        # Clean up temp files
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            backup_path = tmp_path + '.bak.xls'
+            try:
+                os.unlink(backup_path)
+            except OSError:
+                pass

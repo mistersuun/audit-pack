@@ -42,6 +42,16 @@ def compute_geac_data(dr_data, ar_data):
     adv_dep_applied = abs(dr_data.get('balance', {}).get('adv_dep_applied', 0))
     ar_guest_folios = abs(ar_data.get('guest_folios', 0))
 
+    # Facture Direct from DR (front_office_transfers on p.7).
+    # B41 = FD, G41 = AR Guest Folios.  They equal when no GEAC compensation.
+    facture_direct = abs(dr_data.get('balance', {}).get('front_office_transfers', 0))
+    if facture_direct == 0:
+        # Fallback: try comptabilite.facture_direct
+        facture_direct = abs(dr_data.get('revenue', {}).get('comptabilite', {}).get('facture_direct', 0))
+    if facture_direct == 0:
+        # When FD unavailable, use guest_folios (assumes FD = AR)
+        facture_direct = ar_guest_folios
+
     return {
         # Top: Card Variance — cols B=2, G=7, J=10
         (6, 2): amex_cashout,     # B6 AMEX Cash Out
@@ -59,8 +69,8 @@ def compute_geac_data(dr_data, ar_data):
         (32, 5): bal_prev,        # E32 mirror
         (37, 2): bal_today,       # B37 Balance Today
         (37, 5): -bal_today,      # E37 negative
-        (41, 2): ar_guest_folios, # B41 = AR Guest Folios
-        (41, 7): ar_guest_folios, # G41 = same
+        (41, 2): facture_direct,  # B41 = DR Facture Direct
+        (41, 7): ar_guest_folios, # G41 = AR Guest Folios
         (44, 2): adv_dep_applied, # B44 Adv Dep Applied
         (44, 10): adv_dep_applied, # J44 mirror
         (53, 2): new_bal,         # B53 New Balance

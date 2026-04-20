@@ -27,15 +27,40 @@ def test_geac_balance_sheet_values():
         'settlements': {'american_express': 0, 'mastercard': 0, 'visa': 0},
         'deposits': {},
         'balance': {'balance_prev_day': -1476889.24, 'balance_today': -5493.03,
-                    'new_balance': -1482382.27, 'adv_dep_applied': -64522.13},
+                    'new_balance': -1482382.27, 'adv_dep_applied': -64522.13,
+                    'front_office_transfers': 1641.73},
     }
     ar = {'guest_folios': 5197.27}
     result = compute_geac_data(dr, ar)
     assert result[(32, 2)] == 1476889.24
     assert result[(37, 5)] == -5493.03  # E37 negative
-    assert result[(41, 2)] == 5197.27   # AR Guest Folios
-    assert result[(41, 7)] == 5197.27   # G41 matches
+    assert result[(41, 2)] == 1641.73   # B41 = DR Facture Direct
+    assert result[(41, 7)] == 5197.27   # G41 = AR Guest Folios
     assert result[(53, 2)] == 1482382.27
+
+
+def test_geac_b41_equals_g41_when_fd_equals_ar():
+    """When FD = AR, B41 and G41 should match (no GEAC compensation)."""
+    dr = {
+        'settlements': {}, 'deposits': {},
+        'balance': {'front_office_transfers': 5000.00},
+    }
+    ar = {'guest_folios': 5000.00}
+    result = compute_geac_data(dr, ar)
+    assert result[(41, 2)] == 5000.00  # B41 = FD
+    assert result[(41, 7)] == 5000.00  # G41 = AR
+
+
+def test_geac_b41_differs_from_g41_when_fd_ne_ar():
+    """When FD != AR, B41 = FD, G41 = AR Guest Folios."""
+    dr = {
+        'settlements': {}, 'deposits': {},
+        'balance': {'front_office_transfers': 1641.73},
+    }
+    ar = {'guest_folios': 5197.27}
+    result = compute_geac_data(dr, ar)
+    assert result[(41, 2)] == 1641.73  # B41 = FD
+    assert result[(41, 7)] == 5197.27  # G41 = AR
 
 
 def test_geac_row10_not_in_output():

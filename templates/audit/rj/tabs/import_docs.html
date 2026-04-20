@@ -199,7 +199,7 @@
           2. Remplir input sheets
         </button>
         <button onclick="fillJourSheet()" id="btn-fill-jour" disabled style="padding:0.75rem 1.5rem; border:none; border-radius:10px; background:linear-gradient(135deg,#f59e0b,#d97706); color:white; cursor:pointer; font-size:0.9rem; font-weight:600; opacity:0.5;">
-          3. Remplir Jour
+          3. Remplir GEAC + Transelect + Jour
         </button>
       </div>
 
@@ -744,7 +744,7 @@ async function fillAllSheets() {
 }
 
 // ============================================================================
-// STEP 3: FILL JOUR SHEET (via JourMapper)
+// STEP 3: FILL ALL SHEETS (GEAC + Transelect + Jour via COM)
 // ============================================================================
 
 async function fillJourSheet() {
@@ -753,7 +753,7 @@ async function fillJourSheet() {
   banner.style.background = '#fffbeb';
   banner.style.border = '1px solid #fcd34d';
   banner.style.color = '#92400e';
-  banner.textContent = 'Calcul et remplissage de l\'onglet Jour...';
+  banner.textContent = 'Remplissage GEAC + Transelect + Jour via Excel COM...';
 
   try {
     // Build parsed_data from all results
@@ -774,7 +774,7 @@ async function fillJourSheet() {
     // Per-department adjustments
     const adjustments = getAdjustments();
 
-    const response = await csrfFetch('/api/rj/fill-jour', {
+    const response = await csrfFetch('/api/rj/fill-all', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -793,37 +793,61 @@ async function fillJourSheet() {
       const resultsDiv = document.getElementById('import-results');
       const resultsContent = document.getElementById('import-results-content');
 
-      let jourHtml = '<div style="margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:2px solid #f59e0b;">';
-      jourHtml += '<strong style="color:#92400e;">Onglet Jour — Jour ' + result.day + ' (ligne ' + result.target_row + ')</strong>';
-      jourHtml += '<div style="margin-top:0.5rem; font-size:0.8rem; color:#059669;">';
-      jourHtml += result.filled_count + ' colonnes remplies';
-      jourHtml += '</div>';
+      // DC balance indicator
+      const dcColor = result.dc_balanced ? '#059669' : '#dc2626';
+      const dcIcon = result.dc_balanced ? '&#10003;' : '&#9888;';
+      const dcLabel = result.dc_balanced ? 'Balancé' : 'Non balancé';
 
-      // Show values
-      if (result.values && Object.keys(result.values).length > 0) {
-        jourHtml += '<div style="margin-top:0.5rem; display:grid; grid-template-columns:repeat(4, 1fr); gap:0.2rem 0.5rem; font-size:0.75rem;">';
-        for (const [col, val] of Object.entries(result.values)) {
+      let html = '<div style="margin-bottom:1rem; padding:0.75rem; background:white; border-radius:8px; border:2px solid #f59e0b;">';
+
+      // DC value — prominent display
+      html += '<div style="text-align:center; padding:0.75rem; margin-bottom:0.75rem; background:' + (result.dc_balanced ? '#f0fdf4' : '#fef2f2') + '; border-radius:8px; border:2px solid ' + dcColor + ';">';
+      html += '<div style="font-size:1.5rem; font-weight:700; color:' + dcColor + ';">' + dcIcon + ' Diff. Caisse: $' + result.dc_value.toFixed(2) + '</div>';
+      html += '<div style="font-size:0.85rem; color:' + dcColor + ';">' + dcLabel + ' (Jour ' + result.day + ')</div>';
+      html += '</div>';
+
+      // Cell counts per sheet
+      html += '<div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:0.5rem; margin-bottom:0.75rem;">';
+      html += '<div style="text-align:center; padding:0.5rem; background:#f0fdf4; border-radius:6px;"><strong style="color:#065f46;">GEAC</strong><br><span style="font-size:1.1rem; font-weight:600;">' + result.geac_cells + '</span> cellules</div>';
+      html += '<div style="text-align:center; padding:0.5rem; background:#f0fdf4; border-radius:6px;"><strong style="color:#065f46;">Transelect</strong><br><span style="font-size:1.1rem; font-weight:600;">' + result.transelect_cells + '</span> cellules</div>';
+      html += '<div style="text-align:center; padding:0.5rem; background:#f0fdf4; border-radius:6px;"><strong style="color:#065f46;">Jour</strong><br><span style="font-size:1.1rem; font-weight:600;">' + result.jour_cells + '</span> colonnes</div>';
+      html += '</div>';
+
+      // Show jour values
+      if (result.jour_values && Object.keys(result.jour_values).length > 0) {
+        html += '<details style="margin-top:0.5rem;"><summary style="cursor:pointer; font-size:0.85rem; color:#475569; font-weight:600;">Colonnes Jour remplies</summary>';
+        html += '<div style="margin-top:0.5rem; display:grid; grid-template-columns:repeat(4, 1fr); gap:0.2rem 0.5rem; font-size:0.75rem;">';
+        for (const [col, val] of Object.entries(result.jour_values)) {
           const displayVal = typeof val === 'number' ? '$' + val.toFixed(2) : val;
-          jourHtml += '<div style="color:#475569;"><strong>' + col + '</strong>: ' + displayVal + '</div>';
+          html += '<div style="color:#475569;"><strong>' + col + '</strong>: ' + displayVal + '</div>';
         }
-        jourHtml += '</div>';
+        html += '</div></details>';
       }
 
       // Show warnings
       if (result.summary && result.summary.warnings && result.summary.warnings.length > 0) {
-        jourHtml += '<div style="margin-top:0.5rem; color:#92400e; font-size:0.8rem;">&#9888; ' + result.summary.warnings.join(', ') + '</div>';
+        html += '<div style="margin-top:0.5rem; color:#92400e; font-size:0.8rem;">&#9888; ' + result.summary.warnings.join(', ') + '</div>';
       }
 
-      jourHtml += '</div>';
-      resultsContent.innerHTML += jourHtml;
+      html += '</div>';
+      resultsContent.innerHTML += html;
       resultsDiv.style.display = 'block';
 
-      banner.style.background = '#f0fdf4';
-      banner.style.border = '1px solid #86efac';
-      banner.style.color = '#166534';
-      banner.textContent = 'Onglet Jour rempli! ' + result.filled_count + ' colonnes écrites pour jour ' + result.day + '. Vous pouvez télécharger le RJ.';
+      // Update banner
+      const totalCells = result.geac_cells + result.transelect_cells + result.jour_cells;
+      if (result.dc_balanced) {
+        banner.style.background = '#f0fdf4';
+        banner.style.border = '1px solid #86efac';
+        banner.style.color = '#166534';
+        banner.textContent = 'Remplissage complet! ' + totalCells + ' cellules, DC = $' + result.dc_value.toFixed(2) + ' (balancé). Vous pouvez télécharger le RJ.';
+      } else {
+        banner.style.background = '#fffbeb';
+        banner.style.border = '1px solid #fcd34d';
+        banner.style.color = '#92400e';
+        banner.textContent = 'Remplissage complet (' + totalCells + ' cellules) mais DC = $' + result.dc_value.toFixed(2) + ' — vérifier la variance.';
+      }
 
-      // Invalidate all data tabs — Jour values have changed
+      // Invalidate all data tabs
       if (typeof invalidateTabCache === 'function') {
         invalidateTabCache('nouveau-jour', 'recap', 'transelect', 'geac');
       }
@@ -831,12 +855,15 @@ async function fillJourSheet() {
         markTabUpdated('nouveau-jour');
       }
 
-      if (typeof notify === 'function') notify('Jour rempli: ' + result.filled_count + ' colonnes, jour ' + result.day, 'success');
+      if (typeof notify === 'function') {
+        const notifyType = result.dc_balanced ? 'success' : 'warning';
+        notify('Remplissage: ' + totalCells + ' cellules, DC=$' + result.dc_value.toFixed(2), notifyType);
+      }
     } else {
       banner.style.background = '#fef2f2';
       banner.style.border = '1px solid #fca5a5';
       banner.style.color = '#991b1b';
-      banner.textContent = 'Erreur: ' + (result.error || 'Impossible de remplir le jour');
+      banner.textContent = 'Erreur: ' + (result.error || 'Impossible de remplir les onglets');
     }
   } catch (err) {
     banner.style.background = '#fef2f2';

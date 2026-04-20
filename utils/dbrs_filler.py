@@ -20,8 +20,14 @@ class DBRSFiller:
         r'Y:\2026DBR MasterSheraton.xls',
     ]
 
-    # DailyRev tab row mapping: row -> DR page 1 room charge label
+    # DailyRev tab row mapping: row -> DR page 1 room charge label.
+    # Rows 2-40 map to DR p.1 room charge lines (all must be filled, even zeros).
+    # Row 44 = Room Charge + Allowance (from DR p.1).
+    # Row 47 = G4 / Club Lounge deduction (user-provided).
+    # DBRS formulas reference: R44-R47 for ALLOWANCE, R28+R31 for OTHER,
+    # R29+R38 for NO SHOWS, R27+R26 for EARLY DEP/LATE DEP.
     DAILYREV_ROWS = {
+        # Rows 2-30: Main room charge categories
         2: 'Room Chrg - Premium',
         3: 'Room Chrg - Standard',
         4: 'Room Chrg - eChannel',
@@ -51,6 +57,25 @@ class DBRSFiller:
         28: 'Reservation/Cancella',
         29: 'Guaranteed No Show',
         30: 'Day Use Room Charge',
+        # Rows 31-40: Additional room categories (CRITICAL for DBRS formulas)
+        31: 'Cancellation Fee-Tra',
+        32: 'Room Chrg - GRP Asso',
+        33: 'Resort Service Fee',
+        34: 'Package',
+        35: 'Room Charge HOLD FOR',
+        36: 'Other Room Charges',
+        37: 'Loyalty Redemption O',
+        38: 'Guaranteed No Show-C',
+        39: 'Attrition',
+        40: 'NA',
+    }
+
+    # Special DailyRev rows NOT from standard room charge list
+    # Row 44: Room Charge + Allowance (DR p.1 "Room Charge + Allowa" Today value)
+    # Row 47: G4 / Club Lounge deduction (user-provided, same as Jour AK deduction)
+    DAILYREV_SPECIAL_ROWS = {
+        44: 'Room Charge + Allowa',  # DR p.1
+        47: '_G4_CLUB_LOUNGE',       # User-provided G4 value
     }
 
     # Market Segment tab row mapping: row -> segment code prefix.
@@ -127,7 +152,7 @@ class DBRSFiller:
             self.excel.Quit()
             self.excel = None
 
-    def fill_dbrs_staging(self, dr_room_charges, ms_rooms_by_segment):
+    def fill_dbrs_staging(self, dr_room_charges, ms_rooms_by_segment, g4=0):
         """Fill the DBRS staging workbook with parsed data.
 
         Args:
@@ -135,6 +160,8 @@ class DBRSFiller:
                 e.g. {'Room Chrg - Premium': 2690.0, 'Room Chrg - Standard': 7406.88, ...}
             ms_rooms_by_segment: dict mapping segment codes to Rooms count today
                 e.g. {'T10': 5, 'T12': 22, 'T17': 29, 'GC': 100, ...}
+            g4: Club Lounge / accommodation production deduction (user-provided).
+                Goes to DailyRev row 47. Used by DBRS ALLOWANCE formula (R81 = R44 - R47).
 
         Returns:
             dict with 'dbrs_insertion' key containing B2:B89 computed values
@@ -144,11 +171,17 @@ class DBRSFiller:
         try:
             wb = self.excel.Workbooks.Open(self.DBRS_PATH)
 
-            # Fill DailyRev tab — col B, rows 2-30
+            # Fill DailyRev tab — col B, rows 2-40 (all room charge categories)
             ws_dr = wb.Sheets('DailyRev')
             for row, label in self.DAILYREV_ROWS.items():
                 value = dr_room_charges.get(label, 0)
                 ws_dr.Cells(row, 2).Value = value  # Column B
+
+            # Fill special DailyRev rows (44 = Allowance, 47 = G4)
+            # Row 44: Room Charge + Allowance from DR p.1
+            ws_dr.Cells(44, 2).Value = dr_room_charges.get('Room Charge + Allowa', 0)
+            # Row 47: G4 / Club Lounge (user-provided)
+            ws_dr.Cells(47, 2).Value = g4
 
             # Fill Market Segment tab — col B, data rows only.
             # HasFormula guard is a runtime safety net in case row numbering
@@ -244,19 +277,20 @@ class DBRSFiller:
         finally:
             self._quit_excel()
 
-    def fill_and_paste(self, audit_date, dr_room_charges, ms_rooms_by_segment, master_path=None):
+    def fill_and_paste(self, audit_date, dr_room_charges, ms_rooms_by_segment, g4=0, master_path=None):
         """Full workflow: fill DBRS staging, then paste into Master.
 
         Args:
             audit_date: datetime.date
             dr_room_charges: dict of room charge label -> Today value
             ms_rooms_by_segment: dict of segment code -> Rooms today
+            g4: Club Lounge deduction (user-provided)
             master_path: optional explicit path to Master DBR file
 
         Returns:
             dict with 'staging' and 'paste' sub-dicts.
         """
-        staging_result = self.fill_dbrs_staging(dr_room_charges, ms_rooms_by_segment)
+        staging_result = self.fill_dbrs_staging(dr_room_charges, ms_rooms_by_segment, g4=g4)
         paste_result = self.paste_to_master(
             audit_date,
             staging_result['dbrs_insertion'],

@@ -117,6 +117,12 @@ class JourMapper:
             value = self._process_formula(col_letter, config)
         elif operation == 'combined':
             value = self._process_combined(col_letter, config)
+        elif operation == 'geac_compensation':
+            value = self._process_geac_compensation(config)
+        elif operation == 'cf_transfer':
+            value = self._process_cf_transfer(config)
+        elif operation == 'room_formula':
+            value = self._process_room_formula(config)
         else:
             self.warnings.append(f"Column {col_letter}: unknown operation '{operation}'")
             return None
@@ -266,6 +272,72 @@ class JourMapper:
         # Preserve the sign as provided by source data
         return total if total != 0 else 0
 
+    def _process_geac_compensation(self, config):
+        """
+        GEAC Compensation: AP = -(facture_direct - ar_guest_folios).
+
+        Equivalent to: guest_folios - facture_direct.
+        Returns 0 when FD = AR. Positive when FD < AR.
+        If facture_direct is None, cannot compute — return None.
+        If guest_folios is None, treat as 0.
+        """
+        facture_direct = self._resolve_field('revenue.comptabilite.facture_direct')
+        if facture_direct is None:
+            return None
+
+        guest_folios = self._resolve_field('ar_summary.guest_folios')
+        if guest_folios is None:
+            guest_folios = 0
+
+        return float(guest_folios) - float(facture_direct)
+
+    def _process_cf_transfer(self, config):
+        """
+        CF Transfer: sum accumulator_fields with sign-prefix support.
+
+        Fields prefixed with '-' are subtracted; others are added.
+        Formula: CF = front_office_transfers - ar_payments - ar_misc.
+        Returns None if no fields resolved.
+        """
+        fields = config.get('accumulator_fields', [])
+        if not fields:
+            return None
+
+        total = 0
+        found_any = False
+
+        for field_path in fields:
+            negate = False
+            if field_path.startswith('-'):
+                negate = True
+                field_path = field_path[1:]
+
+            value = self._resolve_field(field_path)
+            if value is not None:
+                fval = float(value)
+                total += -fval if negate else fval
+                found_any = True
+
+        return total if found_any else None
+
+    def _process_room_formula(self, config):
+        """
+        Room formula: return the integer value of base_field.
+
+        CK is a formula cell in Excel (=248-CM[row]). JourMapper returns
+        the numeric total_rooms_today value; RJFillerCOM handles writing
+        the actual formula. Returns None if base_field is not available.
+        """
+        base_field = config.get('base_field')
+        if not base_field:
+            return None
+
+        value = self._resolve_field(base_field)
+        if value is None:
+            return None
+
+        return int(value)
+
     def _apply_sign_handling(self, value, config):
         """Apply sign handling rules."""
         sign = config.get('sign_handling', 'keep_sign')
@@ -357,7 +429,13 @@ class JourMapper:
         # Special prefix routing
         if parts[0] == 'sales_journal':
             # Route to sales_journal data directly
-            return self._navigate_dict(self.sales_journal, parts[1:])
+            result = self._navigate_dict(self.sales_journal, parts[1:])
+            if result is not None:
+                return result
+            # SJ parser wraps per-department data under 'departments' key;
+            # mapping config uses e.g. sales_journal.piazza.nourriture
+            departments = self.sales_journal.get('departments', {})
+            return self._navigate_dict(departments, parts[1:])
         elif parts[0] == 'ar_summary':
             return self._navigate_dict(self.ar_summary, parts[1:])
         elif parts[0] == 'derived':
