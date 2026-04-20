@@ -49,7 +49,7 @@ class RJFillerCOM:
         2,    # B  — Bal_Ouv
         3,    # C  — DC
         60,   # BH — TOTAL CREDIT
-        89,   # CK — Simple rooms (=243-CM)
+        89,   # CK — Simple rooms (=total_rooms-CM)
         101,  # CW — escompte AMEX
         102,  # CX — escompte Discover
         103,  # CY — escompte Master
@@ -205,9 +205,9 @@ class RJFillerCOM:
         if cell.HasFormula:
             existing = str(cell.Formula)
             if existing.startswith(self._COMPUTED_FORMULA_PREFIXES):
-                logger.debug(
-                    'Skipping %s!R%dC%d — existing formula: %s',
-                    sheet_name, row, col, existing,
+                logger.warning(
+                    'Skipping %s!R%dC%d — existing formula: %s (attempted value: %s)',
+                    sheet_name, row, col, existing, value,
                 )
                 return
 

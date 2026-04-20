@@ -942,6 +942,9 @@ def fill_all():
             dc_value = filler.get_dc(day)
 
         # ---- Read file back to memory ----
+        # Note: concurrent fill_all calls for the same session could race here.
+        # This is safe in practice (single-auditor workflow, Flask dev server is
+        # single-threaded). For production WSGI with threads, consider per-session locks.
         with open(tmp_path, 'rb') as f:
             output = io.BytesIO(f.read())
         with RJ_FILES_LOCK:

@@ -115,7 +115,7 @@ class TestFormulaColumnsSet:
 
     def test_writable_columns_not_protected(self):
         """Spot-check that common writeable columns are NOT in the set."""
-        # D=4 (bal_ferm), AK=37 (Chambres), CF=84 (transfer AR)
+        # D=4 (Nouveau Solde), AK=37 (Chambres), CF=84 (Transfer AR)
         for col in (4, 37, 84):
             assert col not in self.FC, (
                 f'Column {col} is incorrectly marked as a formula column'
