@@ -8,27 +8,31 @@ Returns a dict of {(row, col): value} for use with RJFillerCOM.write_geac().
 def compute_geac_data(dr_data, ar_data):
     """Compute all GEAC_UX cell values from parsed source data.
 
+    Accepts raw DailyRevenueParser and ARSummaryParser output directly.
+
     Args:
-        dr_data: parsed Daily Revenue dict with keys:
-            settlements.american_express, settlements.visa, settlements.mastercard
-            deposits.dep_rcvd_ax, deposits.dep_rcvd_visa, deposits.dep_rcvd_master
-            balance.balance_prev_day, balance.balance_today
-            balance.new_balance, balance.adv_dep_applied
-        ar_data: parsed AR Summary dict with keys:
-            guest_folios
+        dr_data: DailyRevenueParser.extracted_data dict with keys:
+            settlements: {american_express, visa, mastercard, facture_direct}
+            deposits_received: {ax, visa, mastercard}
+            balance: {prev_day, today, new_balance}
+            advance_deposits: {applied}
+        ar_data: ARSummaryParser.extracted_data dict with keys:
+            front_office_transfers: {guest_folios}
 
     Returns:
-        dict of {(row, col): value} for GEAC cells
+        dict of {(row, col): value} for GEAC cells (1-based row/col)
     """
     # Extract settlement amounts (absolute values)
-    amex_settle = abs(dr_data.get('settlements', {}).get('american_express', 0))
-    mc_settle = abs(dr_data.get('settlements', {}).get('mastercard', 0))
-    visa_settle = abs(dr_data.get('settlements', {}).get('visa', 0))
+    settlements = dr_data.get('settlements', {})
+    amex_settle = abs(settlements.get('american_express', 0) or 0)
+    mc_settle = abs(settlements.get('mastercard', 0) or 0)
+    visa_settle = abs(settlements.get('visa', 0) or 0)
 
-    # Extract deposits received
-    amex_dep = abs(dr_data.get('deposits', {}).get('dep_rcvd_ax', 0))
-    mc_dep = abs(dr_data.get('deposits', {}).get('dep_rcvd_master', 0))
-    visa_dep = abs(dr_data.get('deposits', {}).get('dep_rcvd_visa', 0))
+    # Extract deposits received (parser key: deposits_received)
+    deps = dr_data.get('deposits_received', {})
+    amex_dep = abs(deps.get('ax', 0) or 0)
+    mc_dep = abs(deps.get('mastercard', 0) or 0)
+    visa_dep = abs(deps.get('visa', 0) or 0)
 
     # Cash out = Settlement - Deposit
     amex_cashout = amex_settle - amex_dep
@@ -36,18 +40,24 @@ def compute_geac_data(dr_data, ar_data):
     visa_cashout = visa_settle - visa_dep
 
     # Balance sheet values (all positive/abs)
-    bal_prev = abs(dr_data.get('balance', {}).get('balance_prev_day', 0))
-    bal_today = abs(dr_data.get('balance', {}).get('balance_today', 0))
-    new_bal = abs(dr_data.get('balance', {}).get('new_balance', 0))
-    adv_dep_applied = abs(dr_data.get('balance', {}).get('adv_dep_applied', 0))
-    ar_guest_folios = abs(ar_data.get('guest_folios', 0))
+    balance = dr_data.get('balance', {})
+    bal_prev = abs(balance.get('prev_day', 0) or 0)
+    bal_today = abs(balance.get('today', 0) or 0)
+    new_bal = abs(balance.get('new_balance', 0) or 0)
 
-    # Facture Direct from DR (front_office_transfers on p.7).
+    # Advance deposits applied (parser key: advance_deposits.applied)
+    adv_dep_applied = abs(
+        dr_data.get('advance_deposits', {}).get('applied', 0) or 0
+    )
+
+    # AR Guest Folios (parser key: front_office_transfers.guest_folios)
+    ar_guest_folios = abs(
+        ar_data.get('front_office_transfers', {}).get('guest_folios', 0) or 0
+    )
+
+    # Facture Direct for B41 (parser key: settlements.facture_direct)
     # B41 = FD, G41 = AR Guest Folios.  They equal when no GEAC compensation.
-    facture_direct = abs(dr_data.get('balance', {}).get('front_office_transfers', 0))
-    if facture_direct == 0:
-        # Fallback: try comptabilite.facture_direct
-        facture_direct = abs(dr_data.get('revenue', {}).get('comptabilite', {}).get('facture_direct', 0))
+    facture_direct = abs(settlements.get('facture_direct', 0) or 0)
     if facture_direct == 0:
         # When FD unavailable, use guest_folios (assumes FD = AR)
         facture_direct = ar_guest_folios

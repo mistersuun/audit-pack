@@ -359,9 +359,9 @@ DAILY_REV_TO_JOUR = {
         'operation': 'cf_transfer',
         'formula': 'ar_guest_folios - ar_payments - dr_ar_misc',
         'accumulator_fields': [
-            'balance.front_office_transfers',
-            '-balance.ar_payments',
-            '-non_revenue.ar_activity.total',
+            'ar_summary.front_office_transfers.guest_folios',
+            '-ar_summary.payments',
+            '-revenue.ar_activity.total',
         ],
         'description': 'CF = AR Summary Guest Folios - AR Summary Payments - DR p.2 AR Misc. '
                        'From Jour cell header: "Total Transfers (AR summary Report) '

@@ -108,42 +108,7 @@ EXPECTED_TRANSELECT = {
 TOL = 0.02
 
 
-def _dr_to_geac_format(dr_data):
-    """Transform DailyRevenueParser extracted_data into the dict shape
-    expected by compute_geac_data().
-
-    The parser stores deposits under 'deposits_received' with keys
-    'ax', 'visa', 'mastercard' while the filler expects 'deposits'
-    with keys 'dep_rcvd_ax', 'dep_rcvd_visa', 'dep_rcvd_master'.
-    Balance keys also differ.
-    """
-    deps = dr_data.get('deposits_received', {})
-    adv = dr_data.get('advance_deposits', {})
-    bal = dr_data.get('balance', {})
-    return {
-        'settlements': dr_data.get('settlements', {}),
-        'deposits': {
-            'dep_rcvd_ax': deps.get('ax', 0),
-            'dep_rcvd_visa': deps.get('visa', 0),
-            'dep_rcvd_master': deps.get('mastercard', 0),
-        },
-        'balance': {
-            'balance_prev_day': bal.get('prev_day', 0),
-            'balance_today': bal.get('today', 0),
-            'new_balance': bal.get('new_balance', 0),
-            'adv_dep_applied': adv.get('applied', 0),
-        },
-    }
-
-
-def _ar_to_geac_format(ar_data):
-    """Transform ARSummaryParser extracted_data into the dict shape
-    expected by compute_geac_data().
-    """
-    fo = ar_data.get('front_office_transfers', {})
-    return {
-        'guest_folios': fo.get('guest_folios', 0),
-    }
+# No adaptor functions needed — compute_geac_data accepts raw parser output directly.
 
 
 # ---------------------------------------------------------------------------
@@ -360,9 +325,9 @@ class TestComputeGEAC:
         """Verify settlement-derived and deposit cells match expected values."""
         from utils.geac_filler import compute_geac_data
 
-        dr_shaped = _dr_to_geac_format(parsed_docs['daily_revenue']['data'])
-        ar_shaped = _ar_to_geac_format(parsed_docs['ar_summary']['data'])
-        result = compute_geac_data(dr_shaped, ar_shaped)
+        dr_raw = parsed_docs['daily_revenue']['data']
+        ar_raw = parsed_docs['ar_summary']['data']
+        result = compute_geac_data(dr_raw, ar_raw)
 
         for (row, col), expected in EXPECTED_GEAC_CARDS.items():
             actual = result.get((row, col))
@@ -375,9 +340,9 @@ class TestComputeGEAC:
         """E37 should be the negative of B37."""
         from utils.geac_filler import compute_geac_data
 
-        dr_shaped = _dr_to_geac_format(parsed_docs['daily_revenue']['data'])
-        ar_shaped = _ar_to_geac_format(parsed_docs['ar_summary']['data'])
-        result = compute_geac_data(dr_shaped, ar_shaped)
+        dr_raw = parsed_docs['daily_revenue']['data']
+        ar_raw = parsed_docs['ar_summary']['data']
+        result = compute_geac_data(dr_raw, ar_raw)
 
         b37 = result.get((37, 2), 0)
         e37 = result.get((37, 5), 0)
@@ -388,9 +353,9 @@ class TestComputeGEAC:
         """For each card type: Cash Out + Deposit = Daily Revenue."""
         from utils.geac_filler import compute_geac_data
 
-        dr_shaped = _dr_to_geac_format(parsed_docs['daily_revenue']['data'])
-        ar_shaped = _ar_to_geac_format(parsed_docs['ar_summary']['data'])
-        result = compute_geac_data(dr_shaped, ar_shaped)
+        dr_raw = parsed_docs['daily_revenue']['data']
+        ar_raw = parsed_docs['ar_summary']['data']
+        result = compute_geac_data(dr_raw, ar_raw)
 
         for col, label in [(2, 'AMEX'), (7, 'MC'), (10, 'VISA')]:
             cashout = result.get((6, col), 0)
@@ -403,9 +368,9 @@ class TestComputeGEAC:
         """B53 and E53 should both equal new_balance (absolute)."""
         from utils.geac_filler import compute_geac_data
 
-        dr_shaped = _dr_to_geac_format(parsed_docs['daily_revenue']['data'])
-        ar_shaped = _ar_to_geac_format(parsed_docs['ar_summary']['data'])
-        result = compute_geac_data(dr_shaped, ar_shaped)
+        dr_raw = parsed_docs['daily_revenue']['data']
+        ar_raw = parsed_docs['ar_summary']['data']
+        result = compute_geac_data(dr_raw, ar_raw)
 
         b53 = result.get((53, 2), 0)
         e53 = result.get((53, 5), 0)
@@ -414,32 +379,33 @@ class TestComputeGEAC:
         assert e53 == pytest.approx(b53, abs=TOL), \
             f"E53 should mirror B53: got {e53} vs {b53}"
 
-    def test_geac_guest_folios_in_both_41_cells(self, parsed_docs):
-        """compute_geac_data puts guest_folios in both B41 and G41.
-
-        Note: manual fill uses FD for B41, guest_folios for G41.
-        This documents current behavior.
-        """
+    def test_geac_b41_fd_g41_guest_folios(self, parsed_docs):
+        """B41 = DR Facture Direct, G41 = AR Guest Folios."""
         from utils.geac_filler import compute_geac_data
 
-        dr_shaped = _dr_to_geac_format(parsed_docs['daily_revenue']['data'])
-        ar_shaped = _ar_to_geac_format(parsed_docs['ar_summary']['data'])
-        result = compute_geac_data(dr_shaped, ar_shaped)
+        dr_raw = parsed_docs['daily_revenue']['data']
+        ar_raw = parsed_docs['ar_summary']['data']
+        result = compute_geac_data(dr_raw, ar_raw)
 
+        # DR settlements.facture_direct = -5197.27 (abs = 5197.27)
+        # AR guest_folios = 5197.27
+        # On this pre-audit DR, FD = AR, so both equal AR_GUEST_FOLIOS
         b41 = result.get((41, 2), 0)
         g41 = result.get((41, 7), 0)
-        assert b41 == pytest.approx(AR_GUEST_FOLIOS, abs=TOL), \
-            f"B41: expected {AR_GUEST_FOLIOS}, got {b41}"
         assert g41 == pytest.approx(AR_GUEST_FOLIOS, abs=TOL), \
             f"G41: expected {AR_GUEST_FOLIOS}, got {g41}"
+        # B41 = abs(settlements.facture_direct)
+        fd = abs(dr_raw.get('settlements', {}).get('facture_direct', 0))
+        assert b41 == pytest.approx(fd, abs=TOL), \
+            f"B41: expected FD={fd}, got {b41}"
 
     def test_geac_row10_not_in_output(self, parsed_docs):
         """Row 10 (Total) is a formula -- must not appear in output."""
         from utils.geac_filler import compute_geac_data
 
-        dr_shaped = _dr_to_geac_format(parsed_docs['daily_revenue']['data'])
-        ar_shaped = _ar_to_geac_format(parsed_docs['ar_summary']['data'])
-        result = compute_geac_data(dr_shaped, ar_shaped)
+        dr_raw = parsed_docs['daily_revenue']['data']
+        ar_raw = parsed_docs['ar_summary']['data']
+        result = compute_geac_data(dr_raw, ar_raw)
 
         for (r, c) in result:
             assert r != 10, 'Row 10 should not be in GEAC output (formula row)'
@@ -629,10 +595,7 @@ class TestCOMWriteAndDC:
         sj_data = parsed_docs['sales_journal']['data']
         hp_data = parsed_docs.get('hp_excel', {}).get('data', {})
 
-        dr_shaped = _dr_to_geac_format(dr_raw)
-        ar_shaped = _ar_to_geac_format(ar_raw)
-
-        geac_data = compute_geac_data(dr_shaped, ar_shaped)
+        geac_data = compute_geac_data(dr_raw, ar_raw)
         transelect_data = compute_transelect_data(sj_data, dr_raw)
 
         mapper = JourMapper(
@@ -653,7 +616,7 @@ class TestCOMWriteAndDC:
             with RJFillerCOM(tmp_rj) as filler:
                 filler.write_geac(geac_data)
                 filler.write_transelect(transelect_data)
-                filler.write_jour(jour_values_1based, day=DAY)
+                filler.write_jour_row(DAY, jour_values_1based)
         except Exception as e:
             pytest.skip(f"COM write failed (may need Excel running): {e}")
 

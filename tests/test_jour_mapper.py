@@ -163,43 +163,46 @@ class TestGeacCompensation:
 
 class TestCfTransfer:
     """
-    CF = front_office_transfers - ar_payments - ar_misc.
+    CF = AR Guest Folios - AR Payments - DR AR Misc.
     Uses accumulator_fields with '-' prefix for subtracted fields.
+    Fields route through ar_summary_data and daily_rev_data.
     """
 
     def test_basic_cf_formula(self):
         """CF = 5000 - 1000 - 200 = 3800."""
-        mapper = make_mapper(daily_rev_data={
-            'balance': {
-                'front_office_transfers': 5000.0,
-                'ar_payments': 1000.0,
+        mapper = make_mapper(
+            ar_summary_data={
+                'front_office_transfers': {'guest_folios': 5000.0},
+                'payments': 1000.0,
             },
-            'non_revenue': {
-                'ar_activity': {'total': 200.0},
+            daily_rev_data={
+                'revenue': {'ar_activity': {'total': 200.0}},
             },
-        })
+        )
         result = mapper.compute_all()
         assert result.get(83) == pytest.approx(3800.0)
 
     def test_cf_only_transfers(self):
-        """When only front_office_transfers is present."""
-        mapper = make_mapper(daily_rev_data={
-            'balance': {'front_office_transfers': 5000.0},
-        })
+        """When only guest_folios is present."""
+        mapper = make_mapper(
+            ar_summary_data={
+                'front_office_transfers': {'guest_folios': 5000.0},
+            },
+        )
         result = mapper.compute_all()
         assert result.get(83) == pytest.approx(5000.0)
 
     def test_cf_negative_result(self):
         """CF can be negative when subtractions exceed additions."""
-        mapper = make_mapper(daily_rev_data={
-            'balance': {
-                'front_office_transfers': 1000.0,
-                'ar_payments': 3000.0,
+        mapper = make_mapper(
+            ar_summary_data={
+                'front_office_transfers': {'guest_folios': 1000.0},
+                'payments': 3000.0,
             },
-            'non_revenue': {
-                'ar_activity': {'total': 500.0},
+            daily_rev_data={
+                'revenue': {'ar_activity': {'total': 500.0}},
             },
-        })
+        )
         result = mapper.compute_all()
         # 1000 - 3000 - 500 = -2500
         assert result.get(83) == pytest.approx(-2500.0)
@@ -212,15 +215,15 @@ class TestCfTransfer:
 
     def test_cf_zero_result(self):
         """CF = 0 when all components cancel out."""
-        mapper = make_mapper(daily_rev_data={
-            'balance': {
-                'front_office_transfers': 1200.0,
-                'ar_payments': 1000.0,
+        mapper = make_mapper(
+            ar_summary_data={
+                'front_office_transfers': {'guest_folios': 1200.0},
+                'payments': 1000.0,
             },
-            'non_revenue': {
-                'ar_activity': {'total': 200.0},
+            daily_rev_data={
+                'revenue': {'ar_activity': {'total': 200.0}},
             },
-        })
+        )
         result = mapper.compute_all()
         assert result.get(83) == pytest.approx(0.0)
 
@@ -274,15 +277,17 @@ class TestComputeAllIntegration:
     def test_all_three_new_operations_together(self):
         mapper = make_mapper(
             daily_rev_data={
-                'revenue': {'comptabilite': {'facture_direct': 45000.0}},
-                'balance': {
-                    'front_office_transfers': 5000.0,
-                    'ar_payments': 1000.0,
+                'revenue': {
+                    'comptabilite': {'facture_direct': 45000.0},
+                    'ar_activity': {'total': 200.0},
                 },
-                'non_revenue': {'ar_activity': {'total': 200.0}},
                 'market_segment': {'total_rooms_today': 180},
             },
-            ar_summary_data={'guest_folios': 46000.0},
+            ar_summary_data={
+                'guest_folios': 46000.0,
+                'front_office_transfers': {'guest_folios': 5000.0},
+                'payments': 1000.0,
+            },
         )
         result = mapper.compute_all()
 

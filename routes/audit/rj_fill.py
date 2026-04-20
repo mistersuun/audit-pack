@@ -409,10 +409,9 @@ def save_dueback_simple():
                 total_current += curr_val
                 filled_count += 1
 
-        # Calculate and fill Total Z (column Z)
+        # Column Z has a SUM formula — never overwrite it.
+        # The formula auto-computes the total from per-receptionist cells.
         total_z = total_previous + total_current
-        filler.fill_dueback_by_col(current_day, 'Z', total_previous, line_type='previous')
-        filler.fill_dueback_by_col(current_day, 'Z', total_current, line_type='nouveau')
 
         # Save back to memory
         save_and_store(session_id, filler)
@@ -888,11 +887,13 @@ def fill_all():
 
     tmp_path = None
     try:
-        # ---- Write RJ bytes to temp file for COM access ----
-        rj_bytes = RJ_FILES[session_id]
-        rj_bytes.seek(0)
+        # ---- Copy RJ bytes under lock, then release before COM work ----
+        with RJ_FILES_LOCK:
+            rj_bytes = RJ_FILES[session_id]
+            rj_bytes.seek(0)
+            raw_bytes = rj_bytes.read()
         tmp = tempfile.NamedTemporaryFile(suffix='.xls', delete=False)
-        tmp.write(rj_bytes.read())
+        tmp.write(raw_bytes)
         tmp.close()
         tmp_path = tmp.name
 
