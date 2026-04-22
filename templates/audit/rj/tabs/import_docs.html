@@ -338,16 +338,18 @@ function autoDetectDocType(filename) {
     return 'sales_journal';
   }
 
-  // PDF files — need to distinguish between Daily Revenue and AR Summary
+  // PDF files — order matters: check most-specific patterns first.
   if (ext === 'pdf') {
     if (name.includes('daily') || name.includes('revenue') || name.includes('revenu')) {
       return 'daily_revenue';
     }
-    if (name.includes('ar') || name.includes('summary') || name.includes('receivable') || name.includes('recevable')) {
-      return 'ar_summary';
-    }
+    // Market Segment: check BEFORE ar_summary because "market" contains "ar"
     if (name.includes('market') || name.includes('segment') || name.includes('mktseg')) {
       return 'market_segment';
+    }
+    // AR Summary: use word-boundary regex to avoid matching "market" or other words containing "ar"
+    if (/\bar\b/.test(name) || name.includes('summary') || name.includes('receivable') || name.includes('recevable')) {
+      return 'ar_summary';
     }
     if (name.includes('deposit') || name.includes('advance') || name.includes('dépôt')) {
       return 'advance_deposit';
