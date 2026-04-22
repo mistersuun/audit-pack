@@ -36,6 +36,7 @@ class JourMapper:
 
     def __init__(self, daily_rev_data=None, sales_journal_data=None,
                  ar_summary_data=None, hp_data=None,
+                 market_segment_data=None, dbrs_data=None,
                  manual_values=None, adjustments=None):
         """
         Initialize with all data sources.
@@ -45,6 +46,8 @@ class JourMapper:
             sales_journal_data: Nested dict from SalesJournalParser
             ar_summary_data: Nested dict from ARSummaryParser
             hp_data: Nested dict from HPExcelParser
+            market_segment_data: Flat dict from MarketSegmentParser (for CK/CN/CO)
+            dbrs_data: Flat dict from DBRS parser (for CP)
             manual_values: Dict with 'club_lounge', 'deposit_on_hand'
             adjustments: List of dicts with 'department' and 'amount'
         """
@@ -52,16 +55,19 @@ class JourMapper:
         self.sales_journal = sales_journal_data or {}
         self.ar_summary = ar_summary_data or {}
         self.hp_data = hp_data or {}
+        self.market_segment = market_segment_data or {}
+        self.dbrs = dbrs_data or {}
         self.manual = manual_values or {}
         self.adjustments = adjustments or []
 
         # Combined data for field resolution
-        # Priority: daily_rev > sales_journal > ar_summary > manual
         self._all_data = {
             'daily_rev': self.daily_rev,
             'sales_journal': self.sales_journal,
             'ar_summary': self.ar_summary,
             'hp': self.hp_data,
+            'market_segment': self.market_segment,
+            'dbrs': self.dbrs,
             'manual': self.manual,
         }
 
@@ -378,13 +384,18 @@ class JourMapper:
             return self._navigate_dict(departments, parts[1:])
         elif parts[0] == 'ar_summary':
             return self._navigate_dict(self.ar_summary, parts[1:])
+        elif parts[0] == 'market_segment':
+            return self._navigate_dict(self.market_segment, parts[1:])
+        elif parts[0] == 'dbrs':
+            return self._navigate_dict(self.dbrs, parts[1:])
         elif parts[0] == 'derived':
             return self._resolve_derived(parts[1:])
         elif parts[0] == 'manual':
             return self.manual.get(parts[1]) if len(parts) > 1 else None
 
         # Try each data source in order
-        for source_key in ['daily_rev', 'sales_journal', 'ar_summary', 'hp']:
+        for source_key in ['daily_rev', 'sales_journal', 'ar_summary', 'hp',
+                           'market_segment', 'dbrs']:
             data = self._all_data.get(source_key, {})
             result = self._navigate_dict(data, parts)
             if result is not None:

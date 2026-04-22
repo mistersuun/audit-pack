@@ -925,6 +925,8 @@ def fill_all():
             sales_journal_data=sj,
             ar_summary_data=ar,
             hp_data=parsed_data.get('hp_excel', {}),
+            market_segment_data=parsed_data.get('market_segment', {}),
+            dbrs_data=parsed_data.get('dbrs', {}),
             manual_values=manual_values,
             adjustments=adjustments,
         )

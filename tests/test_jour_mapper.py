@@ -228,8 +228,75 @@ class TestCfTransfer:
         assert result.get(83) == pytest.approx(0.0)
 
 
-# CK (room_formula) removed — CK is a formula cell protected by FORMULA_COLUMNS.
-# The mapping and handler were dead code (computed but never written).
+# CK (col 88) is now a direct-write column sourced from market_segment.total_rooms_today.
+# The auditor overwrites the default Excel formula (=total_rooms-CM) with the actual count.
+# See TestSalesJournalSourcedColumns below for market_segment test coverage.
+
+
+class TestSalesJournalSourcedColumns:
+    """Verify SJ-sourced columns resolve through the 'departments' wrapper."""
+
+    def test_ad_banquet_pourboire(self):
+        """AD (col 29) reads from sales_journal.banquet.pourboire_a_payer."""
+        mapper = make_mapper(sales_journal_data={
+            'departments': {'banquet': {'pourboire_a_payer': 1822.50}},
+        })
+        result = mapper.compute_all()
+        assert result.get(29) == pytest.approx(1822.50)
+
+    def test_ag_accumulates_sj_and_dr(self):
+        """AG (col 32) = SJ banquet.location_salle + DR location_salle_forfait."""
+        mapper = make_mapper(
+            sales_journal_data={
+                'departments': {'banquet': {'location_salle': 15300.0}},
+            },
+            daily_rev_data={
+                'revenue': {'autres_revenus': {'location_salle_forfait': 40.0}},
+            },
+        )
+        result = mapper.compute_all()
+        assert result.get(32) == pytest.approx(15340.0)
+
+    def test_au_accumulates_dr_and_sj(self):
+        """AU (col 46) = DR lit_pliant + SJ chambres.fr_etage."""
+        mapper = make_mapper(
+            daily_rev_data={
+                'revenue': {'autres_revenus': {'lit_pliant': 20.0}},
+            },
+            sales_journal_data={
+                'departments': {'chambres': {'fr_etage': 21.0}},
+            },
+        )
+        result = mapper.compute_all()
+        assert result.get(46) == pytest.approx(41.0)
+
+
+class TestMarketSegmentColumns:
+    """Verify CK/CN/CO resolve from market_segment_data."""
+
+    def test_ck_total_rooms(self):
+        """CK (col 88) reads from market_segment.total_rooms_today."""
+        mapper = make_mapper(market_segment_data={'total_rooms_today': 168})
+        result = mapper.compute_all()
+        assert result.get(88) == 168
+
+    def test_cn_complimentary_rooms(self):
+        """CN (col 91) reads from market_segment.complimentary_rooms_today."""
+        mapper = make_mapper(market_segment_data={'complimentary_rooms_today': 3})
+        result = mapper.compute_all()
+        assert result.get(91) == 3
+
+    def test_co_total_guests(self):
+        """CO (col 92) reads from market_segment.total_guests_today."""
+        mapper = make_mapper(market_segment_data={'total_guests_today': 198})
+        result = mapper.compute_all()
+        assert result.get(92) == 198
+
+    def test_cp_dbrs_ooo_rooms(self):
+        """CP (col 93) reads from dbrs.ooo_rooms."""
+        mapper = make_mapper(dbrs_data={'ooo_rooms': 33})
+        result = mapper.compute_all()
+        assert result.get(93) == 33
 
 
 # ============================================================================

@@ -866,7 +866,8 @@ COLUMNS_BY_CATEGORY = {
     'SALES_JOURNAL_BANQUET': ['Y', 'Z', 'AA', 'AB', 'AC'],
     'SALES_JOURNAL_OTHER': ['AD', 'AJ'],
     'CREDIT_CARDS': ['BI', 'BJ', 'BK', 'BL', 'BM', 'BN'],
-    'HP_TIPS': ['BQ', 'BR'],
+    # BQ/BR (HP tips) are written by _apply_hp_deductions, not via DAILY_REV_TO_JOUR.
+    # They are not in this category mapping because they have no DAILY_REV_TO_JOUR entry.
     'ROOM_STATISTICS': ['CK', 'CN', 'CO', 'CP'],
 }
 
