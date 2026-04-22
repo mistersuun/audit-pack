@@ -162,6 +162,20 @@ class QuasimodoReconciler:
             if result['date']:
                 result['file_date'] = f"2026-02-{result['date']}"
 
+            # H19 balance check — cell format is 0.00 (2 decimals).
+            # When round(H19, 2) == 0.00, the Quasimodo file is balanced.
+            # Raw float typically has noise from AMEX 0.9735 multiplier (e.g., 0.002).
+            try:
+                h19_raw = ws.cell_value(18, 7)  # row 19, col H in 0-based
+                h19_rounded = round(float(h19_raw), 2)
+                result['h19_raw'] = float(h19_raw)
+                result['h19_rounded'] = h19_rounded
+                result['h19_balanced'] = h19_rounded == 0.00
+            except (IndexError, ValueError, TypeError):
+                result['h19_raw'] = None
+                result['h19_rounded'] = None
+                result['h19_balanced'] = None
+
             # Set terminal_data for reconciliation
             self.terminal_data = result['card_totals']
 

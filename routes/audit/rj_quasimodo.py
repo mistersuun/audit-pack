@@ -43,6 +43,66 @@ def quasimodo_reconcile():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@rj_quasimodo_bp.route('/api/rj/quasimodo/file', methods=['POST'])
+@login_required
+def quasimodo_from_file():
+    """
+    Parse an uploaded Quasimodo .xls file (Moneris/POS report) and reconcile
+    against the GEAC bank settlements from the current RJ.
+
+    Returns the H19 balance check first (formatted to 2 decimals per Excel format),
+    then per-card reconciliation vs GEAC cash out.
+    """
+    from utils.quasimodo import QuasimodoReconciler
+
+    q_file = request.files.get('file')
+    if not q_file:
+        return jsonify({'success': False, 'error': 'Fichier Quasimodo (.xls) requis'}), 400
+
+    session_id = get_session_id()
+    has_rj = session_id in RJ_FILES
+
+    try:
+        reconciler = QuasimodoReconciler()
+        q_result = reconciler.load_from_quasimodo_file(q_file.read())
+
+        if 'error' in q_result:
+            return jsonify({'success': False, 'error': q_result['error']}), 400
+
+        response = {
+            'success': True,
+            'h19_balanced': q_result.get('h19_balanced'),
+            'h19_rounded': q_result.get('h19_rounded'),
+            'h19_raw': q_result.get('h19_raw'),
+            'h19_message_fr': (
+                '✓ Quasimodo balancé (H19 = $0.00)'
+                if q_result.get('h19_balanced')
+                else f'⚠ Quasimodo NON balancé — H19 = ${q_result.get("h19_rounded", 0):.2f}'
+            ),
+            'terminal_totals': q_result.get('card_totals'),
+            'by_source': q_result.get('by_source'),
+            'date': q_result.get('date'),
+        }
+
+        # If RJ is loaded, also run reconciliation vs GEAC
+        if has_rj:
+            file_bytes = RJ_FILES[session_id]
+            file_bytes.seek(0)
+            from utils.rj_reader import RJReader
+            reader = RJReader(file_bytes)
+            reconciler.bank_data = reader.read_geac_cash_out()
+            recon = reconciler.reconcile()
+            response['reconciliation'] = recon
+            response['message_fr'] = reconciler.get_status_message_fr()
+
+        return jsonify(response)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @rj_quasimodo_bp.route('/api/rj/quasimodo/manual', methods=['POST'])
 @login_required
 def quasimodo_manual():
