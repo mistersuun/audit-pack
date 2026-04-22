@@ -309,19 +309,19 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     'BC': {
         'column_index': 54,
-        'label_en': 'Gift Card & Bon d\'achat Accumulator',
-        'label_fr': 'Gift Card & Bon d\'achat Accumulator',
+        'label_en': 'Autre Revenu Taxable + Gift Cards',
+        'label_fr': 'Autre Rev Taxable + Gift Cards',
         'source_page': 'PAGES 2, 6',
-        'source_line': 'Multiple lines (accumulates)',
+        'source_line': 'Autre a Payer Taxable + GiveX + Bons d\'achat + Gift Cards',
         'operation': 'accumulate',
         'accumulator_fields': [
+            'revenue.autres_revenus.autre_a_payer_taxable',
             'revenue.givex.total',
             'settlements.bon_dachat',
             'settlements.gift_card',
-            'settlements.bon_dachat_remanco'
+            'settlements.bon_dachat_remanco',
         ],
-        'expected_value': 400.00,  # Will sum all gift card sources
-        'description': 'Accumulator: GiveX + Bon d\'achat + Gift Card + Bon d\'achat Remanco',
+        'description': 'Accumulator: Autre Revenu Taxable (DR p.2) + GiveX + Bon d\'achat + Gift Card + Bon d\'achat Remanco',
         'sign_handling': 'keep_sign'
     },
     'CC': {
