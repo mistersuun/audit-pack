@@ -942,6 +942,21 @@ def fill_all():
         with RJFillerCOM(tmp_path) as filler:
             filler.write_geac(geac_data)
             filler.write_transelect(transelect_data)
+
+            # Force recalc so Transelect row 38 formula totals update before we read
+            filler.excel.Calculate()
+            import time as _time
+            _time.sleep(0.3)
+
+            # calcul_carte equivalent: read Transelect row 38 (1-based) cols A-F
+            # and write to Jour BI:BN (1-based cols 61-66).
+            # Transelect col → Jour col: A→BI, B→BJ, C→BK, D→BL, E→BM, F→BN
+            ts = filler.wb.Sheets('transelect')
+            for trans_col in range(1, 7):
+                v = ts.Cells(38, trans_col).Value
+                if v is not None and isinstance(v, (int, float)):
+                    jour_values_1based[60 + trans_col] = v
+
             filler.write_jour_row(day, jour_values_1based)
             dc_value = filler.get_dc(day)
 

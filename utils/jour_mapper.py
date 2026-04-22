@@ -98,6 +98,11 @@ class JourMapper:
         # Apply HP deductions (for Sales Journal columns)
         self._apply_hp_deductions(jour_values)
 
+        # Apply Depot Utilise to AS (col 44): AS = autres_grand_livre - depot_util
+        depot_util = float(self.manual.get('depot_util', 0) or 0)
+        if depot_util and 44 in jour_values:
+            jour_values[44] -= depot_util
+
         # Apply per-department adjustments
         if self.adjustments:
             jour_values, adj_warnings = apply_adjustments(jour_values, self.adjustments)
@@ -150,7 +155,12 @@ class JourMapper:
         return self._resolve_field(base_field)
 
     def _process_subtract(self, config):
-        """Subtract: value = base_field - subtract_field."""
+        """Subtract: value = base_field - subtract_field.
+
+        For columns whose subtract_field is non_revenue.club_lounge.total,
+        fall back to manual.g4 when the parser-sourced value is 0/missing.
+        The auditor enters G4 in the UI when DR doesn't have a club_lounge entry.
+        """
         base_field = config.get('base_field')
         subtract_field = config.get('subtract_field')
 
@@ -163,6 +173,9 @@ class JourMapper:
 
         if subtract_field:
             subtract_value = self._resolve_field(subtract_field) or 0
+            # Club Lounge fallback to manual G4 when DR doesn't report it
+            if not subtract_value and 'club_lounge' in subtract_field:
+                subtract_value = float(self.manual.get('g4', 0) or 0)
             return float(base_value) - float(subtract_value)
 
         return float(base_value)
