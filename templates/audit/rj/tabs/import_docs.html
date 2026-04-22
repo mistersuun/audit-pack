@@ -144,6 +144,24 @@
           <input type="file" id="file-freedompay" accept=".xls,.xlsx" style="display:none" onchange="handleFileSelect(this, 'freedompay')">
         </div>
 
+        <!-- 7. Market Segment -->
+        <div class="import-card" id="card-market_segment" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-market_segment').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'market_segment')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#14b8a6,#0d9488); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">🏠</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">Market Segment</div>
+              <div style="font-size:0.75rem; color:#64748b;">.pdf — Statistiques chambres</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Jour (CK chambres, CN comp, CO clients)</div>
+          <div id="status-market_segment" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-market_segment" accept=".pdf" style="display:none" onchange="handleFileSelect(this, 'market_segment')">
+        </div>
+
       </div>
 
       <!-- Manual Inputs Section -->
@@ -328,6 +346,9 @@ function autoDetectDocType(filename) {
     if (name.includes('ar') || name.includes('summary') || name.includes('receivable') || name.includes('recevable')) {
       return 'ar_summary';
     }
+    if (name.includes('market') || name.includes('segment') || name.includes('mktseg')) {
+      return 'market_segment';
+    }
     if (name.includes('deposit') || name.includes('advance') || name.includes('dépôt')) {
       return 'advance_deposit';
     }
@@ -405,6 +426,7 @@ function processMultipleFiles(files) {
       'sales_journal': 'Sales Journal',
       'daily_revenue': 'Daily Revenue',
       'ar_summary': 'AR Summary',
+      'market_segment': 'Market Segment',
       'advance_deposit': 'Advance Deposit',
       'hp_excel': 'HP Admin',
       'freedompay': 'FreedomPay',
@@ -972,7 +994,7 @@ async function clearAllImports() {
   importState.filled = {};
   importState.jourFilled = false;
 
-  ['sales_journal', 'daily_revenue', 'ar_summary', 'hp_excel', 'quasimodo', 'freedompay'].forEach(type => {
+  ['sales_journal', 'daily_revenue', 'ar_summary', 'market_segment', 'hp_excel', 'quasimodo', 'freedompay'].forEach(type => {
     const card = document.getElementById('card-' + type);
     if (card) {
       card.style.borderColor = '#dee2e6';
