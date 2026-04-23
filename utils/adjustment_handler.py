@@ -25,6 +25,8 @@ DEPARTMENT_COLUMNS = {
     'piazza_vins': 13,          # N
     'spesa_nourriture': 14,     # O
     'spesa_boissons': 15,       # P
+    'chambres_nourriture': 19,  # T (Service aux Chambres Nourriture)
+    'chambres_boissons': 20,    # U (Service aux Chambres Boisson)
     'banquet_nourriture': 24,   # Y
     'banquet_boissons': 25,     # Z
     'tabagie': 35,              # AJ
@@ -40,6 +42,8 @@ DEPARTMENT_LABELS = {
     'banquet_nourriture': 'Banquet Nourriture',
     'banquet_boissons': 'Banquet Boissons',
     'spesa_nourriture': 'Marché Spesa Nourriture',
+    'chambres_nourriture': 'Service aux Chambres Nourriture',
+    'chambres_boissons': 'Service aux Chambres Boisson',
     'spesa_boissons': 'Marché Spesa Boissons',
     'tabagie': 'Tabagie',
 }

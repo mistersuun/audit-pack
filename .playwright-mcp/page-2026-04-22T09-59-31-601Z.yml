@@ -1,0 +1,373 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic [ref=e56]:
+          - link "Vue d'ensemble" [ref=e57] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e58]
+            - generic [ref=e63]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e64] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e65]
+            - generic [ref=e68]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e69] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e70]
+            - generic [ref=e73]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e74] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e75]
+            - generic [ref=e80]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e81] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e82]
+            - generic [ref=e84]: Cash & Récon
+          - link "Paiements" [ref=e85] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e86]
+            - generic [ref=e88]: Paiements
+          - link "P&L & Budget" [ref=e89] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e90]
+            - generic [ref=e93]: P&L & Budget
+      - link "Prévisions" [ref=e94] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e95]
+        - generic [ref=e98]: Prévisions
+      - link "STR & OTB" [ref=e99] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e100]
+        - generic [ref=e104]: STR & OTB
+      - generic [ref=e105]:
+        - link "Générateurs" [ref=e106] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e107]
+          - generic [ref=e111]: Générateurs
+          - img [ref=e112]
+        - generic:
+          - link "Documents" [ref=e114] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e115]
+            - generic [ref=e118]: Documents
+          - link "Pourboires" [ref=e119] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e120]
+            - generic [ref=e122]: Pourboires
+          - link "HP / Admin" [ref=e123] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e124]
+            - generic [ref=e129]: HP / Admin
+      - generic [ref=e130]: Support
+      - link "FAQ" [ref=e131] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e132]
+        - generic [ref=e135]: FAQ
+    - generic [ref=e136]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e137] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e138]: A
+        - generic [ref=e139]:
+          - generic [ref=e140]: Auditeur de nuit
+          - generic [ref=e141]: Auditeur de nuit
+      - link "Mode sombre" [ref=e142] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e143]
+        - generic [ref=e145]: Mode sombre
+      - link "Déconnexion" [ref=e146] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e147]
+        - generic [ref=e150]: Déconnexion
+  - main [ref=e151]:
+    - generic [ref=e152]:
+      - generic [ref=e153]:
+        - generic [ref=e154]:
+          - heading "Intelligence d'affaires" [level=1] [ref=e155]
+          - paragraph [ref=e156]: 20 jours affichés · 1927 jours en base (2021-01-01 → 2026-04-20) · 252 chambres
+        - generic [ref=e157]:
+          - button "Importer" [ref=e158] [cursor=pointer]:
+            - img [ref=e159]
+            - text: Importer
+          - button "Actualiser" [ref=e163] [cursor=pointer]:
+            - img [ref=e164]
+            - text: Actualiser
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - button "30j" [ref=e170] [cursor=pointer]
+          - button "3 mois" [ref=e171] [cursor=pointer]
+          - button "12 mois" [ref=e172] [cursor=pointer]
+          - button "5 ans" [ref=e173] [cursor=pointer]
+          - button "Tout" [ref=e174] [cursor=pointer]
+          - button "Personnalisé" [ref=e175] [cursor=pointer]
+        - generic [ref=e176]:
+          - generic [ref=e177] [cursor=pointer]:
+            - checkbox "vs A-1" [ref=e178]
+            - generic [ref=e179]: vs A-1
+          - generic "Données en base" [ref=e180]: 1927 jours · undefined an(s)
+      - generic [ref=e182]:
+        - generic [ref=e183]:
+          - generic [ref=e184]:
+            - generic [ref=e185]:
+              - generic [ref=e186]: RevPAR
+              - img [ref=e188]
+            - generic [ref=e191]: $172,43
+          - generic [ref=e193]:
+            - generic [ref=e194]:
+              - generic [ref=e195]: ADR
+              - img [ref=e197]
+            - generic [ref=e200]: $218,62
+          - generic [ref=e202]:
+            - generic [ref=e203]:
+              - generic [ref=e204]: Occupation
+              - img [ref=e206]
+            - generic [ref=e210]: 78.9%
+          - generic [ref=e212]:
+            - generic [ref=e213]:
+              - generic [ref=e214]: Rev. Chambres
+              - img [ref=e216]
+            - generic [ref=e218]: $869 023
+          - generic [ref=e220]:
+            - generic [ref=e221]:
+              - generic [ref=e222]: Rev. F&B
+              - img [ref=e224]
+            - generic [ref=e227]: $385 399
+          - generic [ref=e229]:
+            - generic [ref=e230]:
+              - generic [ref=e231]: Clients/jour
+              - img [ref=e233]
+            - generic [ref=e238]: "267.6"
+        - generic [ref=e240]:
+          - generic [ref=e242]:
+            - heading "Tendance des revenus" [level=3] [ref=e243]
+            - generic [ref=e244]: Par jour
+          - generic [ref=e247]:
+            - heading "Répartition des revenus" [level=3] [ref=e248]
+            - generic [ref=e251]:
+              - strong [ref=e252]: "Total: $702 025"
+              - text: Chambres 123.8% · F&B 54.9% · Autres -78.7%
+        - generic [ref=e253]:
+          - heading "Revenus F&B par point de vente" [level=3] [ref=e255]
+          - generic [ref=e258]:
+            - heading "Mix F&B (Nourriture vs Boisson)" [level=3] [ref=e259]
+            - generic [ref=e262]:
+              - strong [ref=e263]: "Total F&B: $385 399"
+              - text: Nourriture 86% · Boisson 14%
+              - text: "Pourboires: $32 870 · Tabagie: $14 484"
+        - generic [ref=e264]:
+          - heading "Occupation & ADR quotidien" [level=3] [ref=e266]
+          - generic [ref=e269]:
+            - heading "Mix des chambres vendues" [level=3] [ref=e270]
+            - generic [ref=e273]:
+              - strong [ref=e274]: "Occupation moy: 78.9%"
+              - text: 3975 chambres vendues · 267.6 clients/jour
+              - text: "Hors service moy: 10.3 ch."
+        - generic [ref=e275]:
+          - generic [ref=e276]:
+            - heading "Modes de paiement" [level=3] [ref=e277]
+            - generic [ref=e280]:
+              - strong [ref=e281]: "Total cartes: $1 271 670"
+              - text: "Visa: $528 986 (41.6%) · Mastercard: $476 232 (37.4%) · Amex ELAVON: $215 219 (16.9%) · Débit: $38 407 (3%) · Amex GLOBAL: $12 712 (1%) · Discover: $115 (0%)"
+          - generic [ref=e282]:
+            - heading "Taxes collectées" [level=3] [ref=e283]
+            - generic [ref=e286]:
+              - strong [ref=e287]: "Total taxes: $269 190"
+              - text: "Moy/jour: TPS $3 985,44 · TVQ $7 948,94 · TVH $1 525,11"
+        - generic [ref=e289]:
+          - heading "KPIs avancés — Revenue Management" [level=3] [ref=e290]:
+            - img [ref=e291]
+            - text: KPIs avancés — Revenue Management
+          - generic [ref=e293]:
+            - generic [ref=e294]:
+              - generic [ref=e295]: ADR Effectif
+              - generic [ref=e296]: $217,80
+              - generic [ref=e297]: Inclut comps au dénominateur
+            - generic [ref=e298]:
+              - generic [ref=e299]: Pricing Power
+              - generic [ref=e300]: 9.3%
+              - generic [ref=e301]: Écart ADR haute vs basse occ.
+            - generic [ref=e302]:
+              - generic [ref=e303]: F&B / Client
+              - generic [ref=e304]: $72,01
+              - generic [ref=e305]: Dépense F&B par client
+            - generic [ref=e306]:
+              - generic [ref=e307]: F&B RevPAR
+              - generic [ref=e308]: $76,47
+              - generic [ref=e309]: F&B par chambre dispo.
+            - generic [ref=e310]:
+              - generic [ref=e311]: Rev. / Client
+              - generic [ref=e312]: $140,02
+              - generic [ref=e313]: Revenu total par client
+            - generic [ref=e314]:
+              - generic [ref=e315]: Double Occ.
+              - generic [ref=e316]: 1.35x
+              - generic [ref=e317]: Clients moy. par chambre
+            - generic [ref=e318]:
+              - generic [ref=e319]: Taux Comp
+              - generic [ref=e320]: 0.4%
+              - generic [ref=e321]: $3 279 en comps
+            - generic [ref=e322]:
+              - generic [ref=e323]: OOS Moy/Jour
+              - generic [ref=e324]: 10.3 ch.
+              - generic [ref=e325]: "Coût: $45 255"
+            - generic [ref=e326]:
+              - generic [ref=e327]: Volatilité RevPAR
+              - generic [ref=e328]: $50.5
+              - generic [ref=e329]: Écart-type quotidien
+            - generic [ref=e330]:
+              - generic [ref=e331]: Tip Ratio
+              - generic [ref=e332]: 8.5%
+              - generic [ref=e333]: Pourboires / F&B total
+            - generic [ref=e334]:
+              - generic [ref=e335]: Frais Cartes
+              - generic [ref=e336]: $22 979
+              - generic [ref=e337]: ~$419 367/an
+            - generic [ref=e338]:
+              - generic [ref=e339]: Jours Opportunité
+              - generic [ref=e340]: "7"
+              - generic [ref=e341]: Jours <70% occ. = $59 203
+            - generic [ref=e342]:
+              - generic [ref=e343]: "POTENTIEL ANNUEL IDENTIFIÉ: $2 385 567"
+              - generic [ref=e344]: "Coût OOS annuel: $825 900 · Perte comps annuel: $59 848 · Frais cartes annuel: $419 367 · Revenue récupérable: $1 080 452"
+        - generic [ref=e345]:
+          - generic [ref=e346]:
+            - heading "Performance par jour de semaine" [level=3] [ref=e347]:
+              - img [ref=e348]
+              - text: Performance par jour de semaine
+            - generic [ref=e352]:
+              - strong [ref=e353]: "Semaine vs Fin de semaine:"
+              - text: "Occ: 83.2% (sem) vs 73.9% (fds) · gap -9.4pts"
+              - text: "ADR: $217,88 (sem) vs $216,31 (fds) · gap $-1,57"
+              - strong [ref=e354]: "Meilleur jour:"
+              - text: Samedi ·
+              - strong [ref=e355]: "Jour faible:"
+              - text: Mardi
+          - generic [ref=e356]:
+            - heading "Coûts de traitement par carte" [level=3] [ref=e357]:
+              - img [ref=e358]
+              - text: Coûts de traitement par carte
+            - generic [ref=e362]:
+              - strong [ref=e363]: "Frais totaux: $22 979"
+              - text: "· Taux mixte: 1.81%"
+              - text: "Amex: 2.5% sur $227 931 = $5 698"
+              - text: "Débit: 0.5% sur $38 407 = $192"
+              - text: "Mastercard: 1.7% sur $476 232 = $8 096"
+              - text: "Visa: 1.7% sur $528 986 = $8 993"
+        - generic [ref=e365]:
+          - generic [ref=e366]:
+            - heading "Opportunités de revenus" [level=3] [ref=e367]:
+              - img [ref=e368]
+              - text: Opportunités de revenus
+            - generic [ref=e372]: "Potentiel annuel: $2 478 015"
+          - generic [ref=e373]:
+            - generic [ref=e374]:
+              - generic [ref=e375]:
+                - generic [ref=e376]: Pricing dynamique haute demande
+                - generic [ref=e377]: +$1 287 701/an
+              - generic [ref=e378]: 9 jours >90% occ. +15% ADR = +$33/chambre × 240 ch.
+              - generic [ref=e379]:
+                - generic [ref=e380]: Pricing
+                - generic [ref=e381]: Facile
+                - generic [ref=e382]: +$7 840/jour
+            - generic [ref=e383]:
+              - generic [ref=e384]:
+                - generic [ref=e385]: Remplissage jours faibles
+                - generic [ref=e386]: +$603 625/an
+              - generic [ref=e387]: 4 jours <60% occ. +48 chambres à $174 (tarif -20%)
+              - generic [ref=e388]:
+                - generic [ref=e389]: Pricing
+                - generic [ref=e390]: Moyen
+                - generic [ref=e391]: +$8 269/jour
+            - generic [ref=e392]:
+              - generic [ref=e393]:
+                - generic [ref=e394]: Réduction chambres hors-service
+                - generic [ref=e395]: +$520 539/an
+              - generic [ref=e396]: 10 OOS/jour moy. → réduire à 2 max = 8 chambres × $217 ADR
+              - generic [ref=e397]:
+                - generic [ref=e398]: Opérations
+                - generic [ref=e399]: Moyen
+                - generic [ref=e400]: +$1 426/jour
+            - generic [ref=e401]:
+              - generic [ref=e402]:
+                - generic [ref=e403]: Renégociation frais cartes
+                - generic [ref=e404]: +$66 151/an
+              - generic [ref=e405]: "Frais estimés: $441,004/an. Économie de 15% = $66,151"
+              - generic [ref=e406]:
+                - generic [ref=e407]: Coûts
+                - generic [ref=e408]: Facile
+                - generic [ref=e409]: +$181/jour
+        - generic [ref=e411]:
+          - heading "Alertes & Recommandations" [level=3] [ref=e412]:
+            - img [ref=e413]
+            - text: Alertes & Recommandations
+          - generic [ref=e415]:
+            - generic [ref=e416]:
+              - generic [ref=e417]: 🔴
+              - generic [ref=e418]: "02 Apr 2026: Diff caisse $141.08"
+            - generic [ref=e419]:
+              - generic [ref=e420]: 🔴
+              - generic [ref=e421]: "03 Apr 2026: Diff caisse $332.72"
+            - generic [ref=e422]:
+              - generic [ref=e423]: 🔴
+              - generic [ref=e424]: "08 Apr 2026: Diff caisse $-207.30"
+            - generic [ref=e425]:
+              - generic [ref=e426]: 🔴
+              - generic [ref=e427]: "10 Apr 2026: Diff caisse $279.16"
+            - generic [ref=e428]:
+              - generic [ref=e429]: 🔴
+              - generic [ref=e430]: "13 Apr 2026: Diff caisse $1842.76"
+            - generic [ref=e431]:
+              - generic [ref=e432]: 🔴
+              - generic [ref=e433]: "18 Apr 2026: Diff caisse $-837.85"
+            - generic [ref=e434]:
+              - generic [ref=e435]: 🔴
+              - generic [ref=e436]: "19 Apr 2026: Diff caisse $-8107.63"
+            - generic [ref=e437]:
+              - generic [ref=e438]: 🔴
+              - generic [ref=e439]: "20 Apr 2026: Diff caisse $3161.32"
+        - generic [ref=e442]:
+          - heading "Personnel — Suivi des variances" [level=3] [ref=e443]:
+            - img [ref=e444]
+            - text: Personnel — Suivi des variances
+          - textbox "Rechercher..." [ref=e449]

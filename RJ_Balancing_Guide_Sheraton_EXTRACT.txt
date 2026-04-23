@@ -1,0 +1,335 @@
+=== RJ_Balancing_Guide_Sheraton.docx ===
+
+SHERATON LAVAL
+Guide Complet de Balancement du Rapport Journalier
+Night Audit — Procédures et Règles Exhaustives
+1. Principe Fondamental — La Formule DC
+Le Diff.Caisse (colonne C de la feuille JOUR) doit toujours être égal à 0.00 à la fin du balancement de chaque nuit. C'est la règle absolue.
+2. Ordre de Saisie Recommandé
+Suivre cet ordre permet de détecter les erreurs progressivement et évite de corriger plusieurs fois.
+Saisie D (Balance Fermante) — New Balance DR p.7 en négatif, minus Adv Dep on Hand
+Saisie AK (Chambres) — DR Total Chambres Today − Club Lounge
+Saisie CF (Transfer AR) — TOUJOURS = DR Facture Direct p.6
+Saisie AS, AW, AY, AX, AZ, BC, BA, AL-AO, AU, BF — tous les éléments Daily Revenue
+Rouler macro Transelect → BI, BJ, BK, BL, BM, BN (cartes de crédit)
+Rouler macro Recap → BU, BV, BW, BY, CA (cash)
+Rouler macro Sales Journal → F&B (J, K, L, M, N, O, T-X, Y-AC, AD, AJ, etc.)
+Vérifier et appliquer les déductions HP (J, O, AJ et BQ, BR)
+Corriger Discover (BJ) selon X24 Transelect
+Vérifier AP (GEAC compensation)
+Vérifier AU (InterHotel + tous éléments)
+Lire DC — si ≠ 0, diagnostiquer (voir section 8)
+3. Tableau Complet des Colonnes — Source et Règle
+Ce tableau couvre chaque colonne de la feuille JOUR avec la source exacte, où trouver la valeur et la règle de signe.
+4. Règles de Signe — Crédits vs Débits
+La règle fondamentale: tout ce que l'hôtel vend (revenus) est un CRÉDIT → positif dans le journal. Tout ce que l'hôtel paie ou reçoit comme règlement est un DÉBIT → impact négatif ou spécifique.
+5. CF (Transfer A/R) et GEAC — Règles Critiques
+5.1 Règle Absolue pour CF
+CF est la colonne la plus souvent mal saisie. La règle ne souffre aucune exception.
+5.2 GEAC — Compensation Mch/Liqueur (Colonne AP)
+La feuille GEAC_UX compare ce que la banque a reçu vs ce que le Daily Revenue déclare. Quand ces montants diffèrent, une compensation doit être inscrite en AP.
+Comment lire GEAC_UX: Ligne 6 = Daily Cash Out (banque). Ligne 8 = Deposits received. Ligne 10 = Total = banque + dépôts. Ligne 12 = Daily Revenue. Ligne 14 = variance (doit être 0). Ligne 41 (GEAC Balance Sheet) = FD et AR. Ligne 56 = compensation calculée.
+6. Discover (BJ) et X24 — La Variance Transelect
+X24 est la colonne VARIANCE dans le transelect (POSITOUCH vs banque pour le restaurant). Elle détermine le montant et le signe de BJ (Discover).
+6.1 Comment Calculer X24
+X24 = Total bank restaurant − Total POSITOUCH restaurant
+Total bank = somme des montants dans la colonne 'Bank Report' du transelect (section Réception Chambres, lignes Visa+Master+Amex+Débit pour le restaurant)
+Total POSITOUCH = Total de la section Restaurant/Banquet/Spesa (ligne TOTAL, col POSITOUCH)
+Si X24 est négatif (bank < POSITOUCH) → BJ = valeur POSITIVE (ex: X24 = −175.89 → BJ = +175.89)
+Si X24 est positif (bank > POSITOUCH, typique dimanche) → BJ = valeur NÉGATIVE
+6.2 Pannes et leur impact
+PANNE VISA, PANNE MASTER, PANNE INTERACT, PANNE AMEX dans le SJ = transactions dont le terminal n'a pas communiqué avec la banque
+Ces pannes créent une différence entre ce que POSITOUCH enregistre et ce que la banque reçoit
+X24 absorbe cette différence → BJ compense dans le journal
+PANNE LIEN HOTEL = transactions non-récupérables, incluses dans New Balance — pas d'entrée séparée
+7. Hotel Promotion (HP) — Déductions et Pourboires
+Le fichier HP (HP_MM_YYYY.xlsx) contient toutes les consommations offertes aux clients. Ces montants doivent être soustraits des ventes brutes du SJ avant d'entrer dans le journal RJ.
+7.1 Procédure de vérification HP
+Ouvrir HP fichier, aller dans feuille 'Journalier', filtrer par numéro du jour (cellule B3)
+Lire les totaux: Row 33 = Total Somme de Total → doit = SJ ADMINISTRATION + SJ HOTEL PROMOTION
+Row 32 = Pourboires → Admin (BQ) et Promo (BR)
+Calculer par catégorie: Piazza Nourriture (Admin+Promo), Tabagie Nourriture, Tabagie Tab
+Soustraire de J, O, AJ respectivement
+Entrer BQ = HP Admin Pourb, BR = HP Promo Pourb (tous deux POSITIFS)
+8. Colonne AU — Autre Revenu (Souvent Manquant)
+AU est la colonne la plus souvent incomplète car elle cumule plusieurs sources différentes.
+8.1 Formule complète AU
+Règle InterHotel: environ 9.99 par jour d'accumulation. Lundi = 1 jour = 9.99. Dimanche = souvent 5 jours = 49.95. Vérifier toujours le montant EXACT dans DR p.7 'InterHotel XferIn Today'.
+9. Colonne AW — Internet (Négatif Possible)
+Internet est particulier car DR Internet peut être négatif certains jours (corrections, ajustements).
+De même pour TPS/TVQ Internet dans AY/AX: si DR TPS Internet = −1.67, ce montant est SOUSTRAIT de AY (algébrique).
+10. Colonne AS — Autres Grand Livre
+11. Colonne D — Balance Fermante
+12. Table de Diagnostic — Identifier la Source du Débalancement
+Quand DC ≠ 0 après la saisie initiale, utiliser cette table pour identifier la source.
+13. Éléments Circulaires — Ne Pas Essayer de Corriger
+Certains éléments passent par le circuit CHAMBRE → folio client → AR → New Balance → BF → DC. Ces éléments créent un résiduel DC qui est autoéquilibré et acceptable.
+Charge CHAMBRE dans SJ (ex: 0.12) = room charge postée sur folio → déjà dans BF via New Balance → DC résiduel acceptable
+GEAC GL Balance variance cochée = écart GEAC reconnu officiellement, pas d'entrée DC
+AR Misc (ex: 326.04) = apparaît dans CF comme différence FD vs AR → circulaire
+Guaranteed No Show négatif = ajustement dans chambres → passé dans BF
+14. Checklist de Vérification Finale
+Avant de valider la nuit, confirmer chaque point:
+☐  D = −New Balance − Adv Dep on Hand (valeur correcte du papier)
+☐  AK = DR Chambres Total − Club Lounge (si CL > 0)
+☐  CF = DR Facture Direct p.6 (jamais AR Summary, jamais FD − DEPOT UTIL)
+☐  AP = −(FD − AR) si FD ≠ AR dans GEAC_UX — sinon 0
+☐  AS = DR Autres GL (± DEPOT UTIL si présent dans SJ)
+☐  AW = DR Internet (±) + SJ Banquet Internet — signe conservé
+☐  AY = TPS Chamb + SJ TPS + TPS Autres + TPS Inet (algébrique)
+☐  AX = TVQ Chamb + SJ TVQ + TVQ Autres + TVQ Inet (algébrique)
+☐  AU = FR/Étage + Lit Pliant + InterHotel XferIn + Non-Tax (TOUS inclus)
+☐  HP: J, O, AJ correctement réduits (Admin + Promo déduits)
+☐  BQ = HP Admin Pourb, BR = HP Promo Pourb (tous deux positifs)
+☐  HP total = SJ Admin + SJ Hotel Promotion (vérification croisée)
+☐  BJ (Discover) = X24 avec signe inversé (+ si jour normal, − si dimanche)
+☐  BF = −(SJ Forfait − G4) où G4 = DR Chambres − AK
+☐  CC BI, BK, BL, BM, BN = Transelect TOTAUX correspondants
+☐  BU = Recap Argent Reçu, BV = −DR Remb Serveur, BW = −SJ Pourb Charge
+☐  BY = −Recap Due Back Réception, CA = Recap Surplus/Déficit
+☐  DC = 0.00 (ou résiduel circulaire ≤ 0.15 identifié et documenté)
+15. Erreurs Historiques Documentées
+Ces erreurs réelles ont été détectées lors du balancement. Les connaître aide à les prévenir.
+Erreurs de signe
+EQ. DIVERS (Bqt) entré +565 alors que c'était un débit → doit être −565 (ou 0 si déjà dans DR)
+Discover entré positif un dimanche → doit être négatif
+BV entré positif → doit toujours être négatif
+Erreurs de colonne
+EQ. DIVERS entré en AF (Divers) au lieu de AQ (St-Martin Électr.) — selon si crédit ou débit
+HP Promo déduit de la mauvaise ligne F&B
+Club Lounge déduit de J quand il fallait l'ajouter (CL négatif)
+Erreurs d'omission
+InterHotel XferIn oublié dans AU — erreur la plus fréquente (→ DC = +9.99 ou multiple)
+BQ et BR = 0 alors que HP a des pourboires
+HP Promo non déduit de J/O/AJ (seulement Admin déduit)
+AP = 0 alors que GEAC montre FD ≠ AR
+Discover BJ = 0 alors que X24 ≠ 0
+Erreurs de source
+CF pris de AR Summary au lieu de DR Facture Direct — erreur critique
+CF = FD − DEPOT UTIL au lieu de CF = FD (DEPOT UTIL va dans AS, pas CF)
+TPS/TVQ Internet non inclus dans AY/AX — surtout quand c'est négatif
+SJ PAUSE SPESA oublié dans E (Piazza Pause + Banquet Pause)
+Vestiaire Bqt oublié dans BB
+
+[TABLE 0]
+Élément | Explication
+DC = C (Diff.Caisse) | Doit être = 0.00 à la fin de chaque nuit
+Bal_Ferm (col D) | = −(New Balance DR p.7) − Adv Dep on Hand
+Bal_Ouv (col B) | = D de la veille (automatique dans Excel)
+ΣCrédits | Tous les éléments qui AUGMENTENT le passif (chambres, F&B, taxes, AR transfer, etc.)
+ΣDébits | Tous les éléments qui DIMINUENT le passif (CC reçus, cash, pourboires payés, etc.)
+
+[TABLE 1]
+⚡ Formule complète du DC
+DC = Bal_Ferm (col D) − Bal_Ouv (col B) − ΣCrédits + ΣDébits
+Bal_Ferm = −(New Balance DR page 7) − Advance Deposit on Hand
+Si DC > 0 : trop de débits ou pas assez de crédits → chercher crédit manquant ou débit en trop
+Si DC < 0 : trop de crédits ou pas assez de débits → chercher débit manquant ou crédit en trop
+
+[TABLE 2]
+Col RJ | Libellé | Source | Où trouver la valeur | Règle / Signe
+AK | Chambres | DR p.1 | Total Chambres Aujourd'hui | = DR Chambres Total − Club Lounge (si CL > 0)
+BF | Diff Forfait | SJ + AK | SJ ligne FORFAIT | = −(Forfait − G4)  où G4 = DR chamb − AK
+J | Piazza Nourriture | SJ − HP | SJ PIAZZA NOURRITURE | = SJ − HP Piazza Nourr (Admin + Promo). Toujours positif.
+K | Piazza Alcool | SJ | SJ PIAZZA ALCOOL | = SJ direct. Pas de déduction HP alcool.
+L | Piazza Bières | SJ − HP | SJ PIAZZA BIERES | = SJ − HP Piazza Bière (si applicable)
+M | Piazza Minéraux | SJ − HP | SJ PIAZZA NON ALCOOL BAR | = SJ − HP Piazza Minéraux
+N | Piazza Vins | SJ − HP | SJ PIAZZA VINS | = SJ − HP Piazza Vins (si applicable)
+T | S.Ch. Nourriture | SJ − HP | SJ CHAMBRES NOURRITURE | = SJ − HP adj ServCh si applicable
+U | S.Ch. Alcool | SJ | SJ CHAMBRES ALCOOL | = SJ direct
+V | S.Ch. Bières | SJ | SJ CHAMBRES BIERES | = SJ direct
+W | S.Ch. Minéraux | SJ | SJ CHAMBRES NON ALCOOL BAR | = SJ direct
+X | S.Ch. Vins | SJ | SJ CHAMBRES VINS | = SJ direct
+Y | Bqt Nourriture | SJ − HP | SJ BANQUET NOURRITURE | = SJ − HP Banquet Nourr (si applicable)
+Z | Bqt Alcool | SJ | SJ BANQUET ALCOOL | Débit SJ → NÉGATIF. Crédit → POSITIF.
+AA | Bqt Bières | SJ | SJ BANQUET BIERES | Débit SJ → NÉGATIF. Crédit → POSITIF.
+AB | Bqt Minéraux | SJ | SJ BANQUET NON ALCOOL BAR | = SJ direct
+AC | Bqt Vins | SJ | SJ BANQUET VINS | = SJ direct
+AD | Pourboires | SJ | SJ POURBOIRE A PAYER (Piazza+Bqt+Spesa) | = somme de tous les POURBOIRE A PAYER
+AE | Equipement AV | SJ | SJ BANQUET EQUIP AUDIO VISUEL | Débit SJ → NÉGATIF. Crédit → POSITIF.
+AF | Divers Bqt | SJ | SJ BANQUET EQ. DIVERS | Débit SJ → NÉGATIF. Crédit → POSITIF.
+AG | Location Salles | SJ | SJ Piazza LOC SALLE + Bqt LOC SALLE | = somme. Toujours positif.
+AH | SOCAN/Résonne | SJ | SJ BANQUET SOCAM | = SJ direct
+O | Spesa Nourriture | SJ − HP | SJ SPESA NOURRITURE | = SJ − HP Tabagie Nourr
+AJ | Tabagie | SJ − HP | SJ SPESA TABAGIE | = SJ − HP Tabagie Tab
+E | Pause Spesa | SJ | SJ Piazza PAUSE SPESA + Bqt PAUSE SPESA | = somme. Positif.
+BB | Vestiaire | SJ | SJ BANQUET VESTIAIRE | = SJ direct
+AK | Chambres (rappel) | DR p.1 | Total Chambres Today | Voir règle AK ci-dessus
+AL | Tél. Local | DR p.1 | TELEPHONE LOCAL Today | = DR direct
+AM | Tél. Interurbain | DR p.1 | INTERURBAIN Today | = DR direct
+AN | Tél. Public | DR p.1 | TELEPHONES PUBLICS Today | = DR direct
+AO | Nettoyeur | DR p.2 | NETTOYEUR-DRY CLEANING Today | = DR direct
+AP | GEAC comp. | GEAC | GEAC_UX ligne 56 / geac_ux col D41 | = −(FD − AR) si FD ≠ AR. Si FD=AR → 0. POSITIF si FD<AR.
+AQ | St-Martin Électr. | SJ | SJ BANQUET EQ. DIVERS (crédit) | Seulement si crédit dans SJ
+AS | Autres GL | DR p.2 | AUTRES GRAND LIVRE Total Today | = DR direct. Si négatif: négatif. Si DEPOT UTIL: AS = DR GL − DEPOT UTIL.
+AT | Sonifi | DR p.2 | SONIFI Today | = DR direct
+AU | Autre Revenu | DR+SJ | FR/Étage (SJ) + Lit Pliant (DR) + InterHotel XferIn (DR p.7) + Non-Tax (DR) | = somme de tous ces éléments. CRITIQUE: ne pas oublier InterHotel.
+AV | Loc. Boutique | DR p.2 | LOCATION DE BOUTIQUE Today | = DR direct
+AW | Internet | DR+SJ | DR Internet Today + SJ BANQUET INTERNET | Attention: DR Internet peut être NÉGATIF. Additionner algébriquement.
+AX | TVQ | DR p.3+4+5 | TVQ chamb + SJ TVQ + TVQ Autres + TVQ Internet + TVQ Tel | Somme algébrique. Internet souvent négatif.
+AY | TPS | DR p.2+4+5 | TPS chamb + SJ TPS + TPS Autres + TPS Internet + TPS Tel + TPS Compt | Somme algébrique.
+AZ | Taxe Héberg. | DR p.2 | TAXE HEBERGEMENT Today | = DR direct. Toujours positif.
+BA | Massage | DR p.2 | MASSAGE Today | = DR direct
+BB | Vestiaire | SJ | Voir ci-dessus | 
+BC | Ristournes | DR p.2 | AUTRE A PAYER TAXABLE Today | = DR direct
+CB | Gift Card/Bon | DR p.6 | Bon d'Achat + Gift Card + Bon Remanc | = somme DR p.6
+CC | Cert. Cadeaux | DR p.6 | CERTIFICAT CADEAUX Today | = DR direct
+CF | Transfer A/R | DR p.6 | FACTURE DIRECT Today (TOUJOURS) | ⚠ JAMAIS AR Summary. Toujours = DR Facture Direct.
+BQ | HP Admin Pourb | HP fichier | HP Journalier ligne 32 col 14-Admin Pourboire | = HP Admin pourb (row 32, col Admin). Toujours positif (débit).
+BR | HP Promo Pourb | HP fichier | HP Journalier ligne 32 col 15-Promo Pourboire | = HP Promo pourb. Toujours positif (débit).
+BI | Amex Elavon | Transelect | TOTAUX ligne AMEX ELAVON | = Transelect TOTAUX Amex Elavon
+BJ | Discover | Transelect | TOTAUX ligne DISCOVER | Positif ou négatif selon X24. Voir section DISCOVER.
+BK | MasterCard | Transelect | TOTAUX ligne MASTER | = Transelect TOTAUX Master
+BL | Visa | Transelect | TOTAUX ligne VISA | = Transelect TOTAUX Visa
+BM | Débit | Transelect | TOTAUX ligne DEBIT | = Transelect TOTAUX Débit
+BN | Amex Global | Transelect | TOTAUX ligne AMEX GLOBAL | = Transelect TOTAUX Amex Global
+BU | Argent Reçu | Recap | Argent Reçu (ligne 24) | = Recap Argent Reçu. Positif.
+BV | Remb. Serveurs | DR p.5 | REMBOURSEMENT SERVEU Today | = DR direct. Toujours NÉGATIF.
+BW | Remb. Gratuité | SJ | SJ POURBOIRE CHARGE (total crédit=débit) | = SJ Pourboire Charge. Toujours NÉGATIF.
+BY | Due Back Réception | Recap | Due Back Réception (Recap ligne 16) | = Recap Due Back Réception. Toujours NÉGATIF.
+CA | Surplus/Déficit | Recap | Surplus/Déficit (Recap ligne 19) | = Recap: positif si déficit caisse (argent manquant), négatif si surplus.
+D | Balance Ferm. | DR p.7 | NEW BALANCE DR p.7 + Adv Dep on Hand | = −New Balance − Adv Dep on Hand (valeur du fichier RJ ou papier).
+
+[TABLE 3]
+Situation | Dans le SJ | Dans le Jour (RJ) | Exemple
+Vente normale F&B | Crédit | POSITIF | Nourriture 500 → J = +500
+Annulation/reversal F&B | Débit | NÉGATIF | Alcool Bqt débit 24 → Z = −24
+Équipement AV débit | Débit 750 | NÉGATIF: AE = −750 | AE = −750 car débit SJ
+Équipement Divers crédit | Crédit 575 | POSITIF: AQ = +575 | Remboursement équipement
+Équipement Divers débit | Débit 565 | NÉGATIF: AF = −565 OU 0 si déjà dans DR | Vérifier si DR inclut ce montant
+Remb. Serveurs (BV) | DR direct | TOUJOURS NÉGATIF | DR = 552.68 → BV = −552.68
+Pourboire Charge (BW) | SJ POURBOIRE CHARGE | TOUJOURS NÉGATIF | SJ = 1204.22 → BW = −1204.22
+Internet négatif (DR) | DR Internet < 0 | Garder le signe négatif | DR = −33.74 → AW = −33.74 + Bqt inet
+TPS/TVQ Internet négatif | DR < 0 | Algébrique dans AY/AX | TPS inet = −1.67 → soustrait de AY
+HP Pourboires (BQ/BR) | HP fichier | TOUJOURS POSITIF (débit) | HP Admin pourb = 64.35 → BQ = +64.35
+GEAC AP (Mch/Liq.) | GEAC: FD vs AR | = −(FD − AR). Positif si FD < AR | FD 7751 − AR 6173 → AP = −1577.95
+Discover (BJ) | Transelect X24 | X24 négatif → BJ positif. X24 positif → BJ négatif. | Dimanche: X24 = +564.98 → BJ = −564.98
+Autres GL (AS) | DR p.2 Comptabilite | Garder le signe DR. Si DEPOT UTIL: AS = DR GL − DEPOT UTIL | DR = −15642.11, DEPOT 700 → AS = −16342.11
+
+[TABLE 4]
+⚠ Règle Débit/Crédit SJ
+Dans le Sales Journal, la colonne DEBITS = annulations/reversals/paiements reçus.
+La colonne CREDITS = ventes normales.
+Si un item est dans DEBITS → entrer NÉGATIF dans le journal RJ.
+Si un item est dans CREDITS → entrer POSITIF dans le journal RJ.
+Exception: Pourboire Charge, EMPL 30%, TRAINING TOTAL, CORRECTION = identiques débit/crédit → N'entrer qu'une fois (les deux côtés sont autoéquilibrés).
+
+[TABLE 5]
+RÈGLE ABSOLUE CF | JAMAIS FAIRE
+CF = DR Facture Direct (page 6 Settlements) | CF ≠ AR Summary Total Transfers — c'est une erreur fréquente!
+Si DEPOT UTIL dans SJ: CF = FD seulement (ne pas soustraire DEPOT UTIL de CF) | CF ≠ FD − DEPOT UTIL (erreur du 30 mars: CF = 3086.67 au lieu de 3786.67)
+AR Summary sert uniquement à calculer AP (GEAC compensation) | La confusion CF = AR vient du fait que FD ≈ AR Summary Total Transfers — mais c'est une coïncidence, pas une règle
+
+[TABLE 6]
+Situation GEAC | Correction AP (col 41) | CF à corriger
+FD = AR (normal) | AP = 0 | CF = FD = AR (identiques)
+FD > AR (banque reçoit moins) | AP = −(FD − AR) → NÉGATIF | CF = FD (pas AR)
+FD < AR (banque reçoit plus) | AP = −(FD − AR) → POSITIF | CF = FD (pas AR)
+CF toujours = DR Facture Direct | Règle absolue — jamais AR Summary | Si quelqu'un met AR Summary dans CF = ERREUR
+
+[TABLE 7]
+Cas spécial: Case cochée 'doesn't balance'
+Si la case 'Check box if amounts don't balance' est cochée dans GEAC_UX → c'est reconnu officiellement.
+La variance GEAC Visa est déjà comptabilisée dans la case cochée — pas d'entrée DC supplémentaire.
+Ceci arrive typiquement les lundis après un dimanche à forte activité (PANNE VISA importante).
+
+[TABLE 8]
+Situation | X24 (Variance transelect) | Discover BJ à entrer | Logique
+Jour normal (lun-sam) | X24 NÉGATIF (bank < POSITOUCH) | BJ = POSITIF (+X24) | Pannes non récupérées = bank reçoit moins
+Dimanche (batch accumulé) | X24 POSITIF (bank > POSITOUCH) | BJ = NÉGATIF (−X24) | Samedi+Dimanche déposés ensemble lundi
+X24 = 0 | Zéro | BJ = 0 | Parfait équilibre banque/POSITOUCH
+
+[TABLE 9]
+Dimanche spécial — Batch weekend
+Le dimanche, la banque ne dépose pas seule. Les dépôts du samedi ET dimanche arrivent ensemble le lundi.
+Résultat: X24 dimanche = POSITIF (bank > POSITOUCH car inclut samedi aussi).
+BJ dimanche = NÉGATIF. C'est l'inverse de tous les autres jours.
+Le lundi suivant, X24 revient à la normale (négatif si des pannes).
+
+[TABLE 10]
+Col RJ | Item | HP Source | Calcul | Note
+J | Piazza Nourriture | HP données filtrées jour | SJ − (HP Admin Piazza Nourr + HP Promo Piazza Nourr) | Admin + Promo, toutes les lignes Piazza
+L | Piazza Bières | HP données | SJ − HP Piazza Bière | Rare mais possible
+M | Piazza Minéraux | HP données | SJ − HP Piazza Min | 
+N | Piazza Vins | HP données | SJ − HP Piazza Vin | 
+O | Spesa (Marché) Nourriture | HP données Tabagie | SJ Spesa Nourr − HP Tabagie Nourr | HP Tabagie = Spesa/Marché dans HP fichier
+AJ | Tabagie | HP données Tabagie | SJ Tabagie − HP Tabagie Tab | HP Tabagie col Tabagie seulement
+BQ | HP Admin Pourboire | HP Journalier Row 32 | Col 14-Administration Pourboire | TOUJOURS POSITIF (débit)
+BR | HP Promo Pourboire | HP Journalier Row 32 | Col 15-Promotion Pourboire | TOUJOURS POSITIF (débit)
+Vérif | Total HP = SJ Admin + Promo | HP Journalier Row 33 | Total Somme de Total doit = SJ ADMIN + HOTEL PROMOTION | Si différent: HP file ou SJ erroné
+
+[TABLE 11]
+⚠ Erreurs HP fréquentes
+Déduire seulement Admin et oublier Promo → J trop élevé, DC faussé du montant HP Promo
+Oublier BQ et BR → DC faussé du total des pourboires HP
+Déduire les pourboires des colonnes F&B (J/O/AJ) au lieu de les mettre en BQ/BR → double erreur
+HP Promo Piazza de 278.67 avec 0 pourboire et 269.67 PUNCH PROMO = normal (repas sans pourboire)
+Vérification: HP total doit TOUJOURS = SJ Admin + SJ Hotel Promotion à la ligne près
+
+[TABLE 12]
+Élément | Où trouver | Comment entrer
+InterHotel XferIn | DR page 7 — ligne 'InterHotel XferIn Today' | Ajouter à AU. Fréquence: 9.99/jour (lun=1jr, mar=2jr, etc.)
+Dimanche spécial | Parfois 5 jours accumulés = 49.95 | Vérifier le montant exact dans DR p.7 chaque fois
+Formule AU complète | AU = FR/Étage (SJ) + Piazza FR/Étage (SJ) + Lit Pliant (DR) + Autres Non-Tax (DR) + InterHotel (DR) | Additionner TOUS les éléments — aucun ne doit manquer
+
+[TABLE 13]
+AU = Somme de tous ces éléments
+FR/Étage (SJ) — ligne FR/ETAGE sous CHAMBRES dans le Sales Journal
+Piazza FR/Étage (SJ) — ligne FR/ETAGE sous PIAZZA dans le Sales Journal (si présente)
+Lit Pliant (DR p.2) — MACHINE LIT PLIANT Today
+Autres A Payer Non-Taxable (DR p.5) — si présent
+InterHotel XferIn (DR p.7) — TOUJOURS vérifier! Souvent 9.99, 19.98, 39.96, 49.95 selon les jours
+Tout autre revenu non-taxable du Daily Revenue
+
+[TABLE 14]
+Formule AW = DR Internet + SJ Banquet Internet
+DR Internet Today peut être négatif → conserver le signe négatif
+SJ BANQUET INTERNET = toujours positif (crédit)
+Additionner algébriquement: AW = DR(±) + SJ Bqt(+)
+Exemple: DR = −33.74, SJ Bqt = 200 → AW = 166.26
+Exemple: DR = +14.77, SJ Bqt = 100 → AW = 114.77
+Si DR Internet = 0 et SJ Banquet = 200 → AW = 200
+
+[TABLE 15]
+Règle AS — Cas normal et cas DEPOT UTIL
+Cas normal: AS = DR Autres Grand Livre Total Today (conserver le signe — généralement négatif)
+Cas DEPOT UTIL dans SJ: AS = DR Autres GL − SJ DEPOT UTIL
+  → Ex: DR GL = −15642.11, DEPOT UTIL = 700 → AS = −15642.11 − 700 = −16342.11
+  → Ex: DR GL = −42260.16, DEPOT UTIL = 0 → AS = −42260.16
+DEPOT UTIL dans SJ = dépôt utilisé pour compenser un solde — toujours déduire de AS
+Ne pas mettre DEPOT UTIL dans CF — c'est l'erreur classique!
+
+[TABLE 16]
+D = −(New Balance DR page 7) − Advance Deposit on Hand
+New Balance = dernière ligne de DR page 7 (montant déjà négatif dans DR → inverser → positif, puis remettre négatif)
+Advance Deposit on Hand = montant provenant du rapport de dépôts anticipés (paper ou Excel)
+Si Adv Dep on Hand = 328963.22 → soustraire: D = −New Balance − 328963.22
+Cette valeur change chaque nuit selon les réservations avec dépôts
+Si tu n'as pas le rapport papier, utiliser la valeur de la cellule correspondante dans le RJ (déjà pré-remplie par le système)
+
+[TABLE 17]
+Symptôme DC | Montant typique | Première vérification
+DC ≠ 0 après tout | Toute valeur | 1. InterHotel AU? 2. X24/Discover? 3. HP pourb BQ/BR? 4. CF = FD?
+DC = +/− 9.99 ou multiple | 9.99, 19.98, 29.97... | InterHotel XferIn manquant dans AU. Vérifier DR p.7.
+DC = +/− HP Promo total | Varie | HP Promo non déduit de J, O, AJ. BQ/BR = 0?
+DC = +/− X24 | Pannes SJ | Discover BJ non entré. Calculer X24 = Transelect total bank − POSITOUCH.
+DC = +/− (FD − AR) | Varie | AP = 0 mais FD ≠ AR. Calculer AP = −(FD−AR). Corriger CF = FD.
+DC positif = +564.98 (dimanche) | ~564.98 | Batch weekend. BJ doit être NÉGATIF (−564.98). X24 est positif ce jour.
+DC = +/− DEPOT UTIL | 700, 500... | AS = DR GL seulement, ou AS = DR GL − DEPOT UTIL? CF = FD ou FD − DEPOT UTIL?
+Résiduel circulaire ≤ 0.15 | 0.12, 0.05... | Charge CHAMBRE dans SJ (folio client → AR → BF circulaire). Acceptable.
+GEAC Visa variance cochée | Varie | Case 'doesn't balance' cochée dans GEAC = reconnu. Pas d'entrée DC supplémentaire requise.
+AS = valeur inattendue | Varie | Vérifier DR Autres GL TOTAL Today. Si DEPOT UTIL dans SJ: AS = DR − DEPOT UTIL.
+BF incorrect | Varie | Vérifier AK = DR Chambres − Club Lounge. BF = −(Forfait SJ − G4) où G4 = DR − AK.
+DC = +/− Club Lounge | CL value | CL positif: déduire de J. CL négatif: gérer via NB/BF différemment.
+
+[TABLE 18]
+Résiduel accepté ≤ 0.15$
+Un résiduel de 0.00 à 0.15$ après toutes les corrections est typiquement circulaire.
+Vérifier avec la feuille GEAC_UX ligne 56 pour voir la compensation attendue.
+Ne JAMAIS inventer une entrée pour forcer DC à 0 — cela créerait une fausse écriture comptable.
+
+[TABLE 19]
+Rappel sur les ajustements de département
+Les ajustements (corrections mineures de caisse, écarts POS) vont directement dans la colonne F&B correspondante.
+Format: SJ − HP − Ajustement = valeur journal. Les ajustements réduisent le crédit.
+Documenter chaque ajustement avec le montant et la raison pour retrouver la logique plus tard.

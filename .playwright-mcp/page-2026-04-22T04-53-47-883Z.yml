@@ -1,0 +1,248 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - heading "Bonsoir, Auditeur de nuit" [level=1] [ref=e154]
+          - paragraph [ref=e155]: Samedi 2026-03-22 · 134 chambres vendues · 192 clients
+        - button "Actualiser" [ref=e157] [cursor=pointer]:
+          - img [ref=e158]
+      - generic [ref=e162]:
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - img [ref=e166]
+            - generic [ref=e169]:
+              - generic [ref=e170]: Progression du quart
+              - generic [ref=e173]: —
+              - generic [ref=e174]: Aucun quart démarré ce soir
+          - generic [ref=e175]:
+            - img [ref=e177]
+            - generic [ref=e179]:
+              - generic [ref=e180]: Rapport Journalier
+              - generic [ref=e182]: Non démarré
+              - generic [ref=e183]: Aucune session RJ ce soir
+          - generic [ref=e184]:
+            - img [ref=e186]
+            - generic [ref=e190]:
+              - generic [ref=e191]: Budget MTD
+              - generic [ref=e192]: +$324 062
+              - generic [ref=e193]: En avance de 32.0% sur le budget proraté
+        - generic [ref=e194]:
+          - generic [ref=e195]:
+            - generic [ref=e197]: RevPAR
+            - generic [ref=e199]: $115,83
+            - generic [ref=e200]: "-50.6% vs Hier · +10.3% vs Sem. passée · -36.9% vs Moy. 30j"
+          - generic [ref=e201]:
+            - generic [ref=e203]: ADR
+            - generic [ref=e205]: $217,84
+            - generic [ref=e206]: "-17.1% vs Hier · +2.1% vs Sem. passée · -5.4% vs Moy. 30j"
+          - generic [ref=e207]:
+            - generic [ref=e209]: Occupation
+            - generic [ref=e211]: 53.2%
+            - generic [ref=e212]: "-40.5% vs Hier · +8.1% vs Sem. passée · -33.0% vs Moy. 30j"
+          - generic [ref=e213]:
+            - generic [ref=e215]: Rev. Total
+            - generic [ref=e217]: $71 212
+            - generic [ref=e218]: "-28.0% vs Hier · +35.9% vs Sem. passée · +3.5% vs Moy. 30j"
+          - generic [ref=e219]:
+            - generic [ref=e221]: Rev. F&B
+            - generic [ref=e222]: $23 698
+            - generic [ref=e223]: +16.7% vs Hier · +7.9% vs Sem. passée · +12.1% vs Moy. 30j
+          - generic [ref=e224]:
+            - generic [ref=e226]: F&B/Client
+            - generic [ref=e227]: $123,43
+            - generic [ref=e228]: 192 clients · 0 comp
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - img [ref=e231]
+            - text: Recommandations intelligentes
+            - generic [ref=e233]: 2 alertes
+          - generic [ref=e234]:
+            - generic [ref=e235]:
+              - generic [ref=e237]:
+                - generic [ref=e238]: Occupation basse à 53.17%.
+                - generic [ref=e239]: → Considérer pricing walk-in promotionnel, vérifier les OTA, appeler les no-shows potentiels.
+              - generic [ref=e240]: Occupation
+            - generic [ref=e241]:
+              - generic [ref=e243]:
+                - generic [ref=e244]: Occupation en baisse de -34.53pts sur 3 jours consécutifs
+                - generic [ref=e245]: → Tendance baissière — vérifier calendrier événements, ajuster tarifs proactivement
+              - generic [ref=e246]: Tendance
+            - generic [ref=e247]:
+              - generic [ref=e249]:
+                - generic [ref=e250]: Excellent F&B par client à 123.43$!
+                - generic [ref=e251]: → Analyser quels plats/boissons performent pour répliquer.
+              - generic [ref=e252]: F&B
+        - generic [ref=e253]:
+          - generic [ref=e254]:
+            - generic [ref=e255]:
+              - img [ref=e256]
+              - text: Réconciliation
+            - generic [ref=e258]:
+              - generic [ref=e259]:
+                - generic [ref=e260]: Surplus/Déficit
+                - generic [ref=e261]: $0,09
+                - generic [ref=e262]: Caisse du 2026-02-22
+              - generic [ref=e263]:
+                - generic [ref=e264]: Quasimodo
+                - generic [ref=e265]: $0,67
+                - generic [ref=e266]: Frederic
+              - generic [ref=e267]:
+                - generic [ref=e268]: Dépôts
+                - generic [ref=e269]: $2 229
+                - generic [ref=e270]: CDN · USD $817
+          - generic [ref=e271]:
+            - generic [ref=e272]:
+              - img [ref=e273]
+              - text: Main-d'œuvre
+            - generic [ref=e278]:
+              - generic [ref=e279]:
+                - generic [ref=e280]: Ratio MO/Rev
+                - generic [ref=e281]: 5.57%
+                - generic [ref=e282]: "Cible: <30%"
+              - generic [ref=e283]:
+                - generic [ref=e284]: Coût MO
+                - generic [ref=e285]: $115 629
+                - generic [ref=e286]: 2026-02
+              - generic [ref=e287]:
+                - generic [ref=e288]: Revenus
+                - generic [ref=e289]: $2 076 465
+                - generic [ref=e290]: 2026-02
+        - generic [ref=e291]:
+          - link "CRM Complet" [ref=e292] [cursor=pointer]:
+            - /url: /crm
+            - img [ref=e293]
+            - text: CRM Complet
+          - link "Ouvrir le RJ" [ref=e296] [cursor=pointer]:
+            - /url: /rj/native
+            - img [ref=e297]
+            - text: Ouvrir le RJ
+          - link "Checklist" [ref=e299] [cursor=pointer]:
+            - /url: /checklist
+            - img [ref=e300]
+            - text: Checklist
+          - link "Générateurs" [ref=e303] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e304]
+            - text: Générateurs

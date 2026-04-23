@@ -1,0 +1,752 @@
+=== SALES JOURNAL ===
+
+
+HOTEL SHERATON LAVAL                                                   PAGE:   1
+REPORT DATE: 04/16/2026                                 REPORT TIME:  1:07:16.86
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/15/2026
+                         SALES JOURNAL for Entire house
+Account #         Account Name               Debits      Credits
+--------------------------------------------------------------------------------
+                 CAFE LINK 
+
+                 PIAZZA    
+                  NOURRITURE                             2828.50
+                  ALCOOL                                  206.00
+                  BIERES                                  241.00
+                  NON ALCOOL BAR                           34.00
+                  VINS                                    364.00
+
+                 BAR CUPOLA
+
+                 CHAMBRES  
+                  NOURRITURE                              276.00
+                  ALCOOL                                   15.00
+                  NON ALCOOL BAR                           15.50
+                  VINS                                     36.00
+                  FR/ETAGE                                 27.00
+
+                 BANQUET   
+                  NOURRITURE                            12375.00
+                  POURBOIRE A PAYER                      2957.76
+                  EQUIP AUDIO VISUEL         966.61   
+                  EQ. DIVERS                               80.00
+                  LOCATION SALLE                        14650.00
+                  INTERNET                                460.00
+                  PAUSE SPESA                            4115.00
+
+                 SPESA     
+                  NOURRITURE                             1116.57
+                  TABAGIE                                 731.95
+
+                 CLUB LOUNG
+
+                 ANCIEN TAB
+
+                  TPS                                    1950.85
+                  TVQ                                    3891.46
+
+                                               0.00   
+                  COMPTANT                                640.92
+
+                  VISA                      1782.26   
+                  MASTERCARD                 912.63   
+                  AMEX                       310.23   
+                  INTERAC                    568.08   
+                  CHAMBRE                  41791.03   
+
+HOTEL SHERATON LAVAL                                                   PAGE:   2
+REPORT DATE: 04/16/2026                                 REPORT TIME:  1:07:16.86
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/15/2026
+                         SALES JOURNAL for Entire house
+Account #         Account Name               Debits      Credits
+--------------------------------------------------------------------------------
+                    CORRECTION              5555.83      5555.83
+                  PANNE VISA                  62.50   
+                  PANNE INTERACT              17.49   
+                  ADMINISTRATION             348.58   
+                  HOTEL PROMOTION            101.50   
+                  FORFAIT                    142.60   
+                  PANNE LIEN HOTEL             9.00   
+
+                  AMERISPA 10%                 0.60         0.60
+                  EMPL 30%                     5.71         5.71
+
+                  POURBOIRE CHARGE           817.97       817.97
+
+                                         ----------   ----------
+                                           53392.62 *   53392.62 *
+
+
+* These  figures have no meaning, they  simply
+  show the equal balance of debits and credits
+
+
+======================================================================
+DAILY_REV
+======================================================================
+--- PAGE 1 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 1
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+**** Revenue Departments ****
+Chambres
+Room Charge + Allowa 370.00 0.00 2952.00 3057.87 0.00 37716.69 0.00
+Room Chrg - Premium 1134.00- 0.00 23040.37 27380.90 0.00 270392.33 0.00
+Room Chrg - Standard 273.00 0.00 120791.10 102692.27 0.00 844087.36 0.00
+Room Chrg - eChannel 0.00 0.00 48287.00 33326.52 0.00 308361.25 0.00
+Room Chrg - Special 0.00 0.00 89010.01 85732.79 0.00 700285.33 0.00
+Room Chrg - Wholesal 0.00 0.00 9333.00 7194.75 0.00 55333.95 0.00
+Room Chrg - Govt./Mi 0.00 0.00 26744.00 25380.32 0.00 146320.01 0.00
+Room Chrg - Weekend 0.00 0.00 19861.00 17486.00 0.00 156379.00 0.00
+Room Chrg - AAA 0.00 0.00 6017.50 13775.95 0.00 49427.57 0.00
+Room Chrg - Packages 0.00 0.00 6940.84 10257.96 0.00 93813.66 0.00
+Room Chrg - Advance 0.00 0.00 10249.70 5708.44 0.00 83200.64 0.00
+Room Chrg - Senior D 0.00 0.00 4729.00 5299.75 0.00 16642.15 0.00
+Room Chrg - Associat 0.00 0.00 2335.75 1401.45 0.00 9479.42 0.00
+Rm Chrg - Reward Red 0.00 0.00 3197.60 1713.00 0.00 15293.30 0.00
+Room Chrg - Other Di 0.00 0.00 0.00 209.25 0.00 0.00 0.00
+Room Chrg - Complime 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Room Chrg - GRP OTH 135.00- 0.00 65638.00 74890.00 0.00 644342.50 0.00
+Room Chrg - GRP - Co 0.00 0.00 71619.36 111352.00 0.00 738509.08 0.00
+Room Chrg - GRP - As 0.00 0.00 23326.00 85081.00 0.00 130689.00 0.00
+Room Chrg - GRP Tour 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Room Chrg - GRP - Go 0.00 0.00 0.00 0.00 0.00 18352.00 0.00
+Room Charge OPEN 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Room Chrg - Contract 0.00 0.00 28087.00 39095.00 0.00 249098.00 0.00
+Room Chrg Opaque 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Room Chrg SVO Tours 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Early Departure Fee 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Late Checkout Fee 0.00 0.00 0.00 0.00 0.00 1053.58 0.00
+Reservation/Cancella 0.00 0.00 1577.58 2394.00 0.00 11538.64 0.00
+Guaranteed No Show 1125.01 0.00 6430.65 4853.68 0.00 61559.02 0.00
+Day Use Room Charge 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Cancellation Fee-Tra 0.00 0.00 0.00 0.00 0.00 558.00 0.00
+Room Chrg - GRP Asso 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Resort Service Fee 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Package 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Room Charge HOLD FOR 0.00 0.00 0.00 0.00 0.00 309.00 0.00
+Other Room Charges 0.00 0.00 0.00 0.00 0.00 0.01- 0.00
+Loyalty Redemption O 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Guaranteed No Show-C 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Attrition 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+NA 0.00 0.00 0.00 0.00 0.00 975.00 0.00
+Total 499.01 0.00 570167.46 658282.90 0.00 4643716.47 0.00
+TELEPHONES
+Telephone Local 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Interurbain 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Frais De Service 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Telephones Publics 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+AUTRES REVENUS
+--- PAGE 2 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 2
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+Nettoyeur-Dry Cleani 298.70 0.00 583.05 12.35 0.00 2456.00 0.00
+Sonifi 0.00 0.00 91.96 183.92 0.00 689.70 0.00
+Location De Boutique 0.00 0.00 10730.38 10388.42 0.00 48098.42 0.00
+Lit Pliant 0.00 0.00 20.00 20.00 0.00 760.00 0.00
+Fax & Photocopies 0.00 0.00 0.00 86.20 0.00 166.80 0.00
+MACHINE DISTRIBUTRIC 0.00 0.00 0.00 0.00 0.00 603.42 0.00
+Autres Revenus Taxab 0.00 0.00 0.00 0.00 0.00 409.72- 0.00
+Services Bagages 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+DO NOT USE (GuestTek 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Autre A Payer Taxabl 0.00 0.00 1750.00 850.00 0.00 21370.00 0.00
+Massage 0.00 0.00 345.00 155.00 0.00 1485.70 0.00
+Location De Salle 0.00 0.00 0.00 0.00 0.00 50.00- 0.00
+Billet La Ronde 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Billet SuperAquaClub 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+OCV-Internet 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Autres A Payer Tx Fo 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Location Salle Forfa 0.00 0.00 0.00 0.00 0.00 22756.00 0.00
+SPG Platinum Cr Mini 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+SPG INSTANT AWARD 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+BUANDERIE 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 298.70 0.00 13520.39 11695.89 0.00 97926.32 0.00
+Internet
+Internet 0.00 0.00 286.53- 0.12- 0.00 1839.25- 0.00
+Total 0.00 0.00 286.53- 0.12- 0.00 1839.25- 0.00
+Comptabilite
+Vente Bon D'achat 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Diff.de Caisse 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Autres Grand Livre T 0.00 0.00 5645.78 0.00 0.00 47913.53 0.00
+Autres Grand Livre 8269.70- 0.00 689976.54- 424211.09- 0.00 3165733.57- 0.00
+Autres Grand Livre T 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 8269.70- 0.00 684330.76- 424211.09- 0.00 3117820.04- 0.00
+GiveX
+Adj GiveX Gift Card 0.00 0.00 0.00 3000.00 0.00 450.00 0.00
+Total 0.00 0.00 0.00 3000.00 0.00 450.00 0.00
+AR Activity
+A/R Misc 0.00 0.00 8311.92 4843.87 0.00 3120191.89 0.00
+Total 0.00 0.00 8311.92 4843.87 0.00 3120191.89 0.00
+Balance Forward
+Balance Reporte - De 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Subtotal Revenue Dept s 7471.99- 92617.52- 0.00 0.00
+0.00 253611.45 4742625.39
+**** Non-Revenue Departments ****
+Chambres
+Taxe Hebergement 17.50 0.00 19962.59 23038.48 0.00 162567.40 0.00
+TPS 141740175 25.81 0.00 29507.11 34051.67 0.00 240300.77 0.00
+--- PAGE 3 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 3
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+TVQ 1019892413 51.49 0.00 58847.41 67905.12 0.00 479279.12 0.00
+City/Local Tax 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Occupancy/Tourism 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Tax Exempt Rooms 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Tax Other 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Tax Other 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Occupancy/Tourism Ta 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Discounts 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 94.80 0.00 108317.11 124995.27 0.00 882147.29 0.00
+Club Lounge
+Nourriture Lounge 0.00 0.00 0.00 0.00 0.00 806.95- 0.00
+Alcool Lounge 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Biere Lounge 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Mineraux Lounge 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Vin Lounge 0.00 0.00 0.00 74.50 0.00 102.34- 0.00
+Autres Lounge 0.00 0.00 0.00 0.00 0.00 255.00- 0.00
+Pourboire / Frais Ad 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Pourboire Lounge 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TPS Lounge 0.00 0.00 0.00 2.00 0.00 0.00 0.00
+TVQ Lounge 0.00 0.00 0.00 3.99 0.00 0.00 0.00
+Total 0.00 0.00 0.00 80.49 0.00 1164.29- 0.00
+DO NOT USE
+Cafe Link 0.00 0.00 0.00 4500.00 0.00 0.00 0.00
+Alcool Cafe Link 0.00 0.00 0.00 900.00 0.00 0.00 0.00
+Biere Cafe Link 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Mineraux Cafe Link 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Vin Cafe Link 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Autres Cafe Link 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Cafe Link Pourb/Frai 0.00 0.00 0.00 972.00 0.00 0.00 0.00
+Gratuite Cafe Link 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TPS Cafe Link 0.00 0.00 0.00 318.60 0.00 0.00 0.00
+TVQ Cafe Link 0.00 0.00 0.00 635.61 0.00 0.00 0.00
+Total 0.00 0.00 0.00 7326.21 0.00 0.00 0.00
+Restaurant Piazza
+Nourriture Piazza 1265.00 0.00 18765.95 30301.78 0.00 269182.47 0.00
+Alcool Rest Piazza 169.00 0.00 3405.00 2135.00 0.00 33766.38 0.00
+Biere Rest Piazza 143.00 0.00 1246.00 1101.50 0.00 13557.28 0.00
+Mineraux Rest Piazza 8.75 0.00 357.73 638.24 0.00 3385.13 0.00
+Vin Rest Piazza 140.00 0.00 4127.50 4059.00 0.00 28307.01 0.00
+Autres Rest Piazza 0.00 0.00 3602.00 24843.00 0.00 77137.50 0.00
+Pourboire / Frais Ad 0.00 0.00 55.62 3381.07 0.00 27151.52 0.00
+Pourboire Rest Piazz 271.40 0.00 5160.15 3315.56 0.00 34277.54 0.00
+TPS Rest Piazza 86.30 0.00 1577.16 3268.11 0.00 21854.34 0.00
+TVQ Rest Piazza 172.10 0.00 3145.75 6514.83 0.00 43610.09 0.00
+Total 2255.55 0.00 41442.86 79558.09 0.00 552229.26 0.00
+Bar Cupola
+Bar Cupola 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Alcool Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Biere Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+--- PAGE 4 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 4
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+Mineraux Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Vin Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Autres Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Pourboire / Frais Ad 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Pourboire Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TPS Bar 0.00 0.00 0.00 2.40- 0.00 0.00 0.00
+TVQ Bar 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 0.00 0.00 0.00 2.40- 0.00 0.00 0.00
+SERVICES AUX CHAMBRES
+Nourriture Serv Cham 479.47 0.00 5406.50 3704.32 0.00 41457.84 0.00
+Alcool Serv Chamb 0.00 0.00 18.00 0.00 0.00 88.50 0.00
+Biere Serv Chamb 0.00 0.00 0.00 0.00 0.00 19.50 0.00
+Mineraux Serv Chamb 0.00 0.00 0.00 4.25 0.00 39.00 0.00
+Vin Serv Cham 0.00 0.00 0.00 0.00 0.00 353.00 0.00
+Autres Serv Chamb 0.00 0.00 0.00 0.00 0.00 55.61 0.00
+Pourboire Serv Chamb 3.45 0.00 43.95 42.21 0.00 483.51 0.00
+TPS Serv Chamb 1.15 0.00 12.80 14.14 0.00 149.90 0.00
+TVQ Serv Chamb 2.29 0.00 25.52 28.19 0.00 32.70- 0.00
+Total 486.36 0.00 5506.77 3793.11 0.00 42614.16 0.00
+BANQUET
+Nourriture Banquet 16490.00 0.00 126914.08 375762.50 0.00 1411419.17 0.00
+Alcool Banquet 0.00 0.00 5719.00 12807.00 0.00 115819.47 0.00
+Biere Banquet 0.00 0.00 24.80- 7698.78 0.00 5477.43 0.00
+Mineraux Banquet 0.00 0.00 85.00- 4025.50 0.00 11162.90 0.00
+Vin Banquet 0.00 0.00 3932.00 7266.00 0.00 65443.00 0.00
+Autres Banquet 0.00 0.00 0.00 0.00 0.00 1000.00 0.00
+Location De Salle 14650.00 0.00 92989.47 125600.00 0.00 732399.04 0.00
+Equipement Audio 966.61- 0.00 23122.95 13927.60 0.00 133353.69 0.00
+Equipement Divers 540.00 0.00 1735.00 3820.00 0.00 61116.62 0.00
+Frais De Location 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Pourboire / Frais Ad 2957.76 0.00 22045.95 68600.77 0.00 192127.84 0.00
+Socan 0.00 0.00 0.00 172.76 0.00 1893.27 0.00
+Pourboire Bqt 0.00 0.00 0.00 0.00 0.00 500.00- 0.00
+TPS Bqt 1683.58 0.00 13226.96 29661.87 0.00 118019.51 0.00
+TVQ Bqt 3358.74 0.00 26387.80 59175.43 0.00 235800.19 0.00
+Total 38713.47 0.00 315963.41 708518.21 0.00 3084532.13 0.00
+La Spesa
+La Spesa 301.73 0.00 2562.75 1355.59 0.00 39088.46 0.00
+Tps- La Spesa 13.21 0.00 113.42 64.09 0.00 1717.26 0.00
+Tvq - La Spesa 26.31 0.00 226.00 127.57 0.00 3429.47 0.00
+Total 341.25 0.00 2902.17 1547.25 0.00 44235.19 0.00
+TELEPHONES
+TPS Tel.Local 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TPS Tel.Interurbain 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TVQ Tel.Local 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TVQ Telephone Interu 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+AUTRES REVENUS
+--- PAGE 5 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 5
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+Tabagie 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Autres A Payer Non-T 0.00 0.00 72.17 120.00 0.00 951.70 0.00
+TX Forfait-TPS 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Vestiaire 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TX Forfait-TVQ 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Restaurant Forfait 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+SCI Enrollment 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Divers Non-taxable 0.00 0.00 0.00 0.00 0.00 470.04 0.00
+Photocopie - Tabagie 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Restaurant Forfait 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Certificat Promesse 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Promesse Service-cha 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Promesse Service-N&B 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Promesse Service-Aut 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+TPS Autres 14.94 0.00 676.04 584.79 0.00 4896.44 0.00
+TVQ Autres 29.80 0.00 1349.69 1167.81 0.00 9782.20 0.00
+Total 44.74 0.00 2097.90 1872.60 0.00 16100.38 0.00
+Internet
+TPS Internet 0.00 0.00 14.45- 0.01- 0.00 90.80- 0.00
+TVQ Internet 0.00 0.00 28.69- 0.13 0.00 153.83- 0.00
+Total 0.00 0.00 43.14- 0.12 0.00 244.63- 0.00
+Comptabilite
+Balance Reporte 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Due Back Nourriture- 672.97- 0.00 12038.26- 13602.19- 0.00 89682.36- 0.00
+Cash Operation (zo) 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Vente Certificat Cad 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Transfert 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Transfert Royal 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Tps 0.00 0.00 285.79 0.00 0.00 2362.68 0.00
+Tvq 0.00 0.00 570.16 0.00 0.00 4736.48 0.00
+Total 672.97- 0.00 11182.31- 13602.19- 0.00 82583.20- 0.00
+Debourse
+Debourse 20.00 0.00 997.21 1862.97 0.00 6375.27 0.00
+Remboursement Serveu 672.97 0.00 12038.26 13113.22 0.00 88910.07 0.00
+Remboursement Loteri 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 692.97 0.00 13035.47 14976.19 0.00 95285.34 0.00
+Package Breakage
+Overall Breakage 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Freestay Breakage 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Total 0.00 0.00 0.00 0.00 0.00 0.00 0.00
+Subtotal Non-Rev Dept s 41956.17 478040.24 0.00 0.00
+0.00 929062.95 4633151.63
+Todays Activity 34484.18 385422.72 0.00 0.00
+0.00 1182674.40 9375777.02
+Settlements
+Comptant 0.00 7794.42- 6845.01- 47289.54-
+American Express 7576.83- 172783.98- 110003.88- 1025013.54-
+Visa 12126.86- 314029.11- 370828.70- 2656691.77-
+--- PAGE 6 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 6
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+MasterCard 9945.62- 263539.65- 263872.98- 2119552.61-
+Diners 0.00 0.00 0.00 0.00
+Discover 0.00 0.00 0.00 0.00
+Transfert Bancaire 0.00 0.00 0.00 0.00
+Balance Reporte 0.00 0.00 0.00 0.00
+ExpresPass guarant e e 0.00 0.00 0.00 0.00
+Bon D'Achat 0.00 0.00 0.00 0.00
+Certificat Cadeaux 0.00 0.00 0.00 0.00
+Carte Debit 0.00 4891.02- 6472.18- 29830.26-
+Cheque 12477.00- 36143.27- 25362.14- 990228.84-
+Facture Direct 1641.73- 65279.11- 169480.81- 539572.49-
+Cert Cadeau Hp 0.00 0.00 0.00 0.00
+Hotel Promotion 0.00 0.00 0.00 0.00
+Complimentaire 0.00 0.00 0.00 0.00
+Compagnie 0.00 0.00 0.00 0.00
+En Route 0.00 0.00 0.00 0.00
+CG 0.00 0.00 0.00 0.00
+Carte Blance 0.00 0.00 0.00 0.00
+Visa Remanco 0.00 0.00 0.00 0.00
+Mastercard Remanco 0.00 0.00 0.00 0.00
+Comptant Remanco 0.00 0.00 0.00 0.00
+Gift Card 0.00 0.00 150.00- 1346.27-
+Amex Remanco 0.00 0.00 0.00 0.00
+Diners Remanco 0.00 0.00 0.00 0.00
+Carte Debit Remanc o 0.00 0.00 0.00 0.00
+Discover Remanco 0.00 0.00 0.00 0.00
+Emp. Chambre Reman c o 0.00 0.00 0.00 0.00
+Emp. N/B Remanco 0.00 0.00 0.00 0.00
+Agence De Voyage G a ra n t i e 0.00 0.00 0.00 0.00
+Bon D'achat Remanc o 0.00 0.00 0.00 0.00
+Certificat Cadeau R em a n c o 0.00 0.00 0.00 0.00
+Emp. Admin Remanco 0.00 0.00 0.00 0.00
+Hotel Promotion Re m an c o 0.00 0.00 0.00 0.00
+Compagnie 0.00 0.00 0.00 0.00
+C.C. Promesse Serv i ce 0.00 0.00 0.00 0.00
+Mailing in Check 0.00 0.00 0.00 0.00
+Marriott Bonvoy In s ta n t R e w a r d 0.00 0.00 0.00 0.00
+China Union Pay 0.00 0.00 0.00 0.00
+Total Settlements 43768.04- 864460.56- 953015.70- 7409525.32-
+Dep Recvd - Compta n t 0.00 0.00 0.00 0.00
+Dep Recvd - AX 5707.24 28925.24 7666.01 237967.75
+Dep Recvd - Visa 993.65 55031.48 44885.82 421614.85
+Dep Recvd - Master c ar d 474.09 43916.98 32542.17 484356.65
+Dep Recvd - Diners 0.00 0.00 0.00 0.00
+Dep Recvd - Euroca r d 0.00 0.00 0.00 0.00
+Deposit Received - BF 0.00 0.00 0.00 0.00
+Deposit Received - AA 0.00 0.00 0.00 0.00
+Dep Recvd - Carte D eb i t 0.00 0.00 0.00 0.00
+Dep Recvd - Cheque 0.00 0.00 17753.63 30000.00
+Dep Recvd - HP 0.00 0.00 0.00 0.00
+Dep Recvd - En Rou t e 0.00 0.00 0.00 0.00
+Total Net Dep Rcvd 7174.98 127873.70 102847.63 1173939.25
+--- PAGE 7 ---
+Sheraton Laval YULLS Daily Revenue Page Number: 7
+Souleymane Camara Current Day Wednesday April 15, 2026 15-APR-2026 12:59 AM
+(dlyrev) Including Last YTD
+Departments Today Today Budget Month to Date Last Yr M-T-D M-T-D Budget Year to Date Last Y-T-D
+Adv Dep Applied 64522.13- 207935.90- 73623.73- 1108648.54-
+Adv Dep Cancel 0.00 629.27- 1014.18- 12860.42-
+Adv Dep DNA 0.00 1224.51- 3217.08- 28374.12-
+InterHotel XferIn 0.00 329.67 0.00 529.47
+InterHotel XferOut 0.00 0.00 0.00 0.00
+Transferred to AR 0.00 0.00 0.00 0.00
+$$$ Transfer 0.00 0.00 0.00 0.00
+Balance Today 66631.01-
+Balance Prev Day 1476889.24-
+Today Hotel Moved In 0.00
+Today Hotel Moved Out 0.00
+New Balance 1543520.25-
+End of Report
+
+======================================================================
+AR_SUMMARY
+======================================================================
+--- PAGE 1 ---
+Sheraton Laval C/R AR - Summary Page Number: 1
+Souleymane Camara Night Audit Wednesday April 15, 2026 16-APR-2026 02:04 AM
+(arsum)
+1) A/R Ledger Balance - Previous Day 19,169,893.17
+2) Front Office Transfers(+/-)
+Guest Folios 5,197.27
+Non-Guest Folios 0.00
+Subtotal 5,197.27
+Advance Deposits Cancel/DNA 0.00
+Credit Cards 0.00
+Total Transfers 5,197.27
+3) Adjustments
+Credits 58,579.05-
+Debits 0.00 58,579.05-
+Total Adjustments
+4) Invoices 58,627.35
+5) Payments 667.59-
+6) A/R Credit Card Charges 0.00
+7) Service Charges 0.00
+8) A/R Ledger Balance - End of Day 19,174,471.15
+End of Report
+
+======================================================================
+MARKET_SEGMENT
+======================================================================
+--- PAGE 1 ---
+Sheraton Laval YULLS Market Segment Production Page Number: 1
+Souleymane Camara Ordered by Market Segment Order 16-APR-2026 02:07 AM
+(mktsegprd) For 15-APR-2026
+----------------------- TODAY -------------------- --------------------- M T D--------------------
+Market Segment Guests Rooms Room Revenue Avg Rate %Occup Guests Rooms Room Revenue Avg Rate %Occup
+* NOT SPECIFIED * 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T10 Premium Reta 5 5 2745.20 549.04 1.98 111 61 30662.53 502.66 1.61
+SUBTOTAL 5 5 2745.20 549.04 1.98 111 61 30662.53 502.66 1.61
+T11 Airline Dist 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T12 Standard Ret 49 47 17314.87 368.40 18.65 653 505 161820.74 320.44 13.36
+SUBTOTAL 49 47 17314.87 368.40 18.65 653 505 161820.74 320.44 13.36
+T14 HOLD FOR REV 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T15 Associate Bu 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T16 Government 5 5 1356.56 271.31 1.98 186 135 33217.16 246.05 3.57
+SUBTOTAL 5 5 1356.56 271.31 1.98 186 135 33217.16 246.05 3.57
+T17 Special Corp 46 44 10366.96 235.61 17.46 572 509 116534.50 228.95 13.47
+T18 Spec Corp Di 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 46 44 10366.96 235.61 17.46 572 509 116534.50 228.95 13.47
+T19 Long Term St 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T23 Hotel Breakf 0 0 0.00 0.00 0.00 0 0 158.23 0.00 0.00
+T20 Weekend Stan 3 3 1046.53 348.84 1.19 137 81 24814.98 306.36 2.14
+T22 Luxury Conso 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T21 Hotel Value 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T24 Hotel Breakf 4 2 842.49 421.25 0.79 51 18 7162.20 397.90 0.48
+SUBTOTAL 7 5 1889.02 377.80 1.98 188 99 32135.41 324.60 2.62
+T25 Rewards Rede 3 3 203.82 67.94 1.19 113 59 4122.66 69.88 1.56
+SUBTOTAL 3 3 203.82 67.94 1.19 113 59 4122.66 69.88 1.56
+T27 Quarter Cent 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T28 Associate Le 0 0 0.00 0.00 0.00 34 25 2811.80 112.47 0.66
+SUBTOTAL 0 0 0.00 0.00 0.00 34 25 2811.80 112.47 0.66
+T29 Travel Indus 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T30 eChannel Pre 0 0 0.00 0.00 0.00 57 27 11613.39 430.13 0.71
+T33 Promotion / 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T34 eChannel Ret 1 1 332.00 332.00 0.40 339 167 48874.37 292.66 4.42
+SUBTOTAL 1 1 332.00 332.00 0.40 396 194 60487.76 311.79 5.13
+T35 Advance Purc 1 1 314.85 314.85 0.40 35 21 6804.95 324.05 0.56
+T40 Rewards Offe 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T41 Rewards Offe 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T42 Auto Assn Of 2 2 685.40 342.70 0.79 33 26 8160.05 313.85 0.69
+SUBTOTAL 3 3 1000.25 333.42 1.19 68 47 14965.00 318.40 1.24
+T43 Senior Disco 0 0 0.00 0.00 0.00 30 19 5627.26 296.17 0.50
+SUBTOTAL 0 0 0.00 0.00 0.00 30 19 5627.26 296.17 0.50
+T44 Friends And 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T90 Long Term St 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+--- PAGE 2 ---
+Sheraton Laval YULLS Market Segment Production Page Number: 2
+Souleymane Camara Ordered by Market Segment Order 16-APR-2026 02:07 AM
+(mktsegprd) For 15-APR-2026
+----------------------- TODAY -------------------- --------------------- M T D--------------------
+Market Segment Guests Rooms Room Revenue Avg Rate %Occup Guests Rooms Room Revenue Avg Rate %Occup
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W26 Wholersaler 12 12 373.80 31.15 4.76 137 137 4257.48 31.08 3.62
+SUBTOTAL 12 12 373.80 31.15 4.76 137 137 4257.48 31.08 3.62
+W50 Contract 6 6 131.44 21.91 2.38 72 72 1582.54 21.98 1.90
+GC Corporate Gr 93 92 22388.54 243.35 36.51 468 467 107647.79 230.51 12.35
+W52 Corporate Le 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W53 Permanent Le 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T62 Complimentar 0 0 0.00 0.00 0.00 14 14 0.00 0.00 0.37
+SUBTOTAL 99 98 22519.98 229.80 38.89 554 553 109230.33 197.52 14.63
+T38 eChannel Adv 5 2 759.65 379.83 0.79 49 20 6513.59 325.68 0.53
+SUBTOTAL 5 2 759.65 379.83 0.79 49 20 6513.59 325.68 0.53
+W58 KDT MiniHote 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+GG Government/M 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+GN Association 0 0 41.60 0.00 0.00 110 108 27503.15 254.66 2.86
+GO Other Groups 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+GP CMP - Associ 19 10 2415.60 241.56 3.97 486 186 46761.34 251.41 4.92
+GS Group Social 14 13 2413.32 185.64 5.16 175 132 36957.06 279.98 3.49
+GT Tour And Tra 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 33 23 4870.52 211.76 9.13 771 426 111221.55 261.08 11.27
+T31 eChannel Dis 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T37 eChannel Hot 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W51 Marketing Pr 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W55 Associate Re 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W59 Points Owner 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T26 Wholesale Fi 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T36 eChannel Bun 0 0 0.00 0.00 0.00 104 49 11240.58 229.40 1.30
+T39 eChannel Opa 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T32 NA 0 0 0.00 0.00 0.00 0 0 -253.16 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 104 49 10987.42 224.23 1.30
+* TOTAL 268 248 63732.63 256.99 98.41 3966 2838 704595.19 248.27 75.08
+--- PAGE 3 ---
+Sheraton Laval YULLS Market Segment Production Page Number: 3
+Souleymane Camara Ordered by Market Segment Order 16-APR-2026 02:07 AM
+(mktsegprd) For 15-APR-2026
+----------------------- Y T D -------------------- ------------------M T D Budget--------------------
+Market Segment Guests Rooms Room Revenue Avg Rate %Occup Guests Rooms Room Revenue Avg Rate %Occup
+* NOT SPECIFIED * 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T10 Premium Reta 1102 632 318599.12 504.11 2.39 0 0 0.00 0.00 0.00
+SUBTOTAL 1102 632 318599.12 504.11 2.39 0 0 0.00 0.00 0.00
+T11 Airline Dist 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T12 Standard Ret 4093 3176 1029044.61 324.01 12.00 0 0 0.00 0.00 0.00
+SUBTOTAL 4093 3176 1029044.61 324.01 12.00 0 0 0.00 0.00 0.00
+T14 HOLD FOR REV 1 1 18.70 18.70 0.00 0 0 0.00 0.00 0.00
+T15 Associate Bu 10 10 2732.06 273.21 0.04 0 0 0.00 0.00 0.00
+T16 Government 1205 726 174972.64 241.01 2.74 0 0 0.00 0.00 0.00
+SUBTOTAL 1216 737 177723.40 241.14 2.79 0 0 0.00 0.00 0.00
+T17 Special Corp 4023 3607 846054.76 234.56 13.63 0 0 0.00 0.00 0.00
+T18 Spec Corp Di 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 4023 3607 846054.76 234.56 13.63 0 0 0.00 0.00 0.00
+T19 Long Term St 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T23 Hotel Breakf 72 43 25321.17 588.86 0.16 0 0 0.00 0.00 0.00
+T20 Weekend Stan 825 542 169628.43 312.97 2.05 0 0 0.00 0.00 0.00
+T22 Luxury Conso 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T21 Hotel Value 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T24 Hotel Breakf 319 171 68597.98 401.16 0.65 0 0 0.00 0.00 0.00
+SUBTOTAL 1216 756 263547.58 348.61 2.86 0 0 0.00 0.00 0.00
+T25 Rewards Rede 486 267 18671.01 69.93 1.01 0 0 0.00 0.00 0.00
+SUBTOTAL 486 267 18671.01 69.93 1.01 0 0 0.00 0.00 0.00
+T27 Quarter Cent 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T28 Associate Le 173 112 12501.96 111.62 0.42 0 0 0.00 0.00 0.00
+SUBTOTAL 173 112 12501.96 111.62 0.42 0 0 0.00 0.00 0.00
+T29 Travel Indus 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T30 eChannel Pre 284 157 73769.01 469.87 0.59 0 0 0.00 0.00 0.00
+T33 Promotion / 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T34 eChannel Ret 2220 1100 335487.80 304.99 4.16 0 0 0.00 0.00 0.00
+SUBTOTAL 2504 1257 409256.81 325.58 4.75 0 0 0.00 0.00 0.00
+T35 Advance Purc 317 204 65015.01 318.70 0.77 0 0 0.00 0.00 0.00
+T40 Rewards Offe 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T41 Rewards Offe 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T42 Auto Assn Of 288 188 61773.83 328.58 0.71 0 0 0.00 0.00 0.00
+SUBTOTAL 605 392 126788.84 323.44 1.48 0 0 0.00 0.00 0.00
+T43 Senior Disco 110 65 19827.06 305.03 0.25 0 0 0.00 0.00 0.00
+SUBTOTAL 110 65 19827.06 305.03 0.25 0 0 0.00 0.00 0.00
+T44 Friends And 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T90 Long Term St 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+--- PAGE 4 ---
+Sheraton Laval YULLS Market Segment Production Page Number: 4
+Souleymane Camara Ordered by Market Segment Order 16-APR-2026 02:07 AM
+(mktsegprd) For 15-APR-2026
+----------------------- Y T D -------------------- ------------------M T D Budget--------------------
+Market Segment Guests Rooms Room Revenue Avg Rate %Occup Guests Rooms Room Revenue Avg Rate %Occup
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W26 Wholersaler 147 147 4568.98 31.08 0.56 0 0 0.00 0.00 0.00
+SUBTOTAL 147 147 4568.98 31.08 0.56 0 0 0.00 0.00 0.00
+W50 Contract 1544 1547 42633.04 27.56 5.85 0 0 0.00 0.00 0.00
+GC Corporate Gr 3884 3641 907405.59 249.22 13.76 0 0 0.00 0.00 0.00
+W52 Corporate Le 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W53 Permanent Le 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T62 Complimentar 102 95 0.00 0.00 0.36 0 0 0.00 0.00 0.00
+SUBTOTAL 5530 5283 950038.63 179.83 19.97 0 0 0.00 0.00 0.00
+T38 eChannel Adv 273 125 36386.82 291.09 0.47 0 0 0.00 0.00 0.00
+SUBTOTAL 273 125 36386.82 291.09 0.47 0 0 0.00 0.00 0.00
+W58 KDT MiniHote 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+GG Government/M 89 88 22057.68 250.66 0.33 0 0 0.00 0.00 0.00
+GN Association 745 631 155889.36 247.05 2.38 0 0 0.00 0.00 0.00
+GO Other Groups 0 0 -120.00 0.00 0.00 0 0 0.00 0.00 0.00
+GP CMP - Associ 5318 2522 597704.29 237.00 9.53 0 0 0.00 0.00 0.00
+GS Group Social 912 716 181481.88 253.47 2.71 0 0 0.00 0.00 0.00
+GT Tour And Tra 0 0 -373.50 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 7064 3957 956639.71 241.76 14.95 0 0 0.00 0.00 0.00
+T31 eChannel Dis 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T37 eChannel Hot 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W51 Marketing Pr 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W55 Associate Re 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+W59 Points Owner 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T26 Wholesale Fi 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T36 eChannel Bun 586 281 67326.71 239.60 1.06 0 0 0.00 0.00 0.00
+T39 eChannel Opa 0 0 0.00 0.00 0.00 0 0 0.00 0.00 0.00
+T32 NA 5 4 -544.00 -136.00 0.02 0 0 0.00 0.00 0.00
+SUBTOTAL 591 285 66782.71 234.33 1.08 0 0 0.00 0.00 0.00
+* TOTAL 29133 20798 5236432.00 251.78 78.60 0 0 0.00 0.00 0.00
+--- PAGE 5 ---
+Sheraton Laval YULLS Market Segment Production Page Number: 5
+Souleymane Camara Ordered by Market Segment Order 16-APR-2026 02:07 AM
+(mktsegprd) For 15-APR-2026
+----------------------- -------------------- ------------------M T D Variance--------------------
+Market Segment Guests Rooms Room Revenue Avg Rate %Occup Guests Rooms Room Revenue Avg Rate %Occup
+* NOT SPECIFIED * 0 0 0.00 0.00 0.00
+T10 Premium Reta 111 61 30662.53 502.66 1.61
+SUBTOTAL 111 61 30662.53 502.66 1.61
+T11 Airline Dist 0 0 0.00 0.00 0.00
+T12 Standard Ret 653 505 161820.74 320.44 13.36
+SUBTOTAL 653 505 161820.74 320.44 13.36
+T14 HOLD FOR REV 0 0 0.00 0.00 0.00
+T15 Associate Bu 0 0 0.00 0.00 0.00
+T16 Government 186 135 33217.16 246.05 3.57
+SUBTOTAL 186 135 33217.16 246.05 3.57
+T17 Special Corp 572 509 116534.50 228.95 13.47
+T18 Spec Corp Di 0 0 0.00 0.00 0.00
+SUBTOTAL 572 509 116534.50 228.95 13.47
+T19 Long Term St 0 0 0.00 0.00 0.00
+T23 Hotel Breakf 0 0 158.23 0.00 0.00
+T20 Weekend Stan 137 81 24814.98 306.36 2.14
+T22 Luxury Conso 0 0 0.00 0.00 0.00
+T21 Hotel Value 0 0 0.00 0.00 0.00
+T24 Hotel Breakf 51 18 7162.20 397.90 0.48
+SUBTOTAL 188 99 32135.41 397.90 2.62
+T25 Rewards Rede 113 59 4122.66 69.88 1.56
+SUBTOTAL 113 59 4122.66 69.88 1.56
+T27 Quarter Cent 0 0 0.00 0.00 0.00
+T28 Associate Le 34 25 2811.80 112.47 0.66
+SUBTOTAL 34 25 2811.80 112.47 0.66
+T29 Travel Indus 0 0 0.00 0.00 0.00
+T30 eChannel Pre 57 27 11613.39 430.13 0.71
+T33 Promotion / 0 0 0.00 0.00 0.00
+T34 eChannel Ret 339 167 48874.37 292.66 4.42
+SUBTOTAL 396 194 60487.76 292.66 5.13
+T35 Advance Purc 35 21 6804.95 324.05 0.56
+T40 Rewards Offe 0 0 0.00 0.00 0.00
+T41 Rewards Offe 0 0 0.00 0.00 0.00
+T42 Auto Assn Of 33 26 8160.05 313.85 0.69
+SUBTOTAL 68 47 14965.00 313.85 1.24
+T43 Senior Disco 30 19 5627.26 296.17 0.50
+SUBTOTAL 30 19 5627.26 296.17 0.50
+T44 Friends And 0 0 0.00 0.00 0.00
+T90 Long Term St 0 0 0.00 0.00 0.00
+--- PAGE 6 ---
+Sheraton Laval YULLS Market Segment Production Page Number: 6
+Souleymane Camara Ordered by Market Segment Order 16-APR-2026 02:07 AM
+(mktsegprd) For 15-APR-2026
+----------------------- -------------------- ------------------M T D Variance--------------------
+Market Segment Guests Rooms Room Revenue Avg Rate %Occup Guests Rooms Room Revenue Avg Rate %Occup
+SUBTOTAL 0 0 0.00 0.00 0.00
+W26 Wholersaler 137 137 4257.48 31.08 3.62
+SUBTOTAL 137 137 4257.48 31.08 3.62
+W50 Contract 72 72 1582.54 21.98 1.90
+GC Corporate Gr 468 467 107647.79 230.51 12.35
+W52 Corporate Le 0 0 0.00 0.00 0.00
+W53 Permanent Le 0 0 0.00 0.00 0.00
+T62 Complimentar 14 14 0.00 0.00 0.37
+SUBTOTAL 554 553 109230.33 197.52 14.63
+T38 eChannel Adv 49 20 6513.59 325.68 0.53
+SUBTOTAL 49 20 6513.59 325.68 0.53
+W58 KDT MiniHote 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00
+GG Government/M 0 0 0.00 0.00 0.00
+GN Association 110 108 27503.15 254.66 2.86
+GO Other Groups 0 0 0.00 0.00 0.00
+GP CMP - Associ 486 186 46761.34 251.41 4.92
+GS Group Social 175 132 36957.06 279.98 3.49
+GT Tour And Tra 0 0 0.00 0.00 0.00
+SUBTOTAL 771 426 111221.55 261.08 11.27
+T31 eChannel Dis 0 0 0.00 0.00 0.00
+T37 eChannel Hot 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00
+W51 Marketing Pr 0 0 0.00 0.00 0.00
+W55 Associate Re 0 0 0.00 0.00 0.00
+W59 Points Owner 0 0 0.00 0.00 0.00
+SUBTOTAL 0 0 0.00 0.00 0.00
+T26 Wholesale Fi 0 0 0.00 0.00 0.00
+T36 eChannel Bun 104 49 11240.58 229.40 1.30
+T39 eChannel Opa 0 0 0.00 0.00 0.00
+T32 NA 0 0 -253.16 0.00 0.00
+SUBTOTAL 104 49 10987.42 224.23 1.30
+* TOTAL 3966 2838 704595.19 248.27 75.08
+* Revenue totals will not include manual posting or day use activity along with the information-only accounts and adjustments
+if report is run by room pool
+End of Report
+
+======================================================================
+HP Day 15
+======================================================================
+  R1: C1=Rapport Quotidien des factures Hôtel Promotion
+  R2: C1= 
+  R3: C1=  | C2=15
+  R5: C3=Paiement
+  R6: C1=Aera | C2=Données | C3=15 - Promotion | C4=14 - Administration | C5=Total
+  R7: C1=Piazza | C2=00 | C4=195 | C5=195
+  R8: C2=Sum of Tabagie
+  R9: C2=Somme de Boisson
+  R10: C2=Somme de Biere
+  R11: C2=Somme de Mineraux | C4=21 | C5=21
+  R12: C2=Somme de Vin
+  R13: C2=Somme de Autres
+  R14: C2=Somme de Pourboire | C4=25.92 | C5=25.92
+  R15: C2=Somme de Total | C4=241.92000000000002 | C5=241.92000000000002
+  R16: C1=Tabagie | C2=00
+  R17: C2=Sum of Tabagie | C3=101.5 | C4=96.9 | C5=198.4
+  R18: C2=Somme de Boisson
+  R19: C2=Somme de Biere
+  R20: C2=Somme de Mineraux
+  R21: C2=Somme de Vin
+  R22: C2=Somme de Autres
+  R23: C2=Somme de Pourboire | C4=9.76 | C5=9.76
+  R24: C2=Somme de Total | C3=101.5 | C4=106.66000000000001 | C5=208.16000000000003
+  R25: C1=Total 00 | C4=195 | C5=195
+  R26: C1=Total Sum of Tabagie | C3=101.5 | C4=96.9 | C5=198.4
+  R27: C1=Total Somme de Boisson
+  R28: C1=Total Somme de Biere
+  R29: C1=Total Somme de Mineraux | C4=21 | C5=21
+  R30: C1=Total Somme de Vin
+  R31: C1=Total Somme de Autres
+  R32: C1=Total Somme de Pourboire | C4=35.68 | C5=35.68
+  R33: C1=Total Somme de Total | C3=101.5 | C4=348.58000000000004 | C5=450.08000000000004
+
+  HP donnees for day 15:

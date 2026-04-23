@@ -461,17 +461,18 @@ def get_staff():
     excluded = {'petite caisse', 'conc. banc.', 'corr. mois suivant',
                 'mixologue', 'mixologue 2.0', 'mixologue 3.0'}
 
-    # Build aggregated variance stats in a single GROUP BY query instead of
-    # one query per staff member (avoids N+1 on large datasets).
-    # Note: func.sum on a cast boolean avoids SQLAlchemy 1.x/2.x case() API differences.
-    # SQLite and PostgreSQL both support CAST(is_alert AS INTEGER) for counting booleans.
+    # Build aggregated variance stats in a single GROUP BY query.
+    # is_alert is a Python @property (not a DB column), so we inline the
+    # threshold check in SQL: abs(variance) > ALERT_THRESHOLD.
+    from sqlalchemy import case, func as sa_func
+    alert_expr = sa_func.sum(
+        case((sa_func.abs(VarianceRecord.variance) > VarianceRecord.ALERT_THRESHOLD, 1), else_=0)
+    )
     agg_rows = db.session.query(
         func.lower(VarianceRecord.receptionist).label('receptionist_lower'),
         func.count(VarianceRecord.id).label('variance_count'),
         func.sum(VarianceRecord.variance).label('total_variance'),
-        func.sum(
-            db.cast(VarianceRecord.is_alert, db.Integer)
-        ).label('alert_count'),
+        alert_expr.label('alert_count'),
     ).group_by(func.lower(VarianceRecord.receptionist)).all()
 
     variance_stats = {

@@ -231,16 +231,17 @@ DAILY_REV_TO_JOUR = {
     },
     'AG': {
         'column_index': 32,
-        'label_en': 'Location Salle + Divers Bqt',
-        'label_fr': 'Location Salle + Divers',
+        'label_en': 'Location Salle (Banquet + Piazza + DR)',
+        'label_fr': 'Location de Salles',
         'source_page': 'SALES JOURNAL + PAGE 2',
-        'source_line': 'SJ banquet.location_salle + DR location_salle_forfait',
+        'source_line': 'SJ banquet + piazza location_salle + DR location_salle_forfait',
         'operation': 'accumulate',
         'accumulator_fields': [
             'sales_journal.banquet.location_salle',
+            'sales_journal.piazza.location_salle',
             'revenue.autres_revenus.location_salle_forfait',
         ],
-        'description': 'Banquet room rental from SJ + DR forfait/divers. Apr 19: =15300+40',
+        'description': 'Room rental: banquet + piazza (SJ) + forfait (DR). Matches balancer calc[32]',
         'sign_handling': 'keep_sign'
     },
 
@@ -398,13 +399,17 @@ DAILY_REV_TO_JOUR = {
     # --- PAUSE SPESA / CAFE LINK (E-I, cols 4-8) ---
     'E': {
         'column_index': 4,
-        'label_en': 'Cafe Link Nourriture',
+        'label_en': 'Pause Spesa / Cafe Link Nourriture',
         'label_fr': 'Nou_Link',
         'source_page': 'SALES JOURNAL',
-        'source_line': 'Cafe Link - Food',
-        'operation': 'direct',
-        'base_field': 'sales_journal.cafe_link.nourriture',
-        'description': 'Cafe Link food sales',
+        'source_line': 'Pause Spesa (banquet + piazza) + Cafe Link Food',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'sales_journal.banquet.pause_spesa',
+            'sales_journal.piazza.pause_spesa',
+            'sales_journal.cafe_link.nourriture',
+        ],
+        'description': 'E = SJ banquet pause_spesa + piazza pause_spesa + cafe_link nourriture. Apr 21: 6020.5+78 = 6098.5',
         'sign_handling': 'keep_sign'
     },
     'F': {
@@ -691,13 +696,29 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     'AD': {
         'column_index': 29,
-        'label_en': 'Pourboires à Payer (Banquet)',
+        'label_en': 'Pourboires à Payer (Total)',
         'label_fr': 'Pourboires à Payer',
         'source_page': 'SALES JOURNAL',
-        'source_line': 'Banquet pourboire_a_payer',
+        'source_line': 'Total pourboire_a_payer across all F&B depts',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'sales_journal.piazza.pourboire_a_payer',
+            'sales_journal.banquet.pourboire_a_payer',
+            'sales_journal.spesa.pourboire_a_payer',
+            'sales_journal.chambres.pourboire_a_payer',
+        ],
+        'description': 'Sum of pourboire_a_payer across Piazza, Banquet, Spesa, Chambres (matches balancer calc[29])',
+        'sign_handling': 'keep_sign'
+    },
+    'AH': {
+        'column_index': 33,
+        'label_en': 'Droits d\'auteur SOCAN',
+        'label_fr': 'SOCAN',
+        'source_page': 'SALES JOURNAL',
+        'source_line': 'SOCAM (SOCAN rights fees)',
         'operation': 'direct',
-        'base_field': 'sales_journal.banquet.pourboire_a_payer',
-        'description': 'Banquet gratuity charges (pourboire_a_payer from SJ banquet department)',
+        'base_field': 'sales_journal.banquet.socam',
+        'description': 'SOCAN copyright fees from SJ banquet.socam. Sign preserved: negative if DEBIT, positive if CREDIT.',
         'sign_handling': 'keep_sign'
     },
     'AJ': {

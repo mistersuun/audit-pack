@@ -1,0 +1,194 @@
+=== RJ_Balancing_Complete_Guide.docx ===
+
+SHERATON LAVAL
+Rapport Journalier (RJ) — Guide Complet de Balancement
+Document de référence pour IA — Avril 2026
+1. Vue d'ensemble
+L'hôtel Sheraton Laval utilise un fichier Excel (RJ) pour le balancement quotidien de la nuit d'audit. Le fichier contient ~38 onglets. L'onglet principal est 'jour' avec ~117 colonnes et 31 rangées (une par jour du mois). La colonne D (col 2) est le Diff.Caisse (DC) qui DOIT être 0.00 chaque jour.
+RÈGLE FONDAMENTALE: Le DC dans la colonne D du jour doit toujours arriver à 0. S'il n'est pas à 0, il y a soit une erreur de saisie, soit un montant manquant. Les seules exceptions acceptées comme débalancement sont: Transelect X24 (variance terminaux POS), GEAC (variance GL), et Recap I10 (surplus/déficit caisse).
+2. Formule du Diff.Caisse
+DC = Bal_Ferm - Bal_Ouv - Credits + Debits
+Bal_Ouv (col 1) = Balance de fermeture du jour précédent (col 3 du jour d'avant)
+Bal_Ferm (col 3) = -(DR New Balance) - (Advance Deposit on Hand Today)
+Credits = cols 4 à 57 (revenus F&B, taxes, chambres, ajustements)
+Debits = cols 60 à 86 (cartes crédit, argent reçu, remboursements, transferts)
+Advance Deposit on Hand Today = Yesterday + Received - Applied - Cancelled - DNA
+3. Documents sources
+3.1 Sales Journal (SJ)
+Rapport POS (Positouch/LightSpeed). Contient les ventes F&B par département (Piazza, Banquet, Chambres, Spesa/Marché, Club Lounge), les modes de paiement (Visa, MC, Amex, Interac, Chambre, Pannes), les HP (Administration/Promotion), le Forfait, et le Pourboire Charge. Les crédits = revenus, les débits = paiements. Le total débits = total crédits toujours.
+3.2 Daily Revenue (DR)
+Rapport OPERA (PMS). 7 pages. Page 1: Chambres (par catégorie). Page 2: Autres Revenus (Nettoyeur, Sonifi, Loc Boutique, Lit Pliant, Internet, Autre A Payer, etc.), Comptabilité (Autres GL), GiveX. Page 3: Taxes Chambres (TVH, TPS, TVQ), Club Lounge. Pages 3-4: F&B par département OPERA (Piazza, Banquet, ServCh, Spesa) avec taxes. Page 5: Taxes Autres/Internet, Comptabilité (Due Back, TPS/TVQ comptab), Débourse (Remb Serveur). Pages 5-6: Settlements (Amex, Visa, MC, Carte Debit, Chèque, Facture Direct, etc.), Deposits Received. Page 7: Adv Dep Applied/Cancel/DNA, InterHotel XferIn, Balance Today/Prev/New.
+3.3 AR Summary
+1 page. Balance Previous Day, Front Office Transfers (Guest Folios = ce qui va en col 83 si FD=AR), Adjustments, Invoices, Payments, End of Day balance. ATTENTION: Si Invoices et Payments sont identiques, ils s'annulent. Col 83 = DR Facture Direct, PAS AR Guest Folios.
+3.4 HP Report (Hotel Promotion)
+Fichier Excel avec onglets: données (transactions individuelles), Journalier (pivot par jour), mensuel (résumé GL). La feuille données a les colonnes: Date, Aera, Nourriture, Boisson, Biere, Vin, Mineraux, Tabagie, Autres, Pourboire, Paiement (14-Admin/15-Promo/17-Promesse), Total, raison, qui. Le Journalier filtre par jour (B3) et montre les totaux par area et paiement.
+3.5 Advance Deposit Balance
+Deposits on Hand Yesterday, Received Today, Applied Today, Cancelled, DNA, No-Shows. Deposits on Hand Today = Yesterday + Received - Applied - Cancelled - DNA.
+3.6 Recap
+Réconciliation caisse quotidienne. Comptant LightSpeed + Comptant Positouch = Total. Moins Remb Gratuité, Moins Remb Client. Due Back Réception, Due Back N/B. Surplus/Déficit. Total dépôt net.
+3.7 Transelect
+Onglet du RJ. Réconciliation terminaux POS vs dépôts bancaires vs OPERA. Section haute: terminaux POS par type CC. Row 28: TOTAUX (bank deposits). Row 31: TOTAUX TRANSELECT (portion POS). Row 34: TOTAUX GEAC (portion OPERA). Row 37: total_carte_crédit (copié par macro dans cols 60-65). X24 (col 24): variance = doit être 0 pour balancer.
+3.8 GEAC_UX
+Onglet du RJ. Section haute: CC OPERA vs DR (doivent matcher). Section basse (Balance Sheet): Balance Previous/Today, Facture Direct vs AR Transfers, Adv Dep Applied, New Balance. Row 55: compensation geac → col 41.
+4. Mapping des colonnes du jour
+4.1 Crédits (cols 4-57)
+4.2 Débits (cols 60-86)
+5. Règles critiques et pièges
+5.1 Col 83 (Transfer C/R) est CIRCULAIRE
+Changer col 83 change aussi col 3 (Bal Ferm), donc l'impact net sur DC = 0. Pour trouver les vraies erreurs, il faut chercher dans les crédits et les débits non-circulaires. Col 83 = DR Facture Direct TOUJOURS. Si AR a des Invoices et Payments qui s'annulent, NE PAS les soustraire.
+5.2 Col 73 = DR Remb Serveur, PAS Recap
+TOUJOURS utiliser le montant 'Remboursement Serveur' du Daily Revenue (page 5, section Débourse). NE JAMAIS utiliser le 'Due Back N/B' du Recap — les montants diffèrent quand il y a des crédits/paiements AR.
+5.3 DR Internet est souvent NÉGATIF
+Le Daily Revenue montre Internet avec un signe négatif (ex: -33.74, -20.92, -9.01). C'est un crédit NÉGATIF dans le jour. Erreur fréquente: entrer le positif au lieu du négatif. Si SJ a Banquet Internet, col 48 = DR Internet (négatif) + SJ Bqt Internet.
+5.4 HP Processing
+Le HP a deux composantes: (1) Food/Bev/Tab items → déduits des colonnes crédits F&B (cols 9, 10, 11, 12, 13, 14, 35). (2) Pourboire → va dans les colonnes débits (cols 68, 69). Le champ 'Autres' du HP n'a pas de colonne dédiée — il faut le déduire manuellement. Si pas de fichier HP détaillé, mettre -(SJ Admin + SJ Promo) dans col 6 (Bie_Link).
+5.5 Weekend Batch CC
+Le dimanche, les banques ne déposent pas. Le lundi, le dépôt inclut dimanche+lundi. Les montants transelect (bank deposits) ne matchent PAS les settlements OPERA pour ces jours. Le Discover dans le transelect est utilisé comme compensation pour forcer X24=0. La macro calcul_carte copie row 37 (TOTAUX incluant Discover) dans cols 60-65.
+5.6 Club Lounge
+DR Club Lounge (Nourriture Lounge, Autres Lounge) est dans le BF via le New Balance mais n'a PAS de colonne crédit dédiée. Il faut le déduire de col 9 (Piazza Nourr) ou d'une autre colonne. Si non déduit, le DC sera faussé du montant CL.
+5.7 InterHotel XferIn
+DR page 7 InterHotel XferIn (ex: 9.99, 49.95) est inclus dans le BF mais n'a pas de colonne dans le jour. Crée un écart dans le DC. Doit être ajouté quelque part.
+5.8 SJ COMPTANT en débit
+Normalement le SJ Comptant est un crédit (cash reçu). Parfois c'est un débit (le POS a payé plus qu'il a reçu). Le Recap gère ce flux via Argent Reçu.
+5.9 Geac — deux sections, une variance
+La section haute du geac_ux montre la variance CC (row 9 vs row 11). La section basse (Balance Sheet) montre FD vs AR et la variance GL. Row 36 et Row 52 montrent la MÊME variance — row 52 est cumulative incluant row 36. C'est UNE seule variance, pas deux. Col 41 = -(FD - AR) quand ils diffèrent.
+6. Macros VBA
+calcul_carte (Module4): Copie total_carte_crédit (transelect row 37: 6 types CC) vers CC_[jour] (jour cols 60-65). Ne touche PAS col 5.
+envoie_dans_jour (Module15): Copie Recap H19:N19 vers ar_[jour] dans le jour.
+calcul_sal (Module3): Copie les salaires calculés vers le jour.
+7. Procédure étape par étape
+1. Calculer le Bal Ferm: col 3 = -(DR New Balance) - (Adv Dep on Hand Today)
+2. Entrer les crédits F&B du SJ (cols 9-35) en déduisant HP et ajustements manuels
+3. Entrer les crédits DR: Chambres-G4 (col 36), Autres GL (col 44), Internet (col 48, attention négatif!), Taxes (cols 49-51), Autres Rev (col 46), Ristournes (col 54)
+4. Entrer Club Lounge dans col 9 si applicable
+5. Calculer col 57: -(Forfait - G4)
+6. Rouler la macro Recap (envoie_dans_jour) pour cols 72-78
+7. Entrer HP pourboire dans cols 68/69
+8. Entrer col 83 = DR Facture Direct
+9. Remplir le transelect (terminaux POS + bank reports). Mettre Discover si nécessaire pour X24=0
+10. Rouler la macro transelect (calcul_carte) pour cols 60-65
+11. Remplir le geac_ux. Si FD≠AR, entrer col 41 = geac row 55
+12. Vérifier DC = 0. Si pas 0, chercher l'erreur.
+8. Erreurs fréquentes trouvées
+9. État des jours analysés (Mars 2026)
+10. Structure Transelect détaillée
+Rows 6-7: En-têtes terminaux (BAR A/B/C, SPESA D, ROOM E, EXTRA, Banquet)
+Rows 8-12: Montants par CC type (DEBIT, VISA, MASTER, DISCOVER, AMEX) par terminal
+Row 13: TOTAL par terminal. Col 21=TOTAL1, Col 22=TOTAL2, Col 23=POSITOUCH, Col 24=VARIANCE
+Rows 17-24: Section réception — Bank Report (FreedomPay) vs Daily Revenue. Escompte et NET.
+Row 28: TOTAUX = Bank deposits par CC type (ce qui va dans cols 60-65)
+Row 31: TOTAUX TRANSELECT = portion POS seulement
+Row 34: TOTAUX GEAC = portion OPERA (net après escompte pour Amex)
+Row 37: total_carte_crédit = copié par macro vers cols 60-65
+X24 DOIT = 0. Le Discover est ajusté manuellement pour y arriver.
+11. Structure GEAC_UX détaillée
+Row 3-11: Réconciliation CC — Daily Cash Out (row 5) + Deposits (row 7) = Total (row 9) vs Daily Revenue (row 11). Doit matcher.
+Row 36: Balance Today — DR vs Guest Ledger. Si différence, c'est une variance GL.
+Row 40: Facture Direct vs Front Office Transfers (AR). Si FD≠AR, diff = compensation geac.
+Row 52: New Balance — DR vs GL. Même variance que row 36 (cumulative, pas additionnelle).
+Row 55: Montant compensation → col 41. Si FD=AR et CC balance, row 55 = 0.
+12. Structure HP détaillée
+Onglet données: Row 12 = en-têtes, Rows 13-1000 = transactions. Colonnes: Date(A), Aera(B), Nourriture(C), Boisson(D), Biere(E), Vin(F), Mineraux(G), Tabagie(H), Autres(I), Pourboire(J), Paiement(K), Total(L), raison(M), qui(N).
+Named range _xlnm.Database = A12:O1000. Les critères DSUM sont en rows 1-2 (A1:A2 pour Link, C1:C2 pour Piazza, etc.).
+Onglet Journalier: Pivot filtré par jour (B3). Montre par Area (Piazza, Tabagie): 00 (Nourriture), Tabagie, Boisson, Biere, Min, Vin, Autres, Pourboire, Total. Séparé par Paiement (14-Admin, 15-Promo).
+Row 32: Total Pourboire → cols 68/69 du jour.
+Row 33: Grand Total → doit matcher SJ Admin + SJ Promo.
+13. Checklist de vérification
+Pour chaque jour, vérifier dans l'ordre:
+1. Col 3 (BF) = -(DR New Balance) - (Adv Dep on Hand Today) au centime près
+2. Chaque crédit F&B (cols 9-35) = SJ - HP - adj
+3. Col 36 = DR Chambres - G4
+4. Col 44 = DR Autres GL (+ Autres GL T) (- SJ Depot Util si applicable)
+5. Col 48 = DR Internet (VÉRIFIER LE SIGNE!) + SJ Bqt Internet
+6. Taxes (cols 49-51) = somme SJ + DR composantes
+7. Tous les débits CC (cols 60-65) = transelect TOTAUX
+8. Col 68/69 = HP pourboire seulement
+9. Col 72 = Recap Argent Reçu
+10. Col 73 = -(DR Remb Serveur)
+11. Col 74 = -(SJ Pourb Charge)
+12. Col 76 = -(Recap Due Back Réception)
+13. Col 78 = Recap S&D
+14. Col 83 = DR Facture Direct
+15. Transelect X24 = 0
+16. Geac CC variance = 0
+17. Geac FD vs AR → col 41
+18. Club Lounge déduit si applicable
+19. DR InterHotel XferIn comptabilisé
+20. HP Autres comptabilisé
+21. DR Débourse comptabilisé (si non-zero)
+
+[TABLE 0]
+Col | Nom | Source et calcul
+4 | Pause Spesa | SJ Banquet Pause Spesa
+5 | Boi_Link | Compensation transelect (manuelle ou macro). Montant calculé pour balancer.
+6 | Bie_Link | Compensation HP (quand pas de détail HP). = -(SJ Admin + SJ Promo)
+9 | Nou_piazza | SJ Piazza Nourr - HP Piazza food (admin+promo) - adj manuelle - Club Lounge Nourr (si applicable)
+10 | Boi_piazza | SJ Piazza Alcool - HP Piazza boisson
+11 | Bie_piazza | SJ Piazza Bieres - HP Piazza biere
+12 | Min_piazza | SJ Piazza Min - HP Piazza mineraux
+13 | Vin_piazza | SJ Piazza Vins - HP Piazza vin
+14 | Nou_mar | SJ Spesa Nourr - HP Tabagie food (admin+promo) - adj manuelle
+19-23 | ServCh | SJ Chambres (Nourr, Alcool, Biere, Min, Vin)
+24-28 | Banquet | SJ Banquet (Nourr, Alcool, Biere, Min, Vin)
+29 | Pourboires | SJ total pourboires (Piazza+Banquet+Spesa) SANS HP pourb (HP pourb va en cols 68/69)
+30 | Equipement | SJ Banquet Equip Audio Visuel
+31 | Divers | SJ Banquet EQ. DIVERS (crédit=positif, débit=négatif)
+32 | Location de Salles | SJ Piazza Loc + SJ Banquet Loc
+33 | SOCAN | SJ Banquet SOCAM
+35 | Tabagie | SJ Spesa Tabagie - HP Tabagie items (admin+promo)
+36 | Chambres | DR Chambres Total - G4. G4 = SJ Forfait - |col 57|
+37-39 | Téléphones | DR Tel Local, Interurbain, Public
+40 | Nettoyeur | DR Nettoyeur
+41 | Mch/Liqueur | Compensation GEAC. = geac_ux row 55. Si FD=AR alors 0.
+42 | St-Martin Élec | SJ EQ. DIVERS (si banquet) ou DR Equip Divers
+44 | Autres G/L | DR Autres GL + Autres GL T. Si SJ a DEPOT UTIL, soustraire aussi.
+45 | Sonifi | DR Sonifi
+46 | Autre Rev | SJ Fr/Étage (Piazza+Chambres) + DR Lit Pliant + autres misc
+47 | Loc Boutique | DR Location De Boutique
+48 | Internet | DR Internet (ATTENTION: souvent négatif!) + SJ Banquet Internet
+49 | TVQ | SJ TVQ + DR TVQ Chambres + DR TVQ Autres + DR TVQ Internet (+ DR Comptab TVQ si non-zero)
+50 | TPS | SJ TPS + DR TPS Chambres + DR TPS Autres + DR TPS Internet (+ DR Comptab TPS si non-zero)
+51 | TVH | DR Taxe Hébergement
+52 | Massage | DR Massage
+53 | Vestiaire | SJ Banquet Vestiaire
+54 | Ristournes | DR Autre A Payer Taxable
+55 | Fax/Photo | DR Fax & Photocopies
+57 | Diff Forfait | -(SJ Forfait - G4). Si Club Lounge s'applique: -(Forfait - CL total)
+
+[TABLE 1]
+Col | Nom | Source et calcul
+60 | Amex ELAVON | Transelect TOTAUX (row 28) via macro calcul_carte
+61 | Discover | Transelect. Montant de compensation pour X24=0 (weekends/pannes)
+62 | Master Charge | Transelect TOTAUX via macro
+63 | Visa | Transelect TOTAUX via macro
+64 | Carte Débit | Transelect TOTAUX via macro
+65 | Amex GLOBAL | Transelect TOTAUX via macro
+68 | HP Admin Pourb | HP Journalier: Total Pourboire pour 14-Administration
+69 | HP Promo Pourb | HP Journalier: Total Pourboire pour 15-Promotion
+72 | Argent Reçu | Recap: Argent Reçu (row 23)
+73 | Remb Serveurs | DR Remboursement Serveur (en négatif). TOUJOURS utiliser DR, PAS Recap Due Back N/B.
+74 | Remb Gratuité | SJ Pourboire Charge (en négatif)
+76 | Due Back Réc | Recap Due Back Réception (en négatif)
+78 | Surplus/Déficit | Recap S&D. Déficit=positif, Surplus=négatif.
+79 | Cert Cadeau | SJ Cert Cadeau ou DR GiveX (positif)
+83 | Transfer C/R | DR Facture Direct. CIRCULAIRE avec col 3. JAMAIS utiliser AR Guest Folios.
+
+[TABLE 2]
+Jour | Erreur | Cause | Impact
+Fév 4 | Col AF=+565 | EQ.DIVERS débit entré en positif au lieu de négatif | +1130
+Mar 11 | Col 83 = AR au lieu de FD | Utilisé AR Guest Folios au lieu de DR Facture Direct | ~741
+Mar 12 | Col 73 = Due Back N/B | Utilisé Recap au lieu de DR Remb Serveur | ~57
+Mar 13 | HP Autres 2.51 non déduit | Le champ Autres du HP n'a pas de colonne | -2.51
+Mar 14 | Col 48 Internet signe inversé | DR Internet -9.01 entré comme +9.01 | +18.02
+Mar 24 | Col 48 Internet signe inversé | DR Internet -20.92 entré comme +20.92 | +41.84
+Mar 24 | Col 83 = AR - Invoices | Soustrait Invoices qui s'annulent avec Payments | Circulaire
+Mar 24 | Macros pas roulées | Col 5 et col 41 vides | DC = -13716
+
+[TABLE 3]
+Jour | DC actuel | Statut | Notes
+4 | +165.45 | À corriger | Nettoyeur DR=153.95 manquant (col 40) + X24=11.50
+13 | -2167.86 | À corriger | HP Autres 2.51 non déduit. Reste = X24 (-2165.35) à compenser
+14 | +1666.38 | À corriger | Col 48 Internet signe inversé (+18.02). InterHotel 9.99. Reste = X24 (+1674.41)
+23 | -9.53 | Quasi OK | Col 5 = 7540.34 devrait être 7530.81. Erreur de 9.53 dans Discover
+24 | -13716.54 | À corriger | Col 48 signe (+20.92→-20.92). Col 83 (FD=6681.32). Macros à rouler.
+29 | -2991.39 | En cours | HP dans col 6 (-595.79). Geac -67.94. Reste ~2923.45 à identifier/compenser.

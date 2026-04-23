@@ -58,6 +58,10 @@ class HPExcelParser(BaseParser):
         # Food items bought at the Tabagie (nourriture) are NOT deducted from jour_tabagie.
         ('Tabagie', 'tabagie'): 35,
         ('Tabagie', 'nourriture'): 14,  # Tabagie food → deduct from Spesa Nourriture
+        ('Tabagie', 'mineraux'): 12,    # Tabagie mineraux → deduct from Piazza Mineraux (drinks)
+        ('Tabagie', 'boisson'): 10,     # Tabagie alcool → deduct from Piazza Alcool
+        ('Tabagie', 'biere'): 11,       # Tabagie bieres → deduct from Piazza Bieres
+        ('Tabagie', 'vin'): 13,         # Tabagie vins → deduct from Piazza Vins
         ('Link', 'nourriture'): 9,      # Link food grouped with Piazza Nourr
         ('Cupola', 'nourriture'): 9,    # Cupola food grouped with Piazza Nourr
         ('Serv Ch.', 'nourriture'): 19, # Service Chambres food

@@ -1,0 +1,745 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - heading "RJ Balancer" [level=1] [ref=e153]
+        - paragraph [ref=e154]: Analyse automatique des écarts, compensations et résiduels
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - generic [ref=e159]: 📄
+              - heading "Documents" [level=3] [ref=e160]
+              - generic [ref=e161]: 6 sources
+            - generic [ref=e162] [cursor=pointer]:
+              - generic [ref=e163]: SJ
+              - generic [ref=e164]:
+                - text: Sales Journal
+                - generic [ref=e165]: .txt / .rtf · POS
+              - generic [ref=e220]: ✓
+            - generic [ref=e166] [cursor=pointer]:
+              - generic [ref=e167]: DR
+              - generic [ref=e168]:
+                - text: Daily Revenue
+                - generic [ref=e169]: .pdf · 7 pages
+              - generic [ref=e221]: ✓
+            - generic [ref=e170] [cursor=pointer]:
+              - generic [ref=e171]: HP
+              - generic [ref=e172]:
+                - text: HP Admin
+                - generic [ref=e173]: .xlsx · déductions F&B
+              - generic [ref=e222]: ✓
+            - generic [ref=e174] [cursor=pointer]:
+              - generic [ref=e175]: AR
+              - generic [ref=e176]:
+                - text: AR Summary
+                - generic [ref=e177]: .pdf · comptes clients
+              - generic [ref=e223]: ✓
+            - generic [ref=e178] [cursor=pointer]:
+              - generic [ref=e179]: AD
+              - generic [ref=e180]:
+                - text: Advance Deposit
+                - generic [ref=e181]: .pdf · solde
+            - generic [ref=e182] [cursor=pointer]:
+              - generic [ref=e183]: RJ
+              - generic [ref=e184]:
+                - text: Fichier RJ
+                - generic [ref=e185]: .xls · Transelect, GEAC, Jour
+              - generic [ref=e224]: ✓
+          - generic [ref=e186]:
+            - generic [ref=e187]:
+              - generic [ref=e188]: ⚙
+              - heading "Paramètres" [level=3] [ref=e189]
+            - generic [ref=e190]:
+              - generic [ref=e191]:
+                - generic [ref=e192]: Jour (1–31)
+                - spinbutton [ref=e193]: "21"
+              - generic [ref=e194]:
+                - generic [ref=e195]: G4 Forfait
+                - spinbutton [ref=e196]: "50"
+              - generic [ref=e197]:
+                - generic [ref=e198]: Adj. Piazza
+                - spinbutton [ref=e199]: "0"
+              - generic [ref=e200]:
+                - generic [ref=e201]: Adj. Marché
+                - spinbutton [ref=e202]: "0"
+              - generic [ref=e203]:
+                - generic [ref=e204]: CL Nourriture
+                - spinbutton [ref=e205]
+              - generic [ref=e206]:
+                - generic [ref=e207]: CL Autres
+                - spinbutton [ref=e208]
+              - generic [ref=e209]:
+                - generic [ref=e210]: Dépôt en Main ($) — requis
+                - spinbutton [ref=e211]: "291979.04"
+            - button "Relancer l'analyse ↻" [ref=e225] [cursor=pointer]:
+              - generic [ref=e226]: Relancer l'analyse
+              - generic [ref=e227]: ↻
+        - generic [ref=e215]:
+          - generic [ref=e228]:
+            - generic [ref=e229]:
+              - generic [ref=e230]: "!"
+              - generic [ref=e231]:
+                - heading "Compensations nécessaires" [level=2] [ref=e232]
+                - paragraph [ref=e233]: La différence de caisse ne se résorbe pas — voir les écarts ci-dessous.
+            - generic [ref=e234]:
+              - generic [ref=e235]: Diff. Caisse finale
+              - generic [ref=e236]: $3,003.04
+          - generic [ref=e237]:
+            - generic [ref=e238]:
+              - generic [ref=e239]: Crédits
+              - generic [ref=e240]: $48,070.02
+            - generic [ref=e241]:
+              - generic [ref=e242]: Débits
+              - generic [ref=e243]: $71,969.81
+            - generic [ref=e244]:
+              - generic [ref=e245]: Bal. Ferm
+              - generic [ref=e246]: "-1,869,953.58"
+            - generic [ref=e247]:
+              - generic [ref=e248]: X24 Transelect
+              - generic [ref=e249]: "-4,985.05"
+            - generic [ref=e250]:
+              - generic [ref=e251]: GEAC (AP)
+              - generic [ref=e252]: "0.00"
+            - generic [ref=e253]:
+              - generic [ref=e254]: Dépôt en main
+              - generic [ref=e255]: 291,979.04
+          - generic [ref=e256]:
+            - generic [ref=e257]:
+              - generic [ref=e258]: 📈
+              - heading "Le parcours du solde" [level=3] [ref=e259]
+              - generic [ref=e260]: De l'écart initial à l'équilibre
+            - generic [ref=e261]:
+              - generic [ref=e262]:
+                - generic [ref=e263]: "1"
+                - generic [ref=e264]: DC initial
+                - generic [ref=e265]: $-3,483.53
+                - generic [ref=e266]: Avant toute compensation
+              - generic [ref=e268]:
+                - generic [ref=e269]: →
+                - generic [ref=e270]: +$4,985.05
+              - generic [ref=e271]:
+                - generic [ref=e272]: "2"
+                - generic [ref=e273]: Après Discover
+                - generic [ref=e274]: $1,501.52
+                - generic [ref=e275]: Col 61
+              - generic [ref=e277]:
+                - generic [ref=e278]: →
+                - generic [ref=e279]: +$1,501.52
+              - generic [ref=e280]:
+                - generic [ref=e281]: "3"
+                - generic [ref=e282]: DC final
+                - generic [ref=e283]: $3,003.04
+                - generic [ref=e284]: À compléter
+          - generic [ref=e285]:
+            - generic [ref=e286]: ✓
+            - generic [ref=e287]:
+              - strong [ref=e288]: Bal. Ferm vérifié
+              - text: — Calcul ($-1,869,953.58) = RJ ($-1,869,953.58)
+          - generic [ref=e289]:
+            - generic [ref=e290]: II
+            - heading "Compensations appliquées" [level=3] [ref=e291]
+            - generic [ref=e292]: 2 opérations
+          - generic [ref=e293]:
+            - generic [ref=e294]:
+              - generic [ref=e295]:
+                - generic [ref=e296]: Col 61
+                - generic [ref=e297]: Discover (BJ)
+                - generic [ref=e298]: Compensation légitime
+              - generic [ref=e299]: +$4,985.05
+            - generic [ref=e300]:
+              - text: Compensation légitime par méthodologie d'audit. X24 représente l'écart entre les totaux POSITOUCH (terminal restaurant) et les règlements bancaires réels — c'est une variance connue des pannes de carte qui s'absorbe toujours dans la colonne BJ (Discover).
+              - generic [ref=e301]: Compensation X24 Transelect (-4985.05)
+          - generic [ref=e302]:
+            - generic [ref=e303]:
+              - generic [ref=e304]:
+                - generic [ref=e305]: Col 5
+                - generic [ref=e306]: Compensation résiduelle (F)
+                - generic [ref=e307]: Plug — à vérifier
+              - generic [ref=e308]: −$1,501.52
+            - generic [ref=e309]:
+              - text: "⚠ Résiduel suspect : au moins un écart n'a pas d'explication documentée. À vérifier avant de finaliser."
+              - generic [ref=e310]: Résiduel DC après X24 et GEAC = +1501.52
+            - generic [ref=e311]:
+              - generic [ref=e312]: Décomposition du résiduel (6 écarts contributeurs)
+              - list [ref=e313]:
+                - listitem [ref=e314]:
+                  - generic [ref=e315]: Col 12
+                  - generic [ref=e316]:
+                    - generic [ref=e317]: Min_Piaz
+                    - generic [ref=e318]:
+                      - text: HP Tabagie Mineraux soustrait de Piazza Min (écart de 8.75 = déduction HP non-pourboire)
+                      - generic [ref=e319]: RJ = 580.00 · Calc = 588.75
+                  - generic [ref=e320]: +$8.75
+                - listitem [ref=e321]:
+                  - generic [ref=e322]: Col 19
+                  - generic [ref=e323]:
+                    - generic [ref=e324]: Nou_SCh
+                    - generic [ref=e325]:
+                      - text: Ajustement manuel Service aux Chambres Nourriture appliqué (9.95)
+                      - generic [ref=e326]: RJ = 463.05 · Calc = 473.00
+                  - generic [ref=e327]: +$9.95
+                - listitem [ref=e328]:
+                  - generic [ref=e329]: Col 33
+                  - generic [ref=e330]:
+                    - generic [ref=e331]: SOCAN
+                    - generic [ref=e332]:
+                      - text: SOCAN signé selon règle DÉBIT=négatif (signe préservé du SJ)
+                      - generic [ref=e333]: RJ = -99.56 · Calc = 99.56
+                  - generic [ref=e334]: +$199.12
+                - listitem [ref=e335]:
+                  - generic [ref=e336]: Col 48
+                  - generic [ref=e337]:
+                    - generic [ref=e338]: Intrnt
+                    - generic [ref=e339]:
+                      - text: Internet banquet signé selon règle DÉBIT=négatif
+                      - generic [ref=e340]: RJ = -200.00 · Calc = 200.00
+                  - generic [ref=e341]: +$400.00
+                - listitem [ref=e342]:
+                  - generic [ref=e343]: Col 73
+                  - generic [ref=e344]:
+                    - generic [ref=e345]: RmbSrv
+                    - generic [ref=e346]:
+                      - text: Écart inconnue de -659.55 — à investiguer
+                      - generic [ref=e347]: RJ = -659.55 · Calc = 0.00
+                  - generic [ref=e348]: −$659.55
+                - listitem [ref=e349]:
+                  - generic [ref=e350]: Col 83
+                  - generic [ref=e351]:
+                    - generic [ref=e352]: TrC/R
+                    - generic [ref=e353]:
+                      - text: CF inclut la soustraction AR Misc par méthodologie (écart de 1459.79 = AR Misc)
+                      - generic [ref=e354]: RJ = 4,580.04 · Calc = 6,039.83
+                  - generic [ref=e355]: −$1,459.79
+              - generic [ref=e356]:
+                - generic [ref=e357]: Total impact DC
+                - generic [ref=e358]: −$1,501.52
+          - generic [ref=e359]:
+            - generic [ref=e360]: "!"
+            - heading "Avertissements" [level=3] [ref=e361]
+          - generic [ref=e362]:
+            - generic [ref=e363]: "!"
+            - generic [ref=e364]: DR Debourse = 24.0 -- pas de colonne dediee
+          - generic [ref=e365]:
+            - generic [ref=e366]: "!"
+            - generic [ref=e367]: Transelect X24 = -4985.049999999999 -- doit etre compense dans col 5 ou Diff.Caisse#
+          - generic [ref=e368]:
+            - generic [ref=e369]: III
+            - heading "Écarts détaillés" [level=3] [ref=e370]
+            - generic [ref=e371]: 6 lignes avec explication
+          - table [ref=e373]:
+            - rowgroup [ref=e374]:
+              - row "Col Nom RJ Calc Écart Pourquoi" [ref=e375]:
+                - columnheader "Col" [ref=e376]
+                - columnheader "Nom" [ref=e377]
+                - columnheader "RJ" [ref=e378]
+                - columnheader "Calc" [ref=e379]
+                - columnheader "Écart" [ref=e380]
+                - columnheader "Pourquoi" [ref=e381]
+            - rowgroup [ref=e382]:
+              - row "12 Min_Piaz 580.00 588.75 -8.75 HP Tabagie Mineraux soustrait de Piazza Min (écart de 8.75 = déduction HP non-pourboire)" [ref=e383]:
+                - cell "12" [ref=e384]
+                - cell "Min_Piaz" [ref=e385]
+                - cell "580.00" [ref=e386]
+                - cell "588.75" [ref=e387]
+                - cell "-8.75" [ref=e388]
+                - cell "HP Tabagie Mineraux soustrait de Piazza Min (écart de 8.75 = déduction HP non-pourboire)" [ref=e389]
+              - row "19 Nou_SCh 463.05 473.00 -9.95 Ajustement manuel Service aux Chambres Nourriture appliqué (9.95)" [ref=e390]:
+                - cell "19" [ref=e391]
+                - cell "Nou_SCh" [ref=e392]
+                - cell "463.05" [ref=e393]
+                - cell "473.00" [ref=e394]
+                - cell "-9.95" [ref=e395]
+                - cell "Ajustement manuel Service aux Chambres Nourriture appliqué (9.95)" [ref=e396]
+              - row "33 SOCAN -99.56 99.56 -199.12 SOCAN signé selon règle DÉBIT=négatif (signe préservé du SJ)" [ref=e397]:
+                - cell "33" [ref=e398]
+                - cell "SOCAN" [ref=e399]
+                - cell "-99.56" [ref=e400]
+                - cell "99.56" [ref=e401]
+                - cell "-199.12" [ref=e402]
+                - cell "SOCAN signé selon règle DÉBIT=négatif (signe préservé du SJ)" [ref=e403]
+              - row "48 Intrnt -200.00 200.00 -400.00 Internet banquet signé selon règle DÉBIT=négatif" [ref=e404]:
+                - cell "48" [ref=e405]
+                - cell "Intrnt" [ref=e406]
+                - cell "-200.00" [ref=e407]
+                - cell "200.00" [ref=e408]
+                - cell "-400.00" [ref=e409]
+                - cell "Internet banquet signé selon règle DÉBIT=négatif" [ref=e410]
+              - row "73 RmbSrv -659.55 0.00 -659.55 Écart inconnue de -659.55 — à investiguer" [ref=e411]:
+                - cell "73" [ref=e412]
+                - cell "RmbSrv" [ref=e413]
+                - cell "-659.55" [ref=e414]
+                - cell "0.00" [ref=e415]
+                - cell "-659.55" [ref=e416]
+                - cell "Écart inconnue de -659.55 — à investiguer" [ref=e417]
+              - row "83 TrC/R 4,580.04 6,039.83 -1,459.79 CF inclut la soustraction AR Misc par méthodologie (écart de 1459.79 = AR Misc)" [ref=e418]:
+                - cell "83" [ref=e419]
+                - cell "TrC/R" [ref=e420]
+                - cell "4,580.04" [ref=e421]
+                - cell "6,039.83" [ref=e422]
+                - cell "-1,459.79" [ref=e423]
+                - cell "CF inclut la soustraction AR Misc par méthodologie (écart de 1459.79 = AR Misc)" [ref=e424]
+          - generic [ref=e425]:
+            - generic [ref=e426]: V
+            - heading "Vérification complète" [level=3] [ref=e427]
+            - generic [ref=e428]: 38 colonnes
+          - generic [ref=e429]:
+            - generic [ref=e430]:
+              - heading "Crédits · 4 – 57" [level=4] [ref=e431]
+              - generic [ref=e432]:
+                - text: 25 col ·
+                - generic [ref=e433]: 21 OK
+            - table [ref=e434]:
+              - rowgroup [ref=e435]:
+                - row "Col Nom RJ Calc Écart État" [ref=e436]:
+                  - columnheader "Col" [ref=e437]
+                  - columnheader "Nom" [ref=e438]
+                  - columnheader "RJ" [ref=e439]
+                  - columnheader "Calc" [ref=e440]
+                  - columnheader "Écart" [ref=e441]
+                  - columnheader "État" [ref=e442]
+              - rowgroup [ref=e443]:
+                - row "4 Pause 6,098.50 6,098.50 0.00 ✓" [ref=e444]:
+                  - cell "4" [ref=e445]
+                  - cell "Pause" [ref=e446]
+                  - cell "6,098.50" [ref=e447]
+                  - cell "6,098.50" [ref=e448]
+                  - cell "0.00" [ref=e449]
+                  - cell "✓" [ref=e450]:
+                    - generic [ref=e451]: ✓
+                - row "9 Nou_Piaz 18,001.25 18,001.25 0.00 ✓" [ref=e452]:
+                  - cell "9" [ref=e453]
+                  - cell "Nou_Piaz" [ref=e454]
+                  - cell "18,001.25" [ref=e455]
+                  - cell "18,001.25" [ref=e456]
+                  - cell "0.00" [ref=e457]
+                  - cell "✓" [ref=e458]:
+                    - generic [ref=e459]: ✓
+                - row "10 Boi_Piaz 1,019.50 1,019.50 0.00 ✓" [ref=e460]:
+                  - cell "10" [ref=e461]
+                  - cell "Boi_Piaz" [ref=e462]
+                  - cell "1,019.50" [ref=e463]
+                  - cell "1,019.50" [ref=e464]
+                  - cell "0.00" [ref=e465]
+                  - cell "✓" [ref=e466]:
+                    - generic [ref=e467]: ✓
+                - row "11 Bie_Piaz 868.00 868.00 0.00 ✓" [ref=e468]:
+                  - cell "11" [ref=e469]
+                  - cell "Bie_Piaz" [ref=e470]
+                  - cell "868.00" [ref=e471]
+                  - cell "868.00" [ref=e472]
+                  - cell "0.00" [ref=e473]
+                  - cell "✓" [ref=e474]:
+                    - generic [ref=e475]: ✓
+                - row "12 Min_Piaz 580.00 588.75 -8.75 !" [ref=e476]:
+                  - cell "12" [ref=e477]
+                  - cell "Min_Piaz" [ref=e478]
+                  - cell "580.00" [ref=e479]
+                  - cell "588.75" [ref=e480]
+                  - cell "-8.75" [ref=e481]
+                  - cell "!" [ref=e482]:
+                    - generic [ref=e483]: "!"
+                - row "13 Vin_Piaz 857.00 857.00 0.00 ✓" [ref=e484]:
+                  - cell "13" [ref=e485]
+                  - cell "Vin_Piaz" [ref=e486]
+                  - cell "857.00" [ref=e487]
+                  - cell "857.00" [ref=e488]
+                  - cell "0.00" [ref=e489]
+                  - cell "✓" [ref=e490]:
+                    - generic [ref=e491]: ✓
+                - row "14 Nou_Mar 588.38 588.38 0.00 ✓" [ref=e492]:
+                  - cell "14" [ref=e493]
+                  - cell "Nou_Mar" [ref=e494]
+                  - cell "588.38" [ref=e495]
+                  - cell "588.38" [ref=e496]
+                  - cell "0.00" [ref=e497]
+                  - cell "✓" [ref=e498]:
+                    - generic [ref=e499]: ✓
+                - row "19 Nou_SCh 463.05 473.00 -9.95 !" [ref=e500]:
+                  - cell "19" [ref=e501]
+                  - cell "Nou_SCh" [ref=e502]
+                  - cell "463.05" [ref=e503]
+                  - cell "473.00" [ref=e504]
+                  - cell "-9.95" [ref=e505]
+                  - cell "!" [ref=e506]:
+                    - generic [ref=e507]: "!"
+                - row "21 Bie_SCh 10.00 10.00 0.00 ✓" [ref=e508]:
+                  - cell "21" [ref=e509]
+                  - cell "Bie_SCh" [ref=e510]
+                  - cell "10.00" [ref=e511]
+                  - cell "10.00" [ref=e512]
+                  - cell "0.00" [ref=e513]
+                  - cell "✓" [ref=e514]:
+                    - generic [ref=e515]: ✓
+                - row "22 Min_SCh 13.00 13.00 0.00 ✓" [ref=e516]:
+                  - cell "22" [ref=e517]
+                  - cell "Min_SCh" [ref=e518]
+                  - cell "13.00" [ref=e519]
+                  - cell "13.00" [ref=e520]
+                  - cell "0.00" [ref=e521]
+                  - cell "✓" [ref=e522]:
+                    - generic [ref=e523]: ✓
+                - row "23 Vin_SCh 42.00 42.00 0.00 ✓" [ref=e524]:
+                  - cell "23" [ref=e525]
+                  - cell "Vin_SCh" [ref=e526]
+                  - cell "42.00" [ref=e527]
+                  - cell "42.00" [ref=e528]
+                  - cell "0.00" [ref=e529]
+                  - cell "✓" [ref=e530]:
+                    - generic [ref=e531]: ✓
+                - row "29 Pourb 3,735.63 3,735.63 0.00 ✓" [ref=e532]:
+                  - cell "29" [ref=e533]
+                  - cell "Pourb" [ref=e534]
+                  - cell "3,735.63" [ref=e535]
+                  - cell "3,735.63" [ref=e536]
+                  - cell "0.00" [ref=e537]
+                  - cell "✓" [ref=e538]:
+                    - generic [ref=e539]: ✓
+                - row "32 LocSal 10,560.00 10,560.00 0.00 ✓" [ref=e540]:
+                  - cell "32" [ref=e541]
+                  - cell "LocSal" [ref=e542]
+                  - cell "10,560.00" [ref=e543]
+                  - cell "10,560.00" [ref=e544]
+                  - cell "0.00" [ref=e545]
+                  - cell "✓" [ref=e546]:
+                    - generic [ref=e547]: ✓
+                - row "33 SOCAN -99.56 99.56 -199.12 !" [ref=e548]:
+                  - cell "33" [ref=e549]
+                  - cell "SOCAN" [ref=e550]
+                  - cell "-99.56" [ref=e551]
+                  - cell "99.56" [ref=e552]
+                  - cell "-199.12" [ref=e553]
+                  - cell "!" [ref=e554]:
+                    - generic [ref=e555]: "!"
+                - row "35 Tabag 465.03 465.03 +0.00 ✓" [ref=e556]:
+                  - cell "35" [ref=e557]
+                  - cell "Tabag" [ref=e558]
+                  - cell "465.03" [ref=e559]
+                  - cell "465.03" [ref=e560]
+                  - cell "+0.00" [ref=e561]
+                  - cell "✓" [ref=e562]:
+                    - generic [ref=e563]: ✓
+                - row "36 Chamb 50,913.63 50,913.63 0.00 ✓" [ref=e564]:
+                  - cell "36" [ref=e565]
+                  - cell "Chamb" [ref=e566]
+                  - cell "50,913.63" [ref=e567]
+                  - cell "50,913.63" [ref=e568]
+                  - cell "0.00" [ref=e569]
+                  - cell "✓" [ref=e570]:
+                    - generic [ref=e571]: ✓
+                - row "40 Nettoy 120.25 120.25 0.00 ✓" [ref=e572]:
+                  - cell "40" [ref=e573]
+                  - cell "Nettoy" [ref=e574]
+                  - cell "120.25" [ref=e575]
+                  - cell "120.25" [ref=e576]
+                  - cell "0.00" [ref=e577]
+                  - cell "✓" [ref=e578]:
+                    - generic [ref=e579]: ✓
+                - row "44 AutGL -62,696.22 -62,696.22 0.00 ✓" [ref=e580]:
+                  - cell "44" [ref=e581]
+                  - cell "AutGL" [ref=e582]
+                  - cell "-62,696.22" [ref=e583]
+                  - cell "-62,696.22" [ref=e584]
+                  - cell "0.00" [ref=e585]
+                  - cell "✓" [ref=e586]:
+                    - generic [ref=e587]: ✓
+                - row "45 Sonifi 22.99 22.99 0.00 ✓" [ref=e588]:
+                  - cell "45" [ref=e589]
+                  - cell "Sonifi" [ref=e590]
+                  - cell "22.99" [ref=e591]
+                  - cell "22.99" [ref=e592]
+                  - cell "0.00" [ref=e593]
+                  - cell "✓" [ref=e594]:
+                    - generic [ref=e595]: ✓
+                - row "46 AutRev 42.00 42.00 0.00 ✓" [ref=e596]:
+                  - cell "46" [ref=e597]
+                  - cell "AutRev" [ref=e598]
+                  - cell "42.00" [ref=e599]
+                  - cell "42.00" [ref=e600]
+                  - cell "0.00" [ref=e601]
+                  - cell "✓" [ref=e602]:
+                    - generic [ref=e603]: ✓
+                - row "48 Intrnt -200.00 200.00 -400.00 !" [ref=e604]:
+                  - cell "48" [ref=e605]
+                  - cell "Intrnt" [ref=e606]
+                  - cell "-200.00" [ref=e607]
+                  - cell "200.00" [ref=e608]
+                  - cell "-400.00" [ref=e609]
+                  - cell "!" [ref=e610]:
+                    - generic [ref=e611]: "!"
+                - row "49 TVQ 9,556.95 9,556.95 -0.00 ✓" [ref=e612]:
+                  - cell "49" [ref=e613]
+                  - cell "TVQ" [ref=e614]
+                  - cell "9,556.95" [ref=e615]
+                  - cell "9,556.95" [ref=e616]
+                  - cell "-0.00" [ref=e617]
+                  - cell "✓" [ref=e618]:
+                    - generic [ref=e619]: ✓
+                - row "50 TPS 4,791.47 4,791.47 0.00 ✓" [ref=e620]:
+                  - cell "50" [ref=e621]
+                  - cell "TPS" [ref=e622]
+                  - cell "4,791.47" [ref=e623]
+                  - cell "4,791.47" [ref=e624]
+                  - cell "0.00" [ref=e625]
+                  - cell "✓" [ref=e626]:
+                    - generic [ref=e627]: ✓
+                - row "51 TVH 1,784.48 1,784.48 0.00 ✓" [ref=e628]:
+                  - cell "51" [ref=e629]
+                  - cell "TVH" [ref=e630]
+                  - cell "1,784.48" [ref=e631]
+                  - cell "1,784.48" [ref=e632]
+                  - cell "0.00" [ref=e633]
+                  - cell "✓" [ref=e634]:
+                    - generic [ref=e635]: ✓
+                - row "57 DifForf -85.13 -85.13 0.00 ✓" [ref=e636]:
+                  - cell "57" [ref=e637]
+                  - cell "DifForf" [ref=e638]
+                  - cell "-85.13" [ref=e639]
+                  - cell "-85.13" [ref=e640]
+                  - cell "0.00" [ref=e641]
+                  - cell "✓" [ref=e642]:
+                    - generic [ref=e643]: ✓
+          - generic [ref=e644]:
+            - generic [ref=e645]:
+              - heading "Débits · 60 – 86" [level=4] [ref=e646]
+              - generic [ref=e647]:
+                - text: 13 col ·
+                - generic [ref=e648]: 11 OK
+            - table [ref=e649]:
+              - rowgroup [ref=e650]:
+                - row "Col Nom RJ Calc Écart État" [ref=e651]:
+                  - columnheader "Col" [ref=e652]
+                  - columnheader "Nom" [ref=e653]
+                  - columnheader "RJ" [ref=e654]
+                  - columnheader "Calc" [ref=e655]
+                  - columnheader "Écart" [ref=e656]
+                  - columnheader "État" [ref=e657]
+              - rowgroup [ref=e658]:
+                - row "60 AmxElav 5,838.41 5,838.41 0.00 ✓" [ref=e659]:
+                  - cell "60" [ref=e660]
+                  - cell "AmxElav" [ref=e661]
+                  - cell "5,838.41" [ref=e662]
+                  - cell "5,838.41" [ref=e663]
+                  - cell "0.00" [ref=e664]
+                  - cell "✓" [ref=e665]:
+                    - generic [ref=e666]: ✓
+                - row "62 MC 32,249.15 32,249.15 0.00 ✓" [ref=e667]:
+                  - cell "62" [ref=e668]
+                  - cell "MC" [ref=e669]
+                  - cell "32,249.15" [ref=e670]
+                  - cell "32,249.15" [ref=e671]
+                  - cell "0.00" [ref=e672]
+                  - cell "✓" [ref=e673]:
+                    - generic [ref=e674]: ✓
+                - row "63 Visa 27,438.46 27,438.46 0.00 ✓" [ref=e675]:
+                  - cell "63" [ref=e676]
+                  - cell "Visa" [ref=e677]
+                  - cell "27,438.46" [ref=e678]
+                  - cell "27,438.46" [ref=e679]
+                  - cell "0.00" [ref=e680]
+                  - cell "✓" [ref=e681]:
+                    - generic [ref=e682]: ✓
+                - row "64 Debit 520.53 520.53 0.00 ✓" [ref=e683]:
+                  - cell "64" [ref=e684]
+                  - cell "Debit" [ref=e685]
+                  - cell "520.53" [ref=e686]
+                  - cell "520.53" [ref=e687]
+                  - cell "0.00" [ref=e688]
+                  - cell "✓" [ref=e689]:
+                    - generic [ref=e690]: ✓
+                - row "65 AmxGlb 214.28 214.28 0.00 ✓" [ref=e691]:
+                  - cell "65" [ref=e692]
+                  - cell "AmxGlb" [ref=e693]
+                  - cell "214.28" [ref=e694]
+                  - cell "214.28" [ref=e695]
+                  - cell "0.00" [ref=e696]
+                  - cell "✓" [ref=e697]:
+                    - generic [ref=e698]: ✓
+                - row "68 HPAdmP 29.20 29.20 0.00 ✓" [ref=e699]:
+                  - cell "68" [ref=e700]
+                  - cell "HPAdmP" [ref=e701]
+                  - cell "29.20" [ref=e702]
+                  - cell "29.20" [ref=e703]
+                  - cell "0.00" [ref=e704]
+                  - cell "✓" [ref=e705]:
+                    - generic [ref=e706]: ✓
+                - row "69 HPProP 21.69 21.69 0.00 ✓" [ref=e707]:
+                  - cell "69" [ref=e708]
+                  - cell "HPProP" [ref=e709]
+                  - cell "21.69" [ref=e710]
+                  - cell "21.69" [ref=e711]
+                  - cell "0.00" [ref=e712]
+                  - cell "✓" [ref=e713]:
+                    - generic [ref=e714]: ✓
+                - row "72 Argent 2,075.84 2,075.84 -0.00 ✓" [ref=e715]:
+                  - cell "72" [ref=e716]
+                  - cell "Argent" [ref=e717]
+                  - cell "2,075.84" [ref=e718]
+                  - cell "2,075.84" [ref=e719]
+                  - cell "-0.00" [ref=e720]
+                  - cell "✓" [ref=e721]:
+                    - generic [ref=e722]: ✓
+                - row "73 RmbSrv -659.55 0.00 -659.55 !" [ref=e723]:
+                  - cell "73" [ref=e724]
+                  - cell "RmbSrv" [ref=e725]
+                  - cell "-659.55" [ref=e726]
+                  - cell "0.00" [ref=e727]
+                  - cell "-659.55" [ref=e728]
+                  - cell "!" [ref=e729]:
+                    - generic [ref=e730]: "!"
+                - row "74 RmbGrt -1,368.94 -1,368.94 0.00 ✓" [ref=e731]:
+                  - cell "74" [ref=e732]
+                  - cell "RmbGrt" [ref=e733]
+                  - cell "-1,368.94" [ref=e734]
+                  - cell "-1,368.94" [ref=e735]
+                  - cell "0.00" [ref=e736]
+                  - cell "✓" [ref=e737]:
+                    - generic [ref=e738]: ✓
+                - row "76 DueBk -659.55 -659.55 0.00 ✓" [ref=e739]:
+                  - cell "76" [ref=e740]
+                  - cell "DueBk" [ref=e741]
+                  - cell "-659.55" [ref=e742]
+                  - cell "-659.55" [ref=e743]
+                  - cell "0.00" [ref=e744]
+                  - cell "✓" [ref=e745]:
+                    - generic [ref=e746]: ✓
+                - row "78 S&D -429.09 -429.09 -0.00 ✓" [ref=e747]:
+                  - cell "78" [ref=e748]
+                  - cell "S&D" [ref=e749]
+                  - cell "-429.09" [ref=e750]
+                  - cell "-429.09" [ref=e751]
+                  - cell "-0.00" [ref=e752]
+                  - cell "✓" [ref=e753]:
+                    - generic [ref=e754]: ✓
+                - row "83 TrC/R 4,580.04 6,039.83 -1,459.79 !" [ref=e755]:
+                  - cell "83" [ref=e756]
+                  - cell "TrC/R" [ref=e757]
+                  - cell "4,580.04" [ref=e758]
+                  - cell "6,039.83" [ref=e759]
+                  - cell "-1,459.79" [ref=e760]
+                  - cell "!" [ref=e761]:
+                    - generic [ref=e762]: "!"
+          - generic [ref=e763]:
+            - generic [ref=e764]: Trace de l'analyse
+            - text: "SJ: Piaz_N=18068.75 Admin=240.17 Promo=362.14 DR: Chambres=50963.63 Internet=0.0 FD=6039.83 HP: day 21 AR: GuestFolios=0.0 AdvDep MANUAL: Dep on Hand=291979.04 RJ: BO=-1842570.26 BF=-1869953.58 DC=-4985.05 Transelect: AX=5838.41 MC=32249.15 X24=-4985.049999999999"

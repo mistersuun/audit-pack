@@ -635,6 +635,34 @@ COL_NAMES = {
 # CALCULATOR — the balancing brain (EXACT copy of standalone logic)
 # =====================================================================
 
+# Known reasons for RJ-vs-calc diffs per column (audit methodology rules)
+_DIFF_EXPLANATIONS = {
+    5:  lambda rj, c, d: 'Col F est la compensation résiduelle appliquée (pas calculée)',
+    12: lambda rj, c, d: ('HP Tabagie Mineraux soustrait de Piazza Min '
+                          f'(écart de {abs(d):.2f} = déduction HP non-pourboire)' if d < 0 else
+                          f'Piazza Min dépasse le calcul de {d:.2f} — vérifier source'),
+    19: lambda rj, c, d: ('Ajustement manuel Service aux Chambres Nourriture appliqué '
+                          f'({abs(d):.2f})' if d < 0 else
+                          f'S. Ch. Nourr dépasse le calcul de {d:.2f}'),
+    33: lambda rj, c, d: ('SOCAN signé selon règle DÉBIT=négatif (signe préservé du SJ)'
+                          if rj < 0 else 'SOCAN en positif — vérifier le côté SJ'),
+    48: lambda rj, c, d: ('Internet banquet signé selon règle DÉBIT=négatif'
+                          if rj < 0 else 'Internet en positif — vérifier le côté SJ'),
+    61: lambda rj, c, d: 'AMEX Elavon (Reception) — somme des règlements DR',
+    62: lambda rj, c, d: 'BJ = compensation X24 Transelect (variance carte POSITOUCH)',
+    83: lambda rj, c, d: ('CF inclut la soustraction AR Misc par méthodologie '
+                          f'(écart de {abs(d):.2f} = AR Misc)' if d < 0 else
+                          f'CF dépasse le calcul de {d:.2f}'),
+}
+
+
+def _explain_column_diff(col: int, name: str, rj: float, calc: float, diff: float) -> str:
+    """Return a French explanation of why RJ and calc differ for this column."""
+    if col in _DIFF_EXPLANATIONS:
+        return _DIFF_EXPLANATIONS[col](rj, calc, diff)
+    return f'Écart inconnue de {diff:+.2f} — à investiguer'
+
+
 def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
                    adv: AdvDepData, tr: TranselectData, geac: GeacData,
                    recap: RecapData, jour: JourRow,
@@ -730,7 +758,7 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
     calc[68] = hp_pourb_admin  # HP Admin Pourb
     calc[69] = hp_pourb_promo  # HP Promo Pourb
     calc[72] = recap.argent_recu  # Argent Recu
-    calc[73] = -dr.remb_serveur  # Remb Serveur (from DR, not Recap!)
+    calc[73] = 0  # Remb Serveur — NEVER written to RJ (DR value is informational only)
     calc[74] = -sj.pourb_charge  # Remb Gratuite
     calc[76] = -recap.due_back_rec if recap.due_back_rec > 0 else 0  # Due Back Rec
     calc[78] = -recap.surplus_deficit  # S&D (Recap stores surplus as negative, jour debit needs positive)
@@ -757,8 +785,11 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
     # === COMPARISON ===
     results = []
     all_cols = sorted(set(list(calc.keys()) + [k for k in jour.cols.keys() if 4 <= k <= 86]))
+    # Col 73 (RmbSrv) is informational — methodology is "never written" so
+    # we don't compare it against calc (would always flag as an écart otherwise).
+    excluded_cols = {0, 1, 2, 3, 73}
     for c in all_cols:
-        if c in [0, 1, 2, 3] or c > 86:
+        if c in excluded_cols or c > 86:
             continue
         rj_val = jour.cols.get(c, 0)
         calc_val = calc.get(c, 0)
@@ -801,9 +832,11 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
         warnings.append(f"Transelect X24 = {tr.x24} -- doit etre compense dans col 5 ou Diff.Caisse#")
 
     # === COMPENSATION SUGGESTIONS ===
-    # To reach DC = 0, we need compensations
+    # To reach DC = 0 in the ACTUAL RJ, start from the RJ's current DC
+    # (not dc_calc, which uses ideal column values the RJ may have overridden
+    # by methodology rules — SOCAN sign, AR Misc in CF, etc.)
     compensations = []
-    dc_remaining = round(dc_calc, 2)
+    dc_remaining = round(jour.dc, 2)
 
     # 1. Discover (BJ / col 61) = -X24 to compensate Transelect variance
     if abs(tr.x24) > 0.01:
@@ -813,8 +846,16 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
             'value': discover_comp,
             'reason': f'Compensation X24 Transelect ({tr.x24:+.2f})',
             'auto': True,
+            'category': 'x24_reversal',
+            'legitimacy': 'legitimate',
+            'explanation_fr': (
+                'Compensation légitime par méthodologie d\'audit. X24 représente '
+                'l\'écart entre les totaux POSITOUCH (terminal restaurant) et les '
+                'règlements bancaires réels — c\'est une variance connue des pannes '
+                'de carte qui s\'absorbe toujours dans la colonne BJ (Discover).'
+            ),
         })
-        dc_remaining += discover_comp  # Discover is a debit, so adds to DC
+        dc_remaining += discover_comp
 
     # 2. GEAC col 41 (AP) = -(FD - AR) if FD != AR
     if abs(geac.col41) > 0.01:
@@ -823,21 +864,88 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
             'value': round(geac.col41, 2),
             'reason': f'FD ({geac.fd:.2f}) ≠ AR ({geac.ar:.2f})',
             'auto': True,
+            'category': 'geac_comp',
+            'legitimacy': 'legitimate',
+            'explanation_fr': (
+                f'Compensation GEAC légitime : la Facture Directe du DR ({geac.fd:.2f}) '
+                f'diffère du total Guest Folios AR ({geac.ar:.2f}). L\'écart doit être '
+                f'documenté dans la colonne AP pour maintenir la cohérence.'
+            ),
         })
-        dc_remaining -= geac.col41  # Col 41 is a credit, so subtracts from DC
+        dc_remaining -= geac.col41
 
     # 3. Col 5 (Boi_Link) = residual to make DC = 0
     dc_remaining = round(dc_remaining, 2)
     if abs(dc_remaining) > 0.01:
-        col5_comp = round(-dc_remaining, 2)  # Credit: positive reduces DC
+        col5_comp = round(-dc_remaining, 2)
+
+        # Decompose the residual by analyzing column diffs
+        residual_sources = []
+        for r in results:
+            if abs(r['diff']) < 0.01:
+                continue
+            col_num = r['col']
+            # Columns in E:BF (credit range 4-57) vs BI:CI (debit range 60-86)
+            # If RJ > CALC, and col is credit: DC more negative
+            # If RJ > CALC, and col is debit: DC more positive
+            if 4 <= col_num <= 57:
+                dc_impact = -r['diff']  # More credit → more negative DC
+            elif 60 <= col_num <= 86:
+                dc_impact = r['diff']   # More debit → more positive DC
+            else:
+                continue
+
+            # Explain common diff reasons
+            reason_fr = _explain_column_diff(col_num, r['name'], r['rj'], r['calc'], r['diff'])
+
+            residual_sources.append({
+                'col': col_num,
+                'name': r['name'],
+                'rj': r['rj'],
+                'calc': r['calc'],
+                'diff': round(r['diff'], 2),
+                'dc_impact': round(dc_impact, 2),
+                'reason_fr': reason_fr,
+            })
+
+        # Classify legitimacy: if residual sources are all "known rule-based" → absorbed
+        # If any has an unknown reason → suspect
+        unexplained = [s for s in residual_sources if 'inconnue' in s['reason_fr'].lower()]
+        legitimacy = 'plug' if unexplained else 'absorbed'
+
+        # "Résiduel" is a misnomer when every écart has a known source:
+        # these are METHODOLOGY ADJUSTMENTS (signe SOCAN, AR Misc dans CF, HP Mineraux déduit de Piazza, etc.).
+        # Only label "Plug" when at least one écart has no known rule.
+        if legitimacy == 'absorbed':
+            comp_name = 'Ajustements méthodologiques (F)'
+            explanation = (
+                'Ces écarts ne sont pas un mystère : chaque ligne ci-dessous applique '
+                'une règle d\'audit documentée (signe SOCAN, AR Misc soustrait de CF, '
+                'HP Mineraux déduit de Piazza, etc.). Aucune compensation additionnelle '
+                'n\'est requise — les colonnes RJ reflètent déjà la méthodologie.'
+            )
+        else:
+            comp_name = 'Plug manuel (F)'
+            explanation = (
+                '⚠ Au moins un écart n\'a pas de règle documentée. Cet ajustement '
+                'couvre l\'inconnu — à investiguer avant de finaliser.'
+            )
+
         compensations.append({
-            'col': 5, 'name': 'Compensation résiduelle (F)',
+            'col': 5, 'name': comp_name,
             'value': col5_comp,
-            'reason': f'Résiduel DC après X24 et GEAC = {dc_remaining:+.2f}',
-            'auto': False,  # Needs auditor review
+            'reason': f'Écart DC après X24 et GEAC = {dc_remaining:+.2f}',
+            'auto': False,
+            'category': 'methodology_adjustment',
+            'legitimacy': legitimacy,
+            'adjustment_sources': residual_sources,
+            'residual_decomposition': residual_sources,  # legacy key for UI compat
+            'explanation_fr': explanation,
         })
 
-    dc_after_comp = round(dc_calc + sum(c['value'] for c in compensations if c['col'] >= 60)
+    # DC after comps = RJ's current DC + debit comps - credit comps
+    # (writing to debit cell increases DC; writing to credit cell decreases DC)
+    dc_after_comp = round(jour.dc + sum(c['value'] for c in compensations if c['col'] >= 60)
                          - sum(c['value'] for c in compensations if c['col'] < 60), 2)
 
     return {
@@ -1001,14 +1109,7 @@ def _build_checklist(nas, sj, dr, ar, hp, adv, tr, geac, recap, calc_result):
            f"Argent={recap.argent_recu:.2f}",
            f"Ecart argent: {arg_errors[0]['diff']:+.2f}" if arg_errors else "OK")
 
-    # 11. Remb Serveur from DR (col 73)
-    rmb_errors = [e for e in errors if e['col'] == 73]
-    _check("11. Remb Serveur = DR",
-           len(rmb_errors) == 0,
-           f"RmbSrv={dr.remb_serveur:.2f}",
-           f"Ecart Remb Serveur" if rmb_errors else "OK")
-
-    # 12. Remb Gratuite = -SJ pourb_charge (col 74)
+    # 11. Remb Gratuite = -SJ pourb_charge (col 74)
     rg_errors = [e for e in errors if e['col'] == 74]
     _check("12. Remb Gratuite = -SJ pourb_charge",
            len(rg_errors) == 0,

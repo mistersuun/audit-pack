@@ -1,0 +1,167 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic [ref=e56]:
+          - link "Vue d'ensemble" [ref=e57] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e58]
+            - generic [ref=e63]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e64] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e65]
+            - generic [ref=e68]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e69] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e70]
+            - generic [ref=e73]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e74] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e75]
+            - generic [ref=e80]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e81] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e82]
+            - generic [ref=e84]: Cash & Récon
+          - link "Paiements" [ref=e85] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e86]
+            - generic [ref=e88]: Paiements
+          - link "P&L & Budget" [ref=e89] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e90]
+            - generic [ref=e93]: P&L & Budget
+      - link "Prévisions" [ref=e94] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e95]
+        - generic [ref=e98]: Prévisions
+      - link "STR & OTB" [ref=e99] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e100]
+        - generic [ref=e104]: STR & OTB
+      - generic [ref=e105]:
+        - link "Générateurs" [ref=e106] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e107]
+          - generic [ref=e111]: Générateurs
+          - img [ref=e112]
+        - generic:
+          - link "Documents" [ref=e114] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e115]
+            - generic [ref=e118]: Documents
+          - link "Pourboires" [ref=e119] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e120]
+            - generic [ref=e122]: Pourboires
+          - link "HP / Admin" [ref=e123] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e124]
+            - generic [ref=e129]: HP / Admin
+      - generic [ref=e130]: Support
+      - link "FAQ" [ref=e131] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e132]
+        - generic [ref=e135]: FAQ
+    - generic [ref=e136]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e137] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e138]: A
+        - generic [ref=e139]:
+          - generic [ref=e140]: Auditeur de nuit
+          - generic [ref=e141]: Auditeur de nuit
+      - link "Mode sombre" [ref=e142] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e143]
+        - generic [ref=e145]: Mode sombre
+      - link "Déconnexion" [ref=e146] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e147]
+        - generic [ref=e150]: Déconnexion
+  - main [ref=e151]:
+    - generic [ref=e152]:
+      - generic [ref=e153]:
+        - generic [ref=e154]:
+          - heading "Intelligence d'affaires" [level=1] [ref=e155]
+          - paragraph [ref=e156]: 20 jours affichés · 1927 jours en base (2021-01-01 → 2026-04-20) · 252 chambres
+        - generic [ref=e157]:
+          - button "Importer" [ref=e158] [cursor=pointer]:
+            - img [ref=e159]
+            - text: Importer
+          - button "Actualiser" [ref=e163] [cursor=pointer]:
+            - img [ref=e164]
+            - text: Actualiser
+      - generic [ref=e168]:
+        - generic [ref=e169]:
+          - button "30j" [ref=e170] [cursor=pointer]
+          - button "3 mois" [ref=e171] [cursor=pointer]
+          - button "12 mois" [ref=e172] [cursor=pointer]
+          - button "5 ans" [ref=e173] [cursor=pointer]
+          - button "Tout" [ref=e174] [cursor=pointer]
+          - button "Personnalisé" [ref=e175] [cursor=pointer]
+        - generic [ref=e176]:
+          - generic [ref=e177] [cursor=pointer]:
+            - checkbox "vs A-1" [ref=e178]
+            - generic [ref=e179]: vs A-1
+          - generic "Données en base" [ref=e180]: 1927 jours · undefined an(s)
+      - generic [ref=e182]:
+        - generic [ref=e183]: Chargement P&L & Budget...
+        - generic [ref=e185]:
+          - heading "Variance Budget vs Réel" [level=3] [ref=e187]:
+            - img [ref=e188]
+            - text: Variance Budget vs Réel
+          - heading "Marge brute mensuelle" [level=3] [ref=e195]:
+            - img [ref=e196]
+            - text: Marge brute mensuelle
+        - generic [ref=e201]:
+          - heading "Répartition des dépenses" [level=3] [ref=e203]:
+            - img [ref=e204]
+            - text: Répartition des dépenses
+          - heading "Ratio main-d'œuvre / revenu" [level=3] [ref=e211]:
+            - img [ref=e212]
+            - text: Ratio main-d'œuvre / revenu
+        - heading "P&L annuel" [level=3] [ref=e220]:
+          - img [ref=e221]
+          - text: P&L annuel

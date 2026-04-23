@@ -1,0 +1,304 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - heading "RJ Natif" [level=1] [ref=e154]
+          - generic [ref=e155]: Aucune session
+        - generic [ref=e156]:
+          - button "Changer le thème" [ref=e157] [cursor=pointer]:
+            - img [ref=e158]
+          - button "Aperçu RJ" [ref=e160] [cursor=pointer]:
+            - img [ref=e161]
+            - text: Aperçu RJ
+          - button "Exporter PDF" [disabled] [ref=e164]:
+            - img [ref=e165]
+            - text: Exporter PDF
+          - button "Exporter Excel" [disabled] [ref=e168]:
+            - img [ref=e169]
+            - text: Exporter Excel
+          - button "Re-synchroniser" [disabled] [ref=e172]:
+            - img [ref=e173]
+            - text: Re-synchroniser
+          - button "Soumettre" [disabled] [ref=e177]:
+            - img [ref=e178]
+            - text: Soumettre
+      - button "⚖" [ref=e181] [cursor=pointer]
+      - complementary "Panneau d'équilibrage en direct" [ref=e182]:
+        - heading "Diff. Caisse" [level=3] [ref=e183]
+        - generic [ref=e184]: —
+        - heading "Variances déclarées" [level=3] [ref=e185]
+        - generic [ref=e187]: Aucune session chargée
+      - generic [ref=e188]:
+        - button "⚙ Setup" [ref=e189] [cursor=pointer]
+        - button "1 · DueBack" [ref=e190] [cursor=pointer]: 1 · DueBack
+        - button "2 · SD" [ref=e192] [cursor=pointer]: 2 · SD
+        - button "3 · Recap" [ref=e194] [cursor=pointer]: 3 · Recap
+        - button "4 · Transelect" [ref=e196] [cursor=pointer]: 4 · Transelect
+        - button "5 · GEAC" [ref=e198] [cursor=pointer]: 5 · GEAC
+        - button "6 · Jour" [ref=e200] [cursor=pointer]: 6 · Jour
+        - button "7 · Quasimodo" [ref=e202] [cursor=pointer]: 7 · Quasimodo
+        - button "Sommaire" [ref=e204] [cursor=pointer]: Sommaire
+        - button "⋯ Plus" [ref=e206] [cursor=pointer]
+      - generic [ref=e208]:
+        - generic [ref=e209]: Nouveau Jour
+        - generic [ref=e210]: Créer ou charger une session d'audit pour une date
+        - generic [ref=e211]:
+          - generic [ref=e212]:
+            - generic [ref=e213]: Date d'audit
+            - textbox [ref=e214]: 2026-04-22
+          - generic [ref=e215]:
+            - generic [ref=e216]: Auditeur
+            - textbox "Nom de l'auditeur" [ref=e217]: Auditeur de nuit
+          - generic [ref=e218]:
+            - generic [ref=e219]: Température
+            - textbox "-5°C" [ref=e220]
+          - generic [ref=e221]:
+            - generic [ref=e222]: Météo
+            - textbox "Neige, Soleil..." [ref=e223]
+          - generic [ref=e224]:
+            - generic [ref=e225]: Ch. à refaire
+            - spinbutton [ref=e226]: "0"
+          - button "Démarrer / Charger" [ref=e227] [cursor=pointer]:
+            - img [ref=e228]
+            - text: Démarrer / Charger
+        - generic [ref=e230]:
+          - generic [ref=e231]:
+            - img [ref=e232]
+            - text: Importer le RJ de la veille
+          - generic [ref=e235]: Déposez le fichier Excel RJ de la veille. Les données seront lues et la session pour le jour suivant sera créée automatiquement.
+          - button "Choisir un fichier RJ (.xls)" [ref=e236] [cursor=pointer]:
+            - img [ref=e237]
+            - text: Choisir un fichier RJ (.xls)
+        - generic [ref=e240]:
+          - generic [ref=e241]:
+            - img [ref=e242]
+            - text: Macros — Effacement
+          - generic [ref=e244]:
+            - button "Effacer Recap" [ref=e245] [cursor=pointer]:
+              - img [ref=e246]
+              - text: Effacer Recap
+            - button "Effacer Transelect" [ref=e248] [cursor=pointer]:
+              - img [ref=e249]
+              - text: Effacer Transelect
+            - button "Effacer GEAC" [ref=e251] [cursor=pointer]:
+              - img [ref=e252]
+              - text: Effacer GEAC
+            - button "Tout effacer (Recap+Trans+GEAC)" [ref=e254] [cursor=pointer]:
+              - img [ref=e255]
+              - text: Tout effacer (Recap+Trans+GEAC)
+        - generic [ref=e257]:
+          - generic [ref=e258]:
+            - img [ref=e259]
+            - text: Dépôt rapide — Fichier ZIP
+          - generic [ref=e263]:
+            - text: Déposez un fichier
+            - strong [ref=e264]: .zip
+            - text: contenant tous vos rapports de nuit. Les fichiers seront automatiquement identifiés et les données extraites dans les bons onglets.
+          - generic [ref=e265] [cursor=pointer]:
+            - img [ref=e266]
+            - generic [ref=e270]: Glissez votre ZIP ici
+            - generic [ref=e271]: ou cliquez pour parcourir
+        - generic [ref=e272]:
+          - generic [ref=e273]:
+            - img [ref=e274]
+            - text: Auto-remplissage — Rapports individuels
+          - generic [ref=e277]: Ou déposez vos rapports un par un pour remplir automatiquement les champs correspondants.
+          - generic [ref=e278]:
+            - button "Daily Revenue .pdf → Recap, GEAC, Jour" [ref=e279] [cursor=pointer]:
+              - img [ref=e280]
+              - strong [ref=e283]: Daily Revenue
+              - generic [ref=e284]: .pdf
+              - generic [ref=e285]: → Recap, GEAC, Jour
+            - button "Sales Journal .rtf → Jour F&B, Recap, Transelect" [ref=e286] [cursor=pointer]:
+              - img [ref=e287]
+              - strong [ref=e290]: Sales Journal
+              - generic [ref=e291]: .rtf
+              - generic [ref=e292]: → Jour F&B, Recap, Transelect
+            - button "FreedomPay .xls → GEAC cashout, Transelect" [ref=e293] [cursor=pointer]:
+              - img [ref=e294]
+              - strong [ref=e296]: FreedomPay
+              - generic [ref=e297]: .xls
+              - generic [ref=e298]: → GEAC cashout, Transelect
+            - button "AR Summary .pdf → GEAC Balance Sheet" [ref=e299] [cursor=pointer]:
+              - img [ref=e300]
+              - strong [ref=e303]: AR Summary
+              - generic [ref=e304]: .pdf
+              - generic [ref=e305]: → GEAC Balance Sheet
+            - button "Advance Deposit .pdf → GEAC dépôts" [ref=e306] [cursor=pointer]:
+              - img [ref=e307]
+              - strong [ref=e310]: Advance Deposit
+              - generic [ref=e311]: .pdf
+              - generic [ref=e312]: → GEAC dépôts
+            - button "HP Admin .xls → HP/Admin, Jour" [ref=e313] [cursor=pointer]:
+              - img [ref=e314]
+              - strong [ref=e319]: HP Admin
+              - generic [ref=e320]: .xls
+              - generic [ref=e321]: → HP/Admin, Jour
+            - button "Suivi Dépôts (SD) .xls → SD, SetD" [ref=e322] [cursor=pointer]:
+              - img [ref=e323]
+              - strong [ref=e328]: Suivi Dépôts (SD)
+              - generic [ref=e329]: .xls
+              - generic [ref=e330]: → SD, SetD
+            - button "Market Segment .pdf → DBRS segments" [ref=e331] [cursor=pointer]:
+              - img [ref=e332]
+              - strong [ref=e335]: Market Segment
+              - generic [ref=e336]: .pdf
+              - generic [ref=e337]: → DBRS segments
+            - button "Cashier Summary .pdf → GEAC cashout" [ref=e338] [cursor=pointer]:
+              - img [ref=e339]
+              - strong [ref=e344]: Cashier Summary
+              - generic [ref=e345]: .pdf
+              - generic [ref=e346]: → GEAC cashout
+            - button "Transactions Cartes .xlsx → Transelect réception" [ref=e347] [cursor=pointer]:
+              - img [ref=e348]
+              - strong [ref=e350]: Transactions Cartes
+              - generic [ref=e351]: .xlsx
+              - generic [ref=e352]: → Transelect réception
+            - button "Recap Serveurs .txt → Transelect restaurant" [ref=e353] [cursor=pointer]:
+              - img [ref=e354]
+              - strong [ref=e355]: Recap Serveurs
+              - generic [ref=e356]: .txt
+              - generic [ref=e357]: → Transelect restaurant
+            - button "House Totals .txt → Recap Comptant + Remb Gratuité" [ref=e358] [cursor=pointer]:
+              - img [ref=e359]
+              - strong [ref=e361]: House Totals
+              - generic [ref=e362]: .txt
+              - generic [ref=e363]: → Recap Comptant + Remb Gratuité
+            - button "Débourse 90.2 .pdf → Recap Remb Client + Due Back" [ref=e364] [cursor=pointer]:
+              - img [ref=e365]
+              - strong [ref=e368]: Débourse 90.2
+              - generic [ref=e369]: .pdf
+              - generic [ref=e370]: → Recap Remb Client + Due Back
+        - generic [ref=e371]:
+          - generic [ref=e372]:
+            - generic [ref=e373]:
+              - img [ref=e374]
+              - text: Archives RJ historiques
+            - button "Rafraîchir" [ref=e377] [cursor=pointer]:
+              - img [ref=e378]
+              - text: Rafraîchir
+          - generic [ref=e382]: Parcourez les RJ Excel des dernières années. Vous pouvez consulter ou télécharger n'importe quel fichier archivé.
+          - textbox [ref=e384]
+          - generic [ref=e386]: Chargement des archives...

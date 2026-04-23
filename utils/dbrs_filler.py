@@ -15,9 +15,10 @@ class DBRSFiller:
     """Fill DBRS staging workbook and paste into Master DBR."""
 
     DBRS_PATH = r'K:\DBRS\DBRS_formule.2025_corriger.xlsm'
+    # Y: is the authoritative master. K: copy is stale/secondary — never paste there first.
     MASTER_PATHS = [
-        r'K:\Audition\04 - April\2026DBR MasterSheraton.xls',
         r'Y:\2026DBR MasterSheraton.xls',
+        r'K:\Audition\04 - April\2026DBR MasterSheraton.xls',
     ]
 
     # DailyRev tab row mapping: row -> DR page 1 room charge label.
@@ -250,9 +251,9 @@ class DBRSFiller:
         try:
             wb = self.excel.Workbooks.Open(master_path)
 
-            # Update Setup date (F8)
+            # Update Setup date (F8) — Excel COM requires datetime (not date)
             ws_setup = wb.Sheets('Setup')
-            ws_setup.Cells(8, 6).Value = audit_date
+            ws_setup.Cells(8, 6).Value = datetime.combine(audit_date, datetime.min.time())
 
             # Paste into month tab — DBRS Insertion row N → month tab row N+96.
             # HasFormula guard preserves ADR formulas and SUBTOTAL rows,

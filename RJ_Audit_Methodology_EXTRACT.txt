@@ -1,0 +1,198 @@
+=== RJ_Audit_Methodology.docx ===
+
+SHERATON LAVAL
+Audit Methodology for RJ Balancing
+How to Find Missing Amounts and Errors
+Complete step-by-step detective process for AI or human auditor
+1. The Fundamental Problem
+You are given a day where DC (Diff.Caisse, column D) is not zero. Your job is to find WHY it's not zero, identify the missing or wrong amounts, and tell the user exactly what to change to make it zero.
+DC is calculated by Excel as: DC = Bal_Ferm - Bal_Ouv - Sum(Credits) + Sum(Debits). If DC is not zero, it means one or more credits or debits are wrong, missing, or extra. The Bal_Ferm could also be wrong.
+The ONLY acceptable non-zero DC values are those explained by: Transelect X24 (POS terminal variance), GEAC col 41 (GL variance), or Recap I10 (cash surplus/deficit). Everything else MUST be found and corrected.
+2. Phase 1: Data Extraction
+Before doing any analysis, I extract EVERY number from EVERY document. This is critical because errors are found by comparing values across documents. I never skip a document.
+2.1 Extract from the RJ jour sheet
+I read ALL non-zero columns for the day's row. I record every value with its column number. I note: Bal_Ouv (col 1), DC (col 2), Bal_Ferm (col 3), and every credit (cols 4-57) and debit (cols 60-86). I also check cols 5 and 6 which are manual compensation entries.
+Why: This is the baseline. Everything I calculate later will be compared against these values to find discrepancies.
+2.2 Extract from the Sales Journal (SJ)
+I parse the text file line by line. The SJ has a specific format: department headers (PIAZZA, CHAMBRES, BANQUET, SPESA) followed by credit lines (name + amount on the right) and debit lines (name + amount, but for known debit account names like VISA, MASTERCARD, ADMINISTRATION, etc.).
+Key trick: The SJ has only one column of numbers, so I use a list of KNOWN DEBIT NAMES to distinguish debits from credits. If the name matches VISA, MASTERCARD, AMEX, INTERAC, CHAMBRE, PANNE*, ADMINISTRATION, HOTEL PROMOTION, FORFAIT, DEPOT UTIL, POURBOIRE CHARGE, or CERT CADEAU, it's a debit. Everything else is a credit.
+I extract: Every F&B item by department (Piazza Nourr, Alcool, Bieres, Min, Vins, Pourboire, Location; same for Banquet, Chambres, Spesa), TPS, TVQ, Comptant, all payment modes, Forfait, Admin, Promo, Pourboire Charge, Panne amounts, and any special items like SOCAM, VESTIAIRE, EQ. DIVERS, INTERNET.
+2.3 Extract from the Daily Revenue (DR)
+This is a 7-page PDF. I extract page by page:
+Page 1: Chambres Total (sum of all Room Charge lines with Today values). I add up every Room Chrg line. Lines ending with '-' are negative.
+Page 2: Nettoyeur, Sonifi, Location Boutique, Lit Pliant, Fax, Machine Distributrice, Autre A Payer, Massage, Internet (WATCH FOR NEGATIVE!), Autres Grand Livre, Autres Grand Livre T, GiveX.
+Page 3: Taxes: TVH (Taxe Hebergement), TPS Chambres (TPS 141740175), TVQ Chambres (TVQ 1019892413). Club Lounge: Nourriture Lounge, Alcool Lounge, Biere Lounge, Mineraux Lounge, Vin Lounge, Autres Lounge.
+Pages 3-4: F&B breakdown by OPERA department (Piazza, Banquet, ServCh, Spesa) with their TPS/TVQ. I note these but usually use SJ values for the jour — DR F&B is for cross-reference only.
+Page 5: TPS Autres, TVQ Autres, TPS Internet, TVQ Internet. Comptabilité TPS/TVQ. Debourse, Remboursement Serveur.
+Pages 5-6: Settlements: American Express, Visa, MasterCard, Carte Debit, Cheque, Facture Direct, Bon d'Achat, Gift Card. Deposits Received by card type.
+Page 7: Adv Dep Applied, Adv Dep Cancel, Adv Dep DNA, InterHotel XferIn/Out, Balance Today, Balance Prev Day, New Balance.
+2.4 Extract from AR Summary
+One page: Previous Day balance, Guest Folios, Invoices, Payments, End of Day balance. I note whether Invoices and Payments cancel out (if they're equal, they don't affect col 83).
+2.5 Extract from HP file
+I read the 'données' sheet filtered by day number. For each entry I record: Area (Piazza/Tabagie/Banquet), each food/bev category amount, Autres, Pourboire, and Paiement type (14-Admin or 15-Promo). I then sum by Area and Paiement to get totals.
+2.6 Extract from Advance Deposit
+Yesterday balance, Received Today, Applied Today, Cancelled, DNA (No-Shows). I calculate: Today = Yesterday + Received - Applied - Cancelled - DNA.
+2.7 Extract from RJ Transelect
+Row 37: total_carte_crédit (6 CC types). Row 28: TOTAUX. Row 13 col 24: X24 variance. I check if X24 = 0.
+2.8 Extract from RJ GEAC_UX
+Top section: Row 9 (OPERA totals) vs Row 11 (DR totals) — should match. Bottom section: Row 40 (FD vs AR), Row 55 (compensation amount for col 41).
+2.9 Extract from RJ Recap
+Argent Reçu, Remb Gratuité, Remb Client, Due Back Réception, Due Back N/B, Surplus/Déficit.
+3. Phase 2: Calculate Expected Values
+Once I have all the raw data, I calculate what EACH column SHOULD be, using the known formulas. I do this for EVERY column, not just the ones that look wrong.
+3.1 Bal_Ferm (col 3)
+Formula: col 3 = -(DR New Balance) - (Adv Dep on Hand Today)
+Example: DR New Balance = 770,812.12, Adv Dep Today = 315,665.02 → col 3 = -770812.12 - 315665.02 = -1,086,477.14
+If this doesn't match the RJ: The Advance Deposit calculation is wrong, or the New Balance was read incorrectly. I re-check each component of the Advance Deposit (Yesterday + Received - Applied - Cancelled - DNA).
+3.2 Every credit column (4-57)
+I calculate each one. See the column mapping document for exact formulas. Key examples:
+Col 9 = SJ Piazza Nourr - HP Piazza food (admin+promo) - adjustments - Club Lounge Nourr
+Col 48 = DR Internet + SJ Banquet Internet. DR Internet is OFTEN NEGATIVE. If the RJ has it positive, that's +2x the amount as error.
+Col 44 = DR Autres GL + Autres GL T. If SJ has DEPOT UTIL, subtract that too.
+Col 36 = DR Chambres Total - G4. G4 = SJ Forfait - |col 57|.
+3.3 Every debit column (60-86)
+Cols 60-65 = Transelect TOTAUX (row 37 via macro). These should match exactly.
+Col 73 = -(DR Remboursement Serveur). NEVER use Recap Due Back N/B. This is the #1 recurring error I've found.
+Col 83 = DR Facture Direct. NEVER use AR Guest Folios. This column is circular with col 3 — changing it changes Bal_Ferm too, so net DC impact = 0.
+4. Phase 3: Compare and Find Discrepancies
+I compare every calculated value with the actual RJ value. For each column:
+If RJ = Calculated: Mark as ✓ and move on.
+If RJ ≠ Calculated: Record the difference. This is a potential error.
+If RJ has a value but Calculated = 0: Something extra was entered.
+If Calculated > 0 but RJ = 0: Something is missing.
+4.1 Sum up all the differences
+After checking every column, I sum all the credit differences and all the debit differences. The total should explain the DC.
+Example: DC = -2167.86. I find that HP Autres 2.51 was not deducted (credit is 2.51 too high). Transelect X24 = -2165.35. Total explained: 2.51 + 2165.35 = 2167.86 = |DC| ✓
+4.2 Check for items with NO column
+Some DR items have no dedicated column in the jour. These are the sneaky ones:
+DR Debourse: Usually 0 or very small (0.12). No column. Creates a small DC gap.
+DR InterHotel XferIn: Usually 9.99 or 49.95. In the BF via New Balance but no credit column. Creates DC gap.
+HP Autres: The 'Autres' field in HP entries. Pourboire has cols 68/69, food items are deducted from F&B cols, but Autres has nowhere to go.
+DR Club Lounge: Must be deducted from col 9 (or another col). If not deducted, DC is off by the CL amount.
+5. Phase 4: The Exhaustive Search
+If after Phase 3, the DC is still not fully explained, I do an exhaustive numerical search. This is the 'detective work' phase.
+5.1 Collect every number from every document
+I create a list of EVERY number that appears in any document: every SJ credit and debit, every DR Today value, every AR value, every HP entry, every Recap value, every Transelect amount, every GEAC amount. I label each one with its source.
+5.2 Search for combinations
+I search for combinations of 1, 2, or 3 numbers (with + and - signs) that equal the unexplained DC amount. I use Python to automate this:
+for each pair (a, b) in all_numbers:
+  if |a + b - target| < 0.02: found!
+  if |a - b - target| < 0.02: found!
+This is computationally feasible because there are typically 50-150 numbers and we only need combinations of 2-3.
+5.3 Filter for logical combinations
+The search usually returns multiple matches. I filter for combinations that make logical sense:
+Good: DR Adv Dep Applied + DR Debourse + GEAC diff = DC → these are all items that affect BF but have no credit column.
+Bad: SJ Piazza Alcool + DR TVQ Chambres - HP Tab Items = DC → these have no logical relationship.
+Key insight: The combination should represent items that are 'in the BF but not in any credit/debit column' or 'entered in the wrong column' or 'entered with the wrong sign'.
+5.4 Verify the hypothesis
+Once I have a candidate explanation, I verify by mentally applying the fix and checking that DC would become 0 (or equal to the known variances X24/GEAC/I10).
+6. Phase 5: Identify the Root Cause
+After finding WHAT is wrong, I identify WHY it happened. Common root causes:
+6.1 Sign error (most common)
+DR Internet is -9.01 but was entered as +9.01 in col 48. Impact: +18.02 on credits. How I detect it: Col 48 calculated = DR Internet + SJ Bqt Internet. If the DR value is negative and the RJ value is higher than SJ Bqt Internet alone, the sign was flipped.
+6.2 Wrong source used
+Col 73 used Recap Due Back N/B instead of DR Remboursement Serveur. How I detect it: I check if col 73 matches the Recap value or the DR value. If it matches Recap but not DR, wrong source.
+Col 83 used AR Guest Folios instead of DR Facture Direct. How I detect it: I compare col 83 with both DR FD and AR Guest Folios. If it matches AR but not DR, wrong source.
+6.3 Missing entry
+DR Nettoyeur = 153.95 but col 40 is empty. How I detect it: My calculated value is 153.95 but the RJ has 0. Simple gap.
+6.4 Wrong column
+EQ. DIVERS 565 entered in col AF (Divers) instead of being left out (since DR already captures it). How I detect it: I check if the amount appears in the DR AND in a jour column — that's double-counting.
+6.5 HP Autres not deducted
+HP has an 'Autres' value of 2.51 that doesn't have a dedicated column. How I detect it: I sum all HP deductions applied to the jour columns and compare with SJ Admin + SJ Promo. If there's a gap, the Autres field is the likely culprit. I then check the HP données entries for that day and look for any entry with a non-zero 'Autres' value.
+6.6 Macros not run
+Cols 60-65 are empty (CC not filled), col 41 is empty (GEAC not filled). How I detect it: Transelect row 37 has values but cols 60-65 are 0 → macro calcul_carte not run.
+6.7 Club Lounge not deducted
+DR Club Lounge has values but col 9 was not reduced. How I detect it: I check DR pages 3 for any non-zero CL line. If CL Nourr = -333.50, this should be subtracted from col 9. If col 9 = SJ Piaz Nourr (without CL deduction), that's the error.
+7. Phase 6: Decompose the DC
+The final step is expressing the DC as a sum of known components. A balanced day looks like:
+DC = 0 = X24 compensation (col 5) + GEAC compensation (col 41) + Recap I10 (already in col 78)
+An unbalanced day looks like:
+DC = −2167.86 = X24 (−2165.35) + HP Autres missing (−2.51)
+The user then knows: deduct 2.51 from the appropriate column, and compensate X24 with -2165.35 in col 5 or Discover.
+7.1 The compensation chain
+For a day to reach DC = 0, ALL of these must be resolved:
+1. Fix all errors (sign errors, wrong source, missing entries, wrong column) → these make DC closer to the 'true' variance
+2. Transelect X24 → col 5 or Discover — if X24 ≠ 0, enter -X24 in col 5 (manual compensation) or use Discover to zero out X24
+3. GEAC variance → col 41 — if FD ≠ AR, enter geac row 55 in col 41
+4. Items without columns (Debourse, InterHotel, HP Autres) → either deduct from an existing column or accept as variance in Diff.Caisse#
+8. Real Examples from Our Sessions
+8.1 March 4 — DC = +165.45
+Data extraction: All columns checked. Everything matched except col 40 (Nettoyeur) which was empty.
+DR check: DR Nettoyeur = 153.95 today.
+Transelect: X24 = +11.50
+Calculation: 153.95 + 11.50 = 165.45 = DC ✓
+Root cause: Nettoyeur was simply not entered.
+Fix: Col 40 = 153.95. Then compensate X24 (11.50) → DC = 0.
+8.2 March 13 — DC = −2167.86
+Data extraction: All columns checked. Everything matched. No obvious errors.
+Transelect: X24 = −2165.35. GEAC = 0.
+Remaining: DC − X24 = −2167.86 − (−2165.35) = −2.51. Where is 2.51?
+HP deep dive: Read every HP entry for day 13. Found one entry with Autres = 2.51 (Tabagie area, Admin paiement). This 2.51 is included in SJ Admin total (794.02) but was never deducted from any credit column.
+Verification: HP deductions applied = 1199.91. SJ Admin+Promo = 1252.54. Difference = 52.63. Of that, Piazza Alcool, Piazza Vins, etc. account for 50.12, and the Autres = 2.51 is the rest.
+Fix: Deduct 2.51 from appropriate column. Compensate X24 → DC = 0.
+8.3 March 14 — DC = +1666.38
+Data extraction: All columns checked. Found col 48 (Internet) = 509.01.
+Calculation: DR Internet = −9.01. SJ Bqt Internet = 500. Expected = −9.01 + 500 = 490.99.
+Error: 509.01 − 490.99 = +18.02 too much in credits. DR Internet was entered as +9.01 instead of −9.01.
+After fix: DC = 1666.38 + 18.02 = 1684.40 (credits decrease by 18.02 → DC increases).
+DR InterHotel: XferIn = 9.99. In BF but no credit column.
+After InterHotel: 1684.40 − 9.99 = 1674.41
+Transelect: X24 = +1674.41. GEAC = 0.
+Result: DC after fixes = X24 exactly. Compensate X24 → DC = 0. ✓
+8.4 March 12 — DC = +57.07
+Process: Checked all columns. Found col 73 used Recap Due Back N/B value instead of DR Remboursement Serveur. Difference = 57.07 exactly.
+Root cause: Wrong source document for col 73.
+Fix: Col 73 = −(DR Remb Serveur) → DC = 0.
+8.5 February 4 — DC = +113.41
+Process: Found EQ. DIVERS 565 in col AF (Divers) as +565. The Sales Journal showed it as a debit (reversal), and the Daily Revenue already showed it as negative in the Banquet section.
+Discussion: Multiple scenarios tested (+565, −565, 0). Setting AF = 0 gave DC = 678.41 = Transelect (443.41) + GEAC (232.05) + rounding (2.95). This was the correct approach — the 565 was already captured in the New Balance.
+9. The Decision Tree
+When DC ≠ 0, follow this exact order:
+Step 1: Check Bal_Ferm (col 3)
+Calculate -(DR New Balance) - (Adv Dep Today). If doesn't match col 3, fix the BF first. Check each Adv Dep component (Yesterday, Received, Applied, Cancel, DNA).
+Step 2: Check col 83 (Transfer C/R)
+Is it DR Facture Direct or AR Guest Folios? If AR, change to DR FD. But remember: col 83 is CIRCULAR — changing it changes BF too, so net DC impact = 0. This column never explains a DC error by itself.
+Step 3: Check col 48 (Internet)
+Is DR Internet negative and col 48 positive (when no SJ Bqt Internet)? This is the most common error. Impact = 2 × |DR Internet|.
+Step 4: Check col 73 (Remb Serveur)
+Does it match DR Remb Serveur or Recap Due Back N/B? Must be DR.
+Step 5: Check all F&B credits (cols 9-35)
+For each: calculate SJ value - HP deductions - adjustments. If doesn't match, find which HP item wasn't deducted.
+Step 6: Check col 36 (Chambres)
+DR Chambres Total - G4. Verify G4 = SJ Forfait - |col 57|.
+Step 7: Check cols 60-65 (CC debits)
+Should match Transelect TOTAUX (row 37). If they don't, macro wasn't run.
+Step 8: Check for missing DR items
+Go through EVERY non-zero Today value in the DR and verify it appears somewhere in the jour. Key ones to miss: Nettoyeur (col 40), Fax (col 55), Sonifi (col 45), Massage (col 52), Autre A Payer (col 54), GiveX (col 79).
+Step 9: Check for items without columns
+DR Debourse, DR InterHotel XferIn, HP Autres, DR Club Lounge. These are in the BF or SJ totals but have no dedicated jour column.
+Step 10: Exhaustive number search
+If still unexplained, run the combinatorial search with every number from every document.
+Step 11: Decompose the final DC
+Express DC = X24 + GEAC + Recap + identified errors. If DC = sum of known variances, it's correct. Compensate with col 5 and col 41.
+10. Critical Pattern Recognition
+Over many sessions, these patterns always appear:
+10.1 DC matches a specific document value
+If |DC| exactly equals a DR Today value, that value is probably missing from the jour. Check all DR items against their columns.
+10.2 DC is approximately 2× a small amount
+Sign error. The amount was entered positive instead of negative (or vice versa). DC = 2 × |wrong amount|. Most common with DR Internet.
+10.3 DC is close to X24 but off by a small amount
+X24 is the bulk. The small difference is usually HP Autres, DR Debourse, or a manual adjustment that wasn't entered.
+10.4 DC is very large (>10,000)
+Macros weren't run (cols 60-65 empty), or col 83 has the wrong source, or multiple errors compound.
+10.5 DC is tiny (<5)
+Usually rounding or a very small HP Autres or DR Debourse.
+11. Tools I Use
+11.1 Python for extraction
+pdfplumber for DR/AR PDFs, openpyxl for HP Excel, xlrd for RJ .xls files, regex for SJ text parsing. All local, free, no API.
+11.2 Combinatorial search
+When the DC doesn't match any obvious single value, I collect every number from every document into a list, then test all pairs and triples with +/- signs against the target DC. This finds combinations like: DR Debourse (0.12) + DR Adv Dep Applied (3519.13) + GEAC diff (67.94) = 3587.19.
+11.3 Cross-document verification
+I verify the same amount appears consistently across documents: DR Settlement Amex should match GEAC Amex should match Transelect TOTAUX Amex (minus escompte for GEAC). If any mismatch, something's wrong.
+11.4 Mental arithmetic for DC decomposition
+I continuously check: DC - X24 - GEAC - Recap = residual. Then I hunt for the residual in the data. If residual = 0, day is balanced. If not, there's still something missing.
+12. What I Cannot Do
+Manual adjustments: Values like 5.85 (adj Piazza), 7.30 (adj Marché), 52.99 — these are entered by the user and I don't know their source. The user must provide them.
+Club Lounge extra deductions: Sometimes the CL deduction in col 9 is larger than DR CL Nourr (e.g., -373.50 vs DR -333.50). The extra 40 comes from somewhere I haven't identified. User must clarify.
+Col 5 compensation strategy: Whether to use col 5, Discover, or both for X24 compensation is a decision the user makes based on the day type (weekday vs weekend batch).
+Cashier Detail parsing: If the error involves specific cashier transactions, I need the Cashier Detail report which wasn't systematically provided.
