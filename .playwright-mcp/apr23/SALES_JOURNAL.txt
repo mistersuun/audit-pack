@@ -1,0 +1,87 @@
+
+
+HOTEL SHERATON LAVAL                                                   PAGE:   1
+REPORT DATE: 04/24/2026                                 REPORT TIME:  1:02:11.31
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/23/2026
+                         SALES JOURNAL for Entire house
+Account #         Account Name               Debits      Credits
+--------------------------------------------------------------------------------
+                 CAFE LINK 
+
+                 PIAZZA    
+                  NOURRITURE                             8352.76
+                  ALCOOL                                 1944.00
+                  BIERES                                  701.00
+                  NON ALCOOL BAR                           81.14
+                  VINS                                    670.00
+                  POURBOIRE A PAYER                       971.28
+                  EQ. DIVERS                  17.40   
+                  LOCATION SALLE                          500.00
+
+                 BAR CUPOLA
+
+                 CHAMBRES  
+                  NOURRITURE                              412.00
+                  NON ALCOOL BAR                           19.75
+                  FR/ETAGE                                 33.00
+                  TABAGIE                                  12.00
+
+                 BANQUET   
+                  NOURRITURE                            65301.25
+                  ALCOOL                                 4665.45
+                  BIERES                                 1141.40
+                  NON ALCOOL BAR                          420.65
+                  VINS                                   3214.00
+                  POURBOIRE A PAYER                     13347.57
+                  EQUIP AUDIO VISUEL                    12068.00
+                  EQ. DIVERS                             8517.40
+                  LOCATION SALLE                        10900.00
+                  PAUSE SPESA                            1860.00
+
+                 SPESA     
+                  NOURRITURE                              843.51
+                  TABAGIE                                 863.19
+
+                 CLUB LOUNG
+
+                 ANCIEN TAB
+
+                  TPS                                    6798.70
+                  TVQ                                   13562.96
+
+                                               0.00   
+                  COMPTANT                                489.68
+                    CORRECTION               889.86       889.86
+
+HOTEL SHERATON LAVAL                                                   PAGE:   2
+REPORT DATE: 04/24/2026                                 REPORT TIME:  1:02:11.31
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/23/2026
+                         SALES JOURNAL for Entire house
+Account #         Account Name               Debits      Credits
+--------------------------------------------------------------------------------
+
+                  VISA                      3185.41   
+                  MASTERCARD                1535.88   
+                  AMEX                       138.01   
+                  INTERAC                   1339.73   
+                  CHAMBRE                 150314.46   
+                    CORRECTION              8000.38      8000.38
+                  PANNE MASTER                39.67   
+                  ADMINISTRATION             166.21   
+                  HOTEL PROMOTION            666.52   
+                  FORFAIT                    120.18   
+                  PANNE LIEN HOTEL           167.22   
+
+                  AMERISPA 10%                 2.78         2.78
+                  EMPL 30%                    85.97        85.97
+
+                  POURBOIRE CHARGE          1200.01      1200.01
+
+                                         ----------   ----------
+                                          167869.69 *  167869.69 *
+
+
+* These  figures have no meaning, they  simply
+  show the equal balance of debits and credits

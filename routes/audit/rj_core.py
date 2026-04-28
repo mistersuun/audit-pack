@@ -2,7 +2,7 @@
 RJ Core blueprint - handles file upload, download, status, and reading.
 """
 
-from flask import Blueprint, request, jsonify, send_file, session, render_template
+from flask import Blueprint, current_app, request, jsonify, send_file, session, render_template
 from datetime import datetime, date as date_type
 import io
 import re
@@ -549,13 +549,19 @@ def read_rj_sheet(sheet_name):
 @rj_core_bp.route('/api/rj/weather', methods=['GET'])
 @login_required
 def get_weather():
-    """Return current weather for Laval, QC for auto-fill."""
+    """Return current weather for Laval, QC for auto-fill.
+
+    Non-essential cosmetic feature — always returns 200. Returns weather=null
+    when the API key is missing or the upstream call fails, so the UI degrades
+    gracefully instead of surfacing a 500.
+    """
     try:
         from utils.weather_api import get_current_weather_data
         weather = get_current_weather_data()
         return jsonify({'success': True, 'weather': weather})
     except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+        current_app.logger.warning('Weather API unavailable: %s', e)
+        return jsonify({'success': True, 'weather': None})
 
 
 @rj_core_bp.route('/api/rj/preview', methods=['GET'])

@@ -1,0 +1,525 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - heading "RJ Natif" [level=1] [ref=e154]
+          - generic [ref=e155]: En cours
+          - generic [ref=e393]: Sauvegardé
+        - generic [ref=e156]:
+          - button "Changer le thème" [ref=e157] [cursor=pointer]:
+            - img [ref=e386]
+          - button "Aperçu RJ" [ref=e160] [cursor=pointer]:
+            - img [ref=e161]
+            - text: Aperçu RJ
+          - button "Exporter PDF" [ref=e164] [cursor=pointer]:
+            - img [ref=e165]
+            - text: Exporter PDF
+          - button "Exporter Excel" [ref=e168] [cursor=pointer]:
+            - img [ref=e169]
+            - text: Exporter Excel
+          - button "Re-synchroniser" [ref=e172] [cursor=pointer]:
+            - img [ref=e173]
+            - text: Re-synchroniser
+          - button "Soumettre" [ref=e177] [cursor=pointer]:
+            - img [ref=e178]
+            - text: Soumettre
+      - complementary "Panneau d'équilibrage en direct" [ref=e181]:
+        - heading "Diff. Caisse" [level=3] [ref=e182]
+        - generic [ref=e183]: "0.00"
+        - heading "Variances déclarées" [level=3] [ref=e184]
+        - generic [ref=e185]:
+          - generic [ref=e580]:
+            - generic [ref=e581]: Transelect X20
+            - generic [ref=e582]: "+57867.49"
+          - generic [ref=e583]:
+            - generic [ref=e584]: Somme déclarées
+            - generic [ref=e585]: "+57867.49"
+          - generic [ref=e586]:
+            - generic [ref=e587]: Résiduel inexpliqué
+            - generic [ref=e588]: "+453.66"
+        - generic [ref=e403]:
+          - heading "Checklist 21 points 9/20" [level=3] [ref=e589]
+          - generic [ref=e405]:
+            - generic [ref=e590]:
+              - generic [ref=e591]: ✓
+              - generic [ref=e592]:
+                - text: 1. Bal.Ferm = -(NewBal + DepToday)
+                - generic [ref=e593]: BF=0.00
+            - generic [ref=e594]:
+              - generic [ref=e595]: ✗
+              - generic [ref=e596]:
+                - text: 2. Diff.Caisse = 0
+                - generic [ref=e597]: DC=58321.15
+            - generic [ref=e598]:
+              - generic [ref=e599]: ✗
+              - generic [ref=e600]:
+                - text: 3. Transelect X24 = 0
+                - generic [ref=e601]: X24=57867.49 -- a compenser
+            - generic [ref=e602]:
+              - generic [ref=e603]: ✓
+              - generic [ref=e604]:
+                - text: "4. GEAC: FD = AR (col41=0)"
+                - generic [ref=e605]: FD=0.00, AR=0.00
+            - generic [ref=e606]:
+              - generic [ref=e607]: ✗
+              - generic [ref=e608]:
+                - text: 5. Credits F&B = SJ - HP
+                - generic [ref=e609]: "17 col(s) en ecart: Nou_Piaz, Boi_Piaz, Bie_Piaz, Min_Piaz, Vin_Piaz, Nou_Mar, Nou_SCh, Boi_SCh, Bie_SCh, Min_SCh, Vin_SCh, Nou_Bqt, Boi_Bqt, Bie_Bqt, Pourb, LocSal, Tabag"
+            - generic [ref=e610]:
+              - generic [ref=e611]: ✗
+              - generic [ref=e612]:
+                - text: 6. Chambres = DR - G4
+                - generic [ref=e613]: "Ecart chambres: +35409.37"
+            - generic [ref=e614]:
+              - generic [ref=e615]: ✗
+              - generic [ref=e616]:
+                - text: 7. Taxes = SJ + DR
+                - generic [ref=e617]: 3 taxe(s) en ecart
+            - generic [ref=e618]:
+              - generic [ref=e619]: ✗
+              - generic [ref=e620]:
+                - text: 8. Debits Transelect (60-65)
+                - generic [ref=e621]: "3 col(s) en ecart: AmxElav, MC, Visa"
+            - generic [ref=e622]:
+              - generic [ref=e623]: ✓
+              - generic [ref=e624]:
+                - text: 9. HP Pourboires (68/69)
+                - generic [ref=e625]: Admin=0.00, Promo=0.00
+            - generic [ref=e626]:
+              - generic [ref=e627]: ✗
+              - generic [ref=e628]:
+                - text: 10. Argent recu = Recap
+                - generic [ref=e629]: "Ecart argent: -1413.84"
+            - generic [ref=e630]:
+              - generic [ref=e631]: ✓
+              - generic [ref=e632]:
+                - text: 12. Remb Gratuite = -SJ pourb_charge
+                - generic [ref=e633]: RmbGrt=0.00
+            - generic [ref=e634]:
+              - generic [ref=e635]: ✓
+              - generic [ref=e636]:
+                - text: 13. Due Back = Recap
+                - generic [ref=e637]: DueBk=625.75
+            - generic [ref=e638]:
+              - generic [ref=e639]: ✗
+              - generic [ref=e640]:
+                - text: 14. S&D = Recap
+                - generic [ref=e641]: Ecart S&D
+            - generic [ref=e642]:
+              - generic [ref=e643]: ✓
+              - generic [ref=e644]:
+                - text: 15. Cert Cadeau = SJ + GiveX
+                - generic [ref=e645]: CertCd=0.00
+            - generic [ref=e646]:
+              - generic [ref=e647]: ✓
+              - generic [ref=e648]:
+                - text: 16. Transfer C/R = DR FD (NEVER AR)
+                - generic [ref=e649]: FD=0.00
+            - generic [ref=e650]:
+              - generic [ref=e651]: ✓
+              - generic [ref=e652]:
+                - text: 17. Diff Forfait = -(forfait - G4)
+                - generic [ref=e653]: Forfait=0.00, G4=0.00
+            - generic [ref=e654]:
+              - generic [ref=e655]: ✗
+              - generic [ref=e656]:
+                - text: 18. Internet = DR + BQT
+                - generic [ref=e657]: Ecart Internet
+            - generic [ref=e658]:
+              - generic [ref=e659]: ✗
+              - generic [ref=e660]:
+                - text: 19. Autres GL = DR GL + GL_T - DepotUtil
+                - generic [ref=e661]: Ecart AutresGL
+            - generic [ref=e662]:
+              - generic [ref=e663]: ✓
+              - generic [ref=e664]:
+                - text: 20. Pas de colonnes inattendues
+                - generic [ref=e665]: Aucune
+            - generic [ref=e666]:
+              - generic [ref=e667]: ✗
+              - generic [ref=e668]:
+                - text: 21. Total erreurs jour = 0
+                - generic [ref=e669]: 30 erreur(s) a corriger
+      - generic [ref=e187]:
+        - button "⚙ Setup" [ref=e188] [cursor=pointer]
+        - button "1 · DueBack" [ref=e189] [cursor=pointer]: 1 · DueBack
+        - button "2 · SD" [ref=e191] [cursor=pointer]: 2 · SD
+        - button "3 · Recap" [ref=e193] [cursor=pointer]: 3 · Recap
+        - button "4 · Transelect" [ref=e195] [cursor=pointer]: 4 · Transelect
+        - button "5 · GEAC" [ref=e197] [cursor=pointer]: 5 · GEAC
+        - button "6 · Jour" [active] [ref=e199] [cursor=pointer]: 6 · Jour
+        - button "7 · Quasimodo" [ref=e201] [cursor=pointer]: 7 · Quasimodo
+        - button "Sommaire" [ref=e203] [cursor=pointer]: Sommaire
+        - button "⋯ Plus" [ref=e205] [cursor=pointer]
+      - generic [ref=e671]:
+        - generic [ref=e672]:
+          - generic [ref=e673]: Jour — Restauration (F&B)
+          - generic [ref=e674]: Revenus par département et catégorie. Sous-totaux automatiques.
+          - table [ref=e676]:
+            - rowgroup [ref=e677]:
+              - row "Département Nourriture Boisson Bières Minéraux Vins Total Ajust." [ref=e678]:
+                - columnheader "Département" [ref=e679]
+                - columnheader "Nourriture" [ref=e680]
+                - columnheader "Boisson" [ref=e681]
+                - columnheader "Bières" [ref=e682]
+                - columnheader "Minéraux" [ref=e683]
+                - columnheader "Vins" [ref=e684]
+                - columnheader "Total" [ref=e685]
+                - columnheader "Ajust." [ref=e686]
+            - rowgroup [ref=e687]:
+              - row "Café Link $9,206.00" [ref=e688]:
+                - cell "Café Link" [ref=e689]
+                - cell [ref=e690]:
+                  - spinbutton [ref=e691]: "9206"
+                - cell [ref=e692]:
+                  - spinbutton [ref=e693]: "0"
+                - cell [ref=e694]:
+                  - spinbutton [ref=e695]: "0"
+                - cell [ref=e696]:
+                  - spinbutton [ref=e697]: "0"
+                - cell [ref=e698]:
+                  - spinbutton [ref=e699]: "0"
+                - cell "$9,206.00" [ref=e700]
+                - cell [ref=e701]:
+                  - spinbutton [ref=e702]: "0"
+              - row "Piazza / Cupola $7,608.75" [ref=e703]:
+                - cell "Piazza / Cupola" [ref=e704]
+                - cell [ref=e705]:
+                  - spinbutton [ref=e706]: "6356.75"
+                - cell [ref=e707]:
+                  - spinbutton [ref=e708]: "604"
+                - cell [ref=e709]:
+                  - spinbutton [ref=e710]: "329"
+                - cell [ref=e711]:
+                  - spinbutton [ref=e712]: "40"
+                - cell [ref=e713]:
+                  - spinbutton [ref=e714]: "279"
+                - cell "$7,608.75" [ref=e715]
+                - cell [ref=e716]:
+                  - spinbutton [ref=e717]: "0"
+              - row "Marché La Spesa $605.51" [ref=e718]:
+                - cell "Marché La Spesa" [ref=e719]
+                - cell [ref=e720]:
+                  - spinbutton [ref=e721]: "605.51"
+                - cell [ref=e722]:
+                  - spinbutton [ref=e723]: "0"
+                - cell [ref=e724]:
+                  - spinbutton [ref=e725]: "0"
+                - cell [ref=e726]:
+                  - spinbutton [ref=e727]: "0"
+                - cell [ref=e728]:
+                  - spinbutton [ref=e729]: "0"
+                - cell "$605.51" [ref=e730]
+                - cell [ref=e731]:
+                  - spinbutton [ref=e732]: "0"
+              - row "Service Chambres $373.25" [ref=e733]:
+                - cell "Service Chambres" [ref=e734]
+                - cell [ref=e735]:
+                  - spinbutton [ref=e736]: "229"
+                - cell [ref=e737]:
+                  - spinbutton [ref=e738]: "24"
+                - cell [ref=e739]:
+                  - spinbutton [ref=e740]: "20"
+                - cell [ref=e741]:
+                  - spinbutton [ref=e742]: "4.25"
+                - cell [ref=e743]:
+                  - spinbutton [ref=e744]: "96"
+                - cell "$373.25" [ref=e745]
+                - cell [ref=e746]:
+                  - spinbutton [ref=e747]: "0"
+              - row "Banquet $11,402.50" [ref=e748]:
+                - cell "Banquet" [ref=e749]
+                - cell [ref=e750]:
+                  - spinbutton [ref=e751]: "8840"
+                - cell [ref=e752]:
+                  - spinbutton [ref=e753]: "2520"
+                - cell [ref=e754]:
+                  - spinbutton [ref=e755]: "42.5"
+                - cell [ref=e756]:
+                  - spinbutton [ref=e757]: "0"
+                - cell [ref=e758]:
+                  - spinbutton [ref=e759]: "0"
+                - cell "$11,402.50" [ref=e760]
+                - cell [ref=e761]:
+                  - spinbutton [ref=e762]: "0"
+              - row "TOTAL $25,237.26 $3,148.00 $391.50 $44.25 $375.00 $29,196.01 $0" [ref=e763]:
+                - cell "TOTAL" [ref=e764]
+                - cell "$25,237.26" [ref=e765]
+                - cell "$3,148.00" [ref=e766]
+                - cell "$391.50" [ref=e767]
+                - cell "$44.25" [ref=e768]
+                - cell "$375.00" [ref=e769]
+                - cell "$29,196.01" [ref=e770]
+                - cell "$0" [ref=e771]
+          - generic [ref=e772]:
+            - generic [ref=e773]:
+              - generic [ref=e774]: Pourboires
+              - spinbutton [ref=e775]: "4525.83"
+            - generic [ref=e776]:
+              - generic [ref=e777]: Tabagie
+              - spinbutton [ref=e778]: "352.25"
+            - generic [ref=e779]:
+              - generic "Ajustement caissier Tabagie" [ref=e780]: Ajust. Tab.
+              - spinbutton [ref=e781]: "0"
+            - generic [ref=e782]:
+              - generic [ref=e783]: Location salle
+              - spinbutton [ref=e784]: "9150"
+            - generic [ref=e785]:
+              - generic [ref=e786]: Total F&B
+              - spinbutton [ref=e787]: "43224.09"
+          - button "▸ Notes d'ajustements (0)" [ref=e789] [cursor=pointer]:
+            - generic [ref=e790]: ▸
+            - text: Notes d'ajustements
+            - generic [ref=e791]: (0)
+        - generic [ref=e792]:
+          - generic [ref=e793]: Jour — Hébergement & Autres Revenus
+          - generic [ref=e794]:
+            - generic [ref=e795]:
+              - generic [ref=e796]: Chambres (Revenu)
+              - spinbutton [ref=e797]: "35409.37"
+            - generic [ref=e798]:
+              - generic "G4 — ajustement revenus chambres (promotions hôtel)" [ref=e799]: G4 Montant
+              - spinbutton [ref=e800]: "0"
+            - generic [ref=e801]:
+              - generic [ref=e802]: Tél. Local
+              - spinbutton [ref=e803]: "0"
+            - generic [ref=e804]:
+              - generic [ref=e805]: Tél. Interurbain
+              - spinbutton [ref=e806]: "0"
+            - generic [ref=e807]:
+              - generic [ref=e808]: Tél. Publics
+              - spinbutton [ref=e809]: "0"
+          - generic [ref=e810]:
+            - button "▾ Autres revenus (5 remplis)" [ref=e811] [cursor=pointer]:
+              - generic [ref=e812]: ▾
+              - text: Autres revenus
+              - generic [ref=e813]: (5 remplis)
+            - generic [ref=e814]:
+              - generic [ref=e815]:
+                - generic [ref=e816]: Nettoyeur
+                - spinbutton [ref=e817]: "0"
+              - generic [ref=e818]:
+                - generic [ref=e819]: Machine distrib.
+                - spinbutton [ref=e820]: "-59.78"
+              - generic [ref=e821]:
+                - generic [ref=e822]: Autres GL
+                - spinbutton [ref=e823]: "-37876.07"
+              - generic [ref=e824]:
+                - generic [ref=e825]: Sonifi
+                - spinbutton [ref=e826]: "0"
+              - generic [ref=e827]:
+                - generic [ref=e828]: Lit pliant
+                - spinbutton [ref=e829]: "27"
+              - generic [ref=e830]:
+                - generic [ref=e831]: Boutique
+                - spinbutton [ref=e832]: "1475.38"
+              - generic [ref=e833]:
+                - generic [ref=e834]: Internet
+                - spinbutton [ref=e835]: "0.29"
+              - generic [ref=e836]:
+                - generic [ref=e837]: Massage
+                - spinbutton [ref=e838]: "0"
+        - generic [ref=e839]:
+          - generic [ref=e840]: Jour — Taxes & Règlements
+          - generic [ref=e841]:
+            - generic [ref=e842]:
+              - generic [ref=e843]: TVQ
+              - spinbutton [ref=e844]: "8114.290000000001"
+            - generic [ref=e845]:
+              - generic [ref=e846]: TPS
+              - spinbutton [ref=e847]: "4067.05"
+            - generic [ref=e848]:
+              - generic [ref=e849]: Taxe hébergement
+              - spinbutton [ref=e850]: "1241.07"
+          - generic [ref=e851]:
+            - generic [ref=e852]:
+              - generic [ref=e853]: Cartes cadeaux & Bons
+              - spinbutton [ref=e854]: "40"
+            - generic [ref=e855]:
+              - generic [ref=e856]: Certificats cadeaux
+              - spinbutton [ref=e857]: "0"
+        - generic [ref=e858]:
+          - generic [ref=e859]: Jour — Occupation & KPIs
+          - generic [ref=e860]:
+            - generic [ref=e861]:
+              - generic [ref=e862]: Chambres Simples
+              - spinbutton [ref=e863]: "163"
+            - generic [ref=e864]:
+              - generic [ref=e865]: Chambres Doubles
+              - spinbutton [ref=e866]: "0"
+            - generic [ref=e867]:
+              - generic [ref=e868]: Suites
+              - spinbutton [ref=e869]: "0"
+            - generic [ref=e870]:
+              - generic [ref=e871]: Comp
+              - spinbutton [ref=e872]: "0"
+            - generic [ref=e873]:
+              - generic [ref=e874]: Nb. Clients
+              - spinbutton [ref=e875]: "182"
+            - generic [ref=e876]:
+              - generic [ref=e877]: Hors usage
+              - spinbutton [ref=e878]: "11"
+          - generic [ref=e879]:
+            - generic [ref=e880]:
+              - generic [ref=e881]: Club Lounge
+              - spinbutton [ref=e882]: "-307.88"
+            - generic [ref=e883]:
+              - generic [ref=e884]: Deposit on Hand
+              - spinbutton [ref=e885]: "0"
+            - generic [ref=e886]:
+              - generic [ref=e887]: A/R Misc
+              - spinbutton [ref=e888]: "5368.37"
+          - generic [ref=e889]:
+            - generic [ref=e890]:
+              - generic [ref=e891]: Total Revenu
+              - generic [ref=e892]: $42,200.28
+            - generic [ref=e893]:
+              - generic [ref=e894]: Occupation
+              - generic [ref=e895]: 67.6%
+            - generic [ref=e896]:
+              - generic [ref=e897]: ADR
+              - generic [ref=e898]: $217.24
+            - generic [ref=e899]:
+              - generic [ref=e900]: RevPAR
+              - generic [ref=e901]: $146.93
+        - generic [ref=e902]:
+          - generic [ref=e903]: Valeurs auto (macros)
+          - generic [ref=e904]: Ces valeurs sont injectées automatiquement depuis Recap et Transelect à la soumission.
+          - generic [ref=e905]:
+            - generic [ref=e906]:
+              - generic [ref=e907]: Débit
+              - generic [ref=e908]: —
+            - generic [ref=e909]:
+              - generic [ref=e910]: Visa
+              - generic [ref=e911]: —
+            - generic [ref=e912]:
+              - generic [ref=e913]: MC
+              - generic [ref=e914]: —
+            - generic [ref=e915]:
+              - generic [ref=e916]: Amex
+              - generic [ref=e917]: —
+            - generic [ref=e918]:
+              - generic [ref=e919]: Discover
+              - generic [ref=e920]: —

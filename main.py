@@ -1,4 +1,53 @@
 import os
+import sys
+import threading
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Bootstrap file logging before any other import so pythonw startup failures
+# (missing modules, syntax errors, DB locks) actually land on disk.
+_LOG_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+os.makedirs(_LOG_DIR, exist_ok=True)
+_handler = RotatingFileHandler(
+    os.path.join(_LOG_DIR, 'app.log'),
+    maxBytes=5 * 1024 * 1024, backupCount=3, encoding='utf-8',
+)
+_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(name)s: %(message)s'))
+logging.basicConfig(level=logging.INFO, handlers=[_handler])
+
+# Under pythonw.exe sys.stdout/stderr are None — existing print() calls would
+# crash with AttributeError. Route them through logging instead.
+# A lock guards _buf because APScheduler's daemon thread and Flask's threaded
+# request handlers both call print() concurrently in this deployment.
+class _StreamToLog:
+    def __init__(self, level):
+        self.level = level
+        self._buf = ''
+        self._lock = threading.Lock()
+    def write(self, msg):
+        with self._lock:
+            self._buf += msg
+            while '\n' in self._buf:
+                line, self._buf = self._buf.split('\n', 1)
+                if line.strip():
+                    logging.log(self.level, line)
+    def flush(self):
+        with self._lock:
+            if self._buf.strip():
+                logging.log(self.level, self._buf)
+            self._buf = ''
+
+if sys.stdout is None:
+    sys.stdout = _StreamToLog(logging.INFO)
+if sys.stderr is None:
+    sys.stderr = _StreamToLog(logging.ERROR)
+
+def _excepthook(exc_type, exc_value, exc_tb):
+    logging.critical('Uncaught exception', exc_info=(exc_type, exc_value, exc_tb))
+sys.excepthook = _excepthook
+
+logging.info('=== audit-pack starting (pid=%s) ===', os.getpid())
+
 from flask import Flask, redirect, url_for, session
 from config.settings import Config
 from database import db

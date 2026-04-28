@@ -90,9 +90,10 @@ def _build_diagnostic(day: str, files: dict, result: dict) -> str:
     lines.append(f"  declared_sum         = {declared}")
     lines.append(f"  unexplained_residual = {residual}   <-- FAILING (expected 0.00)")
     lines.append("")
-    lines.append("VARIANCE CLASSES (10):")
+    lines.append("VARIANCE CLASSES:")
+    # InterHotel XferIn removed Apr 23: now folded into calc[46] (AU revenue), not variance.
     for class_name in [
-        "x20_transelect", "geac_bottom", "interhotel_xferin",
+        "x20_transelect", "geac_bottom",
         "panne_lien_hotel", "chambres_annulation", "prior_day_correction",
         "cashier_misposting", "depot_resto_pas_ferme",
         "recap_surplus", "recap_deficit",

@@ -141,6 +141,10 @@
                 <i data-feather="book-open"></i>
                 <span>Documentation</span>
             </a>
+            <a href="{{ url_for('audit.rj_core.rj_page_v2') }}" class="menu-item {% if request.path == '/rj/v2' %}active{% endif %}">
+                <i data-feather="zap"></i>
+                <span>RJ Auto-Fill</span>
+            </a>
             <a href="{{ url_for('rj_native.native_page') }}" class="menu-item {% if request.path == '/rj/native' %}active{% endif %}">
                 <i data-feather="edit-3"></i>
                 <span>Rapport Journalier</span>

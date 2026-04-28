@@ -162,6 +162,42 @@
           <input type="file" id="file-market_segment" accept=".pdf" style="display:none" onchange="handleFileSelect(this, 'market_segment')">
         </div>
 
+        <!-- House Totals (Recap cash side) -->
+        <div class="import-card" id="card-house_totals" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-house_totals').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'house_totals')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#06b6d4,#0891b2); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">💵</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">House Totals</div>
+              <div style="font-size:0.75rem; color:#64748b;">.txt — Lightspeed Sales Report</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Recap (Comptant B7, Remb Gratuité B11) → Jour BU/BW</div>
+          <div id="status-house_totals" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-house_totals" accept=".txt" style="display:none" onchange="handleFileSelect(this, 'house_totals')">
+        </div>
+
+        <!-- Débourse 90.2 (Remb Client + Due Back) -->
+        <div class="import-card" id="card-debourse" style="border:2px dashed #dee2e6; border-radius:12px; padding:1.25rem; cursor:pointer; transition: all 0.2s;"
+             onclick="document.getElementById('file-debourse').click()"
+             ondragover="event.preventDefault(); this.style.borderColor='#10b981'; this.style.background='#f0fdf4'"
+             ondragleave="this.style.borderColor='#dee2e6'; this.style.background='white'"
+             ondrop="handleDrop(event, 'debourse')">
+          <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.5rem;">
+            <div style="width:40px; height:40px; border-radius:10px; background:linear-gradient(135deg,#f97316,#ea580c); display:flex; align-items:center; justify-content:center; color:white; font-size:1.1rem;">📑</div>
+            <div>
+              <div style="font-weight:600; font-size:0.95rem;">Débourse 90.2</div>
+              <div style="font-size:0.75rem; color:#64748b;">.pdf — Cashier Detail Dept 90</div>
+            </div>
+          </div>
+          <div style="font-size:0.8rem; color:#94a3b8;">→ Recap (Remb Client B12, Due Back B16) → Jour BV/BY</div>
+          <div id="status-debourse" style="margin-top:0.5rem; font-size:0.8rem; display:none;"></div>
+          <input type="file" id="file-debourse" accept=".pdf" style="display:none" onchange="handleFileSelect(this, 'debourse')">
+        </div>
+
       </div>
 
       <!-- Manual Inputs Section -->
@@ -183,6 +219,16 @@
           <div>
             <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Dépôt Utilisé ($)</label>
             <input type="number" id="manual-depot-util" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;" title="Total Dépôt Utilisé à soustraire de Autres GL (col AS). Ex: 120+300=420">
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+          <div>
+            <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Argent Reçu ($)</label>
+            <input type="number" id="manual-argent-recu" step="0.01" placeholder="auto si laissé vide" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;" title="Cash physique dans la caisse (Recap B24). Laissé vide = Recap calcule depuis B7 Comptant.">
+          </div>
+          <div>
+            <label style="font-size:0.8rem; color:#64748b; display:block; margin-bottom:0.25rem;">Surplus/Déficit ($)</label>
+            <input type="number" id="manual-surplus-deficit" value="0" step="0.01" style="width:100%; padding:0.5rem; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;" title="Recap B19 — Différence physique (négatif = surplus, positif = déficit)">
           </div>
         </div>
 
@@ -234,9 +280,9 @@
 // DOCUMENT IMPORT SYSTEM
 // ============================================================================
 
-let parseTimeout = null;  // debounce for auto-parse after drop
+window.parseTimeout = window.parseTimeout ?? null;  // debounce for auto-parse after drop (window.* prevents re-declaration error on tab switch)
 
-const importState = {
+window.importState = window.importState ?? {
   files: {},      // { doc_type: File }
   results: {},    // { doc_type: parsed_data }
   filled: {},     // { doc_type: true/false }
@@ -244,7 +290,7 @@ const importState = {
 };
 
 // Department options for adjustments
-const DEPARTMENTS = [
+window.DEPARTMENTS = window.DEPARTMENTS ?? [
   { key: 'piazza_nourriture', label: 'Piazza Nourriture', col: 9 },
   { key: 'piazza_alcool', label: 'Piazza Alcool', col: 10 },
   { key: 'piazza_bieres', label: 'Piazza Bières', col: 11 },
@@ -259,7 +305,7 @@ const DEPARTMENTS = [
   { key: 'tabagie', label: 'Tabagie', col: 35 },
 ];
 
-let adjustmentCounter = 0;
+window.adjustmentCounter = window.adjustmentCounter ?? 0;
 
 // ============================================================================
 // ADJUSTMENT MANAGEMENT
@@ -339,15 +385,29 @@ function autoDetectDocType(filename) {
   const name = filename.toLowerCase();
   const ext = name.split('.').pop();
 
-  // Sales Journal: RTF or TXT files from Positouch/LightSpeed
-  if (ext === 'rtf' || (ext === 'txt' && (name.includes('journal') || name.includes('sales') || name.includes('positouch') || name.includes('lightspeed')))) {
-    return 'sales_journal';
+  // RTF/TXT: Sales Journal or House Totals
+  if (ext === 'rtf' || ext === 'txt') {
+    if (name.includes('house') && name.includes('total')) {
+      return 'house_totals';
+    }
+    if (ext === 'rtf' || name.includes('journal') || name.includes('sales') || name.includes('positouch') || name.includes('lightspeed')) {
+      return 'sales_journal';
+    }
+    return null;
   }
 
   // PDF files — order matters: check most-specific patterns first.
   if (ext === 'pdf') {
     if (name.includes('daily') || name.includes('revenue') || name.includes('revenu')) {
       return 'daily_revenue';
+    }
+    // Débourse 90.2 (Cashier Detail Dept 90) — filename typically "90_2.pdf"
+    if (name.includes('90_2') || name.includes('90.2') || name.includes('debourse') || name.includes('débourse')) {
+      return 'debourse';
+    }
+    // Cashier Cashout / Summary (cshout / cshsum)
+    if (name.includes('cashout') || name.includes('cshout') || name.includes('cshsum') || name.includes('cashier')) {
+      return 'cashier_cashout';
     }
     // Market Segment: check BEFORE ar_summary because "market" contains "ar"
     if (name.includes('market') || name.includes('segment') || name.includes('mktseg')) {
@@ -555,7 +615,30 @@ async function parseAllDocuments() {
     }
   } catch (e) { /* ignore — HP will parse without day */ }
 
+  // Recap-side files (house_totals, debourse) are parsed directly by
+  // /api/rj/autofill-recap-from-docs in step 3; skip them here.
+  const RECAP_SIDE_DOCS = new Set(['house_totals', 'debourse', 'cashier_cashout']);
+
   for (const [docType, file] of Object.entries(importState.files)) {
+    if (RECAP_SIDE_DOCS.has(docType)) {
+      // Recap-side docs are parsed by /api/rj/autofill-recap-from-docs at
+      // step 3, but we still need to seed importState.results so the step-3
+      // button enables (updateButtonStates checks results.length > 0) and
+      // so a recap-only upload triggers the green success banner.
+      importState.results[docType] = { success: true, source: 'recap_side', confidence: 1 };
+      successCount++;
+      const status = document.getElementById('status-' + docType);
+      if (status) {
+        status.style.color = '#059669';
+        status.textContent = '✓ prêt (traité à l\'étape 3)';
+      }
+      const card = document.getElementById('card-' + docType);
+      if (card) {
+        card.style.borderColor = '#10b981';
+        card.style.background = '#f0fdf4';
+      }
+      continue;
+    }
     const status = document.getElementById('status-' + docType);
     status.style.color = '#d97706';
     status.textContent = 'Extraction...';
@@ -618,15 +701,28 @@ async function parseAllDocuments() {
 }
 
 // ============================================================================
-// STEP 2: FILL INPUT SHEETS (Recap, Transelect, GEAC/UX)
+// STEP 2: FILL INPUT SHEETS (DEPRECATED — xlutils-based, corrupts .xls)
+// ----------------------------------------------------------------------------
+// The previous implementation called /api/rj/parse-and-fill, /autofill-cashout,
+// and /autofill-recap — all backed by RJFiller (xlutils), which silently
+// destroys the workbook's formulas/macros and shrinks the file ~75%.
+// Step 3 (/api/rj/fill-all + /api/rj/autofill-recap-from-docs) uses COM and
+// handles everything the old step 2 did. Step 2 is now a no-op confirmation.
 // ============================================================================
 
 async function fillAllSheets() {
   const banner = document.getElementById('import-status-banner');
   banner.style.display = 'block';
-  banner.style.background = '#fffbeb';
-  banner.style.border = '1px solid #fcd34d';
-  banner.style.color = '#92400e';
+  banner.style.background = '#ecfdf5';
+  banner.style.border = '1px solid #86efac';
+  banner.style.color = '#166534';
+  banner.textContent = 'Étape 2 désactivée. Cliquez directement sur "3. Remplir GEAC + Transelect + Jour" — un seul passage COM fait tout.';
+  if (typeof notify === 'function') notify('Étape 2 ignorée (xlutils corrompait le RJ). Cliquez étape 3.', 'info');
+  return;
+
+  // ----- Legacy code below kept for reference; never executes -----
+  const legacyDisabled = true;
+  if (legacyDisabled) return;
   banner.textContent = 'Remplissage des feuilles d\'entrée...';
 
   let fillCount = 0;
@@ -867,18 +963,62 @@ async function fillJourSheet() {
       resultsContent.innerHTML += html;
       resultsDiv.style.display = 'block';
 
-      // Update banner
+      // Update banner (preliminary — may be overwritten after Recap push)
       const totalCells = result.geac_cells + result.transelect_cells + result.jour_cells;
-      if (result.dc_balanced) {
+      banner.style.background = '#fffbeb';
+      banner.style.border = '1px solid #fcd34d';
+      banner.style.color = '#92400e';
+      banner.textContent = 'Remplissage Jour OK (' + totalCells + ' cellules). Push Recap → Jour BU:CA...';
+
+      // ---- Step 3b: Push Recap side (BU:CA) from House Totals + Débourse + DR ----
+      const htFile = importState.files['house_totals'];
+      const debFile = importState.files['debourse'];
+      const drFile = importState.files['daily_revenue'];  // for B17 Due Back N/B
+      const surplusVal = document.getElementById('manual-surplus-deficit')?.value;
+      const argentRecuVal = document.getElementById('manual-argent-recu')?.value;
+
+      let dcFinal = result.dc_value;
+      let dcBalanced = result.dc_balanced;
+
+      if (htFile || debFile || drFile || surplusVal || argentRecuVal) {
+        try {
+          const fd = new FormData();
+          if (htFile)  fd.append('house_totals', htFile);
+          if (debFile) fd.append('debourse', debFile);
+          if (drFile)  fd.append('daily_revenue', drFile);
+          if (surplusVal !== undefined && surplusVal !== '') fd.append('surplus_deficit', surplusVal);
+          if (argentRecuVal !== undefined && argentRecuVal !== '') fd.append('argent_recu', argentRecuVal);
+          fd.append('day', String(result.day));
+          const recapRes = await csrfFetch('/api/rj/autofill-recap-from-docs', {
+            method: 'POST',
+            body: fd,
+          });
+          const recapData = await recapRes.json();
+          if (recapData.success && typeof recapData.dc_value === 'number') {
+            dcFinal = recapData.dc_value;
+            dcBalanced = recapData.dc_balanced;
+            if (typeof notify === 'function') {
+              notify('Recap poussé → Jour. DC=$' + dcFinal.toFixed(2), dcBalanced ? 'success' : 'warning');
+            }
+          } else if (!recapData.success) {
+            if (typeof notify === 'function') notify('Recap fill: ' + (recapData.error || 'erreur'), 'warning');
+          }
+        } catch (recapErr) {
+          console.warn('autofill-recap-from-docs failed:', recapErr);
+        }
+      }
+
+      // Final banner (after both fill-all and recap push)
+      if (dcBalanced) {
         banner.style.background = '#f0fdf4';
         banner.style.border = '1px solid #86efac';
         banner.style.color = '#166534';
-        banner.textContent = 'Remplissage complet! ' + totalCells + ' cellules, DC = $' + result.dc_value.toFixed(2) + ' (balancé). Vous pouvez télécharger le RJ.';
+        banner.textContent = 'Remplissage complet! ' + totalCells + ' cellules + Recap→Jour, DC = $' + dcFinal.toFixed(2) + ' (balancé). Vous pouvez télécharger le RJ.';
       } else {
         banner.style.background = '#fffbeb';
         banner.style.border = '1px solid #fcd34d';
         banner.style.color = '#92400e';
-        banner.textContent = 'Remplissage complet (' + totalCells + ' cellules) mais DC = $' + result.dc_value.toFixed(2) + ' — vérifier la variance.';
+        banner.textContent = 'Remplissage complet (' + totalCells + ' cellules) mais DC = $' + dcFinal.toFixed(2) + ' — vérifier la variance.';
       }
 
       // Invalidate all data tabs
@@ -1003,7 +1143,11 @@ async function clearAllImports() {
   importState.filled = {};
   importState.jourFilled = false;
 
-  ['sales_journal', 'daily_revenue', 'ar_summary', 'market_segment', 'hp_excel', 'quasimodo', 'freedompay'].forEach(type => {
+  // Includes recap-side cards (house_totals, debourse, cashier_cashout) added
+  // alongside the autofill_recap_from_docs endpoint — without them, dropping
+  // the same file twice gets silently deduped by the browser file input.
+  ['sales_journal', 'daily_revenue', 'ar_summary', 'market_segment', 'hp_excel',
+   'quasimodo', 'freedompay', 'house_totals', 'debourse', 'cashier_cashout'].forEach(type => {
     const card = document.getElementById('card-' + type);
     if (card) {
       card.style.borderColor = '#dee2e6';
@@ -1024,6 +1168,13 @@ async function clearAllImports() {
   document.getElementById('manual-club-lounge').value = '0';
   document.getElementById('manual-deposit-on-hand').value = '0';
   document.getElementById('manual-depot-util').value = '0';
+  // Recap-side manual inputs: argent_recu has no template default (placeholder
+  // "auto si laissé vide") so reset to ''; surplus_deficit defaults to '0'.
+  // Stale values would silently re-apply on the next push and corrupt B9/B19.
+  const argentRecuEl = document.getElementById('manual-argent-recu');
+  if (argentRecuEl) argentRecuEl.value = '';
+  const surplusEl = document.getElementById('manual-surplus-deficit');
+  if (surplusEl) surplusEl.value = '0';
 
   // Clear adjustments
   document.getElementById('adjustments-container').innerHTML = '';

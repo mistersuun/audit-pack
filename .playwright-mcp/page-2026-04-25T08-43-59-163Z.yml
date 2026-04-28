@@ -1,0 +1,219 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "RJ Auto-Fill" [ref=e39] [cursor=pointer]:
+        - /url: /rj/v2
+        - img [ref=e40]
+        - generic [ref=e42]: RJ Auto-Fill
+      - link "Rapport Journalier" [ref=e43] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e44]
+        - generic [ref=e46]: Rapport Journalier
+      - link "RJ Balancer" [ref=e47] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e48]
+        - generic [ref=e51]: RJ Balancer
+      - generic [ref=e52]:
+        - link "CRM" [ref=e53] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e54]
+          - generic [ref=e57]: CRM
+          - img [ref=e58]
+        - generic:
+          - link "Vue d'ensemble" [ref=e60] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e61]
+            - generic [ref=e66]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e67] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e68]
+            - generic [ref=e71]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e72] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e73]
+            - generic [ref=e76]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e77] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e78]
+            - generic [ref=e83]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e85]
+            - generic [ref=e87]: Cash & Récon
+          - link "Paiements" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e89]
+            - generic [ref=e91]: Paiements
+          - link "P&L & Budget" [ref=e92] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e93]
+            - generic [ref=e96]: P&L & Budget
+      - link "Prévisions" [ref=e97] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e98]
+        - generic [ref=e101]: Prévisions
+      - link "STR & OTB" [ref=e102] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e103]
+        - generic [ref=e107]: STR & OTB
+      - generic [ref=e108]:
+        - link "Générateurs" [ref=e109] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e110]
+          - generic [ref=e114]: Générateurs
+          - img [ref=e115]
+        - generic:
+          - link "Documents" [ref=e117] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e118]
+            - generic [ref=e121]: Documents
+          - link "Pourboires" [ref=e122] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e123]
+            - generic [ref=e125]: Pourboires
+          - link "HP / Admin" [ref=e126] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e127]
+            - generic [ref=e132]: HP / Admin
+      - generic [ref=e133]: Support
+      - link "FAQ" [ref=e134] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e135]
+        - generic [ref=e138]: FAQ
+    - generic [ref=e139]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e140] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e141]: A
+        - generic [ref=e142]:
+          - generic [ref=e143]: Auditeur de nuit
+          - generic [ref=e144]: Auditeur de nuit
+      - link "Mode sombre" [ref=e145] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e146]
+        - generic [ref=e148]: Mode sombre
+      - link "Déconnexion" [ref=e149] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e150]
+        - generic [ref=e153]: Déconnexion
+  - main [ref=e154]:
+    - generic [ref=e155]:
+      - generic [ref=e156]:
+        - generic [ref=e158]:
+          - img [ref=e160]
+          - generic [ref=e163]:
+            - heading "Gestion RJ" [level=1] [ref=e164]
+            - generic [ref=e165]:
+              - generic [ref=e167]: RJ.xls
+              - generic [ref=e234]: (2250 KB)
+        - generic [ref=e168]:
+          - button "Uploader un fichier RJ" [ref=e169] [cursor=pointer]:
+            - img [ref=e235]
+            - generic [ref=e238]: Remplacer
+          - button "Télécharger le fichier RJ" [ref=e174] [cursor=pointer]:
+            - img [ref=e175]
+            - generic [ref=e178]: Télécharger
+          - button "Générer le fichier Quasimodo" [ref=e179] [cursor=pointer]:
+            - img [ref=e180]
+            - generic [ref=e182]: Quasimodo
+          - button "Générer le rapport PDF pour le GM" [ref=e183] [cursor=pointer]:
+            - img [ref=e184]
+            - generic [ref=e187]: Rapport PDF
+          - button "Réinitialiser le RJ" [ref=e188] [cursor=pointer]:
+            - img [ref=e189]
+            - generic [ref=e193]: Reset
+      - generic [ref=e239]:
+        - generic [ref=e661]: 5/7 sections
+        - generic [ref=e664]: 71%
+        - generic [ref=e665]:
+          - generic "Contrôle" [ref=e666] [cursor=pointer]
+          - generic "Recap" [ref=e667] [cursor=pointer]
+          - generic "Transelect" [ref=e668] [cursor=pointer]
+          - generic "GEAC" [ref=e669] [cursor=pointer]
+          - generic "DueBack" [ref=e670] [cursor=pointer]
+          - generic "Dépôt / SD" [ref=e671] [cursor=pointer]
+          - generic "Macros Jour" [ref=e672] [cursor=pointer]
+      - generic [ref=e194]:
+        - tablist [ref=e195]:
+          - tab "⚙ Setup" [ref=e196] [cursor=pointer]:
+            - generic [ref=e197]: ⚙
+            - generic [ref=e198]: Setup
+          - tab "1 Import" [ref=e199] [cursor=pointer]:
+            - generic [ref=e200]: "1"
+            - generic [ref=e201]: Import
+          - tab "2 SD" [ref=e202] [cursor=pointer]:
+            - generic [ref=e203]: "2"
+            - generic [ref=e204]: SD
+          - tab "3 DueBack" [ref=e205] [cursor=pointer]:
+            - generic [ref=e206]: "3"
+            - generic [ref=e207]: DueBack
+          - tab "4 Saisies" [ref=e208] [cursor=pointer]:
+            - generic [ref=e209]: "4"
+            - generic [ref=e210]: Saisies
+          - tab "5 Balance" [active] [ref=e211] [cursor=pointer]:
+            - generic [ref=e212]: "5"
+            - generic [ref=e213]: Balance
+          - tab "6 Aperçu" [ref=e214] [cursor=pointer]:
+            - generic [ref=e215]: "6"
+            - generic [ref=e216]: Aperçu
+          - button "⋯ Détail" [ref=e217] [cursor=pointer]:
+            - generic [ref=e218]: ⋯
+            - generic [ref=e219]: Détail
+        - generic [ref=e673]:
+          - generic [ref=e674]:
+            - heading "RJ Auto-Balancer" [level=2] [ref=e675]
+            - paragraph [ref=e676]: Compare les valeurs calculées (documents sources) vs les valeurs RJ actuelles
+          - generic [ref=e677]:
+            - generic [ref=e678]: Diff.Caisse (DC)
+            - generic [ref=e679]: —
+            - generic [ref=e680]: Cliquez "Vérifier" pour lancer l'analyse
+          - generic [ref=e681]:
+            - button "Recap → Jour" [ref=e682] [cursor=pointer]
+            - button "Transelect → Jour" [ref=e683] [cursor=pointer]
+            - button "Tout → Jour" [ref=e684] [cursor=pointer]
+          - button "Vérifier l'équilibrage" [ref=e686] [cursor=pointer]
+  - generic [ref=e373]:
+    - generic [ref=e374]: ✅ Validation RJ
+    - generic [ref=e375]:
+      - generic [ref=e376]: ✅ Date configurée
+      - generic [ref=e377]: Jour 24/4/2026
+    - generic [ref=e378]:
+      - generic [ref=e379]: ℹ️ Recap balance
+      - generic [ref=e380]: Non vérifié
+    - generic [ref=e381]:
+      - generic [ref=e382]: ℹ️ Cartes TS vs GEAC
+      - generic [ref=e383]: Pas de données cartes
+    - generic [ref=e384]:
+      - generic [ref=e385]: ℹ️ Recap balance
+      - generic [ref=e386]: Pas encore rempli
+    - generic [ref=e387]:
+      - generic [ref=e388]: ✅ DueBack
+      - generic [ref=e389]: 20 réceptionnistes

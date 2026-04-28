@@ -37,6 +37,8 @@ class SJData:
     bqt_loc: float = 0; bqt_internet: float = 0; bqt_pause: float = 0
     bqt_vestiaire: float = 0; bqt_autre_frais: float = 0
     piaz_tab: float = 0  # Piazza tabagie (rare, added to col 35)
+    piaz_eq_divers: float = 0  # Piazza eq divers (added to col 31, user rule Apr 23)
+    ch_tab: float = 0  # Chambres tabagie (added to col 35, user rule Apr 23)
     spesa_nourr: float = 0; spesa_pourb: float = 0; spesa_tab: float = 0; spesa_internet: float = 0
     # Taxes
     tps: float = 0; tvq: float = 0
@@ -243,6 +245,7 @@ def parse_sj(file_bytes: BytesIO) -> SJData:
                 elif 'FR/ETAGE' in name: sj.piaz_fretage = amount
                 elif 'PAUSE' in name: sj.piaz_pause = amount
                 elif 'EQUIP AUDIO' in name: sj.piaz_eq_audio = amount  # May be debit (reversal)
+                elif 'EQ. DIVERS' in name: sj.piaz_eq_divers = amount  # Goes to AF col 31
                 elif 'TABAGIE' in name: sj.piaz_tab = amount
             elif current_dept == 'CHAMBRES':
                 if 'NOURRITURE' in name: sj.ch_nourr = amount
@@ -251,6 +254,7 @@ def parse_sj(file_bytes: BytesIO) -> SJData:
                 elif 'VIN' in name: sj.ch_vins = amount
                 elif 'FR/ETAGE' in name: sj.ch_fretage = amount
                 elif 'BIERE' in name: sj.ch_bieres = amount
+                elif 'TABAGIE' in name: sj.ch_tab = amount  # Goes to AJ col 35
             elif current_dept == 'BANQUET':
                 if name == 'NOURRITURE': sj.bqt_nourr = amount
                 elif name == 'ALCOOL': sj.bqt_alcool = amount
@@ -714,10 +718,10 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
     # deducting it here would double-count (master doc Part 2 col 29).
     calc[29] = sj.piaz_pourb + sj.bqt_pourb + sj.spesa_pourb
     calc[30] = sj.bqt_eq_audio - sj.piaz_eq_audio  # Equipement Audio (bqt - piazza reversal)
-    calc[31] = sj.bqt_eq_divers  # EQ. Divers (if credit=+, debit=-)
+    calc[31] = sj.bqt_eq_divers - sj.piaz_eq_divers  # EQ. Divers (Banquet - Piazza reversal, mirrors col 30 pattern)
     calc[32] = sj.piaz_loc + sj.bqt_loc + dr.loc_salle_forfait  # Location de Salles (SJ + DR)
     calc[33] = sj.bqt_socam  # SOCAN
-    calc[35] = sj.spesa_tab + sj.piaz_tab - hp.tab_items_admin - hp.tab_items_promo  # Tabagie (spesa + piazza - HP)
+    calc[35] = sj.spesa_tab + sj.piaz_tab + sj.ch_tab - hp.tab_items_admin - hp.tab_items_promo  # Tabagie (spesa + piazza + chambres - HP, user rule Apr 23)
     calc[36] = dr.chambres_total - g4  # Chambres
     calc[37] = dr.tel_local  # Tel Local
     calc[38] = dr.tel_inter  # Tel Inter
@@ -730,10 +734,9 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
     # calc[41] = geac.col41
     calc[44] = dr.autres_gl + dr.autres_gl_t - sj.depot_util  # Autres GL
     calc[45] = dr.sonifi  # Sonifi
-    # Col 46 (AU) = Autre Rev.  InterHotel XferIn is NOT included here
-    # because the GT RJ treats it as a variance class (declared in the
-    # DC cell note) rather than a revenue column.
-    calc[46] = sj.piaz_fretage + sj.ch_fretage + dr.lit_pliant  # Autre Rev
+    # Col 46 (AU) = Autre Rev. InterHotel XferIn is folded in here per user
+    # rule Apr 23 (no longer a separate DC variance class).
+    calc[46] = sj.piaz_fretage + sj.ch_fretage + dr.lit_pliant + dr.interhotel_xferin  # Autre Rev (+ InterHotel, user rule Apr 23)
     calc[47] = dr.loc_boutique  # Loc Boutique
     calc[48] = dr.internet + sj.bqt_internet + sj.spesa_internet  # Internet (DR + SJ banquet + SJ spesa)
     calc[49] = sj.tvq + dr.tvq_ch + dr.tvq_aut + dr.tvq_int + dr.tvq_comptab  # TVQ
@@ -762,7 +765,7 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
     calc[74] = -sj.pourb_charge  # Remb Gratuite
     calc[76] = -recap.due_back_rec if recap.due_back_rec > 0 else 0  # Due Back Rec
     calc[78] = -recap.surplus_deficit  # S&D (Recap stores surplus as negative, jour debit needs positive)
-    calc[79] = sj.cert_cadeau + dr.givex  # Cert Cadeau / GiveX
+    calc[79] = sj.cert_cadeau - abs(dr.givex)  # Cert Cadx: SJ cert_cadeau minus GiveX (GiveX always negative, user rule Apr 23)
     # Transfer C/R = net facture (GEAC FD - AR).  Using the raw DR FD
     # overstates the debit; the AR payments offset part of it.
     calc[83] = geac.diff if abs(geac.diff) > 0.001 else dr.facture_direct
@@ -976,12 +979,11 @@ def calculate_jour(sj: SJData, dr: DRData, ar: ARData, hp: HPData,
 
 # French labels matching the auditor conventions observed in the 20-day
 # forensic library (Mar/Apr 2026). Order here is the order used in the
-# generated note body — Transelect / GEAC / InterHotel first, then the
-# smaller manual classes.
+# generated note body — Transelect / GEAC first, then the smaller manual
+# classes. (InterHotel XferIn was removed Apr 23: now folded into AU col 46.)
 _VARIANCE_NOTE_LABELS = (
     ('x20_transelect',       'TRANSELECT'),
     ('geac_bottom',          'GEAC'),
-    ('interhotel_xferin',    'InterHotel XferIn'),
     ('chambres_annulation',  'CHAMBRES ANNULER'),
     ('prior_day_correction', 'CORRECTION VEILLE'),
     ('cashier_misposting',   'CORRECTION CAISSIER'),
@@ -1130,11 +1132,11 @@ def _build_checklist(nas, sj, dr, ar, hp, adv, tr, geac, recap, calc_result):
            f"S&D={recap.surplus_deficit:.2f}",
            f"Ecart S&D" if sd_errors else "OK")
 
-    # 15. Cert Cadeau = SJ + GiveX (col 79)
+    # 15. Cert Cadx = SJ cert_cadeau - GiveX (col 79, GiveX always negative)
     cc_errors = [e for e in errors if e['col'] == 79]
-    _check("15. Cert Cadeau = SJ + GiveX",
+    _check("15. Cert Cadx = SJ cert - GiveX",
            len(cc_errors) == 0,
-           f"CertCd={sj.cert_cadeau + dr.givex:.2f}",
+           f"CertCd={sj.cert_cadeau - abs(dr.givex):.2f}",
            f"Ecart CertCd" if cc_errors else "OK")
 
     # 16. Transfer C/R = DR Facture Direct (col 83)
@@ -1386,20 +1388,21 @@ class BalancerService:
                     'fix': f"Set col {r['col']} ({r['name']}) to {r['calc']:.2f}",
                 })
 
-        # DC decomposition — 10 variance classes per master doc Part 3.
+        # DC decomposition — variance classes per master doc Part 3.
         # `recap_surplus_deficit` is excluded from declared_sum: col 78 already
         # absorbs it into the jour debit side, so including it would double-count.
+        # `interhotel_xferin` is excluded: as of user rule Apr 23 it lives in
+        # calc[46] (AU revenue), so it no longer belongs in DC variance.
         # `panne_lien_hotel` IS included: Mar 02 verified DC = X20 + PANNE LIEN.
         # Classes 6-9 (chambres annul, prior-day, misposting, depot resto) require
         # cell-note parsing — placeheld at 0 until Phase 3.
         x20_transelect = round(tr.x24, 2)
         geac_bottom = round(geac_effective.col41, 2)
         recap_sd_col78_value = round(-recap.surplus_deficit, 2)
-        interhotel_xferin = round(dr.interhotel_xferin, 2)
         panne_lien_hotel = round(sj.panne_lien, 2)
 
         declared_sum = round(
-            x20_transelect + geac_bottom + interhotel_xferin + panne_lien_hotel,
+            x20_transelect + geac_bottom + panne_lien_hotel,
             2,
         )
         unexplained_residual = round(calc_result['dc_calc'] - declared_sum, 2)
@@ -1412,7 +1415,6 @@ class BalancerService:
                 'geac_bottom': geac_bottom,
                 'geac_top_per_card': {},
                 'recap_surplus_deficit': recap_sd_col78_value,
-                'interhotel_xferin': interhotel_xferin,
                 'chambres_annulation': 0,
                 'prior_day_correction': 0,
                 'cashier_misposting': 0,

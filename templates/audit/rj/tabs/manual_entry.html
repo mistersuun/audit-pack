@@ -134,8 +134,8 @@
 
 <script data-rj-tab-script="manual_entry">
 // Manual entry simplified interface
-const ME_RECEPTIONISTS = [];
-let meEntries = [];
+window.ME_RECEPTIONISTS = window.ME_RECEPTIONISTS ?? [];
+window.meEntries = window.meEntries ?? [];
 
 async function initManualEntry() {
   // Load receptionist names if available

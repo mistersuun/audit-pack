@@ -269,8 +269,8 @@
 // DUEBACK TAB - Dynamic Receptionist Loading & Entry Management
 // ============================================================================
 
-let duebackEntries = [];
-let duebackReceptionists = [];
+window.duebackEntries = window.duebackEntries ?? [];
+window.duebackReceptionists = window.duebackReceptionists ?? [];
 
 /**
  * Load receptionists dynamically from the DUBACK# sheet headers.

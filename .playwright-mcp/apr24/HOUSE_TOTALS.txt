@@ -1,0 +1,475 @@
+
+
+HOTEL SHERATON LAVAL                                                   PAGE:   1
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                   SALES TOTALS BY CATEGORY for Entire house
+                                         SALES              %OF SALES
+--------------------------------------------------------------------------------
+NOURRITURE
+    DEJEUNER                        1751.25                 4.28%
+       LUNCH                        7795.25                19.03%
+  HAPPY HOUR                        1506.45                 3.68%
+      SOUPER                        3740.40                 9.13%
+  TOTAL                                      14793.35               36.11%
+ALCOOL    
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                          91.50                 0.22%
+  HAPPY HOUR                         664.50                 1.62%
+      SOUPER                        1264.00                 3.09%
+  TOTAL                                       2020.00                4.93%
+BIERES    
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                         148.00                 0.36%
+  HAPPY HOUR                         253.00                 0.62%
+      SOUPER                         983.50                 2.40%
+  TOTAL                                       1384.50                3.38%
+N/ALC BAR 
+    DEJEUNER                           3.00                 0.01%
+       LUNCH                          25.50                 0.06%
+  HAPPY HOUR                          24.75                 0.06%
+      SOUPER                         114.25                 0.28%
+  TOTAL                                        167.50                0.41%
+VINS      
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                          71.00                 0.17%
+  HAPPY HOUR                         536.00                 1.31%
+      SOUPER                         777.00                 1.90%
+  TOTAL                                       1384.00                3.38%
+P. A PAYER
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                        1560.96                 3.81%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                       1560.96                3.81%
+SOCAM     
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                          0.00                0.00%
+EQUP AUDIO
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                       11978.70                29.24%
+  HAPPY HOUR                           0.00                 0.00%
+
+HOTEL SHERATON LAVAL                                                   PAGE:   2
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                   SALES TOTALS BY CATEGORY for Entire house
+                                         SALES              %OF SALES
+--------------------------------------------------------------------------------
+      SOUPER                           0.00                 0.00%
+  TOTAL                                      11978.70               29.24%
+EQ. DIVERS
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                          0.00                0.00%
+LOC SALLE 
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                        4750.00                11.60%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                         400.00                 0.98%
+  TOTAL                                       5150.00               12.57%
+AUTRE FRAI
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                          0.00                0.00%
+INTERNET  
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                          0.00                0.00%
+FORFAIT   
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                          0.00                0.00%
+FR / ETAGE
+    DEJEUNER                          -3.00                -0.01%
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                         -3.00               -0.01%
+PAUS SPESA
+    DEJEUNER                           0.00                 0.00%
+       LUNCH                        1625.00                 3.97%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                       1625.00                3.97%
+VESTIAIRE 
+    DEJEUNER                           0.00                 0.00%
+
+HOTEL SHERATON LAVAL                                                   PAGE:   3
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                   SALES TOTALS BY CATEGORY for Entire house
+                                         SALES              %OF SALES
+--------------------------------------------------------------------------------
+       LUNCH                           0.00                 0.00%
+  HAPPY HOUR                           0.00                 0.00%
+      SOUPER                           0.00                 0.00%
+  TOTAL                                          0.00                0.00%
+TABAGIE   
+    DEJEUNER                         210.77                 0.51%
+       LUNCH                         398.55                 0.97%
+  HAPPY HOUR                          67.98                 0.17%
+      SOUPER                         224.83                 0.55%
+  TOTAL                                        902.13                2.20%
+                                           ----------              -------
+TOTAL SALES                                  40963.14              100.00%
+TOTAL TAX                                     6032.65
+                                           ----------
+TOTAL SALES PLUS TAX                         46995.79
+
+HOTEL SHERATON LAVAL                                                   PAGE:   4
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                          SALES TOTALS BY COST CENTER
+                   CUST COUNT            SALES              % OF SALES
+--------------------------------------------------------------------------------
+PIAZZA         
+    DEJEUNER         40             1086.50                 2.65%
+       LUNCH         34             9480.06                23.14%
+  HAPPY HOUR         53             2812.25                 6.87%
+      SOUPER        213             6497.75                15.86%
+  TOTAL                  340                 19876.56               48.52%
+CHAMBRES       
+    DEJEUNER          0                0.00                 0.00%
+       LUNCH          2               61.00                 0.15%
+  HAPPY HOUR          3               95.00                 0.23%
+      SOUPER          9              596.00                 1.45%
+  TOTAL                   14                   752.00                1.84%
+BANQUET        
+    DEJEUNER          0                0.00                 0.00%
+       LUNCH         14            18208.60                44.45%
+  HAPPY HOUR          0                0.00                 0.00%
+      SOUPER          0                0.00                 0.00%
+  TOTAL                   14                 18208.60               44.45%
+SPESA          
+    DEJEUNER         80              875.52                 2.14%
+       LUNCH         74              694.80                 1.70%
+  HAPPY HOUR         12              145.43                 0.36%
+      SOUPER         41              410.23                 1.00%
+  TOTAL                  207                  2125.98                5.19%
+                        ----               ----------              -------
+TOTAL SALES              575                 40963.14              100.00%
+TOTAL TAX                                     6032.65
+                                           ----------
+TOTAL SALES PLUS TAX                         46995.79
+
+HOTEL SHERATON LAVAL                                                   PAGE:   5
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                   SALES TOTALS BY TAX TYPE for Entire house
+                                         SALES      TAX
+--------------------------------------------------------------------------------
+                 TAXABLE              40282.31
+                   TAX 1                         2014.45
+                   TAX 2                         4018.20
+
+                 TAX INCLUDED (NET)       0.00
+                   TAX OWED 1                       0.00
+                   TAX OWED 2                       0.00
+
+                 TAX EXEMPT             680.83
+                   TAX OWED                         0.00
+                                     -------------------
+                 TOTAL                40963.14   6032.65
+                                     -------------------
+                 TOTAL SALES PLUS TAX           46995.79
+
+
+
+
+HOTEL SHERATON LAVAL                                                   PAGE:   6
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                       DISCOUNT SUMMARY for Entire house
+Discount--     GERANT  EXEMPTION T*  LOUMII 10%  CLUB LOUNGE  AMERISPA 10  
+--------------------------------------------------------------------------------
+NOURRITURE        0.00         0.00         0.00         0.00         0.70 
+ # Sold           0.00        38.00         0.00         0.00         1.00 
+
+ALCOOL            0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         1.00         0.00         0.00         0.00 
+
+BIERES            0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+N/ALC BAR         0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+VINS              0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         3.00         0.00         0.00         0.00 
+
+P. A PAYER        0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+SOCAM             0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+EQUP AUDIO        0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+EQ. DIVERS        0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+LOC SALLE         0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+AUTRE FRAI        0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+INTERNET          0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+FORFAIT           0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+FR / ETAGE        0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+PAUS SPESA        0.00         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+VESTIAIRE         0.00         0.00         0.00         0.00         0.00 
+
+HOTEL SHERATON LAVAL                                                   PAGE:   7
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                       DISCOUNT SUMMARY for Entire house
+Discount--     GERANT  EXEMPTION T*  LOUMII 10%  CLUB LOUNGE  AMERISPA 10  
+--------------------------------------------------------------------------------
+ # Sold           0.00         0.00         0.00         0.00         0.00 
+
+TABAGIE           0.00         0.00         0.00         0.00         0.10 
+ # Sold           0.00        37.00         0.00         0.00         1.00 
+
+             ---------    ---------    ---------    ---------    --------- 
+Total:            0.00         0.00         0.00         0.00         0.80 
+ # Checks            0           28            0            0            1 
+
+HOTEL SHERATON LAVAL                                                   PAGE:   8
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                       DISCOUNT SUMMARY for Entire house
+Discount--  HOTEL 50%          25%  EMPLOYEE 30        TOTAL
+--------------------------------------------------------------------------------
+NOURRITURE        0.00         0.00         7.65         8.35 
+ # Sold           0.00         0.00         5.00        44.00 
+
+ALCOOL            0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         1.00 
+
+BIERES            0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+N/ALC BAR         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+VINS              0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         3.00 
+
+P. A PAYER        0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+SOCAM             0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+EQUP AUDIO        0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+EQ. DIVERS        0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+LOC SALLE         0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+AUTRE FRAI        0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+INTERNET          0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+FORFAIT           0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+FR / ETAGE        0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+PAUS SPESA        0.00         0.00         0.00         0.00 
+ # Sold           0.00         0.00         0.00         0.00 
+
+VESTIAIRE         0.00         0.00         0.00         0.00 
+
+HOTEL SHERATON LAVAL                                                   PAGE:   9
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                       DISCOUNT SUMMARY for Entire house
+Discount--  HOTEL 50%          25%  EMPLOYEE 30        TOTAL
+--------------------------------------------------------------------------------
+ # Sold           0.00         0.00         0.00         0.00 
+
+TABAGIE           0.00         0.00        17.33        17.43 
+ # Sold           0.00         0.00         9.00        47.00 
+
+             ---------    ---------    ---------    --------- 
+Total:            0.00         0.00        24.98        25.78 
+ # Checks            0            0           12           41 
+
+  Discounts marked * are included in sales figures.
+  Discounts are shown net of tax.
+
+HOTEL SHERATON LAVAL                                                   PAGE:  10
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                       DELETION SUMMARY for Entire house
+Reason---  ERREUR N/P ERREUR PRE DEM. DU SE CLIENT INS  TROP LONG       TOTAL
+--------------------------------------------------------------------------------
+NOURRITURE      15.00       0.00       0.00       0.00       0.00      15.00
+ # Deleted       1.00       0.00       0.00       0.00       0.00       1.00
+
+ALCOOL           0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+BIERES           0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+N/ALC BAR        0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+VINS             0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+P. A PAYER       0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+SOCAM            0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+EQUP AUDIO       0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+EQ. DIVERS       0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+LOC SALLE        0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+AUTRE FRAI       0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+INTERNET         0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+FORFAIT          0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+FR / ETAGE       0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+PAUS SPESA       0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+VESTIAIRE        0.00       0.00       0.00       0.00       0.00       0.00
+
+HOTEL SHERATON LAVAL                                                   PAGE:  11
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                       DELETION SUMMARY for Entire house
+Reason---  ERREUR N/P ERREUR PRE DEM. DU SE CLIENT INS  TROP LONG       TOTAL
+--------------------------------------------------------------------------------
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+TABAGIE          0.00       0.00       0.00       0.00       0.00       0.00
+ # Deleted       0.00       0.00       0.00       0.00       0.00       0.00
+
+            ---------  ---------  ---------  ---------  ---------  ---------
+                15.00       0.00       0.00       0.00       0.00      15.00
+
+HOTEL SHERATON LAVAL                                                   PAGE:  12
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                              NON-RESETABLE TOTALS
+
+--------------------------------------------------------------------------------
+                  ENDING                       9,025,068.42
+                  -BEGINNING                   8,978,015.90
+                                             -------------
+                  PERIOD                         47,052.52
+
+                  -OVERRINGS                         20.70
+                  -OPEN TABLES                        0.00
+                  -DELETED ITEMS & TABLES            15.00
+                  -DISCOUNTS THAT SUBTRACT           25.78
+                  ADDITIONAL SALES                    0.00
+                                             -------------
+                  TOTAL SALES+TAX                46,991.04
+
+
+NRT ERROR - SALES TOTALS
+
+
+HOTEL SHERATON LAVAL                                                   PAGE:  13
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:15.23
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                        PAYMENT TOTALS for Entire house
+
+--------------------------------------------------------------------------------
+   TYPE        NO                                                    TALLY
+CASH          54           
+ -PAIDOUTS                                                        -1432.81
+
+                                                                ----------
+
+
+EXPECTED DEPOSIT                                                  -1432.81
+
+PAIDOUTS                                                           2024.84
+
+VISA          89                                                   7272.86
+
+MASTERCARD    60                                                   2311.18
+
+AMEX          15                                                    754.29
+
+INTERAC       48                                                   2185.96
+
+CHAMBRE       81                                                  34962.07
+
+PANE MASTE     1                                                      5.31
+
+ADMIN          4                                                     59.17
+
+HOTEL PROM    21                                                    532.75
+
+FORFAIT        3                                                    152.95
+
+PANNE LIEN     3                                                    192.06
+
+TIPS TO SERVERS                                                   -2024.84
+
+                                                                ----------
+
+TOTAL SALES+TAX                                                   46995.79
+

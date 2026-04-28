@@ -230,18 +230,22 @@ class JourMapper:
 
     def _formula_column_bf(self, config):
         """
-        Column BF = -Forfait + Club Lounge value.
+        Column BF = -SJ Forfait + Club Lounge + G4.
+
+        Verified against Apr 23 ground truth: BF = -120.18 + 0 + 40 = -80.18.
+        Apr 24: BF = -152.95 + 0 + 70 = -82.95.
         """
-        # Forfait from HP data or Sales Journal
+        # Forfait from SJ adjustments (HOUSE_TOTALS PAYMENT TOTALS line)
         forfait = self._resolve_field('adjustments.forfait')
         if forfait is None:
             forfait = 0
         forfait = float(forfait)
 
-        # Club lounge from manual values
+        # Club lounge and G4 from manual values
         club_lounge = float(self.manual.get('club_lounge', 0))
+        g4 = float(self.manual.get('g4', 0))
 
-        return -forfait + club_lounge
+        return -forfait + club_lounge + g4
 
     def _process_geac_compensation(self, config):
         """
@@ -267,8 +271,14 @@ class JourMapper:
         """
         CF Transfer: sum accumulator_fields with sign-prefix support.
 
-        Fields prefixed with '-' are subtracted; others are added.
-        Formula: CF = front_office_transfers - ar_payments - ar_misc.
+        Field path syntax:
+          'foo'      -> add value
+          '-foo'     -> subtract value
+          '|foo|'    -> add abs(value)
+          '-|foo|'   -> subtract abs(value)
+        Formula examples:
+          CF = front_office_transfers - ar_payments - ar_misc
+          CB = sj.cert_cadeau - abs(dr.givex)
         Returns None if no fields resolved.
         """
         fields = config.get('accumulator_fields', [])
@@ -280,13 +290,19 @@ class JourMapper:
 
         for field_path in fields:
             negate = False
+            absolute = False
             if field_path.startswith('-'):
                 negate = True
                 field_path = field_path[1:]
+            if field_path.startswith('|') and field_path.endswith('|'):
+                absolute = True
+                field_path = field_path[1:-1]
 
             value = self._resolve_field(field_path)
             if value is not None:
                 fval = float(value)
+                if absolute:
+                    fval = abs(fval)
                 total += -fval if negate else fval
                 found_any = True
 

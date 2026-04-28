@@ -958,7 +958,48 @@ def fill_all():
                     jour_values_1based[60 + trans_col] = v
 
             filler.write_jour_row(day, jour_values_1based)
-            dc_value = filler.get_dc(day)
+
+            # ---- BJ auto-compensation ----
+            # Transelect X24 (row 20, col 24) holds the restaurant card carry-down
+            # variance. BJ (Jour col 62) carries the Discover total from
+            # Transelect (row 38, col 2, written above) AND absorbs X24 to drive
+            # DC toward $0. We must PRESERVE the Discover total — write the
+            # formula as `={discover}+{x24}` instead of overwriting BJ.
+            # Sign heuristic: pick whichever of +X24 / -X24 minimises |DC| after
+            # the write. Because we preserve Discover (the only change is +chosen),
+            # the actual post-write DC equals dc_before_bj + chosen_x24.
+            # PANNE LIEN HOTEL is intentionally excluded — it lands in AK via DR
+            # chambres and must never be double-compensated here.
+            js = filler.wb.Sheets('jour')
+            jour_row = day + 2  # Day 1 → row 3
+            x24 = ts.Cells(20, 24).Value or 0.0
+            filler.excel.Calculate()
+            _time.sleep(0.2)
+            dc_before_bj = float(js.Cells(jour_row, 3).Value or 0.0)
+            existing_bj = float(js.Cells(jour_row, 62).Value or 0.0)
+            logger.info(
+                'fill_all BJ: X24=%.2f  DC_before=%.2f  Discover_in_BJ=%.2f',
+                x24, dc_before_bj, existing_bj,
+            )
+
+            if x24:
+                if abs(dc_before_bj + x24) < abs(dc_before_bj - x24):
+                    chosen_x24 = x24
+                else:
+                    chosen_x24 = -x24
+                if chosen_x24 >= 0:
+                    bj_formula = f'={existing_bj:.2f}+{chosen_x24:.2f}'
+                else:
+                    bj_formula = f'={existing_bj:.2f}-{abs(chosen_x24):.2f}'
+                logger.info(
+                    'fill_all BJ: writing col62 formula %s (chosen X24=%.2f, preserves Discover=%.2f)',
+                    bj_formula, chosen_x24, existing_bj,
+                )
+                js.Cells(jour_row, 62).Formula = bj_formula
+                filler.excel.Calculate()
+                _time.sleep(0.2)
+
+            dc_value = float(js.Cells(jour_row, 3).Value or 0.0)
 
         # ---- Read file back to memory ----
         # Note: concurrent fill_all calls for the same session could race here.
@@ -1000,6 +1041,266 @@ def fill_all():
                 os.unlink(tmp_path)
             except OSError:
                 pass
+            backup_path = tmp_path + '.bak.xls'
+            try:
+                os.unlink(backup_path)
+            except OSError:
+                pass
+
+
+@rj_fill_bp.route('/api/rj/autofill-recap-from-docs', methods=['POST'])
+@login_required
+@csrf_protect
+def autofill_recap_from_docs():
+    """Parse House Totals + Débourse 90.2 + (optional) Cashier Cashout,
+    fill the Recap sheet, then run envoie_dans_jour so BU:CA land in Jour.
+
+    Multipart form fields (all optional but at least one must be present):
+        house_totals:   HOUSE_TOTALS.txt  -> B7 (Comptant Positouch), B11 (Remb Gratuité)
+        debourse:       90_2.pdf          -> B12 (Remb Client), B16 (Due Back Réception)
+        cashier_cashout CASHIER_CASHOUT.pdf (currently informational only)
+
+    Optional form fields:
+        day:              target day 1-31 (read from controle if missing)
+        surplus_deficit:  manual B19 value (physical cash vs expected)
+        argent_recu:      manual B24 value (cash actually in the box)
+
+    Returns the values pushed to Jour BU:CA and the resulting DC.
+    """
+    from utils.parsers.house_totals_parser import HouseTotalsParser
+    from utils.parsers.debourse_parser import DebourseParser
+    from utils.rj_filler_com import RJFillerCOM
+
+    session_id = get_session_id()
+    if session_id not in RJ_FILES:
+        return jsonify({'success': False, 'error': 'Aucun fichier RJ chargé'}), 400
+
+    # --- Gather files from multipart form ---
+    ht_file = request.files.get('house_totals')
+    deb_file = request.files.get('debourse')
+    _ = request.files.get('cashier_cashout')  # parsed upstream for GEAC; unused here
+
+    dr_file_present = request.files.get('daily_revenue')
+    if not ht_file and not deb_file and not dr_file_present:
+        return jsonify({
+            'success': False,
+            'error': 'Au moins un fichier requis (house_totals, debourse ou daily_revenue)'
+        }), 400
+
+    # --- Parse inputs ---
+    recap_inputs = {}
+    parsed_summary = []
+
+    if ht_file:
+        ht = HouseTotalsParser(ht_file.read(), filename=ht_file.filename)
+        ht.parse()
+        if not ht.extracted_data:
+            return jsonify({'success': False, 'error': 'House Totals parsing failed'}), 400
+        comptant = ht.extracted_data.get('comptant_positouch')
+        remb_grat = ht.extracted_data.get('remb_gratuite')
+        if comptant is not None:
+            recap_inputs['B7'] = float(comptant)
+            parsed_summary.append(f'Comptant Positouch (B7)={comptant:.2f}')
+        if remb_grat is not None:
+            recap_inputs['B11'] = float(remb_grat)  # parser returns signed (negative)
+            parsed_summary.append(f'Remb Gratuité (B11)={remb_grat:.2f}')
+
+    if deb_file:
+        deb = DebourseParser(deb_file.read(), filename=deb_file.filename)
+        deb.parse()
+        if not deb.extracted_data:
+            return jsonify({'success': False, 'error': 'Débourse 90.2 parsing failed'}), 400
+        deb_total = deb.extracted_data.get('debourse_total')
+        if deb_total is not None:
+            # B12 (Remb Client) is entered as NEGATIVE — it reduces the total.
+            # B16 (Due Back Réception) is entered as POSITIVE because E16=-D16
+            # inverts the sign so L19 ends up negative.
+            # B17 (Due Back N/B) is sourced from DR `due_back_nourriture` (below),
+            # NOT from the débourse total.
+            neg_val = -abs(float(deb_total))
+            pos_val = abs(float(deb_total))
+            recap_inputs['B12'] = neg_val
+            recap_inputs['B16'] = pos_val   # E16==-D16 inverts → L19 negative
+            parsed_summary.append(
+                f'Remb Client (B12)={neg_val:.2f}  Due Back Réception (B16)={pos_val:.2f}'
+            )
+
+    # B17 Due Back N/B comes from Daily Revenue — comptabilite_nonrev.due_back_nourriture
+    # DR stores it as negative (e.g. -519.30); B17 needs the positive magnitude
+    # (Recap E17=-D17 will invert it back to negative for L19).
+    dr_file = request.files.get('daily_revenue')
+    if dr_file:
+        from utils.parsers.daily_revenue_parser import DailyRevenueParser
+        dr = DailyRevenueParser(dr_file.read(), filename=dr_file.filename)
+        dr.parse()
+        dbn = (dr.extracted_data or {}).get('non_revenue', {}) \
+            .get('comptabilite_nonrev', {}).get('due_back_nourriture')
+        if dbn is not None and abs(float(dbn)) > 0.005:
+            b17_val = abs(float(dbn))
+            recap_inputs['B17'] = b17_val
+            parsed_summary.append(f'Due Back N/B (B17)={b17_val:.2f} (from DR)')
+
+    # --- Optional manual values ---
+    sd = request.form.get('surplus_deficit')
+    if sd not in (None, ''):
+        try:
+            # B19 (Surplus/déficit) is signed: négatif = surplus, positif = déficit
+            # (matches the UI hint and rj_native.py:1002).
+            sd_val = float(sd)
+            recap_inputs['B19'] = sd_val
+            parsed_summary.append(f'Surplus/Déficit (B19)={sd_val:.2f}')
+        except ValueError:
+            return jsonify({'success': False, 'error': 'surplus_deficit invalide'}), 400
+
+    ar_recu_raw = request.form.get('argent_recu')
+    # Defer the argent_recu back-solve until after we open the workbook — it
+    # needs the existing B6 (LightSpeed cash) and B8 (Chèque A/R) values, which
+    # may have been written by the rj_native pipeline on a prior request.
+    if ar_recu_raw not in (None, ''):
+        try:
+            ar_recu = float(ar_recu_raw)
+        except ValueError:
+            return jsonify({'success': False, 'error': 'argent_recu invalide'}), 400
+    else:
+        ar_recu = None
+
+    # --- Determine target day ---
+    day = request.form.get('day')
+    if day:
+        try:
+            day = int(day)
+        except ValueError:
+            return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
+    else:
+        day = None
+
+    # --- Copy RJ bytes under lock, then release before COM ---
+    tmp_path = None
+    try:
+        with RJ_FILES_LOCK:
+            rj_bytes = RJ_FILES[session_id]
+            rj_bytes.seek(0)
+            raw_bytes = rj_bytes.read()
+
+        if not day:
+            reader = RJReader(io.BytesIO(raw_bytes))
+            day = reader.get_current_audit_day()
+        if not day or day < 1 or day > 31:
+            return jsonify({'success': False, 'error': f'Jour invalide: {day}'}), 400
+
+        tmp = tempfile.NamedTemporaryFile(suffix='.xls', delete=False)
+        tmp.write(raw_bytes)
+        tmp.close()
+        tmp_path = tmp.name
+
+        # --- Write to Recap, run envoie_dans_jour equivalent, return DC ---
+        with RJFillerCOM(tmp_path) as filler:
+            recap_sheet = filler.wb.Sheets('Recap')
+
+            # If argent_recu was provided, back-solve B9 (Chèque Daily Revenu).
+            # B24 is `=SUM(D10,E22)` and cannot be written directly. Solve:
+            #   B24 = D10 + E22 = (B6+B7+B8+B9) + (B16+B17+B19)
+            #   → B9 = argent_recu - B6 - B7 - B8 - (B16+B17+B19)
+            # B6 (LightSpeed cash) and B8 (Chèque A/R) may already be non-zero
+            # from the rj_native pipeline (rj_native.py:993-997). Reading them
+            # from the workbook prevents silent overshoot by exactly B6+B8.
+            if ar_recu is not None:
+                # Use recap_inputs values when present (about to be written),
+                # otherwise read existing workbook values. Avoid the .get(default)
+                # idiom — its default expression evaluates eagerly, which would
+                # do unnecessary COM reads.
+                b6 = float(recap_sheet.Cells(6, 2).Value or 0)
+                b7 = (recap_inputs['B7'] if 'B7' in recap_inputs
+                      else float(recap_sheet.Cells(7, 2).Value or 0))
+                b8 = float(recap_sheet.Cells(8, 2).Value or 0)
+                b16 = (recap_inputs['B16'] if 'B16' in recap_inputs
+                       else float(recap_sheet.Cells(16, 2).Value or 0))
+                b17 = float(recap_sheet.Cells(17, 2).Value or 0)  # always manual
+                b19 = (recap_inputs['B19'] if 'B19' in recap_inputs
+                       else float(recap_sheet.Cells(19, 2).Value or 0))
+                e22_contribution = b16 + b17 + b19
+                b9 = ar_recu - b6 - b7 - b8 - e22_contribution
+                if abs(b9) > 0.005:
+                    recap_inputs['B9'] = round(b9, 2)
+                    parsed_summary.append(
+                        f'Chèque Daily Rev (B9)={b9:.2f}  '
+                        f'[ar_recu={ar_recu:.2f} - B6={b6:.2f} - B7={b7:.2f} '
+                        f'- B8={b8:.2f} - E22={e22_contribution:.2f}]'
+                    )
+                parsed_summary.append(
+                    f'argent_recu={ar_recu:.2f} → B24 formula will compute to {ar_recu:.2f}'
+                )
+
+            # 1. Fill Recap cells (HasFormula guard protects existing formulas)
+            for cell_ref, value in recap_inputs.items():
+                # Parse B7 -> row=7 col=2, B11 -> row=11 col=2, etc.
+                col_letter = cell_ref[0]  # always B in our map
+                row_num = int(cell_ref[1:])
+                col_num = ord(col_letter.upper()) - ord('A') + 1
+                filler.write_sheet_cell('Recap', row_num, col_num, value)
+
+            # 2. Force recalc so Recap formulas update H19:N19
+            filler.excel.Calculate()
+            import time as _time
+            _time.sleep(0.3)
+
+            # 3. Read Recap H19:N19 (1-based: row 19, cols 8-14)
+            recap_row_values = []
+            for col_1based in range(8, 15):  # H=8, I=9, J=10, K=11, L=12, M=13, N=14
+                v = recap_sheet.Cells(19, col_1based).Value
+                recap_row_values.append(v if isinstance(v, (int, float)) else 0)
+
+            # 4. Write to Jour BU:CA (1-based cols 73-79) for target day
+            jour_row = day + 2  # Jour day=1 -> row 3, day=23 -> row 25
+            jour_sheet = filler.wb.Sheets('jour')
+            for offset, val in enumerate(recap_row_values):
+                jour_col = 73 + offset  # BU=73, BV=74, ..., CA=79
+                cell = jour_sheet.Cells(jour_row, jour_col)
+                if not cell.HasFormula:
+                    cell.Value = val
+
+            # 5. Recalc, read DC
+            filler.excel.Calculate()
+            _time.sleep(0.3)
+            dc_value = jour_sheet.Cells(jour_row, 3).Value
+
+        # --- Save back to in-memory store ---
+        # Same race caveat as fill_all (rj_fill.py:993-995): RJ_FILES_LOCK is
+        # released for the COM session, so two concurrent calls on the same
+        # session race here (last writer wins). Safe in practice (single-auditor
+        # workflow, Flask dev server is single-threaded). For production WSGI
+        # with threads, wrap the copy/COM/readback block with a per-session lock.
+        with open(tmp_path, 'rb') as f:
+            output = io.BytesIO(f.read())
+        with RJ_FILES_LOCK:
+            RJ_FILES[session_id] = output
+        invalidate_rj_cache(session_id)
+
+        return jsonify({
+            'success': True,
+            'day': day,
+            'recap_filled': recap_inputs,
+            'recap_h19_n19': recap_row_values,
+            'jour_bu_ca_row': jour_row,
+            'dc_value': round(dc_value, 2) if isinstance(dc_value, (int, float)) else None,
+            # Match fill_all's threshold so the UI banner verdict is consistent
+            # whether or not the recap-side chain runs.
+            'dc_balanced': isinstance(dc_value, (int, float)) and abs(dc_value) < 0.01,
+            'parsed': parsed_summary,
+        })
+
+    except Exception as e:
+        import traceback
+        logger.exception('autofill_recap_from_docs failed')
+        return jsonify({'success': False, 'error': str(e), 'trace': traceback.format_exc()}), 500
+    finally:
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            # RJFillerCOM.__enter__ creates a sibling .bak.xls; its __exit__
+            # never deletes it, so we must clean up here (mirror fill_all).
             backup_path = tmp_path + '.bak.xls'
             try:
                 os.unlink(backup_path)

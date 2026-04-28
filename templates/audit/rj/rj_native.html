@@ -4487,7 +4487,7 @@ function renderLivePanel(result){
   const rows = [
     ['Transelect X20',    classes.x20_transelect],
     ['GEAC col 41',       classes.geac_bottom],
-    ['InterHotel XferIn', classes.interhotel_xferin],
+    // InterHotel XferIn removed Apr 23: now in calc[46] (AU revenue), not variance.
     ['PANNE LIEN',        classes.panne_lien_hotel],
     ['Chambres annul.',   classes.chambres_annulation],
     ['Correction veille', classes.prior_day_correction],
@@ -4597,7 +4597,7 @@ function renderLivePanel(result){
   const VARIANCE_ROWS = [
     ['Transelect X20',    'x20_transelect'],
     ['GEAC col 41',       'geac_bottom'],
-    ['InterHotel XferIn', 'interhotel_xferin'],
+    // InterHotel XferIn removed Apr 23: now folded into AU col 46 (revenue), not variance.
     ['PANNE LIEN',        'panne_lien_hotel'],
     ['Chambres annul.',   'chambres_annulation'],
     ['Correction veille', 'prior_day_correction'],

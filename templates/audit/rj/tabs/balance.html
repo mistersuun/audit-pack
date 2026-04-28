@@ -133,7 +133,7 @@
 </div>
 
 <script data-rj-tab-script="balance">
-let lastBalanceResult = null;
+window.lastBalanceResult = window.lastBalanceResult ?? null;
 
 async function runBalanceCheck() {
   const btn = document.getElementById('bal-run-btn');

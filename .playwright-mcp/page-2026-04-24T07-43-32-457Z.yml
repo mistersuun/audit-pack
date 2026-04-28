@@ -1,0 +1,1042 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - heading "RJ Balancer" [level=1] [ref=e153]
+        - paragraph [ref=e154]: Analyse automatique des écarts, compensations et résiduels
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - generic [ref=e159]: 📄
+              - heading "Documents" [level=3] [ref=e160]
+              - generic [ref=e161]: 6 sources
+            - generic [ref=e162] [cursor=pointer]:
+              - generic [ref=e163]: SJ
+              - generic [ref=e164]:
+                - text: Sales Journal
+                - generic [ref=e165]: .txt / .rtf · POS
+              - generic [ref=e220]: ✓
+            - generic [ref=e166] [cursor=pointer]:
+              - generic [ref=e167]: DR
+              - generic [ref=e168]:
+                - text: Daily Revenue
+                - generic [ref=e169]: .pdf · 7 pages
+              - generic [ref=e221]: ✓
+            - generic [ref=e170] [cursor=pointer]:
+              - generic [ref=e171]: HP
+              - generic [ref=e172]:
+                - text: HP Admin
+                - generic [ref=e173]: .xlsx · déductions F&B
+            - generic [ref=e174] [cursor=pointer]:
+              - generic [ref=e175]: AR
+              - generic [ref=e176]:
+                - text: AR Summary
+                - generic [ref=e177]: .pdf · comptes clients
+              - generic [ref=e222]: ✓
+            - generic [ref=e178] [cursor=pointer]:
+              - generic [ref=e179]: AD
+              - generic [ref=e180]:
+                - text: Advance Deposit
+                - generic [ref=e181]: .pdf · solde
+            - generic [ref=e182] [cursor=pointer]:
+              - generic [ref=e183]: RJ
+              - generic [ref=e184]:
+                - text: Fichier RJ
+                - generic [ref=e185]: .xls · Transelect, GEAC, Jour
+              - generic [ref=e223]: ✓
+          - generic [ref=e186]:
+            - generic [ref=e187]:
+              - generic [ref=e188]: ⚙
+              - heading "Paramètres" [level=3] [ref=e189]
+            - generic [ref=e190]:
+              - generic [ref=e191]:
+                - generic [ref=e192]: Jour (1–31)
+                - spinbutton [ref=e193]: "23"
+              - generic [ref=e194]:
+                - generic [ref=e195]: G4 Forfait
+                - spinbutton [ref=e196]: "40"
+              - generic [ref=e197]:
+                - generic [ref=e198]: Adj. Piazza
+                - spinbutton [ref=e199]: "41.22"
+              - generic [ref=e200]:
+                - generic [ref=e201]: Adj. Marché
+                - spinbutton [ref=e202]: "1.94"
+              - generic [ref=e203]:
+                - generic [ref=e204]: CL Nourriture
+                - spinbutton [ref=e205]
+              - generic [ref=e206]:
+                - generic [ref=e207]: CL Autres
+                - spinbutton [ref=e208]
+              - generic [ref=e209]:
+                - generic [ref=e210]: Dépôt en Main ($) — requis
+                - spinbutton [ref=e211]: "294582.46"
+            - button "Relancer l'analyse ↻" [ref=e224] [cursor=pointer]:
+              - generic [ref=e225]: Relancer l'analyse
+              - generic [ref=e226]: ↻
+        - generic [ref=e215]:
+          - generic [ref=e227]:
+            - generic [ref=e228]:
+              - generic [ref=e229]: "!"
+              - generic [ref=e230]:
+                - heading "Compensations nécessaires" [level=2] [ref=e231]
+                - paragraph [ref=e232]: La différence de caisse ne se résorbe pas — voir les écarts ci-dessous.
+            - generic [ref=e233]:
+              - generic [ref=e234]: Diff. Caisse finale
+              - generic [ref=e235]: $3,615,301.26
+          - generic [ref=e236]:
+            - generic [ref=e237]:
+              - generic [ref=e238]: Crédits
+              - generic [ref=e239]: $229,438.13
+            - generic [ref=e240]:
+              - generic [ref=e241]: Débits
+              - generic [ref=e242]: $3,957.29
+            - generic [ref=e243]:
+              - generic [ref=e244]: Bal. Ferm
+              - generic [ref=e245]: "-1,651,104.18"
+            - generic [ref=e246]:
+              - generic [ref=e247]: X24 Transelect
+              - generic [ref=e248]: "0.00"
+            - generic [ref=e249]:
+              - generic [ref=e250]: GEAC (AP)
+              - generic [ref=e251]: "0.00"
+            - generic [ref=e252]:
+              - generic [ref=e253]: Dépôt en main
+              - generic [ref=e254]: 294,267.59
+          - generic [ref=e255]:
+            - generic [ref=e256]:
+              - generic [ref=e257]: 📈
+              - heading "Le parcours du solde" [level=3] [ref=e258]
+              - generic [ref=e259]: De l'écart initial à l'équilibre
+            - generic [ref=e260]:
+              - generic [ref=e261]:
+                - generic [ref=e262]: "1"
+                - generic [ref=e263]: DC initial
+                - generic [ref=e264]: $-68,934.39
+                - generic [ref=e265]: Avant toute compensation
+              - generic [ref=e267]:
+                - generic [ref=e268]: →
+                - generic [ref=e269]: +$1,807,650.63
+              - generic [ref=e270]:
+                - generic [ref=e271]: "2"
+                - generic [ref=e272]: DC final
+                - generic [ref=e273]: $3,615,301.26
+                - generic [ref=e274]: À compléter
+          - generic [ref=e275]:
+            - generic [ref=e276]: "!"
+            - generic [ref=e277]:
+              - strong [ref=e278]: Bal. Ferm divergent
+              - text: "— Calcul: $-1,651,104.18 vs RJ: $0.00 (écart $1,651,104.18). Vérifier DR ou Dépôt en Main."
+          - generic [ref=e279]:
+            - generic [ref=e280]: II
+            - heading "Compensations appliquées" [level=3] [ref=e281]
+            - generic [ref=e282]: 1 opération
+          - generic [ref=e283]:
+            - generic [ref=e284]:
+              - generic [ref=e285]:
+                - generic [ref=e286]: Col 5
+                - generic [ref=e287]: Plug manuel (F)
+                - generic [ref=e288]: Plug — à vérifier
+              - generic [ref=e289]: −$1,807,650.63
+            - generic [ref=e290]:
+              - text: ⚠ Au moins un écart n'a pas de règle documentée. Cet ajustement couvre l'inconnu — à investiguer avant de finaliser.
+              - generic [ref=e291]: Écart DC après X24 et GEAC = +1807650.63
+            - generic [ref=e292]:
+              - generic [ref=e293]: Écarts couverts par le plug (31)
+              - list [ref=e294]:
+                - listitem [ref=e295]:
+                  - generic [ref=e296]: Col 4
+                  - generic [ref=e297]:
+                    - generic [ref=e298]: Pause
+                    - generic [ref=e299]:
+                      - text: Écart inconnue de -1860.00 — à investiguer
+                      - generic [ref=e300]: RJ = 0.00 · Calc = 1,860.00
+                  - generic [ref=e301]: +$1,860.00
+                - listitem [ref=e302]:
+                  - generic [ref=e303]: Col 9
+                  - generic [ref=e304]:
+                    - generic [ref=e305]: Nou_Piaz
+                    - generic [ref=e306]:
+                      - text: Écart inconnue de -8311.54 — à investiguer
+                      - generic [ref=e307]: RJ = 0.00 · Calc = 8,311.54
+                  - generic [ref=e308]: +$8,311.54
+                - listitem [ref=e309]:
+                  - generic [ref=e310]: Col 10
+                  - generic [ref=e311]:
+                    - generic [ref=e312]: Boi_Piaz
+                    - generic [ref=e313]:
+                      - text: Écart inconnue de -1944.00 — à investiguer
+                      - generic [ref=e314]: RJ = 0.00 · Calc = 1,944.00
+                  - generic [ref=e315]: +$1,944.00
+                - listitem [ref=e316]:
+                  - generic [ref=e317]: Col 11
+                  - generic [ref=e318]:
+                    - generic [ref=e319]: Bie_Piaz
+                    - generic [ref=e320]:
+                      - text: Écart inconnue de -701.00 — à investiguer
+                      - generic [ref=e321]: RJ = 0.00 · Calc = 701.00
+                  - generic [ref=e322]: +$701.00
+                - listitem [ref=e323]:
+                  - generic [ref=e324]: Col 12
+                  - generic [ref=e325]:
+                    - generic [ref=e326]: Min_Piaz
+                    - generic [ref=e327]:
+                      - text: HP Tabagie Mineraux soustrait de Piazza Min (écart de 81.14 = déduction HP non-pourboire)
+                      - generic [ref=e328]: RJ = 0.00 · Calc = 81.14
+                  - generic [ref=e329]: +$81.14
+                - listitem [ref=e330]:
+                  - generic [ref=e331]: Col 13
+                  - generic [ref=e332]:
+                    - generic [ref=e333]: Vin_Piaz
+                    - generic [ref=e334]:
+                      - text: Écart inconnue de -670.00 — à investiguer
+                      - generic [ref=e335]: RJ = 0.00 · Calc = 670.00
+                  - generic [ref=e336]: +$670.00
+                - listitem [ref=e337]:
+                  - generic [ref=e338]: Col 14
+                  - generic [ref=e339]:
+                    - generic [ref=e340]: Nou_Mar
+                    - generic [ref=e341]:
+                      - text: Écart inconnue de -841.57 — à investiguer
+                      - generic [ref=e342]: RJ = 0.00 · Calc = 841.57
+                  - generic [ref=e343]: +$841.57
+                - listitem [ref=e344]:
+                  - generic [ref=e345]: Col 19
+                  - generic [ref=e346]:
+                    - generic [ref=e347]: Nou_SCh
+                    - generic [ref=e348]:
+                      - text: Ajustement manuel Service aux Chambres Nourriture appliqué (412.00)
+                      - generic [ref=e349]: RJ = 0.00 · Calc = 412.00
+                  - generic [ref=e350]: +$412.00
+                - listitem [ref=e351]:
+                  - generic [ref=e352]: Col 22
+                  - generic [ref=e353]:
+                    - generic [ref=e354]: Min_SCh
+                    - generic [ref=e355]:
+                      - text: Écart inconnue de -19.75 — à investiguer
+                      - generic [ref=e356]: RJ = 0.00 · Calc = 19.75
+                  - generic [ref=e357]: +$19.75
+                - listitem [ref=e358]:
+                  - generic [ref=e359]: Col 24
+                  - generic [ref=e360]:
+                    - generic [ref=e361]: Nou_Bqt
+                    - generic [ref=e362]:
+                      - text: Écart inconnue de -65301.25 — à investiguer
+                      - generic [ref=e363]: RJ = 0.00 · Calc = 65,301.25
+                  - generic [ref=e364]: +$65,301.25
+                - listitem [ref=e365]:
+                  - generic [ref=e366]: Col 25
+                  - generic [ref=e367]:
+                    - generic [ref=e368]: Boi_Bqt
+                    - generic [ref=e369]:
+                      - text: Écart inconnue de -4665.45 — à investiguer
+                      - generic [ref=e370]: RJ = 0.00 · Calc = 4,665.45
+                  - generic [ref=e371]: +$4,665.45
+                - listitem [ref=e372]:
+                  - generic [ref=e373]: Col 26
+                  - generic [ref=e374]:
+                    - generic [ref=e375]: Bie_Bqt
+                    - generic [ref=e376]:
+                      - text: Écart inconnue de -1141.40 — à investiguer
+                      - generic [ref=e377]: RJ = 0.00 · Calc = 1,141.40
+                  - generic [ref=e378]: +$1,141.40
+                - listitem [ref=e379]:
+                  - generic [ref=e380]: Col 27
+                  - generic [ref=e381]:
+                    - generic [ref=e382]: Min_Bqt
+                    - generic [ref=e383]:
+                      - text: Écart inconnue de -420.65 — à investiguer
+                      - generic [ref=e384]: RJ = 0.00 · Calc = 420.65
+                  - generic [ref=e385]: +$420.65
+                - listitem [ref=e386]:
+                  - generic [ref=e387]: Col 28
+                  - generic [ref=e388]:
+                    - generic [ref=e389]: Vin_Bqt
+                    - generic [ref=e390]:
+                      - text: Écart inconnue de -3214.00 — à investiguer
+                      - generic [ref=e391]: RJ = 0.00 · Calc = 3,214.00
+                  - generic [ref=e392]: +$3,214.00
+                - listitem [ref=e393]:
+                  - generic [ref=e394]: Col 29
+                  - generic [ref=e395]:
+                    - generic [ref=e396]: Pourb
+                    - generic [ref=e397]:
+                      - text: Écart inconnue de -14318.85 — à investiguer
+                      - generic [ref=e398]: RJ = 0.00 · Calc = 14,318.85
+                  - generic [ref=e399]: +$14,318.85
+                - listitem [ref=e400]:
+                  - generic [ref=e401]: Col 30
+                  - generic [ref=e402]:
+                    - generic [ref=e403]: Equip
+                    - generic [ref=e404]:
+                      - text: Écart inconnue de -12068.00 — à investiguer
+                      - generic [ref=e405]: RJ = 0.00 · Calc = 12,068.00
+                  - generic [ref=e406]: +$12,068.00
+                - listitem [ref=e407]:
+                  - generic [ref=e408]: Col 31
+                  - generic [ref=e409]:
+                    - generic [ref=e410]: Divers
+                    - generic [ref=e411]:
+                      - text: Écart inconnue de -8517.40 — à investiguer
+                      - generic [ref=e412]: RJ = 0.00 · Calc = 8,517.40
+                  - generic [ref=e413]: +$8,517.40
+                - listitem [ref=e414]:
+                  - generic [ref=e415]: Col 32
+                  - generic [ref=e416]:
+                    - generic [ref=e417]: LocSal
+                    - generic [ref=e418]:
+                      - text: Écart inconnue de -11870.00 — à investiguer
+                      - generic [ref=e419]: RJ = 0.00 · Calc = 11,870.00
+                  - generic [ref=e420]: +$11,870.00
+                - listitem [ref=e421]:
+                  - generic [ref=e422]: Col 35
+                  - generic [ref=e423]:
+                    - generic [ref=e424]: Tabag
+                    - generic [ref=e425]:
+                      - text: Écart inconnue de -863.19 — à investiguer
+                      - generic [ref=e426]: RJ = 0.00 · Calc = 863.19
+                  - generic [ref=e427]: +$863.19
+                - listitem [ref=e428]:
+                  - generic [ref=e429]: Col 36
+                  - generic [ref=e430]:
+                    - generic [ref=e431]: Chamb
+                    - generic [ref=e432]:
+                      - text: Écart inconnue de -58764.09 — à investiguer
+                      - generic [ref=e433]: RJ = 0.00 · Calc = 58,764.09
+                  - generic [ref=e434]: +$58,764.09
+                - listitem [ref=e435]:
+                  - generic [ref=e436]: Col 40
+                  - generic [ref=e437]:
+                    - generic [ref=e438]: Nettoy
+                    - generic [ref=e439]:
+                      - text: Écart inconnue de -69.30 — à investiguer
+                      - generic [ref=e440]: RJ = 0.00 · Calc = 69.30
+                  - generic [ref=e441]: +$69.30
+                - listitem [ref=e442]:
+                  - generic [ref=e443]: Col 44
+                  - generic [ref=e444]:
+                    - generic [ref=e445]: AutGL
+                    - generic [ref=e446]:
+                      - text: Écart inconnue de -942.69 — à investiguer
+                      - generic [ref=e447]: RJ = 0.00 · Calc = 942.69
+                  - generic [ref=e448]: +$942.69
+                - listitem [ref=e449]:
+                  - generic [ref=e450]: Col 46
+                  - generic [ref=e451]:
+                    - generic [ref=e452]: AutRev
+                    - generic [ref=e453]:
+                      - text: Écart inconnue de -33.00 — à investiguer
+                      - generic [ref=e454]: RJ = 0.00 · Calc = 33.00
+                  - generic [ref=e455]: +$33.00
+                - listitem [ref=e456]:
+                  - generic [ref=e457]: Col 48
+                  - generic [ref=e458]:
+                    - generic [ref=e459]: Intrnt
+                    - generic [ref=e460]:
+                      - text: Internet en positif — vérifier le côté SJ
+                      - generic [ref=e461]: RJ = 0.00 · Calc = -26.08
+                  - generic [ref=e462]: −$26.08
+                - listitem [ref=e463]:
+                  - generic [ref=e464]: Col 49
+                  - generic [ref=e465]:
+                    - generic [ref=e466]: TVQ
+                    - generic [ref=e467]:
+                      - text: Écart inconnue de -20285.58 — à investiguer
+                      - generic [ref=e468]: RJ = 0.00 · Calc = 20,285.58
+                  - generic [ref=e469]: +$20,285.58
+                - listitem [ref=e470]:
+                  - generic [ref=e471]: Col 50
+                  - generic [ref=e472]:
+                    - generic [ref=e473]: TPS
+                    - generic [ref=e474]:
+                      - text: Écart inconnue de -10169.56 — à investiguer
+                      - generic [ref=e475]: RJ = 0.00 · Calc = 10,169.56
+                  - generic [ref=e476]: +$10,169.56
+                - listitem [ref=e477]:
+                  - generic [ref=e478]: Col 51
+                  - generic [ref=e479]:
+                    - generic [ref=e480]: TVH
+                    - generic [ref=e481]:
+                      - text: Écart inconnue de -2058.98 — à investiguer
+                      - generic [ref=e482]: RJ = 0.00 · Calc = 2,058.98
+                  - generic [ref=e483]: +$2,058.98
+                - listitem [ref=e484]:
+                  - generic [ref=e485]: Col 57
+                  - generic [ref=e486]:
+                    - generic [ref=e487]: DifForf
+                    - generic [ref=e488]:
+                      - text: Écart inconnue de +80.18 — à investiguer
+                      - generic [ref=e489]: RJ = 0.00 · Calc = -80.18
+                  - generic [ref=e490]: −$80.18
+                - listitem [ref=e491]:
+                  - generic [ref=e492]: Col 74
+                  - generic [ref=e493]:
+                    - generic [ref=e494]: RmbGrt
+                    - generic [ref=e495]:
+                      - text: Écart inconnue de +1200.01 — à investiguer
+                      - generic [ref=e496]: RJ = 0.00 · Calc = -1,200.01
+                  - generic [ref=e497]: +$1,200.01
+                - listitem [ref=e498]:
+                  - generic [ref=e499]: Col 79
+                  - generic [ref=e500]:
+                    - generic [ref=e501]: CertCd
+                    - generic [ref=e502]:
+                      - text: Écart inconnue de -600.00 — à investiguer
+                      - generic [ref=e503]: RJ = 0.00 · Calc = 600.00
+                  - generic [ref=e504]: −$600.00
+                - listitem [ref=e505]:
+                  - generic [ref=e506]: Col 83
+                  - generic [ref=e507]:
+                    - generic [ref=e508]: TrC/R
+                    - generic [ref=e509]:
+                      - text: CF inclut la soustraction AR Misc par méthodologie (écart de 4557.30 = AR Misc)
+                      - generic [ref=e510]: RJ = 0.00 · Calc = 4,557.30
+                  - generic [ref=e511]: −$4,557.30
+              - generic [ref=e512]:
+                - generic [ref=e513]: Somme des impacts DC
+                - generic [ref=e514]: +$225,480.84
+          - generic [ref=e515]:
+            - generic [ref=e516]: "!"
+            - heading "Avertissements" [level=3] [ref=e517]
+          - generic [ref=e518]:
+            - generic [ref=e519]: "!"
+            - generic [ref=e520]: InterHotel XferIn = 29.97 -- routé automatiquement dans col 46 (AU)
+          - generic [ref=e521]:
+            - generic [ref=e522]: III
+            - heading "Écarts détaillés" [level=3] [ref=e523]
+            - generic [ref=e524]: 31 lignes avec explication
+          - table [ref=e526]:
+            - rowgroup [ref=e527]:
+              - row "Col Nom RJ Calc Écart Pourquoi" [ref=e528]:
+                - columnheader "Col" [ref=e529]
+                - columnheader "Nom" [ref=e530]
+                - columnheader "RJ" [ref=e531]
+                - columnheader "Calc" [ref=e532]
+                - columnheader "Écart" [ref=e533]
+                - columnheader "Pourquoi" [ref=e534]
+            - rowgroup [ref=e535]:
+              - row "4 Pause 0.00 1,860.00 -1,860.00 Écart inconnue de -1860.00 — à investiguer" [ref=e536]:
+                - cell "4" [ref=e537]
+                - cell "Pause" [ref=e538]
+                - cell "0.00" [ref=e539]
+                - cell "1,860.00" [ref=e540]
+                - cell "-1,860.00" [ref=e541]
+                - cell "Écart inconnue de -1860.00 — à investiguer" [ref=e542]
+              - row "9 Nou_Piaz 0.00 8,311.54 -8,311.54 Écart inconnue de -8311.54 — à investiguer" [ref=e543]:
+                - cell "9" [ref=e544]
+                - cell "Nou_Piaz" [ref=e545]
+                - cell "0.00" [ref=e546]
+                - cell "8,311.54" [ref=e547]
+                - cell "-8,311.54" [ref=e548]
+                - cell "Écart inconnue de -8311.54 — à investiguer" [ref=e549]
+              - row "10 Boi_Piaz 0.00 1,944.00 -1,944.00 Écart inconnue de -1944.00 — à investiguer" [ref=e550]:
+                - cell "10" [ref=e551]
+                - cell "Boi_Piaz" [ref=e552]
+                - cell "0.00" [ref=e553]
+                - cell "1,944.00" [ref=e554]
+                - cell "-1,944.00" [ref=e555]
+                - cell "Écart inconnue de -1944.00 — à investiguer" [ref=e556]
+              - row "11 Bie_Piaz 0.00 701.00 -701.00 Écart inconnue de -701.00 — à investiguer" [ref=e557]:
+                - cell "11" [ref=e558]
+                - cell "Bie_Piaz" [ref=e559]
+                - cell "0.00" [ref=e560]
+                - cell "701.00" [ref=e561]
+                - cell "-701.00" [ref=e562]
+                - cell "Écart inconnue de -701.00 — à investiguer" [ref=e563]
+              - row "12 Min_Piaz 0.00 81.14 -81.14 HP Tabagie Mineraux soustrait de Piazza Min (écart de 81.14 = déduction HP non-pourboire)" [ref=e564]:
+                - cell "12" [ref=e565]
+                - cell "Min_Piaz" [ref=e566]
+                - cell "0.00" [ref=e567]
+                - cell "81.14" [ref=e568]
+                - cell "-81.14" [ref=e569]
+                - cell "HP Tabagie Mineraux soustrait de Piazza Min (écart de 81.14 = déduction HP non-pourboire)" [ref=e570]
+              - row "13 Vin_Piaz 0.00 670.00 -670.00 Écart inconnue de -670.00 — à investiguer" [ref=e571]:
+                - cell "13" [ref=e572]
+                - cell "Vin_Piaz" [ref=e573]
+                - cell "0.00" [ref=e574]
+                - cell "670.00" [ref=e575]
+                - cell "-670.00" [ref=e576]
+                - cell "Écart inconnue de -670.00 — à investiguer" [ref=e577]
+              - row "14 Nou_Mar 0.00 841.57 -841.57 Écart inconnue de -841.57 — à investiguer" [ref=e578]:
+                - cell "14" [ref=e579]
+                - cell "Nou_Mar" [ref=e580]
+                - cell "0.00" [ref=e581]
+                - cell "841.57" [ref=e582]
+                - cell "-841.57" [ref=e583]
+                - cell "Écart inconnue de -841.57 — à investiguer" [ref=e584]
+              - row "19 Nou_SCh 0.00 412.00 -412.00 Ajustement manuel Service aux Chambres Nourriture appliqué (412.00)" [ref=e585]:
+                - cell "19" [ref=e586]
+                - cell "Nou_SCh" [ref=e587]
+                - cell "0.00" [ref=e588]
+                - cell "412.00" [ref=e589]
+                - cell "-412.00" [ref=e590]
+                - cell "Ajustement manuel Service aux Chambres Nourriture appliqué (412.00)" [ref=e591]
+              - row "22 Min_SCh 0.00 19.75 -19.75 Écart inconnue de -19.75 — à investiguer" [ref=e592]:
+                - cell "22" [ref=e593]
+                - cell "Min_SCh" [ref=e594]
+                - cell "0.00" [ref=e595]
+                - cell "19.75" [ref=e596]
+                - cell "-19.75" [ref=e597]
+                - cell "Écart inconnue de -19.75 — à investiguer" [ref=e598]
+              - row "24 Nou_Bqt 0.00 65,301.25 -65,301.25 Écart inconnue de -65301.25 — à investiguer" [ref=e599]:
+                - cell "24" [ref=e600]
+                - cell "Nou_Bqt" [ref=e601]
+                - cell "0.00" [ref=e602]
+                - cell "65,301.25" [ref=e603]
+                - cell "-65,301.25" [ref=e604]
+                - cell "Écart inconnue de -65301.25 — à investiguer" [ref=e605]
+              - row "25 Boi_Bqt 0.00 4,665.45 -4,665.45 Écart inconnue de -4665.45 — à investiguer" [ref=e606]:
+                - cell "25" [ref=e607]
+                - cell "Boi_Bqt" [ref=e608]
+                - cell "0.00" [ref=e609]
+                - cell "4,665.45" [ref=e610]
+                - cell "-4,665.45" [ref=e611]
+                - cell "Écart inconnue de -4665.45 — à investiguer" [ref=e612]
+              - row "26 Bie_Bqt 0.00 1,141.40 -1,141.40 Écart inconnue de -1141.40 — à investiguer" [ref=e613]:
+                - cell "26" [ref=e614]
+                - cell "Bie_Bqt" [ref=e615]
+                - cell "0.00" [ref=e616]
+                - cell "1,141.40" [ref=e617]
+                - cell "-1,141.40" [ref=e618]
+                - cell "Écart inconnue de -1141.40 — à investiguer" [ref=e619]
+              - row "27 Min_Bqt 0.00 420.65 -420.65 Écart inconnue de -420.65 — à investiguer" [ref=e620]:
+                - cell "27" [ref=e621]
+                - cell "Min_Bqt" [ref=e622]
+                - cell "0.00" [ref=e623]
+                - cell "420.65" [ref=e624]
+                - cell "-420.65" [ref=e625]
+                - cell "Écart inconnue de -420.65 — à investiguer" [ref=e626]
+              - row "28 Vin_Bqt 0.00 3,214.00 -3,214.00 Écart inconnue de -3214.00 — à investiguer" [ref=e627]:
+                - cell "28" [ref=e628]
+                - cell "Vin_Bqt" [ref=e629]
+                - cell "0.00" [ref=e630]
+                - cell "3,214.00" [ref=e631]
+                - cell "-3,214.00" [ref=e632]
+                - cell "Écart inconnue de -3214.00 — à investiguer" [ref=e633]
+              - row "29 Pourb 0.00 14,318.85 -14,318.85 Écart inconnue de -14318.85 — à investiguer" [ref=e634]:
+                - cell "29" [ref=e635]
+                - cell "Pourb" [ref=e636]
+                - cell "0.00" [ref=e637]
+                - cell "14,318.85" [ref=e638]
+                - cell "-14,318.85" [ref=e639]
+                - cell "Écart inconnue de -14318.85 — à investiguer" [ref=e640]
+              - row "30 Equip 0.00 12,068.00 -12,068.00 Écart inconnue de -12068.00 — à investiguer" [ref=e641]:
+                - cell "30" [ref=e642]
+                - cell "Equip" [ref=e643]
+                - cell "0.00" [ref=e644]
+                - cell "12,068.00" [ref=e645]
+                - cell "-12,068.00" [ref=e646]
+                - cell "Écart inconnue de -12068.00 — à investiguer" [ref=e647]
+              - row "31 Divers 0.00 8,517.40 -8,517.40 Écart inconnue de -8517.40 — à investiguer" [ref=e648]:
+                - cell "31" [ref=e649]
+                - cell "Divers" [ref=e650]
+                - cell "0.00" [ref=e651]
+                - cell "8,517.40" [ref=e652]
+                - cell "-8,517.40" [ref=e653]
+                - cell "Écart inconnue de -8517.40 — à investiguer" [ref=e654]
+              - row "32 LocSal 0.00 11,870.00 -11,870.00 Écart inconnue de -11870.00 — à investiguer" [ref=e655]:
+                - cell "32" [ref=e656]
+                - cell "LocSal" [ref=e657]
+                - cell "0.00" [ref=e658]
+                - cell "11,870.00" [ref=e659]
+                - cell "-11,870.00" [ref=e660]
+                - cell "Écart inconnue de -11870.00 — à investiguer" [ref=e661]
+              - row "35 Tabag 0.00 863.19 -863.19 Écart inconnue de -863.19 — à investiguer" [ref=e662]:
+                - cell "35" [ref=e663]
+                - cell "Tabag" [ref=e664]
+                - cell "0.00" [ref=e665]
+                - cell "863.19" [ref=e666]
+                - cell "-863.19" [ref=e667]
+                - cell "Écart inconnue de -863.19 — à investiguer" [ref=e668]
+              - row "36 Chamb 0.00 58,764.09 -58,764.09 Écart inconnue de -58764.09 — à investiguer" [ref=e669]:
+                - cell "36" [ref=e670]
+                - cell "Chamb" [ref=e671]
+                - cell "0.00" [ref=e672]
+                - cell "58,764.09" [ref=e673]
+                - cell "-58,764.09" [ref=e674]
+                - cell "Écart inconnue de -58764.09 — à investiguer" [ref=e675]
+              - row "40 Nettoy 0.00 69.30 -69.30 Écart inconnue de -69.30 — à investiguer" [ref=e676]:
+                - cell "40" [ref=e677]
+                - cell "Nettoy" [ref=e678]
+                - cell "0.00" [ref=e679]
+                - cell "69.30" [ref=e680]
+                - cell "-69.30" [ref=e681]
+                - cell "Écart inconnue de -69.30 — à investiguer" [ref=e682]
+              - row "44 AutGL 0.00 942.69 -942.69 Écart inconnue de -942.69 — à investiguer" [ref=e683]:
+                - cell "44" [ref=e684]
+                - cell "AutGL" [ref=e685]
+                - cell "0.00" [ref=e686]
+                - cell "942.69" [ref=e687]
+                - cell "-942.69" [ref=e688]
+                - cell "Écart inconnue de -942.69 — à investiguer" [ref=e689]
+              - row "46 AutRev 0.00 33.00 -33.00 Écart inconnue de -33.00 — à investiguer" [ref=e690]:
+                - cell "46" [ref=e691]
+                - cell "AutRev" [ref=e692]
+                - cell "0.00" [ref=e693]
+                - cell "33.00" [ref=e694]
+                - cell "-33.00" [ref=e695]
+                - cell "Écart inconnue de -33.00 — à investiguer" [ref=e696]
+              - row "48 Intrnt 0.00 -26.08 +26.08 Internet en positif — vérifier le côté SJ" [ref=e697]:
+                - cell "48" [ref=e698]
+                - cell "Intrnt" [ref=e699]
+                - cell "0.00" [ref=e700]
+                - cell "-26.08" [ref=e701]
+                - cell "+26.08" [ref=e702]
+                - cell "Internet en positif — vérifier le côté SJ" [ref=e703]
+              - row "49 TVQ 0.00 20,285.58 -20,285.58 Écart inconnue de -20285.58 — à investiguer" [ref=e704]:
+                - cell "49" [ref=e705]
+                - cell "TVQ" [ref=e706]
+                - cell "0.00" [ref=e707]
+                - cell "20,285.58" [ref=e708]
+                - cell "-20,285.58" [ref=e709]
+                - cell "Écart inconnue de -20285.58 — à investiguer" [ref=e710]
+              - row "50 TPS 0.00 10,169.56 -10,169.56 Écart inconnue de -10169.56 — à investiguer" [ref=e711]:
+                - cell "50" [ref=e712]
+                - cell "TPS" [ref=e713]
+                - cell "0.00" [ref=e714]
+                - cell "10,169.56" [ref=e715]
+                - cell "-10,169.56" [ref=e716]
+                - cell "Écart inconnue de -10169.56 — à investiguer" [ref=e717]
+              - row "51 TVH 0.00 2,058.98 -2,058.98 Écart inconnue de -2058.98 — à investiguer" [ref=e718]:
+                - cell "51" [ref=e719]
+                - cell "TVH" [ref=e720]
+                - cell "0.00" [ref=e721]
+                - cell "2,058.98" [ref=e722]
+                - cell "-2,058.98" [ref=e723]
+                - cell "Écart inconnue de -2058.98 — à investiguer" [ref=e724]
+              - row "57 DifForf 0.00 -80.18 +80.18 Écart inconnue de +80.18 — à investiguer" [ref=e725]:
+                - cell "57" [ref=e726]
+                - cell "DifForf" [ref=e727]
+                - cell "0.00" [ref=e728]
+                - cell "-80.18" [ref=e729]
+                - cell "+80.18" [ref=e730]
+                - cell "Écart inconnue de +80.18 — à investiguer" [ref=e731]
+              - row "74 RmbGrt 0.00 -1,200.01 +1,200.01 Écart inconnue de +1200.01 — à investiguer" [ref=e732]:
+                - cell "74" [ref=e733]
+                - cell "RmbGrt" [ref=e734]
+                - cell "0.00" [ref=e735]
+                - cell "-1,200.01" [ref=e736]
+                - cell "+1,200.01" [ref=e737]
+                - cell "Écart inconnue de +1200.01 — à investiguer" [ref=e738]
+              - row "79 CertCd 0.00 600.00 -600.00 Écart inconnue de -600.00 — à investiguer" [ref=e739]:
+                - cell "79" [ref=e740]
+                - cell "CertCd" [ref=e741]
+                - cell "0.00" [ref=e742]
+                - cell "600.00" [ref=e743]
+                - cell "-600.00" [ref=e744]
+                - cell "Écart inconnue de -600.00 — à investiguer" [ref=e745]
+              - row "83 TrC/R 0.00 4,557.30 -4,557.30 CF inclut la soustraction AR Misc par méthodologie (écart de 4557.30 = AR Misc)" [ref=e746]:
+                - cell "83" [ref=e747]
+                - cell "TrC/R" [ref=e748]
+                - cell "0.00" [ref=e749]
+                - cell "4,557.30" [ref=e750]
+                - cell "-4,557.30" [ref=e751]
+                - cell "CF inclut la soustraction AR Misc par méthodologie (écart de 4557.30 = AR Misc)" [ref=e752]
+          - generic [ref=e753]:
+            - generic [ref=e754]: V
+            - heading "Vérification complète" [level=3] [ref=e755]
+            - generic [ref=e756]: 31 colonnes
+          - generic [ref=e757]:
+            - generic [ref=e758]:
+              - heading "Crédits · 4 – 57" [level=4] [ref=e759]
+              - generic [ref=e760]:
+                - text: 28 col ·
+                - generic [ref=e761]: 0 OK
+            - table [ref=e762]:
+              - rowgroup [ref=e763]:
+                - row "Col Nom RJ Calc Écart État" [ref=e764]:
+                  - columnheader "Col" [ref=e765]
+                  - columnheader "Nom" [ref=e766]
+                  - columnheader "RJ" [ref=e767]
+                  - columnheader "Calc" [ref=e768]
+                  - columnheader "Écart" [ref=e769]
+                  - columnheader "État" [ref=e770]
+              - rowgroup [ref=e771]:
+                - row "4 Pause 0.00 1,860.00 -1,860.00 !" [ref=e772]:
+                  - cell "4" [ref=e773]
+                  - cell "Pause" [ref=e774]
+                  - cell "0.00" [ref=e775]
+                  - cell "1,860.00" [ref=e776]
+                  - cell "-1,860.00" [ref=e777]
+                  - cell "!" [ref=e778]:
+                    - generic [ref=e779]: "!"
+                - row "9 Nou_Piaz 0.00 8,311.54 -8,311.54 !" [ref=e780]:
+                  - cell "9" [ref=e781]
+                  - cell "Nou_Piaz" [ref=e782]
+                  - cell "0.00" [ref=e783]
+                  - cell "8,311.54" [ref=e784]
+                  - cell "-8,311.54" [ref=e785]
+                  - cell "!" [ref=e786]:
+                    - generic [ref=e787]: "!"
+                - row "10 Boi_Piaz 0.00 1,944.00 -1,944.00 !" [ref=e788]:
+                  - cell "10" [ref=e789]
+                  - cell "Boi_Piaz" [ref=e790]
+                  - cell "0.00" [ref=e791]
+                  - cell "1,944.00" [ref=e792]
+                  - cell "-1,944.00" [ref=e793]
+                  - cell "!" [ref=e794]:
+                    - generic [ref=e795]: "!"
+                - row "11 Bie_Piaz 0.00 701.00 -701.00 !" [ref=e796]:
+                  - cell "11" [ref=e797]
+                  - cell "Bie_Piaz" [ref=e798]
+                  - cell "0.00" [ref=e799]
+                  - cell "701.00" [ref=e800]
+                  - cell "-701.00" [ref=e801]
+                  - cell "!" [ref=e802]:
+                    - generic [ref=e803]: "!"
+                - row "12 Min_Piaz 0.00 81.14 -81.14 !" [ref=e804]:
+                  - cell "12" [ref=e805]
+                  - cell "Min_Piaz" [ref=e806]
+                  - cell "0.00" [ref=e807]
+                  - cell "81.14" [ref=e808]
+                  - cell "-81.14" [ref=e809]
+                  - cell "!" [ref=e810]:
+                    - generic [ref=e811]: "!"
+                - row "13 Vin_Piaz 0.00 670.00 -670.00 !" [ref=e812]:
+                  - cell "13" [ref=e813]
+                  - cell "Vin_Piaz" [ref=e814]
+                  - cell "0.00" [ref=e815]
+                  - cell "670.00" [ref=e816]
+                  - cell "-670.00" [ref=e817]
+                  - cell "!" [ref=e818]:
+                    - generic [ref=e819]: "!"
+                - row "14 Nou_Mar 0.00 841.57 -841.57 !" [ref=e820]:
+                  - cell "14" [ref=e821]
+                  - cell "Nou_Mar" [ref=e822]
+                  - cell "0.00" [ref=e823]
+                  - cell "841.57" [ref=e824]
+                  - cell "-841.57" [ref=e825]
+                  - cell "!" [ref=e826]:
+                    - generic [ref=e827]: "!"
+                - row "19 Nou_SCh 0.00 412.00 -412.00 !" [ref=e828]:
+                  - cell "19" [ref=e829]
+                  - cell "Nou_SCh" [ref=e830]
+                  - cell "0.00" [ref=e831]
+                  - cell "412.00" [ref=e832]
+                  - cell "-412.00" [ref=e833]
+                  - cell "!" [ref=e834]:
+                    - generic [ref=e835]: "!"
+                - row "22 Min_SCh 0.00 19.75 -19.75 !" [ref=e836]:
+                  - cell "22" [ref=e837]
+                  - cell "Min_SCh" [ref=e838]
+                  - cell "0.00" [ref=e839]
+                  - cell "19.75" [ref=e840]
+                  - cell "-19.75" [ref=e841]
+                  - cell "!" [ref=e842]:
+                    - generic [ref=e843]: "!"
+                - row "24 Nou_Bqt 0.00 65,301.25 -65,301.25 !" [ref=e844]:
+                  - cell "24" [ref=e845]
+                  - cell "Nou_Bqt" [ref=e846]
+                  - cell "0.00" [ref=e847]
+                  - cell "65,301.25" [ref=e848]
+                  - cell "-65,301.25" [ref=e849]
+                  - cell "!" [ref=e850]:
+                    - generic [ref=e851]: "!"
+                - row "25 Boi_Bqt 0.00 4,665.45 -4,665.45 !" [ref=e852]:
+                  - cell "25" [ref=e853]
+                  - cell "Boi_Bqt" [ref=e854]
+                  - cell "0.00" [ref=e855]
+                  - cell "4,665.45" [ref=e856]
+                  - cell "-4,665.45" [ref=e857]
+                  - cell "!" [ref=e858]:
+                    - generic [ref=e859]: "!"
+                - row "26 Bie_Bqt 0.00 1,141.40 -1,141.40 !" [ref=e860]:
+                  - cell "26" [ref=e861]
+                  - cell "Bie_Bqt" [ref=e862]
+                  - cell "0.00" [ref=e863]
+                  - cell "1,141.40" [ref=e864]
+                  - cell "-1,141.40" [ref=e865]
+                  - cell "!" [ref=e866]:
+                    - generic [ref=e867]: "!"
+                - row "27 Min_Bqt 0.00 420.65 -420.65 !" [ref=e868]:
+                  - cell "27" [ref=e869]
+                  - cell "Min_Bqt" [ref=e870]
+                  - cell "0.00" [ref=e871]
+                  - cell "420.65" [ref=e872]
+                  - cell "-420.65" [ref=e873]
+                  - cell "!" [ref=e874]:
+                    - generic [ref=e875]: "!"
+                - row "28 Vin_Bqt 0.00 3,214.00 -3,214.00 !" [ref=e876]:
+                  - cell "28" [ref=e877]
+                  - cell "Vin_Bqt" [ref=e878]
+                  - cell "0.00" [ref=e879]
+                  - cell "3,214.00" [ref=e880]
+                  - cell "-3,214.00" [ref=e881]
+                  - cell "!" [ref=e882]:
+                    - generic [ref=e883]: "!"
+                - row "29 Pourb 0.00 14,318.85 -14,318.85 !" [ref=e884]:
+                  - cell "29" [ref=e885]
+                  - cell "Pourb" [ref=e886]
+                  - cell "0.00" [ref=e887]
+                  - cell "14,318.85" [ref=e888]
+                  - cell "-14,318.85" [ref=e889]
+                  - cell "!" [ref=e890]:
+                    - generic [ref=e891]: "!"
+                - row "30 Equip 0.00 12,068.00 -12,068.00 !" [ref=e892]:
+                  - cell "30" [ref=e893]
+                  - cell "Equip" [ref=e894]
+                  - cell "0.00" [ref=e895]
+                  - cell "12,068.00" [ref=e896]
+                  - cell "-12,068.00" [ref=e897]
+                  - cell "!" [ref=e898]:
+                    - generic [ref=e899]: "!"
+                - row "31 Divers 0.00 8,517.40 -8,517.40 !" [ref=e900]:
+                  - cell "31" [ref=e901]
+                  - cell "Divers" [ref=e902]
+                  - cell "0.00" [ref=e903]
+                  - cell "8,517.40" [ref=e904]
+                  - cell "-8,517.40" [ref=e905]
+                  - cell "!" [ref=e906]:
+                    - generic [ref=e907]: "!"
+                - row "32 LocSal 0.00 11,870.00 -11,870.00 !" [ref=e908]:
+                  - cell "32" [ref=e909]
+                  - cell "LocSal" [ref=e910]
+                  - cell "0.00" [ref=e911]
+                  - cell "11,870.00" [ref=e912]
+                  - cell "-11,870.00" [ref=e913]
+                  - cell "!" [ref=e914]:
+                    - generic [ref=e915]: "!"
+                - row "35 Tabag 0.00 863.19 -863.19 !" [ref=e916]:
+                  - cell "35" [ref=e917]
+                  - cell "Tabag" [ref=e918]
+                  - cell "0.00" [ref=e919]
+                  - cell "863.19" [ref=e920]
+                  - cell "-863.19" [ref=e921]
+                  - cell "!" [ref=e922]:
+                    - generic [ref=e923]: "!"
+                - row "36 Chamb 0.00 58,764.09 -58,764.09 !" [ref=e924]:
+                  - cell "36" [ref=e925]
+                  - cell "Chamb" [ref=e926]
+                  - cell "0.00" [ref=e927]
+                  - cell "58,764.09" [ref=e928]
+                  - cell "-58,764.09" [ref=e929]
+                  - cell "!" [ref=e930]:
+                    - generic [ref=e931]: "!"
+                - row "40 Nettoy 0.00 69.30 -69.30 !" [ref=e932]:
+                  - cell "40" [ref=e933]
+                  - cell "Nettoy" [ref=e934]
+                  - cell "0.00" [ref=e935]
+                  - cell "69.30" [ref=e936]
+                  - cell "-69.30" [ref=e937]
+                  - cell "!" [ref=e938]:
+                    - generic [ref=e939]: "!"
+                - row "44 AutGL 0.00 942.69 -942.69 !" [ref=e940]:
+                  - cell "44" [ref=e941]
+                  - cell "AutGL" [ref=e942]
+                  - cell "0.00" [ref=e943]
+                  - cell "942.69" [ref=e944]
+                  - cell "-942.69" [ref=e945]
+                  - cell "!" [ref=e946]:
+                    - generic [ref=e947]: "!"
+                - row "46 AutRev 0.00 33.00 -33.00 !" [ref=e948]:
+                  - cell "46" [ref=e949]
+                  - cell "AutRev" [ref=e950]
+                  - cell "0.00" [ref=e951]
+                  - cell "33.00" [ref=e952]
+                  - cell "-33.00" [ref=e953]
+                  - cell "!" [ref=e954]:
+                    - generic [ref=e955]: "!"
+                - row "48 Intrnt 0.00 -26.08 +26.08 !" [ref=e956]:
+                  - cell "48" [ref=e957]
+                  - cell "Intrnt" [ref=e958]
+                  - cell "0.00" [ref=e959]
+                  - cell "-26.08" [ref=e960]
+                  - cell "+26.08" [ref=e961]
+                  - cell "!" [ref=e962]:
+                    - generic [ref=e963]: "!"
+                - row "49 TVQ 0.00 20,285.58 -20,285.58 !" [ref=e964]:
+                  - cell "49" [ref=e965]
+                  - cell "TVQ" [ref=e966]
+                  - cell "0.00" [ref=e967]
+                  - cell "20,285.58" [ref=e968]
+                  - cell "-20,285.58" [ref=e969]
+                  - cell "!" [ref=e970]:
+                    - generic [ref=e971]: "!"
+                - row "50 TPS 0.00 10,169.56 -10,169.56 !" [ref=e972]:
+                  - cell "50" [ref=e973]
+                  - cell "TPS" [ref=e974]
+                  - cell "0.00" [ref=e975]
+                  - cell "10,169.56" [ref=e976]
+                  - cell "-10,169.56" [ref=e977]
+                  - cell "!" [ref=e978]:
+                    - generic [ref=e979]: "!"
+                - row "51 TVH 0.00 2,058.98 -2,058.98 !" [ref=e980]:
+                  - cell "51" [ref=e981]
+                  - cell "TVH" [ref=e982]
+                  - cell "0.00" [ref=e983]
+                  - cell "2,058.98" [ref=e984]
+                  - cell "-2,058.98" [ref=e985]
+                  - cell "!" [ref=e986]:
+                    - generic [ref=e987]: "!"
+                - row "57 DifForf 0.00 -80.18 +80.18 !" [ref=e988]:
+                  - cell "57" [ref=e989]
+                  - cell "DifForf" [ref=e990]
+                  - cell "0.00" [ref=e991]
+                  - cell "-80.18" [ref=e992]
+                  - cell "+80.18" [ref=e993]
+                  - cell "!" [ref=e994]:
+                    - generic [ref=e995]: "!"
+          - generic [ref=e996]:
+            - generic [ref=e997]:
+              - heading "Débits · 60 – 86" [level=4] [ref=e998]
+              - generic [ref=e999]:
+                - text: 3 col ·
+                - generic [ref=e1000]: 0 OK
+            - table [ref=e1001]:
+              - rowgroup [ref=e1002]:
+                - row "Col Nom RJ Calc Écart État" [ref=e1003]:
+                  - columnheader "Col" [ref=e1004]
+                  - columnheader "Nom" [ref=e1005]
+                  - columnheader "RJ" [ref=e1006]
+                  - columnheader "Calc" [ref=e1007]
+                  - columnheader "Écart" [ref=e1008]
+                  - columnheader "État" [ref=e1009]
+              - rowgroup [ref=e1010]:
+                - row "74 RmbGrt 0.00 -1,200.01 +1,200.01 !" [ref=e1011]:
+                  - cell "74" [ref=e1012]
+                  - cell "RmbGrt" [ref=e1013]
+                  - cell "0.00" [ref=e1014]
+                  - cell "-1,200.01" [ref=e1015]
+                  - cell "+1,200.01" [ref=e1016]
+                  - cell "!" [ref=e1017]:
+                    - generic [ref=e1018]: "!"
+                - row "79 CertCd 0.00 600.00 -600.00 !" [ref=e1019]:
+                  - cell "79" [ref=e1020]
+                  - cell "CertCd" [ref=e1021]
+                  - cell "0.00" [ref=e1022]
+                  - cell "600.00" [ref=e1023]
+                  - cell "-600.00" [ref=e1024]
+                  - cell "!" [ref=e1025]:
+                    - generic [ref=e1026]: "!"
+                - row "83 TrC/R 0.00 4,557.30 -4,557.30 !" [ref=e1027]:
+                  - cell "83" [ref=e1028]
+                  - cell "TrC/R" [ref=e1029]
+                  - cell "0.00" [ref=e1030]
+                  - cell "4,557.30" [ref=e1031]
+                  - cell "-4,557.30" [ref=e1032]
+                  - cell "!" [ref=e1033]:
+                    - generic [ref=e1034]: "!"
+          - generic [ref=e1035]:
+            - generic [ref=e1036]: Trace de l'analyse
+            - text: "SJ: Piaz_N=8352.76 Admin=166.21 Promo=666.52 DR: Chambres=58804.09 Internet=-26.08 FD=4557.3 AR: GuestFolios=0.0 AdvDep MANUAL: Dep on Hand=294582.46 RJ: BO=-1807650.63 BF=0.00 DC=1807650.63 Transelect: AX=0.0 MC=0.0 X24=0.0"

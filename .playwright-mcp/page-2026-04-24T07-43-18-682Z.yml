@@ -1,0 +1,201 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - heading "RJ Balancer" [level=1] [ref=e153]
+        - paragraph [ref=e154]: Analyse automatique des écarts, compensations et résiduels
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - generic [ref=e157]:
+            - generic [ref=e158]:
+              - generic [ref=e159]: 📄
+              - heading "Documents" [level=3] [ref=e160]
+              - generic [ref=e161]: 6 sources
+            - generic [ref=e162] [cursor=pointer]:
+              - generic [ref=e163]: SJ
+              - generic [ref=e164]:
+                - text: Sales Journal
+                - generic [ref=e165]: .txt / .rtf · POS
+              - generic [ref=e220]: ✓
+            - generic [ref=e166] [cursor=pointer]:
+              - generic [ref=e167]: DR
+              - generic [ref=e168]:
+                - text: Daily Revenue
+                - generic [ref=e169]: .pdf · 7 pages
+              - generic [ref=e221]: ✓
+            - generic [ref=e170] [cursor=pointer]:
+              - generic [ref=e171]: HP
+              - generic [ref=e172]:
+                - text: HP Admin
+                - generic [ref=e173]: .xlsx · déductions F&B
+            - generic [ref=e174] [cursor=pointer]:
+              - generic [ref=e175]: AR
+              - generic [ref=e176]:
+                - text: AR Summary
+                - generic [ref=e177]: .pdf · comptes clients
+              - generic [ref=e222]: ✓
+            - generic [ref=e178] [cursor=pointer]:
+              - generic [ref=e179]: AD
+              - generic [ref=e180]:
+                - text: Advance Deposit
+                - generic [ref=e181]: .pdf · solde
+            - generic [ref=e182] [cursor=pointer]:
+              - generic [ref=e183]: RJ
+              - generic [ref=e184]:
+                - text: Fichier RJ
+                - generic [ref=e185]: .xls · Transelect, GEAC, Jour
+              - generic [ref=e223]: ✓
+          - generic [ref=e186]:
+            - generic [ref=e187]:
+              - generic [ref=e188]: ⚙
+              - heading "Paramètres" [level=3] [ref=e189]
+            - generic [ref=e190]:
+              - generic [ref=e191]:
+                - generic [ref=e192]: Jour (1–31)
+                - spinbutton [ref=e193]: "23"
+              - generic [ref=e194]:
+                - generic [ref=e195]: G4 Forfait
+                - spinbutton [ref=e196]: "40"
+              - generic [ref=e197]:
+                - generic [ref=e198]: Adj. Piazza
+                - spinbutton [ref=e199]: "41.22"
+              - generic [ref=e200]:
+                - generic [ref=e201]: Adj. Marché
+                - spinbutton [ref=e202]: "1.94"
+              - generic [ref=e203]:
+                - generic [ref=e204]: CL Nourriture
+                - spinbutton [ref=e205]
+              - generic [ref=e206]:
+                - generic [ref=e207]: CL Autres
+                - spinbutton [ref=e208]
+              - generic [ref=e209]:
+                - generic [ref=e210]: Dépôt en Main ($) — requis
+                - spinbutton [ref=e211]: "294582.46"
+            - button "Analyser l'équilibre →" [ref=e212] [cursor=pointer]:
+              - generic [ref=e213]: Analyser l'équilibre
+              - generic [ref=e214]: →
+        - generic [ref=e216]:
+          - generic [ref=e217]: ⚖️
+          - heading "Prêt pour l'analyse" [level=4] [ref=e218]
+          - paragraph [ref=e219]: Téléchargez vos documents et lancez la vérification

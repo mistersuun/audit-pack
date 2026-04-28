@@ -1,0 +1,492 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - heading "RJ Natif" [level=1] [ref=e154]
+          - generic [ref=e155]: En cours
+          - generic [ref=e393]: Sauvegardé
+        - generic [ref=e156]:
+          - button "Changer le thème" [ref=e157] [cursor=pointer]:
+            - img [ref=e386]
+          - button "Aperçu RJ" [ref=e160] [cursor=pointer]:
+            - img [ref=e161]
+            - text: Aperçu RJ
+          - button "Exporter PDF" [ref=e164] [cursor=pointer]:
+            - img [ref=e165]
+            - text: Exporter PDF
+          - button "Exporter Excel" [ref=e168] [cursor=pointer]:
+            - img [ref=e169]
+            - text: Exporter Excel
+          - button "Re-synchroniser" [ref=e172] [cursor=pointer]:
+            - img [ref=e173]
+            - text: Re-synchroniser
+          - button "Soumettre" [ref=e177] [cursor=pointer]:
+            - img [ref=e178]
+            - text: Soumettre
+      - complementary "Panneau d'équilibrage en direct" [ref=e181]:
+        - heading "Diff. Caisse" [level=3] [ref=e182]
+        - generic [ref=e183]: "0.00"
+        - heading "Variances déclarées" [level=3] [ref=e184]
+        - generic [ref=e185]:
+          - generic [ref=e580]:
+            - generic [ref=e581]: Transelect X20
+            - generic [ref=e582]: "+57867.49"
+          - generic [ref=e583]:
+            - generic [ref=e584]: Somme déclarées
+            - generic [ref=e585]: "+57867.49"
+          - generic [ref=e586]:
+            - generic [ref=e587]: Résiduel inexpliqué
+            - generic [ref=e588]: "+453.66"
+        - generic [ref=e403]:
+          - heading "Checklist 21 points 9/20" [level=3] [ref=e589]
+          - generic [ref=e405]:
+            - generic [ref=e590]:
+              - generic [ref=e591]: ✓
+              - generic [ref=e592]:
+                - text: 1. Bal.Ferm = -(NewBal + DepToday)
+                - generic [ref=e593]: BF=0.00
+            - generic [ref=e594]:
+              - generic [ref=e595]: ✗
+              - generic [ref=e596]:
+                - text: 2. Diff.Caisse = 0
+                - generic [ref=e597]: DC=58321.15
+            - generic [ref=e598]:
+              - generic [ref=e599]: ✗
+              - generic [ref=e600]:
+                - text: 3. Transelect X24 = 0
+                - generic [ref=e601]: X24=57867.49 -- a compenser
+            - generic [ref=e602]:
+              - generic [ref=e603]: ✓
+              - generic [ref=e604]:
+                - text: "4. GEAC: FD = AR (col41=0)"
+                - generic [ref=e605]: FD=0.00, AR=0.00
+            - generic [ref=e606]:
+              - generic [ref=e607]: ✗
+              - generic [ref=e608]:
+                - text: 5. Credits F&B = SJ - HP
+                - generic [ref=e609]: "17 col(s) en ecart: Nou_Piaz, Boi_Piaz, Bie_Piaz, Min_Piaz, Vin_Piaz, Nou_Mar, Nou_SCh, Boi_SCh, Bie_SCh, Min_SCh, Vin_SCh, Nou_Bqt, Boi_Bqt, Bie_Bqt, Pourb, LocSal, Tabag"
+            - generic [ref=e610]:
+              - generic [ref=e611]: ✗
+              - generic [ref=e612]:
+                - text: 6. Chambres = DR - G4
+                - generic [ref=e613]: "Ecart chambres: +35409.37"
+            - generic [ref=e614]:
+              - generic [ref=e615]: ✗
+              - generic [ref=e616]:
+                - text: 7. Taxes = SJ + DR
+                - generic [ref=e617]: 3 taxe(s) en ecart
+            - generic [ref=e618]:
+              - generic [ref=e619]: ✗
+              - generic [ref=e620]:
+                - text: 8. Debits Transelect (60-65)
+                - generic [ref=e621]: "3 col(s) en ecart: AmxElav, MC, Visa"
+            - generic [ref=e622]:
+              - generic [ref=e623]: ✓
+              - generic [ref=e624]:
+                - text: 9. HP Pourboires (68/69)
+                - generic [ref=e625]: Admin=0.00, Promo=0.00
+            - generic [ref=e626]:
+              - generic [ref=e627]: ✗
+              - generic [ref=e628]:
+                - text: 10. Argent recu = Recap
+                - generic [ref=e629]: "Ecart argent: -1413.84"
+            - generic [ref=e630]:
+              - generic [ref=e631]: ✓
+              - generic [ref=e632]:
+                - text: 12. Remb Gratuite = -SJ pourb_charge
+                - generic [ref=e633]: RmbGrt=0.00
+            - generic [ref=e634]:
+              - generic [ref=e635]: ✓
+              - generic [ref=e636]:
+                - text: 13. Due Back = Recap
+                - generic [ref=e637]: DueBk=625.75
+            - generic [ref=e638]:
+              - generic [ref=e639]: ✗
+              - generic [ref=e640]:
+                - text: 14. S&D = Recap
+                - generic [ref=e641]: Ecart S&D
+            - generic [ref=e642]:
+              - generic [ref=e643]: ✓
+              - generic [ref=e644]:
+                - text: 15. Cert Cadeau = SJ + GiveX
+                - generic [ref=e645]: CertCd=0.00
+            - generic [ref=e646]:
+              - generic [ref=e647]: ✓
+              - generic [ref=e648]:
+                - text: 16. Transfer C/R = DR FD (NEVER AR)
+                - generic [ref=e649]: FD=0.00
+            - generic [ref=e650]:
+              - generic [ref=e651]: ✓
+              - generic [ref=e652]:
+                - text: 17. Diff Forfait = -(forfait - G4)
+                - generic [ref=e653]: Forfait=0.00, G4=0.00
+            - generic [ref=e654]:
+              - generic [ref=e655]: ✗
+              - generic [ref=e656]:
+                - text: 18. Internet = DR + BQT
+                - generic [ref=e657]: Ecart Internet
+            - generic [ref=e658]:
+              - generic [ref=e659]: ✗
+              - generic [ref=e660]:
+                - text: 19. Autres GL = DR GL + GL_T - DepotUtil
+                - generic [ref=e661]: Ecart AutresGL
+            - generic [ref=e662]:
+              - generic [ref=e663]: ✓
+              - generic [ref=e664]:
+                - text: 20. Pas de colonnes inattendues
+                - generic [ref=e665]: Aucune
+            - generic [ref=e666]:
+              - generic [ref=e667]: ✗
+              - generic [ref=e668]:
+                - text: 21. Total erreurs jour = 0
+                - generic [ref=e669]: 30 erreur(s) a corriger
+      - generic [ref=e187]:
+        - button "⚙ Setup" [ref=e188] [cursor=pointer]
+        - button "1 · DueBack" [ref=e189] [cursor=pointer]: 1 · DueBack
+        - button "2 · SD" [ref=e191] [cursor=pointer]: 2 · SD
+        - button "3 · Recap" [ref=e193] [cursor=pointer]: 3 · Recap
+        - button "4 · Transelect" [ref=e195] [cursor=pointer]: 4 · Transelect
+        - button "5 · GEAC" [ref=e197] [cursor=pointer]: 5 · GEAC
+        - button "6 · Jour" [ref=e199] [cursor=pointer]: 6 · Jour
+        - button "7 · Quasimodo" [ref=e201] [cursor=pointer]: 7 · Quasimodo
+        - button "Sommaire" [ref=e203] [cursor=pointer]: Sommaire
+        - button "⋯ Plus" [ref=e205] [cursor=pointer]
+      - generic [ref=e207]:
+        - generic [ref=e208]: Nouveau Jour
+        - generic [ref=e209]: Créer ou charger une session d'audit pour une date
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - generic [ref=e212]: Date d'audit
+            - textbox [ref=e213]: 2026-04-23
+          - generic [ref=e214]:
+            - generic [ref=e215]: Auditeur
+            - textbox "Nom de l'auditeur" [ref=e216]: Souleymane Camara
+          - generic [ref=e217]:
+            - generic [ref=e218]: Température
+            - textbox "-5°C" [ref=e219]
+          - generic [ref=e220]:
+            - generic [ref=e221]: Météo
+            - textbox "Neige, Soleil..." [ref=e222]
+          - generic [ref=e223]:
+            - generic [ref=e224]: Ch. à refaire
+            - spinbutton [ref=e225]: "0"
+          - button "Démarrer / Charger" [ref=e226] [cursor=pointer]:
+            - img [ref=e227]
+            - text: Démarrer / Charger
+        - generic [ref=e486]: Nouvelle session créée — données copiées du 2026-03-24
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - img [ref=e231]
+            - text: Importer le RJ de la veille
+          - generic [ref=e234]: Déposez le fichier Excel RJ de la veille. Les données seront lues et la session pour le jour suivant sera créée automatiquement.
+          - button "Choisir un fichier RJ (.xls)" [ref=e235] [cursor=pointer]:
+            - img [ref=e236]
+            - text: Choisir un fichier RJ (.xls)
+          - generic [ref=e487]:
+            - text: ✓ RJ du 23/04/2026 importé et archivé. Session créée pour le 24/04/2026.
+            - text: "Champs importés — dueback: 20, jour: 30, recap: 1"
+        - generic [ref=e239]:
+          - generic [ref=e240]:
+            - img [ref=e241]
+            - text: Macros — Effacement
+          - generic [ref=e243]:
+            - button "Effacer Recap" [ref=e244] [cursor=pointer]:
+              - img [ref=e245]
+              - text: Effacer Recap
+            - button "Effacer Transelect" [ref=e247] [cursor=pointer]:
+              - img [ref=e248]
+              - text: Effacer Transelect
+            - button "Effacer GEAC" [ref=e250] [cursor=pointer]:
+              - img [ref=e251]
+              - text: Effacer GEAC
+            - button "Tout effacer (Recap+Trans+GEAC)" [ref=e253] [cursor=pointer]:
+              - img [ref=e254]
+              - text: Tout effacer (Recap+Trans+GEAC)
+        - generic [ref=e256]:
+          - generic [ref=e257]:
+            - img [ref=e258]
+            - text: Dépôt rapide — Fichier ZIP
+          - generic [ref=e262]:
+            - text: Déposez un fichier
+            - strong [ref=e263]: .zip
+            - text: contenant tous vos rapports de nuit. Les fichiers seront automatiquement identifiés et les données extraites dans les bons onglets.
+          - generic [ref=e264] [cursor=pointer]:
+            - img [ref=e265]
+            - generic [ref=e269]: Glissez votre ZIP ici
+            - generic [ref=e270]: ou cliquez pour parcourir
+        - generic [ref=e271]:
+          - generic [ref=e272]:
+            - img [ref=e273]
+            - text: Auto-remplissage — Rapports individuels
+          - generic [ref=e276]: Ou déposez vos rapports un par un pour remplir automatiquement les champs correspondants.
+          - generic [ref=e277]:
+            - button "Daily Revenue .pdf → Recap, GEAC, Jour" [active] [ref=e278] [cursor=pointer]:
+              - img [ref=e279]
+              - strong [ref=e282]: Daily Revenue
+              - generic [ref=e283]: .pdf
+              - generic [ref=e284]: → Recap, GEAC, Jour
+            - button "Sales Journal .rtf → Jour F&B, Recap, Transelect" [ref=e285] [cursor=pointer]:
+              - img [ref=e286]
+              - strong [ref=e289]: Sales Journal
+              - generic [ref=e290]: .rtf
+              - generic [ref=e291]: → Jour F&B, Recap, Transelect
+            - button "FreedomPay .xls → GEAC cashout, Transelect" [ref=e292] [cursor=pointer]:
+              - img [ref=e293]
+              - strong [ref=e295]: FreedomPay
+              - generic [ref=e296]: .xls
+              - generic [ref=e297]: → GEAC cashout, Transelect
+            - button "AR Summary .pdf → GEAC Balance Sheet" [ref=e298] [cursor=pointer]:
+              - img [ref=e299]
+              - strong [ref=e302]: AR Summary
+              - generic [ref=e303]: .pdf
+              - generic [ref=e304]: → GEAC Balance Sheet
+            - button "Advance Deposit .pdf → GEAC dépôts" [ref=e305] [cursor=pointer]:
+              - img [ref=e306]
+              - strong [ref=e309]: Advance Deposit
+              - generic [ref=e310]: .pdf
+              - generic [ref=e311]: → GEAC dépôts
+            - button "HP Admin .xls → HP/Admin, Jour" [ref=e312] [cursor=pointer]:
+              - img [ref=e313]
+              - strong [ref=e318]: HP Admin
+              - generic [ref=e319]: .xls
+              - generic [ref=e320]: → HP/Admin, Jour
+            - button "Suivi Dépôts (SD) .xls → SD, SetD" [ref=e321] [cursor=pointer]:
+              - img [ref=e322]
+              - strong [ref=e327]: Suivi Dépôts (SD)
+              - generic [ref=e328]: .xls
+              - generic [ref=e329]: → SD, SetD
+            - button "Market Segment .pdf → DBRS segments" [ref=e330] [cursor=pointer]:
+              - img [ref=e331]
+              - strong [ref=e334]: Market Segment
+              - generic [ref=e335]: .pdf
+              - generic [ref=e336]: → DBRS segments
+            - button "Cashier Summary .pdf → GEAC cashout" [ref=e337] [cursor=pointer]:
+              - img [ref=e338]
+              - strong [ref=e343]: Cashier Summary
+              - generic [ref=e344]: .pdf
+              - generic [ref=e345]: → GEAC cashout
+            - button "Transactions Cartes .xlsx → Transelect réception" [ref=e346] [cursor=pointer]:
+              - img [ref=e347]
+              - strong [ref=e349]: Transactions Cartes
+              - generic [ref=e350]: .xlsx
+              - generic [ref=e351]: → Transelect réception
+            - button "Recap Serveurs .txt → Transelect restaurant" [ref=e352] [cursor=pointer]:
+              - img [ref=e353]
+              - strong [ref=e354]: Recap Serveurs
+              - generic [ref=e355]: .txt
+              - generic [ref=e356]: → Transelect restaurant
+            - button "House Totals .txt → Recap Comptant + Remb Gratuité" [ref=e357] [cursor=pointer]:
+              - img [ref=e358]
+              - strong [ref=e360]: House Totals
+              - generic [ref=e361]: .txt
+              - generic [ref=e362]: → Recap Comptant + Remb Gratuité
+            - button "Débourse 90.2 .pdf → Recap Remb Client + Due Back" [ref=e363] [cursor=pointer]:
+              - img [ref=e364]
+              - strong [ref=e367]: Débourse 90.2
+              - generic [ref=e368]: .pdf
+              - generic [ref=e369]: → Recap Remb Client + Due Back
+        - generic [ref=e370]:
+          - generic [ref=e371]:
+            - generic [ref=e372]:
+              - img [ref=e373]
+              - text: Archives RJ historiques
+            - button "Rafraîchir" [ref=e376] [cursor=pointer]:
+              - img [ref=e377]
+              - text: Rafraîchir
+          - generic [ref=e381]: Parcourez les RJ Excel des dernières années. Vous pouvez consulter ou télécharger n'importe quel fichier archivé.
+          - generic [ref=e382]:
+            - textbox [ref=e383]
+            - generic [ref=e488]: 7 fichier(s)
+          - generic [ref=e384]:
+            - generic [ref=e489]:
+              - generic [ref=e490]: 2026-04-21
+              - generic [ref=e491]: mar.
+              - generic "Rj 21-04-2026.xls" [ref=e492]
+              - generic [ref=e493]: 38 tabs
+              - button "Voir les onglets" [ref=e494] [cursor=pointer]:
+                - img [ref=e495]
+              - link "Télécharger" [ref=e498] [cursor=pointer]:
+                - /url: /api/rj/archives/7/download
+                - img [ref=e499]
+            - generic [ref=e502]:
+              - generic [ref=e503]: 2026-04-19
+              - generic [ref=e504]: dim.
+              - generic "Rj 19-04-2026.xls" [ref=e505]
+              - generic [ref=e506]: 38 tabs
+              - button "Voir les onglets" [ref=e507] [cursor=pointer]:
+                - img [ref=e508]
+              - link "Télécharger" [ref=e511] [cursor=pointer]:
+                - /url: /api/rj/archives/6/download
+                - img [ref=e512]
+            - generic [ref=e515]:
+              - generic [ref=e516]: 2026-03-24
+              - generic [ref=e517]: mar.
+              - generic "Rj 24-03-2026.xls" [ref=e518]
+              - generic [ref=e519]: 39 tabs
+              - button "Voir les onglets" [ref=e520] [cursor=pointer]:
+                - img [ref=e521]
+              - link "Télécharger" [ref=e524] [cursor=pointer]:
+                - /url: /api/rj/archives/4/download
+                - img [ref=e525]
+            - generic [ref=e528]:
+              - generic [ref=e529]: 2026-03-23
+              - generic [ref=e530]: lun.
+              - generic "Rj 23-03-2026.xls" [ref=e531]
+              - generic [ref=e532]: 39 tabs
+              - button "Voir les onglets" [ref=e533] [cursor=pointer]:
+                - img [ref=e534]
+              - link "Télécharger" [ref=e537] [cursor=pointer]:
+                - /url: /api/rj/archives/3/download
+                - img [ref=e538]
+            - generic [ref=e541]:
+              - generic [ref=e542]: 2026-03-22
+              - generic [ref=e543]: dim.
+              - generic "Rj 22-03-2026.xls" [ref=e544]
+              - generic [ref=e545]: 39 tabs
+              - button "Voir les onglets" [ref=e546] [cursor=pointer]:
+                - img [ref=e547]
+              - link "Télécharger" [ref=e550] [cursor=pointer]:
+                - /url: /api/rj/archives/5/download
+                - img [ref=e551]
+            - generic [ref=e554]:
+              - generic [ref=e555]: 2026-02-24
+              - generic [ref=e556]: mar.
+              - generic "Rj 24-02-2026.xls" [ref=e557]
+              - generic [ref=e558]: 39 tabs
+              - button "Voir les onglets" [ref=e559] [cursor=pointer]:
+                - img [ref=e560]
+              - link "Télécharger" [ref=e563] [cursor=pointer]:
+                - /url: /api/rj/archives/2/download
+                - img [ref=e564]
+            - generic [ref=e567]:
+              - generic [ref=e568]: 2026-02-23
+              - generic [ref=e569]: lun.
+              - generic "Rj 23-02-2026.xls" [ref=e570]
+              - generic [ref=e571]: 39 tabs
+              - button "Voir les onglets" [ref=e572] [cursor=pointer]:
+                - img [ref=e573]
+              - link "Télécharger" [ref=e576] [cursor=pointer]:
+                - /url: /api/rj/archives/1/download
+                - img [ref=e577]

@@ -175,16 +175,19 @@ DAILY_REV_TO_JOUR = {
     },
     'AU': {
         'column_index': 46,
-        'label_en': 'Autres Revenus (Lit Pliant + Fr/Etage)',
+        'label_en': 'Autres Revenus (Lit Pliant + Fr/Etage + InterHotel)',
         'label_fr': 'Autres Rev',
-        'source_page': 'PAGE 2 + SALES JOURNAL',
-        'source_line': 'DR Lit Pliant + SJ Chambres fr_etage',
+        'source_page': 'PAGE 2 + SALES JOURNAL + PAGE 7',
+        'source_line': 'DR Lit Pliant + SJ Piazza/Chambres fr_etage + DR InterHotel XferIn',
         'operation': 'accumulate',
         'accumulator_fields': [
             'revenue.autres_revenus.lit_pliant',
+            'sales_journal.piazza.fr_etage',
             'sales_journal.chambres.fr_etage',
+            'balance.interhotel_xferin',
         ],
-        'description': 'AU = DR rollaway bed + SJ room service delivery fee. Apr 19: =21+20',
+        'description': 'AU = DR rollaway bed + SJ Piazza fr_etage (debit/credit) + SJ Chambres fr_etage + InterHotel XferIn. '
+                       'Matches balancer calc[46]. SJ debits stored as negative — addition gives bqt + (-piaz_debit) = bqt - piaz.',
         'sign_handling': 'keep_sign'
     },
     'AV': {
@@ -201,21 +204,19 @@ DAILY_REV_TO_JOUR = {
     },
     'AW': {
         'column_index': 48,
-        'label_en': 'Internet (3 components)',
-        'label_fr': 'Internet (3 composantes)',
-        'source_page': 'PAGE 2 + Sales Journal + PAGE 7',
-        'source_line': 'DR Internet + SJ Bqt Internet + InterHotel XferIn',
+        'label_en': 'Internet (DR + SJ Banquet)',
+        'label_fr': 'Internet',
+        'source_page': 'PAGE 2 + Sales Journal',
+        'source_line': 'DR Internet + SJ Bqt Internet',
         'operation': 'accumulate',
         'accumulator_fields': [
             'revenue.internet.total',
             'sales_journal.banquet.internet',
-            'balance.interhotel_xferin',
         ],
-        'description': 'AW = DR Internet (signed, often negative!) + SJ Banquet Internet + '
-                       'DR InterHotel XferIn (p.7). All 3 components every time. '
-                       'Real example Apr 15: -17.38 + 460 + 19.98 = 462.60',
+        'description': 'AW = DR Internet (signed, often negative) + SJ Banquet Internet. '
+                       'User rule Apr 23: InterHotel XferIn is NOT in AW — it moved to AU.',
         'sign_handling': 'keep_sign',
-        'note': 'DR Internet can be negative (corrections). InterHotel often $9.99 weekday, $49.95 Sunday.'
+        'note': 'DR Internet can be negative (corrections). InterHotel goes to AU, not here.'
     },
     'BA': {
         'column_index': 52,
@@ -274,6 +275,7 @@ DAILY_REV_TO_JOUR = {
             'non_revenue.telephones_tax.tps_interurbain',
             'non_revenue.autres_tax.tps_autres',
             'non_revenue.internet_nonrev.tps',
+            'non_revenue.comptabilite_nonrev.tps',
             # NOTE: F&B OPERA taxes (Piazza/Bqt/Spesa/ServCh) deliberately excluded — already in sales_journal.taxes.tps
             # Sales Journal POS taxes
             'sales_journal.taxes.tps',
@@ -296,6 +298,7 @@ DAILY_REV_TO_JOUR = {
             'non_revenue.telephones_tax.tvq_interurbain',
             'non_revenue.autres_tax.tvq_autres',
             'non_revenue.internet_nonrev.tvq',
+            'non_revenue.comptabilite_nonrev.tvq',
             # NOTE: F&B OPERA taxes (Piazza/Bqt/Spesa/ServCh) deliberately excluded — already in sales_journal.taxes.tvq
             # Sales Journal POS taxes
             'sales_journal.taxes.tvq',
@@ -310,19 +313,19 @@ DAILY_REV_TO_JOUR = {
     # =========================================================================
     'BC': {
         'column_index': 54,
-        'label_en': 'Autre Revenu Taxable + Gift Cards',
-        'label_fr': 'Autre Rev Taxable + Gift Cards',
+        'label_en': 'Autre Revenu Taxable + Bon d\'achat',
+        'label_fr': 'Autre Rev Taxable + Bon d\'achat',
         'source_page': 'PAGES 2, 6',
-        'source_line': 'Autre a Payer Taxable + GiveX + Bons d\'achat + Gift Cards',
+        'source_line': 'Autre a Payer Taxable + Bons d\'achat',
         'operation': 'accumulate',
         'accumulator_fields': [
             'revenue.autres_revenus.autre_a_payer_taxable',
-            'revenue.givex.total',
             'settlements.bon_dachat',
             'settlements.gift_card',
             'settlements.bon_dachat_remanco',
         ],
-        'description': 'Accumulator: Autre Revenu Taxable (DR p.2) + GiveX + Bon d\'achat + Gift Card + Bon d\'achat Remanco',
+        'description': 'Autre Revenu Taxable (DR p.2) + Bon d\'achat + Gift Card + Bon d\'achat Remanco. '
+                       'GiveX removed Apr 23: it belongs in CB col 79 as always_negative (not BC as credit).',
         'sign_handling': 'keep_sign'
     },
     'CC': {
@@ -383,12 +386,12 @@ DAILY_REV_TO_JOUR = {
         'label_en': 'Club Lounge & Forfait Calculation',
         'label_fr': 'Club Lounge & Forfait Calculation',
         'source_page': 'DERIVED',
-        'source_line': 'Calculated from diff_forfait',
+        'source_line': 'Calculated from -SJ Forfait + Club Lounge + G4',
         'operation': 'formula',
-        'formula': '-forfait + club_lounge_value',
+        'formula': '-forfait + club_lounge + g4',
         'base_field': 'derived.diff_forfait',
         'expected_value': 0.00,
-        'description': 'Column BF = -Forfait + Club Lounge value (from diff_forfait)',
+        'description': 'Column BF = -SJ Forfait + Club Lounge + G4 (Apr 23 GT: -120.18 + 0 + 40 = -80.18).',
         'sign_handling': 'keep_sign'
     },
 
@@ -726,10 +729,56 @@ DAILY_REV_TO_JOUR = {
         'label_en': 'Tabagie',
         'label_fr': 'Tabagie',
         'source_page': 'SALES JOURNAL',
-        'source_line': 'Tabagie / Tobacco',
-        'operation': 'direct',
-        'base_field': 'sales_journal.spesa.tabagie',
-        'description': 'Tobacco/tabagie sales (Spesa dept)',
+        'source_line': 'Tabagie / Tobacco (Spesa + Piazza + Chambres)',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'sales_journal.spesa.tabagie',
+            'sales_journal.piazza.tabagie',
+            'sales_journal.chambres.tabagie',
+        ],
+        'description': 'Tobacco/tabagie sales: Spesa + Piazza + Chambres (matches balancer calc[35]).',
+        'sign_handling': 'keep_sign'
+    },
+    'AE': {
+        'column_index': 30,
+        'label_en': 'Equipement Audio Visuel (Banquet - Piazza reversal)',
+        'label_fr': 'Equipement Audio',
+        'source_page': 'SALES JOURNAL',
+        'source_line': 'Banquet Equip Audio Visuel + Piazza Equip Audio',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'sales_journal.banquet.equip_audio_visuel',
+            'sales_journal.piazza.equip_audio',
+        ],
+        'description': 'Banquet AV credit + Piazza AV reversal (debit stored as negative). Matches balancer calc[30]=bqt_eq_audio - piaz_eq_audio.',
+        'sign_handling': 'keep_sign'
+    },
+    'AF': {
+        'column_index': 31,
+        'label_en': 'Divers Banquet + Piazza',
+        'label_fr': 'Divers Banq',
+        'source_page': 'SALES JOURNAL',
+        'source_line': 'Banquet EQ Divers + Piazza EQ Divers',
+        'operation': 'accumulate',
+        'accumulator_fields': [
+            'sales_journal.banquet.eq_divers',
+            'sales_journal.piazza.eq_divers',
+        ],
+        'description': 'Divers equipment from Banquet + Piazza. Apr 23: =-17.4+8517.4 = 8500.',
+        'sign_handling': 'keep_sign'
+    },
+    'CB': {
+        'column_index': 79,
+        'label_en': 'Certificat Cadx (SJ Cert Cadeau − |GiveX|)',
+        'label_fr': 'Cert Cadx',
+        'source_page': 'PAGE 2',
+        'source_line': 'SJ CERT CADEAU debit − DR GiveX adjustment (abs)',
+        'operation': 'cf_transfer',
+        'accumulator_fields': [
+            'sales_journal.adjustments.cert_cadeau',  # SJ cert cadeau debit (positive)
+            '-|revenue.givex.total|',                 # subtract abs(GiveX), robust to DR sign
+        ],
+        'description': 'CB = SJ cert_cadeau − |GiveX| (matches balancer calc[79]). When cert_cadeau=0, behaves as -|GiveX|. abs() guards against DR sign drift.',
         'sign_handling': 'keep_sign'
     },
 

@@ -1,0 +1,376 @@
+- generic [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "Rapport Journalier" [ref=e39] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e40]
+        - generic [ref=e42]: Rapport Journalier
+      - link "RJ Balancer" [ref=e43] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e44]
+        - generic [ref=e47]: RJ Balancer
+      - generic [ref=e48]:
+        - link "CRM" [ref=e49] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e50]
+          - generic [ref=e53]: CRM
+          - img [ref=e54]
+        - generic:
+          - link "Vue d'ensemble" [ref=e56] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e57]
+            - generic [ref=e62]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e63] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e64]
+            - generic [ref=e67]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e68] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e69]
+            - generic [ref=e72]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e73] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e74]
+            - generic [ref=e79]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e80] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e81]
+            - generic [ref=e83]: Cash & Récon
+          - link "Paiements" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e85]
+            - generic [ref=e87]: Paiements
+          - link "P&L & Budget" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e89]
+            - generic [ref=e92]: P&L & Budget
+      - link "Prévisions" [ref=e93] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e94]
+        - generic [ref=e97]: Prévisions
+      - link "STR & OTB" [ref=e98] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e99]
+        - generic [ref=e103]: STR & OTB
+      - generic [ref=e104]:
+        - link "Générateurs" [ref=e105] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e106]
+          - generic [ref=e110]: Générateurs
+          - img [ref=e111]
+        - generic:
+          - link "Documents" [ref=e113] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e114]
+            - generic [ref=e117]: Documents
+          - link "Pourboires" [ref=e118] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e119]
+            - generic [ref=e121]: Pourboires
+          - link "HP / Admin" [ref=e122] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e123]
+            - generic [ref=e128]: HP / Admin
+      - generic [ref=e129]: Support
+      - link "FAQ" [ref=e130] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e131]
+        - generic [ref=e134]: FAQ
+    - generic [ref=e135]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e136] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e137]: A
+        - generic [ref=e138]:
+          - generic [ref=e139]: Auditeur de nuit
+          - generic [ref=e140]: Auditeur de nuit
+      - link "Mode sombre" [ref=e141] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e142]
+        - generic [ref=e144]: Mode sombre
+      - link "Déconnexion" [ref=e145] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e146]
+        - generic [ref=e149]: Déconnexion
+  - main [ref=e150]:
+    - generic [ref=e151]:
+      - generic [ref=e152]:
+        - generic [ref=e153]:
+          - heading "RJ Natif" [level=1] [ref=e154]
+          - generic [ref=e155]: Aucune session
+        - generic [ref=e156]:
+          - button "Changer le thème" [ref=e157] [cursor=pointer]:
+            - img [ref=e386]
+          - button "Aperçu RJ" [ref=e160] [cursor=pointer]:
+            - img [ref=e161]
+            - text: Aperçu RJ
+          - button "Exporter PDF" [disabled] [ref=e164]:
+            - img [ref=e165]
+            - text: Exporter PDF
+          - button "Exporter Excel" [disabled] [ref=e168]:
+            - img [ref=e169]
+            - text: Exporter Excel
+          - button "Re-synchroniser" [disabled] [ref=e172]:
+            - img [ref=e173]
+            - text: Re-synchroniser
+          - button "Soumettre" [disabled] [ref=e177]:
+            - img [ref=e178]
+            - text: Soumettre
+      - complementary "Panneau d'équilibrage en direct" [ref=e181]:
+        - heading "Diff. Caisse" [level=3] [ref=e182]
+        - generic [ref=e183]: —
+        - heading "Variances déclarées" [level=3] [ref=e184]
+        - generic [ref=e186]: Aucune session chargée
+      - generic [ref=e187]:
+        - button "⚙ Setup" [ref=e188] [cursor=pointer]
+        - button "1 · DueBack" [ref=e189] [cursor=pointer]: 1 · DueBack
+        - button "2 · SD" [ref=e191] [cursor=pointer]: 2 · SD
+        - button "3 · Recap" [ref=e193] [cursor=pointer]: 3 · Recap
+        - button "4 · Transelect" [ref=e195] [cursor=pointer]: 4 · Transelect
+        - button "5 · GEAC" [ref=e197] [cursor=pointer]: 5 · GEAC
+        - button "6 · Jour" [ref=e199] [cursor=pointer]: 6 · Jour
+        - button "7 · Quasimodo" [ref=e201] [cursor=pointer]: 7 · Quasimodo
+        - button "Sommaire" [ref=e203] [cursor=pointer]: Sommaire
+        - button "⋯ Plus" [ref=e205] [cursor=pointer]
+      - generic [ref=e207]:
+        - generic [ref=e208]: Nouveau Jour
+        - generic [ref=e209]: Créer ou charger une session d'audit pour une date
+        - generic [ref=e210]:
+          - generic [ref=e211]:
+            - generic [ref=e212]: Date d'audit
+            - textbox [ref=e213]: 2026-04-23
+          - generic [ref=e214]:
+            - generic [ref=e215]: Auditeur
+            - textbox "Nom de l'auditeur" [ref=e216]: Auditeur de nuit
+          - generic [ref=e217]:
+            - generic [ref=e218]: Température
+            - textbox "-5°C" [ref=e219]
+          - generic [ref=e220]:
+            - generic [ref=e221]: Météo
+            - textbox "Neige, Soleil..." [ref=e222]
+          - generic [ref=e223]:
+            - generic [ref=e224]: Ch. à refaire
+            - spinbutton [ref=e225]: "0"
+          - button "Démarrer / Charger" [ref=e226] [cursor=pointer]:
+            - img [ref=e227]
+            - text: Démarrer / Charger
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - img [ref=e231]
+            - text: Importer le RJ de la veille
+          - generic [ref=e234]: Déposez le fichier Excel RJ de la veille. Les données seront lues et la session pour le jour suivant sera créée automatiquement.
+          - button "Choisir un fichier RJ (.xls)" [active] [ref=e235] [cursor=pointer]:
+            - img [ref=e236]
+            - text: Choisir un fichier RJ (.xls)
+          - generic [ref=e485]: "Erreur lors de l'import: (sqlite3.OperationalError) no such column: night_audit_sessions.jour_equip_audio [SQL: SELECT night_audit_sessions.id AS night_audit_sessions_id, night_audit_sessions.audit_date AS night_audit_sessions_audit_date, night_audit_sessions.property_id AS night_audit_sessions_property_id, night_audit_sessions.auditor_name AS night_audit_sessions_auditor_name, night_audit_sessions.status AS night_audit_sessions_status, night_audit_sessions.started_at AS night_audit_sessions_started_at, night_audit_sessions.completed_at AS night_audit_sessions_completed_at, night_audit_sessions.notes AS night_audit_sessions_notes, night_audit_sessions.correction_count AS night_audit_sessions_correction_count, night_audit_sessions.last_corrected_by AS night_audit_sessions_last_corrected_by, night_audit_sessions.last_corrected_at AS night_audit_sessions_last_corrected_at, night_audit_sessions.correction_reason AS night_audit_sessions_correction_reason, night_audit_sessions.temperature AS night_audit_sessions_temperature, night_audit_sessions.weather_condition AS night_audit_sessions_weather_condition, night_audit_sessions.chambres_refaire AS night_audit_sessions_chambres_refaire, night_audit_sessions.jours_dans_mois AS night_audit_sessions_jours_dans_mois, night_audit_sessions.cash_ls_lecture AS night_audit_sessions_cash_ls_lecture, night_audit_sessions.cash_ls_corr AS night_audit_sessions_cash_ls_corr, night_audit_sessions.cash_pos_lecture AS night_audit_sessions_cash_pos_lecture, night_audit_sessions.cash_pos_corr AS night_audit_sessions_cash_pos_corr, night_audit_sessions.cheque_ar_lecture AS night_audit_sessions_cheque_ar_lecture, night_audit_sessions.cheque_ar_corr AS night_audit_sessions_cheque_ar_corr, night_audit_sessions.cheque_dr_lecture AS night_audit_sessions_cheque_dr_lecture, night_audit_sessions.cheque_dr_corr AS night_audit_sessions_cheque_dr_corr, night_audit_sessions.remb_gratuite_lecture AS night_audit_sessions_remb_gratuite_lecture, night_audit_sessions.remb_gratuite_corr AS night_audit_sessions_remb_gratuite_corr, night_audit_sessions.remb_client_lecture AS night_audit_sessions_remb_client_lecture, night_audit_sessions.remb_client_corr AS night_audit_sessions_remb_client_corr, night_audit_sessions.dueback_reception_lecture AS night_audit_sessions_dueback_reception_lecture, night_audit_sessions.dueback_reception_corr AS night_audit_sessions_dueback_reception_corr, night_audit_sessions.dueback_nb_lecture AS night_audit_sessions_dueback_nb_lecture, night_audit_sessions.dueback_nb_corr AS night_audit_sessions_dueback_nb_corr, night_audit_sessions.deposit_cdn AS night_audit_sessions_deposit_cdn, night_audit_sessions.deposit_us AS night_audit_sessions_deposit_us, night_audit_sessions.recap_balance AS night_audit_sessions_recap_balance, night_audit_sessions.transelect_restaurant AS night_audit_sessions_transelect_restaurant, night_audit_sessions.transelect_reception AS night_audit_sessions_transelect_reception, night_audit_sessions.transelect_quasimodo AS night_audit_sessions_transelect_quasimodo, night_audit_sessions.transelect_variance AS night_audit_sessions_transelect_variance, night_audit_sessions.geac_cashout AS night_audit_sessions_geac_cashout, night_audit_sessions.geac_daily_rev AS night_audit_sessions_geac_daily_rev, night_audit_sessions.geac_balance_sheet AS night_audit_sessions_geac_balance_sheet, night_audit_sessions.geac_ar_previous AS night_audit_sessions_geac_ar_previous, night_audit_sessions.geac_ar_charges AS night_audit_sessions_geac_ar_charges, night_audit_sessions.geac_ar_payments AS night_audit_sessions_geac_ar_payments, night_audit_sessions.geac_ar_new_balance AS night_audit_sessions_geac_ar_new_balance, night_audit_sessions.geac_ar_variance AS night_audit_sessions_geac_ar_variance, night_audit_sessions.dueback_entries AS night_audit_sessions_dueback_entries, night_audit_sessions.dueback_total AS night_audit_sessions_dueback_total, night_audit_sessions.sd_entries AS night_audit_sessions_sd_entries, night_audit_sessions.sd_total_verified AS night_audit_sessions_sd_total_verified, night_audit_sessions.depot_data AS night_audit_sessions_depot_data, night_audit_sessions.depot_total AS night_audit_sessions_depot_total, night_audit_sessions.setd_rj_balance AS night_audit_sessions_setd_rj_balance, night_audit_sessions.setd_personnel AS night_audit_sessions_setd_personnel, night_audit_sessions.jour_cafe_nourriture AS night_audit_sessions_jour_cafe_nourriture, night_audit_sessions.jour_cafe_boisson AS night_audit_sessions_jour_cafe_boisson, night_audit_sessions.jour_cafe_bieres AS night_audit_sessions_jour_cafe_bieres, night_audit_sessions.jour_cafe_mineraux AS night_audit_sessions_jour_cafe_mineraux, night_audit_sessions.jour_cafe_vins AS night_audit_sessions_jour_cafe_vins, night_audit_sessions.jour_piazza_nourriture AS night_audit_sessions_jour_piazza_nourriture, night_audit_sessions.jour_piazza_boisson AS night_audit_sessions_jour_piazza_boisson, night_audit_sessions.jour_piazza_bieres AS night_audit_sessions_jour_piazza_bieres, night_audit_sessions.jour_piazza_mineraux AS night_audit_sessions_jour_piazza_mineraux, night_audit_sessions.jour_piazza_vins AS night_audit_sessions_jour_piazza_vins, night_audit_sessions.jour_spesa_nourriture AS night_audit_sessions_jour_spesa_nourriture, night_audit_sessions.jour_spesa_boisson AS night_audit_sessions_jour_spesa_boisson, night_audit_sessions.jour_spesa_bieres AS night_audit_sessions_jour_spesa_bieres, night_audit_sessions.jour_spesa_mineraux AS night_audit_sessions_jour_spesa_mineraux, night_audit_sessions.jour_spesa_vins AS night_audit_sessions_jour_spesa_vins, night_audit_sessions.jour_chambres_svc_nourriture AS night_audit_sessions_jour_chambres_svc_nourriture, night_audit_sessions.jour_chambres_svc_boisson AS night_audit_sessions_jour_chambres_svc_boisson, night_audit_sessions.jour_chambres_svc_bieres AS night_audit_sessions_jour_chambres_svc_bieres, night_audit_sessions.jour_chambres_svc_mineraux AS night_audit_sessions_jour_chambres_svc_mineraux, night_audit_sessions.jour_chambres_svc_vins AS night_audit_sessions_jour_chambres_svc_vins, night_audit_sessions.jour_banquet_nourriture AS night_audit_sessions_jour_banquet_nourriture, night_audit_sessions.jour_banquet_boisson AS night_audit_sessions_jour_banquet_boisson, night_audit_sessions.jour_banquet_bieres AS night_audit_sessions_jour_banquet_bieres, night_audit_sessions.jour_banquet_mineraux AS night_audit_sessions_jour_banquet_mineraux, night_audit_sessions.jour_banquet_vins AS night_audit_sessions_jour_banquet_vins, night_audit_sessions.jour_pourboires AS night_audit_sessions_jour_pourboires, night_audit_sessions.jour_equip_audio AS night_audit_sessions_jour_equip_audio, night_audit_sessions.jour_equip_divers AS night_audit_sessions_jour_equip_divers, night_audit_sessions.jour_tabagie AS night_audit_sessions_jour_tabagie, night_audit_sessions.jour_location_salle AS night_audit_sessions_jour_location_salle, night_audit_sessions.jour_vestiaire AS night_audit_sessions_jour_vestiaire, night_audit_sessions.jour_adj_cafe AS night_audit_sessions_jour_adj_cafe, night_audit_sessions.jour_adj_piazza AS night_audit_sessions_jour_adj_piazza, night_audit_sessions.jour_adj_spesa AS night_audit_sessions_jour_adj_spesa, night_audit_sessions.jour_adj_chambres_svc AS night_audit_sessions_jour_adj_chambres_svc, night_audit_sessions.jour_adj_banquet AS night_audit_sessions_jour_adj_banquet, night_audit_sessions.jour_adj_tabagie AS night_audit_sessions_jour_adj_tabagie, night_audit_sessions.jour_adj_notes AS night_audit_sessions_jour_adj_notes, night_audit_sessions.jour_room_revenue AS night_audit_sessions_jour_room_revenue, night_audit_sessions.jour_tel_local AS night_audit_sessions_jour_tel_local, night_audit_sessions.jour_tel_interurbain AS night_audit_sessions_jour_tel_interurbain, night_audit_sessions.jour_tel_publics AS night_audit_sessions_jour_tel_publics, night_audit_sessions.jour_nettoyeur AS night_audit_sessions_jour_nettoyeur, night_audit_sessions.jour_fax AS night_audit_sessions_jour_fax, night_audit_sessions.jour_machine_distrib AS night_audit_sessions_jour_machine_distrib, night_audit_sessions.jour_autres_gl AS night_audit_sessions_jour_autres_gl, night_audit_sessions.jour_sonifi AS night_audit_sessions_jour_sonifi, night_audit_sessions.jour_lit_pliant AS night_audit_sessions_jour_lit_pliant, night_audit_sessions.jour_boutique AS night_audit_sessions_jour_boutique, night_audit_sessions.jour_internet AS night_audit_sessions_jour_internet, night_audit_sessions.jour_massage AS night_audit_sessions_jour_massage, night_audit_sessions.jour_diff_forfait AS night_audit_sessions_jour_diff_forfait, night_audit_sessions.jour_forfait_sj AS night_audit_sessions_jour_forfait_sj, night_audit_sessions.g4_montant AS night_audit_sessions_g4_montant, night_audit_sessions.jour_tvq AS night_audit_sessions_jour_tvq, night_audit_sessions.jour_tps AS night_audit_sessions_jour_tps, night_audit_sessions.jour_taxe_hebergement AS night_audit_sessions_jour_taxe_hebergement, night_audit_sessions.jour_gift_cards AS night_audit_sessions_jour_gift_cards, night_audit_sessions.jour_certificats AS night_audit_sessions_jour_certificats, night_audit_sessions.jour_rooms_simple AS night_audit_sessions_jour_rooms_simple, night_audit_sessions.jour_rooms_double AS night_audit_sessions_jour_rooms_double, night_audit_sessions.jour_rooms_suite AS night_audit_sessions_jour_rooms_suite, night_audit_sessions.jour_rooms_comp AS night_audit_sessions_jour_rooms_comp, night_audit_sessions.jour_nb_clients AS night_audit_sessions_jour_nb_clients, night_audit_sessions.jour_rooms_hors_usage AS night_audit_sessions_jour_rooms_hors_usage, night_audit_sessions.jour_club_lounge AS night_audit_sessions_jour_club_lounge, night_audit_sessions.jour_deposit_on_hand AS night_audit_sessions_jour_deposit_on_hand, night_audit_sessions.jour_ar_misc AS night_audit_sessions_jour_ar_misc, night_audit_sessions.jour_total_fb AS night_audit_sessions_jour_total_fb, night_audit_sessions.jour_total_revenue AS night_audit_sessions_jour_total_revenue, night_audit_sessions.jour_adr AS night_audit_sessions_jour_adr, night_audit_sessions.jour_revpar AS night_audit_sessions_jour_revpar, night_audit_sessions.jour_occupancy_rate AS night_audit_sessions_jour_occupancy_rate, night_audit_sessions.is_recap_balanced AS night_audit_sessions_is_recap_balanced, night_audit_sessions.is_transelect_balanced AS night_audit_sessions_is_transelect_balanced, night_audit_sessions.is_ar_balanced AS night_audit_sessions_is_ar_balanced, night_audit_sessions.is_fully_balanced AS night_audit_sessions_is_fully_balanced, night_audit_sessions.hp_admin_entries AS night_audit_sessions_hp_admin_entries, night_audit_sessions.hp_admin_total AS night_audit_sessions_hp_admin_total, night_audit_sessions.internet_ls_361 AS night_audit_sessions_internet_ls_361, night_audit_sessions.internet_ls_365 AS night_audit_sessions_internet_ls_365, night_audit_sessions.internet_variance AS night_audit_sessions_internet_variance, night_audit_sessions.sonifi_cd_352 AS night_audit_sessions_sonifi_cd_352, night_audit_sessions.sonifi_email AS night_audit_sessions_sonifi_email, night_audit_sessions.sonifi_variance AS night_audit_sessions_sonifi_variance, night_audit_sessions.quasi_fb_debit AS night_audit_sessions_quasi_fb_debit, night_audit_sessions.quasi_fb_visa AS night_audit_sessions_quasi_fb_visa, night_audit_sessions.quasi_fb_mc AS night_audit_sessions_quasi_fb_mc, night_audit_sessions.quasi_fb_amex AS night_audit_sessions_quasi_fb_amex, night_audit_sessions.quasi_fb_discover AS night_audit_sessions_quasi_fb_discover, night_audit_sessions.quasi_rec_debit AS night_audit_sessions_quasi_rec_debit, night_audit_sessions.quasi_rec_visa AS night_audit_sessions_quasi_rec_visa, night_audit_sessions.quasi_rec_mc AS night_audit_sessions_quasi_rec_mc, night_audit_sessions.quasi_rec_amex AS night_audit_sessions_quasi_rec_amex, night_audit_sessions.quasi_rec_discover AS night_audit_sessions_quasi_rec_discover, night_audit_sessions.quasi_amex_factor AS night_audit_sessions_quasi_amex_factor, night_audit_sessions.quasi_cash_cdn AS night_audit_sessions_quasi_cash_cdn, night_audit_sessions.quasi_cash_usd AS night_audit_sessions_quasi_cash_usd, night_audit_sessions.quasi_total AS night_audit_sessions_quasi_total, night_audit_sessions.quasi_rj_total AS night_audit_sessions_quasi_rj_total, night_audit_sessions.quasi_variance AS night_audit_sessions_quasi_variance, night_audit_sessions.dbrs_market_segments AS night_audit_sessions_dbrs_market_segments, night_audit_sessions.dbrs_daily_rev_today AS night_audit_sessions_dbrs_daily_rev_today, night_audit_sessions.dbrs_adr AS night_audit_sessions_dbrs_adr, night_audit_sessions.dbrs_house_count AS night_audit_sessions_dbrs_house_count, night_audit_sessions.dbrs_otb_data AS night_audit_sessions_dbrs_otb_data, night_audit_sessions.dbrs_noshow_count AS night_audit_sessions_dbrs_noshow_count, night_audit_sessions.dbrs_noshow_revenue AS night_audit_sessions_dbrs_noshow_revenue, night_audit_sessions.gl_101100_previous AS night_audit_sessions_gl_101100_previous, night_audit_sessions.gl_101100_additions AS night_audit_sessions_gl_101100_additions, night_audit_sessions.gl_101100_deductions AS night_audit_sessions_gl_101100_deductions, night_audit_sessions.gl_101100_new_balance AS night_audit_sessions_gl_101100_new_balance, night_audit_sessions.gl_101100_variance AS night_audit_sessions_gl_101100_variance, night_audit_sessions.gl_101100_notes AS night_audit_sessions_gl_101100_notes, night_audit_sessions.gl_100401_previous AS night_audit_sessions_gl_100401_previous, night_audit_sessions.gl_100401_additions AS night_audit_sessions_gl_100401_additions, night_audit_sessions.gl_100401_deductions AS night_audit_sessions_gl_100401_deductions, night_audit_sessions.gl_100401_new_balance AS night_audit_sessions_gl_100401_new_balance, night_audit_sessions.gl_100401_variance AS night_audit_sessions_gl_100401_variance, night_audit_sessions.gl_100401_notes AS night_audit_sessions_gl_100401_notes, night_audit_sessions.diff_caisse_entries AS night_audit_sessions_diff_caisse_entries, night_audit_sessions.diff_caisse_total AS night_audit_sessions_diff_caisse_total, night_audit_sessions.diff_caisse_formula AS night_audit_sessions_diff_caisse_formula, night_audit_sessions.diff_caisse_reconciled AS night_audit_sessions_diff_caisse_reconciled, night_audit_sessions.socan_charge AS night_audit_sessions_socan_charge, night_audit_sessions.socan_allocation_resto AS night_audit_sessions_socan_allocation_resto, night_audit_sessions.socan_allocation_bar AS night_audit_sessions_socan_allocation_bar, night_audit_sessions.socan_allocation_banquet AS night_audit_sessions_socan_allocation_banquet, night_audit_sessions.socan_notes AS night_audit_sessions_socan_notes, night_audit_sessions.resonne_entries AS night_audit_sessions_resonne_entries, night_audit_sessions.resonne_total AS night_audit_sessions_resonne_total, night_audit_sessions.vestiaire_entries AS night_audit_sessions_vestiaire_entries, night_audit_sessions.vestiaire_total_revenue AS night_audit_sessions_vestiaire_total_revenue, night_audit_sessions.vestiaire_total_variance AS night_audit_sessions_vestiaire_total_variance, night_audit_sessions.admin_entries AS night_audit_sessions_admin_entries, night_audit_sessions.admin_total AS night_audit_sessions_admin_total, night_audit_sessions.massage_entries AS night_audit_sessions_massage_entries, night_audit_sessions.massage_total_revenue AS night_audit_sessions_massage_total_revenue, night_audit_sessions.massage_total_tips AS night_audit_sessions_massage_total_tips, night_audit_sessions.ristourne_entries AS night_audit_sessions_ristourne_entries, night_audit_sessions.ristourne_total AS night_audit_sessions_ristourne_total, night_audit_sessions.ristourne_by_dept AS night_audit_sessions_ristourne_by_dept, night_audit_sessions.ristourne_analysis_notes AS night_audit_sessions_ristourne_analysis_notes, night_audit_sessions.ej_entries AS night_audit_sessions_ej_entries, night_audit_sessions.ej_total AS night_audit_sessions_ej_total, night_audit_sessions.salaires_data AS night_audit_sessions_salaires_data, night_audit_sessions.salaires_total_heures AS night_audit_sessions_salaires_total_heures, night_audit_sessions.salaires_total_montant AS night_audit_sessions_salaires_total_montant, night_audit_sessions.nettoyeur_entries AS night_audit_sessions_nettoyeur_entries, night_audit_sessions.nettoyeur_total AS night_audit_sessions_nettoyeur_total, night_audit_sessions.somm_nettoyeur_data AS night_audit_sessions_somm_nettoyeur_data, night_audit_sessions.somm_nettoyeur_distribution AS night_audit_sessions_somm_nettoyeur_distribution, night_audit_sessions.auditeur_list AS night_audit_sessions_auditeur_list, night_audit_sessions.rj_balance_ouverture AS night_audit_sessions_rj_balance_ouverture, night_audit_sessions.rj_balance_fermeture AS night_audit_sessions_rj_balance_fermeture, night_audit_sessions.rj_total_revenus AS night_audit_sessions_rj_total_revenus, night_audit_sessions.rj_stats_data AS night_audit_sessions_rj_stats_data, night_audit_sessions.rj_cards_summary AS night_audit_sessions_rj_cards_summary, night_audit_sessions.rapp_p1_data AS night_audit_sessions_rapp_p1_data, night_audit_sessions.rapp_p2_data AS night_audit_sessions_rapp_p2_data, night_audit_sessions.rapp_p3_data AS night_audit_sessions_rapp_p3_data, night_audit_sessions.etat_rev_data AS night_audit_sessions_etat_rev_data, night_audit_sessions.budget_data AS night_audit_sessions_budget_data, night_audit_sessions.analyse_101100_entries AS night_audit_sessions_analyse_101100_entries, night_audit_sessions.analyse_100401_entries AS night_audit_sessions_analyse_100401_entries, night_audit_sessions.autre_gl_data AS night_audit_sessions_autre_gl_data, night_audit_sessions.created_at AS night_audit_sessions_created_at FROM night_audit_sessions WHERE night_audit_sessions.audit_date = ? LIMIT ? OFFSET ?] [parameters: ('2026-04-24', 1, 0)] (Background on this error at: https://sqlalche.me/e/20/e3q8)"
+        - generic [ref=e239]:
+          - generic [ref=e240]:
+            - img [ref=e241]
+            - text: Macros — Effacement
+          - generic [ref=e243]:
+            - button "Effacer Recap" [ref=e244] [cursor=pointer]:
+              - img [ref=e245]
+              - text: Effacer Recap
+            - button "Effacer Transelect" [ref=e247] [cursor=pointer]:
+              - img [ref=e248]
+              - text: Effacer Transelect
+            - button "Effacer GEAC" [ref=e250] [cursor=pointer]:
+              - img [ref=e251]
+              - text: Effacer GEAC
+            - button "Tout effacer (Recap+Trans+GEAC)" [ref=e253] [cursor=pointer]:
+              - img [ref=e254]
+              - text: Tout effacer (Recap+Trans+GEAC)
+        - generic [ref=e256]:
+          - generic [ref=e257]:
+            - img [ref=e258]
+            - text: Dépôt rapide — Fichier ZIP
+          - generic [ref=e262]:
+            - text: Déposez un fichier
+            - strong [ref=e263]: .zip
+            - text: contenant tous vos rapports de nuit. Les fichiers seront automatiquement identifiés et les données extraites dans les bons onglets.
+          - generic [ref=e264] [cursor=pointer]:
+            - img [ref=e265]
+            - generic [ref=e269]: Glissez votre ZIP ici
+            - generic [ref=e270]: ou cliquez pour parcourir
+        - generic [ref=e271]:
+          - generic [ref=e272]:
+            - img [ref=e273]
+            - text: Auto-remplissage — Rapports individuels
+          - generic [ref=e276]: Ou déposez vos rapports un par un pour remplir automatiquement les champs correspondants.
+          - generic [ref=e277]:
+            - button "Daily Revenue .pdf → Recap, GEAC, Jour" [ref=e278] [cursor=pointer]:
+              - img [ref=e279]
+              - strong [ref=e282]: Daily Revenue
+              - generic [ref=e283]: .pdf
+              - generic [ref=e284]: → Recap, GEAC, Jour
+            - button "Sales Journal .rtf → Jour F&B, Recap, Transelect" [ref=e285] [cursor=pointer]:
+              - img [ref=e286]
+              - strong [ref=e289]: Sales Journal
+              - generic [ref=e290]: .rtf
+              - generic [ref=e291]: → Jour F&B, Recap, Transelect
+            - button "FreedomPay .xls → GEAC cashout, Transelect" [ref=e292] [cursor=pointer]:
+              - img [ref=e293]
+              - strong [ref=e295]: FreedomPay
+              - generic [ref=e296]: .xls
+              - generic [ref=e297]: → GEAC cashout, Transelect
+            - button "AR Summary .pdf → GEAC Balance Sheet" [ref=e298] [cursor=pointer]:
+              - img [ref=e299]
+              - strong [ref=e302]: AR Summary
+              - generic [ref=e303]: .pdf
+              - generic [ref=e304]: → GEAC Balance Sheet
+            - button "Advance Deposit .pdf → GEAC dépôts" [ref=e305] [cursor=pointer]:
+              - img [ref=e306]
+              - strong [ref=e309]: Advance Deposit
+              - generic [ref=e310]: .pdf
+              - generic [ref=e311]: → GEAC dépôts
+            - button "HP Admin .xls → HP/Admin, Jour" [ref=e312] [cursor=pointer]:
+              - img [ref=e313]
+              - strong [ref=e318]: HP Admin
+              - generic [ref=e319]: .xls
+              - generic [ref=e320]: → HP/Admin, Jour
+            - button "Suivi Dépôts (SD) .xls → SD, SetD" [ref=e321] [cursor=pointer]:
+              - img [ref=e322]
+              - strong [ref=e327]: Suivi Dépôts (SD)
+              - generic [ref=e328]: .xls
+              - generic [ref=e329]: → SD, SetD
+            - button "Market Segment .pdf → DBRS segments" [ref=e330] [cursor=pointer]:
+              - img [ref=e331]
+              - strong [ref=e334]: Market Segment
+              - generic [ref=e335]: .pdf
+              - generic [ref=e336]: → DBRS segments
+            - button "Cashier Summary .pdf → GEAC cashout" [ref=e337] [cursor=pointer]:
+              - img [ref=e338]
+              - strong [ref=e343]: Cashier Summary
+              - generic [ref=e344]: .pdf
+              - generic [ref=e345]: → GEAC cashout
+            - button "Transactions Cartes .xlsx → Transelect réception" [ref=e346] [cursor=pointer]:
+              - img [ref=e347]
+              - strong [ref=e349]: Transactions Cartes
+              - generic [ref=e350]: .xlsx
+              - generic [ref=e351]: → Transelect réception
+            - button "Recap Serveurs .txt → Transelect restaurant" [ref=e352] [cursor=pointer]:
+              - img [ref=e353]
+              - strong [ref=e354]: Recap Serveurs
+              - generic [ref=e355]: .txt
+              - generic [ref=e356]: → Transelect restaurant
+            - button "House Totals .txt → Recap Comptant + Remb Gratuité" [ref=e357] [cursor=pointer]:
+              - img [ref=e358]
+              - strong [ref=e360]: House Totals
+              - generic [ref=e361]: .txt
+              - generic [ref=e362]: → Recap Comptant + Remb Gratuité
+            - button "Débourse 90.2 .pdf → Recap Remb Client + Due Back" [ref=e363] [cursor=pointer]:
+              - img [ref=e364]
+              - strong [ref=e367]: Débourse 90.2
+              - generic [ref=e368]: .pdf
+              - generic [ref=e369]: → Recap Remb Client + Due Back
+        - generic [ref=e370]:
+          - generic [ref=e371]:
+            - generic [ref=e372]:
+              - img [ref=e373]
+              - text: Archives RJ historiques
+            - button "Rafraîchir" [ref=e376] [cursor=pointer]:
+              - img [ref=e377]
+              - text: Rafraîchir
+          - generic [ref=e381]: Parcourez les RJ Excel des dernières années. Vous pouvez consulter ou télécharger n'importe quel fichier archivé.
+          - generic [ref=e382]:
+            - textbox [ref=e383]
+            - generic [ref=e393]: 7 fichier(s)
+          - generic [ref=e384]:
+            - generic [ref=e394]:
+              - generic [ref=e395]: 2026-04-21
+              - generic [ref=e396]: mar.
+              - generic "Rj 21-04-2026.xls" [ref=e397]
+              - generic [ref=e398]: 38 tabs
+              - button "Voir les onglets" [ref=e399] [cursor=pointer]:
+                - img [ref=e400]
+              - link "Télécharger" [ref=e403] [cursor=pointer]:
+                - /url: /api/rj/archives/7/download
+                - img [ref=e404]
+            - generic [ref=e407]:
+              - generic [ref=e408]: 2026-04-19
+              - generic [ref=e409]: dim.
+              - generic "Rj 19-04-2026.xls" [ref=e410]
+              - generic [ref=e411]: 38 tabs
+              - button "Voir les onglets" [ref=e412] [cursor=pointer]:
+                - img [ref=e413]
+              - link "Télécharger" [ref=e416] [cursor=pointer]:
+                - /url: /api/rj/archives/6/download
+                - img [ref=e417]
+            - generic [ref=e420]:
+              - generic [ref=e421]: 2026-03-24
+              - generic [ref=e422]: mar.
+              - generic "Rj 24-03-2026.xls" [ref=e423]
+              - generic [ref=e424]: 39 tabs
+              - button "Voir les onglets" [ref=e425] [cursor=pointer]:
+                - img [ref=e426]
+              - link "Télécharger" [ref=e429] [cursor=pointer]:
+                - /url: /api/rj/archives/4/download
+                - img [ref=e430]
+            - generic [ref=e433]:
+              - generic [ref=e434]: 2026-03-23
+              - generic [ref=e435]: lun.
+              - generic "Rj 23-03-2026.xls" [ref=e436]
+              - generic [ref=e437]: 39 tabs
+              - button "Voir les onglets" [ref=e438] [cursor=pointer]:
+                - img [ref=e439]
+              - link "Télécharger" [ref=e442] [cursor=pointer]:
+                - /url: /api/rj/archives/3/download
+                - img [ref=e443]
+            - generic [ref=e446]:
+              - generic [ref=e447]: 2026-03-22
+              - generic [ref=e448]: dim.
+              - generic "Rj 22-03-2026.xls" [ref=e449]
+              - generic [ref=e450]: 39 tabs
+              - button "Voir les onglets" [ref=e451] [cursor=pointer]:
+                - img [ref=e452]
+              - link "Télécharger" [ref=e455] [cursor=pointer]:
+                - /url: /api/rj/archives/5/download
+                - img [ref=e456]
+            - generic [ref=e459]:
+              - generic [ref=e460]: 2026-02-24
+              - generic [ref=e461]: mar.
+              - generic "Rj 24-02-2026.xls" [ref=e462]
+              - generic [ref=e463]: 39 tabs
+              - button "Voir les onglets" [ref=e464] [cursor=pointer]:
+                - img [ref=e465]
+              - link "Télécharger" [ref=e468] [cursor=pointer]:
+                - /url: /api/rj/archives/2/download
+                - img [ref=e469]
+            - generic [ref=e472]:
+              - generic [ref=e473]: 2026-02-23
+              - generic [ref=e474]: lun.
+              - generic "Rj 23-02-2026.xls" [ref=e475]
+              - generic [ref=e476]: 39 tabs
+              - button "Voir les onglets" [ref=e477] [cursor=pointer]:
+                - img [ref=e478]
+              - link "Télécharger" [ref=e481] [cursor=pointer]:
+                - /url: /api/rj/archives/1/download
+                - img [ref=e482]

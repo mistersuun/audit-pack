@@ -1,0 +1,27 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - img [ref=e5]
+    - heading "Night Audit" [level=1] [ref=e7]
+    - paragraph [ref=e8]: Sheraton Laval
+  - generic [ref=e25]:
+    - generic [ref=e26]:
+      - button "Retour" [ref=e27] [cursor=pointer]:
+        - img [ref=e28]
+      - generic [ref=e30]:
+        - img [ref=e31]
+        - generic [ref=e33]: Auditeur
+    - generic [ref=e34]:
+      - heading "Connexion" [level=2] [ref=e35]
+      - paragraph [ref=e36]: Identifiez-vous pour continuer
+      - generic [ref=e37]:
+        - generic [ref=e38]:
+          - generic [ref=e39]: Nom d'utilisateur
+          - textbox "Nom d'utilisateur" [active] [ref=e40]:
+            - /placeholder: Identifiant
+        - generic [ref=e41]:
+          - generic [ref=e42]: Mot de passe
+          - textbox "Mot de passe" [ref=e43]
+        - button "Se connecter" [ref=e44] [cursor=pointer]:
+          - img [ref=e45]
+          - text: Se connecter
+      - paragraph [ref=e49]: Personnel autorise uniquement

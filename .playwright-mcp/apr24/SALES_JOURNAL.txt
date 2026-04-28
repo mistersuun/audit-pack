@@ -1,0 +1,81 @@
+
+
+HOTEL SHERATON LAVAL                                                   PAGE:   1
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:39.19
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                         SALES JOURNAL for Entire house
+Account #         Account Name               Debits      Credits
+--------------------------------------------------------------------------------
+                 CAFE LINK 
+
+                 PIAZZA    
+                  NOURRITURE                            12712.25
+                  ALCOOL                                 2020.00
+                  BIERES                                 1332.50
+                  NON ALCOOL BAR                          154.75
+                  VINS                                   1374.00
+                  POURBOIRE A PAYER                      1236.06
+                  LOCATION SALLE                         1050.00
+                  FR/ETAGE                     3.00   
+
+                 BAR CUPOLA
+
+                 CHAMBRES  
+                  NOURRITURE                              677.25
+                  BIERES                                   52.00
+                  NON ALCOOL BAR                           12.75
+                  VINS                                     10.00
+
+                 BANQUET   
+                  NOURRITURE                              180.00
+                  POURBOIRE A PAYER                       324.90
+                  EQUIP AUDIO VISUEL                    11978.70
+                  LOCATION SALLE                         4100.00
+                  PAUSE SPESA                            1625.00
+
+                 SPESA     
+                  NOURRITURE                             1223.85
+                  TABAGIE                                 902.13
+
+                 CLUB LOUNG
+
+                 ANCIEN TAB
+
+                  TPS                                    2014.45
+                  TVQ                                    4018.20
+
+                                               0.00   
+                  COMPTANT                               1432.81
+
+                  VISA                      7272.86   
+                  MASTERCARD                2311.18   
+                  AMEX                       754.29   
+                  INTERAC                   2185.96   
+                  CHAMBRE                  34962.07   
+
+HOTEL SHERATON LAVAL                                                   PAGE:   2
+REPORT DATE: 04/25/2026                                 REPORT TIME:  2:37:39.19
+--------------------------------------------------------------------------------
+                      SALES JOURNAL REPORT FOR 04/24/2026
+                         SALES JOURNAL for Entire house
+Account #         Account Name               Debits      Credits
+--------------------------------------------------------------------------------
+                    CORRECTION                30.70        30.70
+                  PANNE MASTER                 5.31   
+                  ADMINISTRATION              59.17   
+                  HOTEL PROMOTION            532.75   
+                  FORFAIT                    152.95   
+                  PANNE LIEN HOTEL           192.06   
+
+                  AMERISPA 10%                 0.80         0.80
+                  EMPL 30%                    24.98        24.98
+
+                  POURBOIRE CHARGE          2024.84      2024.84
+
+                                         ----------   ----------
+                                           50512.92 *   50512.92 *
+
+
+* These  figures have no meaning, they  simply
+  show the equal balance of debits and credits

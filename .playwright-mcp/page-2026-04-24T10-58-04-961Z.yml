@@ -1,0 +1,310 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "RJ Auto-Fill" [ref=e39] [cursor=pointer]:
+        - /url: /rj/v2
+        - img [ref=e40]
+        - generic [ref=e42]: RJ Auto-Fill
+      - link "Rapport Journalier" [ref=e43] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e44]
+        - generic [ref=e46]: Rapport Journalier
+      - link "RJ Balancer" [ref=e47] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e48]
+        - generic [ref=e51]: RJ Balancer
+      - generic [ref=e52]:
+        - link "CRM" [ref=e53] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e54]
+          - generic [ref=e57]: CRM
+          - img [ref=e58]
+        - generic:
+          - link "Vue d'ensemble" [ref=e60] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e61]
+            - generic [ref=e66]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e67] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e68]
+            - generic [ref=e71]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e72] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e73]
+            - generic [ref=e76]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e77] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e78]
+            - generic [ref=e83]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e85]
+            - generic [ref=e87]: Cash & Récon
+          - link "Paiements" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e89]
+            - generic [ref=e91]: Paiements
+          - link "P&L & Budget" [ref=e92] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e93]
+            - generic [ref=e96]: P&L & Budget
+      - link "Prévisions" [ref=e97] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e98]
+        - generic [ref=e101]: Prévisions
+      - link "STR & OTB" [ref=e102] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e103]
+        - generic [ref=e107]: STR & OTB
+      - generic [ref=e108]:
+        - link "Générateurs" [ref=e109] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e110]
+          - generic [ref=e114]: Générateurs
+          - img [ref=e115]
+        - generic:
+          - link "Documents" [ref=e117] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e118]
+            - generic [ref=e121]: Documents
+          - link "Pourboires" [ref=e122] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e123]
+            - generic [ref=e125]: Pourboires
+          - link "HP / Admin" [ref=e126] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e127]
+            - generic [ref=e132]: HP / Admin
+      - generic [ref=e133]: Support
+      - link "FAQ" [ref=e134] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e135]
+        - generic [ref=e138]: FAQ
+    - generic [ref=e139]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e140] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e141]: A
+        - generic [ref=e142]:
+          - generic [ref=e143]: Auditeur de nuit
+          - generic [ref=e144]: Auditeur de nuit
+      - link "Mode sombre" [ref=e145] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e146]
+        - generic [ref=e148]: Mode sombre
+      - link "Déconnexion" [ref=e149] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e150]
+        - generic [ref=e153]: Déconnexion
+  - main [ref=e154]:
+    - generic [ref=e155]:
+      - generic [ref=e156]:
+        - generic [ref=e158]:
+          - img [ref=e160]
+          - generic [ref=e163]:
+            - heading "Gestion RJ" [level=1] [ref=e164]
+            - generic [ref=e165]:
+              - generic [ref=e167]: Rj_23-04-2026_UNFILLED.xls
+              - generic [ref=e237]: (2254 KB)
+        - generic [ref=e168]:
+          - button "Uploader un fichier RJ" [ref=e169] [cursor=pointer]:
+            - img [ref=e238]
+            - generic [ref=e241]: Remplacer
+          - button "Télécharger le fichier RJ" [ref=e174] [cursor=pointer]:
+            - img [ref=e175]
+            - generic [ref=e178]: Télécharger
+          - button "Générer le fichier Quasimodo" [ref=e179] [cursor=pointer]:
+            - img [ref=e180]
+            - generic [ref=e182]: Quasimodo
+          - button "Générer le rapport PDF pour le GM" [ref=e183] [cursor=pointer]:
+            - img [ref=e184]
+            - generic [ref=e187]: Rapport PDF
+          - button "Réinitialiser le RJ" [ref=e188] [cursor=pointer]:
+            - img [ref=e189]
+            - generic [ref=e193]: Reset
+      - generic [ref=e242]:
+        - generic [ref=e405]: 2/7 sections
+        - generic [ref=e408]: 29%
+        - generic [ref=e409]:
+          - generic "Contrôle" [ref=e410] [cursor=pointer]
+          - generic "Recap" [ref=e411] [cursor=pointer]
+          - generic "Transelect" [ref=e412] [cursor=pointer]
+          - generic "GEAC" [ref=e413] [cursor=pointer]
+          - generic "DueBack" [ref=e414] [cursor=pointer]
+          - generic "Dépôt / SD" [ref=e415] [cursor=pointer]
+          - generic "Macros Jour" [ref=e416] [cursor=pointer]
+      - generic [ref=e194]:
+        - tablist [ref=e195]:
+          - tab "⚙ Setup" [ref=e196] [cursor=pointer]:
+            - generic [ref=e197]: ⚙
+            - generic [ref=e198]: Setup
+          - tab "1 Import" [ref=e199] [cursor=pointer]:
+            - generic [ref=e200]: "1"
+            - generic [ref=e201]: Import
+          - tab "2 SD" [ref=e202] [cursor=pointer]:
+            - generic [ref=e203]: "2"
+            - generic [ref=e204]: SD
+          - tab "3 DueBack" [ref=e205] [cursor=pointer]:
+            - generic [ref=e206]: "3"
+            - generic [ref=e207]: DueBack
+          - tab "4 Saisies" [ref=e208] [cursor=pointer]:
+            - generic [ref=e209]: "4"
+            - generic [ref=e210]: Saisies
+          - tab "5 Balance" [ref=e211] [cursor=pointer]:
+            - generic [ref=e212]: "5"
+            - generic [ref=e213]: Balance
+          - tab "6 Aperçu" [ref=e214] [cursor=pointer]:
+            - generic [ref=e215]: "6"
+            - generic [ref=e216]: Aperçu
+          - button "⋯ Détail" [ref=e217] [cursor=pointer]:
+            - generic [ref=e218]: ⋯
+            - generic [ref=e219]: Détail
+        - generic [ref=e419]:
+          - heading "Import Documents — Auto-Fill" [level=4] [ref=e420]
+          - paragraph [ref=e421]: Déposez vos fichiers ici. Le système extrait automatiquement les données et remplit les feuilles correspondantes du RJ.
+          - generic [ref=e422] [cursor=pointer]:
+            - generic [ref=e423]: 📥
+            - generic [ref=e424]: Déposez tous vos fichiers ici
+            - generic [ref=e425]: Le système détecte automatiquement le type de chaque fichier
+            - generic [ref=e426]: PDF (Daily Revenue, AR Summary) • RTF/TXT (Sales Journal) • XLS/XLSX (HP, FreedomPay, Quasimodo)
+          - generic [ref=e427]:
+            - generic [ref=e428] [cursor=pointer]:
+              - generic [ref=e429]:
+                - generic [ref=e430]: 📋
+                - generic [ref=e431]:
+                  - generic [ref=e432]: Sales Journal
+                  - generic [ref=e433]: .rtf / .txt — Positouch/LightSpeed
+              - generic [ref=e434]: → Jour (F&B par département), Taxes (AX/AY)
+            - generic [ref=e435] [cursor=pointer]:
+              - generic [ref=e436]:
+                - generic [ref=e437]: 📊
+                - generic [ref=e438]:
+                  - generic [ref=e439]: Daily Revenue
+                  - generic [ref=e440]: .pdf — GEAC/UX (7 pages)
+              - generic [ref=e441]: → Jour (AK-CF), Taxes, Balance, Settlements
+            - generic [ref=e442] [cursor=pointer]:
+              - generic [ref=e443]:
+                - generic [ref=e444]: 📄
+                - generic [ref=e445]:
+                  - generic [ref=e446]: AR Summary
+                  - generic [ref=e447]: .pdf — Comptes recevables
+              - generic [ref=e448]: → GEAC/UX (A/R balances, transfers)
+            - generic [ref=e449] [cursor=pointer]:
+              - generic [ref=e450]:
+                - generic [ref=e451]: 🏨
+                - generic [ref=e452]:
+                  - generic [ref=e453]: HP Admin
+                  - generic [ref=e454]: .xlsx — Hotel Promotion
+              - generic [ref=e455]: → Jour (déductions F&B), BQ/BR (pourboires)
+            - generic [ref=e456] [cursor=pointer]:
+              - generic [ref=e457]:
+                - generic [ref=e458]: 💳
+                - generic [ref=e459]:
+                  - generic [ref=e460]: Quasimodo
+                  - generic [ref=e461]: .xls — Réconciliation cartes
+              - generic [ref=e462]: → Transelect (Débit, Visa, MC, Amex)
+            - generic [ref=e463] [cursor=pointer]:
+              - generic [ref=e464]:
+                - generic [ref=e465]: 🏦
+                - generic [ref=e466]:
+                  - generic [ref=e467]: FreedomPay
+                  - generic [ref=e468]: .xls — Règlement bancaire
+              - generic [ref=e469]: → GEAC/UX (settlements bancaires)
+            - generic [ref=e470] [cursor=pointer]:
+              - generic [ref=e471]:
+                - generic [ref=e472]: 🏠
+                - generic [ref=e473]:
+                  - generic [ref=e474]: Market Segment
+                  - generic [ref=e475]: .pdf — Statistiques chambres
+              - generic [ref=e476]: → Jour (CK chambres, CN comp, CO clients)
+            - generic [ref=e477] [cursor=pointer]:
+              - generic [ref=e478]:
+                - generic [ref=e479]: 💵
+                - generic [ref=e480]:
+                  - generic [ref=e481]: House Totals
+                  - generic [ref=e482]: .txt — Lightspeed Sales Report
+              - generic [ref=e483]: → Recap (Comptant B7, Remb Gratuité B11) → Jour BU/BW
+            - generic [ref=e484] [cursor=pointer]:
+              - generic [ref=e485]:
+                - generic [ref=e486]: 📑
+                - generic [ref=e487]:
+                  - generic [ref=e488]: Débourse 90.2
+                  - generic [ref=e489]: .pdf — Cashier Detail Dept 90
+              - generic [ref=e490]: → Recap (Remb Client B12, Due Back B16) → Jour BV/BY
+          - generic [ref=e491]:
+            - heading "Valeurs manuelles" [level=5] [ref=e492]
+            - generic [ref=e493]:
+              - generic [ref=e494]:
+                - generic [ref=e495]: G4 — Forfait chambres ($)
+                - 'spinbutton "Montant G4: déduit de Chambres (col AK), ajouté à Diff Forfait (col BF)" [ref=e496]': "0"
+              - generic [ref=e497]:
+                - generic [ref=e498]: Club Lounge ($)
+                - spinbutton "Déduit de Piazza Nourr (col J)" [ref=e499]: "0"
+              - generic [ref=e500]:
+                - generic [ref=e501]: Deposit on Hand ($)
+                - spinbutton "Pour le calcul Bal_Ferm (col D)" [ref=e502]: "0"
+              - generic [ref=e503]:
+                - generic [ref=e504]: Dépôt Utilisé ($)
+                - 'spinbutton "Total Dépôt Utilisé à soustraire de Autres GL (col AS). Ex: 120+300=420" [ref=e505]': "0"
+            - generic [ref=e506]:
+              - generic [ref=e507]:
+                - generic [ref=e508]: Argent Reçu ($)
+                - spinbutton "Cash physique dans la caisse (Recap B24). Laissé vide = Recap calcule depuis B7 Comptant." [ref=e509]
+              - generic [ref=e510]:
+                - generic [ref=e511]: Surplus/Déficit ($)
+                - spinbutton "Recap B19 — Différence physique (négatif = surplus, positif = déficit)" [ref=e512]: "0"
+            - generic [ref=e513]:
+              - generic [ref=e514]:
+                - heading "Ajustements par département" [level=6] [ref=e515]
+                - button "+ Ajouter" [ref=e516] [cursor=pointer]
+              - generic [ref=e517]: Aucun ajustement. Cliquez "+ Ajouter" pour en ajouter un.
+          - generic [ref=e518]:
+            - button "Réinitialiser" [ref=e519] [cursor=pointer]
+            - button "1. Extraire les données" [ref=e520] [cursor=pointer]
+            - button "2. Remplir input sheets" [disabled] [ref=e521] [cursor=pointer]
+            - button "3. Remplir GEAC + Transelect + Jour" [disabled] [ref=e522] [cursor=pointer]
+  - generic [ref=e388]:
+    - generic [ref=e389]: ✅ Validation RJ
+    - generic [ref=e390]:
+      - generic [ref=e391]: ✅ Date configurée
+      - generic [ref=e392]: Jour 23/4/2026
+    - generic [ref=e393]:
+      - generic [ref=e394]: ℹ️ Recap balance
+      - generic [ref=e395]: Non vérifié
+    - generic [ref=e396]:
+      - generic [ref=e397]: ℹ️ Cartes TS vs GEAC
+      - generic [ref=e398]: Pas de données cartes
+    - generic [ref=e399]:
+      - generic [ref=e400]: ℹ️ Recap balance
+      - generic [ref=e401]: Pas encore rempli
+    - generic [ref=e402]:
+      - generic [ref=e403]: ✅ DueBack
+      - generic [ref=e404]: 20 réceptionnistes

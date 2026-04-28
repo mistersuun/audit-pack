@@ -398,6 +398,9 @@ class SalesJournalParser(BaseParser):
             'forfait': r'FORFAIT\s+(\d+\.\d+)',
             'empl_30': r'EMPL 30%\s+(\d+\.\d+)',
             'pourboire_charge': r'POURBOIRE CHARGE\s+(\d+\.\d+)',
+            # CERT CADEAU debit (rare; pairs with DR GiveX in CB col 79).
+            # Stored as positive — matches balancer parse_sj convention.
+            'cert_cadeau': r'CERT CADEAU\s+(\d+\.\d+)',
         }
 
         for key, pattern in adjustment_items.items():

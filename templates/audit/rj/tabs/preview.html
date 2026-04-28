@@ -85,7 +85,7 @@
 // ============================================================================
 // PREVIEW TAB — 38-Sheet Preview
 // ============================================================================
-let previewData = null;
+window.previewData = window.previewData ?? null;
 
 async function loadPreview() {
   const container = document.getElementById('sheets-grid');

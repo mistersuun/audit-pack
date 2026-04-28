@@ -388,6 +388,9 @@ class DailyRevenueParser(BaseParser):
         non_revenue['comptabilite_nonrev'] = {
             'tvq': self._get_today(comp_nr_text, 'Tvq') if comp_nr_text else 0.0,
             'tps': self._get_today(comp_nr_text, 'Tps') if comp_nr_text else 0.0,
+            # Due Back Nourriture - feeds Recap B17 (sign-flipped to positive in Recap).
+            # The label appears as "Due Back Nourriture-" with a trailing dash in DR.
+            'due_back_nourriture': self._get_today(comp_nr_text, 'Due Back Nourriture-') if comp_nr_text else 0.0,
         }
 
         # Combined tax totals — convenience aggregate for test pipeline and quick reads

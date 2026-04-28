@@ -1,0 +1,16 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - img [ref=e5]
+    - heading "Night Audit" [level=1] [ref=e7]
+    - paragraph [ref=e8]: Sheraton Laval
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11] [cursor=pointer]:
+        - img [ref=e13]
+        - heading "Auditeur" [level=3] [ref=e15]
+        - paragraph [ref=e16]: Audit de nuit & Rapport Journalier
+      - generic [ref=e17] [cursor=pointer]:
+        - img [ref=e19]
+        - heading "Direction" [level=3] [ref=e20]
+        - paragraph [ref=e21]: Tableau de bord & Analyses
+    - paragraph [ref=e23]: Selectionnez votre profil pour continuer

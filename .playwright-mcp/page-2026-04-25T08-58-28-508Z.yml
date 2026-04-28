@@ -1,0 +1,369 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - generic [ref=e8]:
+        - generic [ref=e9]: Night Audit
+        - generic [ref=e10]: Sheraton Laval
+    - generic [ref=e11]:
+      - link "Dashboard" [ref=e12] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e13]
+        - generic [ref=e15]: Dashboard
+      - generic [ref=e16]: Outils
+      - generic [ref=e17]:
+        - link "Checklist" [ref=e18] [cursor=pointer]:
+          - /url: /checklist
+          - img [ref=e19]
+          - generic [ref=e22]: Checklist
+          - img [ref=e23]
+        - generic:
+          - link "Front Desk" [ref=e25] [cursor=pointer]:
+            - /url: /checklist?role=front
+            - img [ref=e26]
+            - generic [ref=e28]: Front Desk
+          - link "Back Office" [ref=e29] [cursor=pointer]:
+            - /url: /checklist?role=back
+            - img [ref=e30]
+            - generic [ref=e33]: Back Office
+      - link "Documentation" [ref=e34] [cursor=pointer]:
+        - /url: /documentation
+        - img [ref=e35]
+        - generic [ref=e38]: Documentation
+      - link "RJ Auto-Fill" [ref=e39] [cursor=pointer]:
+        - /url: /rj/v2
+        - img [ref=e40]
+        - generic [ref=e42]: RJ Auto-Fill
+      - link "Rapport Journalier" [ref=e43] [cursor=pointer]:
+        - /url: /rj/native
+        - img [ref=e44]
+        - generic [ref=e46]: Rapport Journalier
+      - link "RJ Balancer" [ref=e47] [cursor=pointer]:
+        - /url: /balancer
+        - img [ref=e48]
+        - generic [ref=e51]: RJ Balancer
+      - generic [ref=e52]:
+        - link "CRM" [ref=e53] [cursor=pointer]:
+          - /url: /crm
+          - img [ref=e54]
+          - generic [ref=e57]: CRM
+          - img [ref=e58]
+        - generic:
+          - link "Vue d'ensemble" [ref=e60] [cursor=pointer]:
+            - /url: /crm?tab=overview
+            - img [ref=e61]
+            - generic [ref=e66]: Vue d'ensemble
+          - link "Revenue Mgmt" [ref=e67] [cursor=pointer]:
+            - /url: /crm?tab=revenue
+            - img [ref=e68]
+            - generic [ref=e71]: Revenue Mgmt
+          - link "F&B Intelligence" [ref=e72] [cursor=pointer]:
+            - /url: /crm?tab=fb
+            - img [ref=e73]
+            - generic [ref=e76]: F&B Intelligence
+          - link "Main-d'œuvre" [ref=e77] [cursor=pointer]:
+            - /url: /crm?tab=labor
+            - img [ref=e78]
+            - generic [ref=e83]: Main-d'œuvre
+          - link "Cash & Récon" [ref=e84] [cursor=pointer]:
+            - /url: /crm?tab=cash
+            - img [ref=e85]
+            - generic [ref=e87]: Cash & Récon
+          - link "Paiements" [ref=e88] [cursor=pointer]:
+            - /url: /crm?tab=payments
+            - img [ref=e89]
+            - generic [ref=e91]: Paiements
+          - link "P&L & Budget" [ref=e92] [cursor=pointer]:
+            - /url: /crm?tab=pnl
+            - img [ref=e93]
+            - generic [ref=e96]: P&L & Budget
+      - link "Prévisions" [ref=e97] [cursor=pointer]:
+        - /url: /previsions
+        - img [ref=e98]
+        - generic [ref=e101]: Prévisions
+      - link "STR & OTB" [ref=e102] [cursor=pointer]:
+        - /url: /compset/
+        - img [ref=e103]
+        - generic [ref=e107]: STR & OTB
+      - generic [ref=e108]:
+        - link "Générateurs" [ref=e109] [cursor=pointer]:
+          - /url: /generators
+          - img [ref=e110]
+          - generic [ref=e114]: Générateurs
+          - img [ref=e115]
+        - generic:
+          - link "Documents" [ref=e117] [cursor=pointer]:
+            - /url: /generators
+            - img [ref=e118]
+            - generic [ref=e121]: Documents
+          - link "Pourboires" [ref=e122] [cursor=pointer]:
+            - /url: /pod
+            - img [ref=e123]
+            - generic [ref=e125]: Pourboires
+          - link "HP / Admin" [ref=e126] [cursor=pointer]:
+            - /url: /hp
+            - img [ref=e127]
+            - generic [ref=e132]: HP / Admin
+      - generic [ref=e133]: Support
+      - link "FAQ" [ref=e134] [cursor=pointer]:
+        - /url: /faq
+        - img [ref=e135]
+        - generic [ref=e138]: FAQ
+    - generic [ref=e139]:
+      - link "A Auditeur de nuit Auditeur de nuit" [ref=e140] [cursor=pointer]:
+        - /url: /auth/profile
+        - generic [ref=e141]: A
+        - generic [ref=e142]:
+          - generic [ref=e143]: Auditeur de nuit
+          - generic [ref=e144]: Auditeur de nuit
+      - link "Mode sombre" [ref=e145] [cursor=pointer]:
+        - /url: javascript:void(0)
+        - img [ref=e146]
+        - generic [ref=e148]: Mode sombre
+      - link "Déconnexion" [ref=e149] [cursor=pointer]:
+        - /url: /auth/logout
+        - img [ref=e150]
+        - generic [ref=e153]: Déconnexion
+  - main [ref=e154]:
+    - generic [ref=e155]:
+      - generic [ref=e156]:
+        - generic [ref=e158]:
+          - img [ref=e160]
+          - generic [ref=e163]:
+            - heading "Gestion RJ" [level=1] [ref=e164]
+            - generic [ref=e165]:
+              - generic [ref=e167]: Rj 24-04-2026.xls
+              - generic [ref=e327]: (2258 KB)
+        - generic [ref=e168]:
+          - button "Uploader un fichier RJ" [ref=e169] [cursor=pointer]:
+            - img [ref=e328]
+            - generic [ref=e331]: Remplacer
+          - button "Télécharger le fichier RJ" [ref=e174] [cursor=pointer]:
+            - img [ref=e175]
+            - generic [ref=e178]: Télécharger
+          - button "Générer le fichier Quasimodo" [ref=e179] [cursor=pointer]:
+            - img [ref=e180]
+            - generic [ref=e182]: Quasimodo
+          - button "Générer le rapport PDF pour le GM" [ref=e183] [cursor=pointer]:
+            - img [ref=e184]
+            - generic [ref=e187]: Rapport PDF
+          - button "Réinitialiser le RJ" [ref=e188] [cursor=pointer]:
+            - img [ref=e189]
+            - generic [ref=e193]: Reset
+      - generic [ref=e332]:
+        - generic [ref=e333]: 2/7 sections
+        - generic [ref=e336]: 29%
+        - generic [ref=e337]:
+          - generic "Contrôle" [ref=e338] [cursor=pointer]
+          - generic "Recap" [ref=e339] [cursor=pointer]
+          - generic "Transelect" [ref=e340] [cursor=pointer]
+          - generic "GEAC" [ref=e341] [cursor=pointer]
+          - generic "DueBack" [ref=e342] [cursor=pointer]
+          - generic "Dépôt / SD" [ref=e343] [cursor=pointer]
+          - generic "Macros Jour" [ref=e344] [cursor=pointer]
+      - generic [ref=e194]:
+        - tablist [ref=e195]:
+          - tab "⚙ Setup" [ref=e196] [cursor=pointer]:
+            - generic [ref=e197]: ⚙
+            - generic [ref=e198]: Setup
+          - tab "1 Import" [ref=e199] [cursor=pointer]:
+            - generic [ref=e200]: "1"
+            - generic [ref=e201]: Import
+          - tab "2 SD" [ref=e202] [cursor=pointer]:
+            - generic [ref=e203]: "2"
+            - generic [ref=e204]: SD
+          - tab "3 DueBack" [ref=e205] [cursor=pointer]:
+            - generic [ref=e206]: "3"
+            - generic [ref=e207]: DueBack
+          - tab "4 Saisies" [ref=e208] [cursor=pointer]:
+            - generic [ref=e209]: "4"
+            - generic [ref=e210]: Saisies
+          - tab "5 Balance" [ref=e211] [cursor=pointer]:
+            - generic [ref=e212]: "5"
+            - generic [ref=e213]: Balance
+          - tab "6 Aperçu" [ref=e214] [cursor=pointer]:
+            - generic [ref=e215]: "6"
+            - generic [ref=e216]: Aperçu
+          - button "⋯ Détail" [ref=e217] [cursor=pointer]:
+            - generic [ref=e218]: ⋯
+            - generic [ref=e219]: Détail
+        - generic [ref=e345]:
+          - heading "Configuration Nouveau Jour" [level=3] [ref=e346]:
+            - img [ref=e348]
+            - text: Configuration Nouveau Jour
+          - paragraph [ref=e350]:
+            - strong [ref=e351]: "Workflow de démarrage:"
+            - text: "Quand vous commencez un nouveau jour d'audit, vous devez:"
+            - text: 1. Charger votre fichier RJ
+            - text: 2. Mettre à jour la date dans
+            - emphasis [ref=e352]: controle
+            - text: 3. Effacer les onglets de données (Recap, Transelect, GEAC, Dépôt)
+          - generic [ref=e353]:
+            - 'heading "Étape 1: Configurer la date (controle)" [level=4] [ref=e354]':
+              - img [ref=e355]
+              - text: "Étape 1: Configurer la date (controle)"
+            - generic [ref=e358]:
+              - generic [ref=e359]:
+                - generic [ref=e360]: Jour (vjour)
+                - combobox [ref=e361]:
+                  - option "1"
+                  - option "2"
+                  - option "3"
+                  - option "4"
+                  - option "5"
+                  - option "6"
+                  - option "7"
+                  - option "8"
+                  - option "9"
+                  - option "10"
+                  - option "11"
+                  - option "12"
+                  - option "13"
+                  - option "14"
+                  - option "15"
+                  - option "16"
+                  - option "17"
+                  - option "18"
+                  - option "19"
+                  - option "20"
+                  - option "21"
+                  - option "22"
+                  - option "23"
+                  - option "24" [selected]
+                  - option "25"
+                  - option "26"
+                  - option "27"
+                  - option "28"
+                  - option "29"
+                  - option "30"
+                  - option "31"
+              - generic [ref=e362]:
+                - generic [ref=e363]: Mois
+                - combobox [ref=e364]:
+                  - option "Janvier (01)"
+                  - option "Février (02)"
+                  - option "Mars (03)"
+                  - option "Avril (04)" [selected]
+                  - option "Mai (05)"
+                  - option "Juin (06)"
+                  - option "Juillet (07)"
+                  - option "Août (08)"
+                  - option "Septembre (09)"
+                  - option "Octobre (10)"
+                  - option "Novembre (11)"
+                  - option "Décembre (12)"
+              - generic [ref=e365]:
+                - generic [ref=e366]: Année
+                - combobox [ref=e367]:
+                  - option "2025"
+                  - option "2026" [selected]
+                  - option "2027"
+            - button "Appliquer la date dans controle" [ref=e368] [cursor=pointer]:
+              - img [ref=e369]
+              - text: Appliquer la date dans controle
+          - generic [ref=e373]:
+            - 'heading "Étape 2: Effacer les données du jour précédent" [level=4] [ref=e374]':
+              - img [ref=e375]
+              - text: "Étape 2: Effacer les données du jour précédent"
+            - paragraph [ref=e377]: Cliquez sur chaque bouton pour effacer les données de l'onglet correspondant, ou utilisez "Effacer TOUS" pour tout nettoyer d'un coup.
+            - generic [ref=e378]:
+              - button "Effacer Recap" [ref=e379] [cursor=pointer]:
+                - img [ref=e380]
+                - text: Effacer Recap
+              - button "Effacer Transelect" [ref=e382] [cursor=pointer]:
+                - img [ref=e383]
+                - text: Effacer Transelect
+              - button "Effacer GEAC" [ref=e385] [cursor=pointer]:
+                - img [ref=e386]
+                - text: Effacer GEAC
+              - button "Effacer Dépôt" [ref=e390] [cursor=pointer]:
+                - img [ref=e391]
+                - text: Effacer Dépôt
+            - button "EFFACER TOUS LES ONGLETS" [ref=e394] [cursor=pointer]:
+              - img [ref=e395]
+              - text: EFFACER TOUS LES ONGLETS
+          - generic [ref=e397]:
+            - 'heading "Étape 3: Actions de fin de journée (Macros)" [level=4] [ref=e398]':
+              - img [ref=e399]
+              - text: "Étape 3: Actions de fin de journée (Macros)"
+            - paragraph [ref=e402]: Ces actions copient les données calculées vers le journal (jour). Exécutez-les après avoir rempli Recap et Transelect.
+            - generic [ref=e403]:
+              - button "Copier Recap → Jour" [ref=e404] [cursor=pointer]:
+                - img [ref=e405]
+                - text: Copier Recap → Jour
+              - button "Copier Cartes → Jour" [ref=e408] [cursor=pointer]:
+                - img [ref=e409]
+                - text: Copier Cartes → Jour
+              - button "Effacer Daily" [ref=e411] [cursor=pointer]:
+                - img [ref=e412]
+                - text: Effacer Daily
+              - button "Tout Copier → Jour" [ref=e414] [cursor=pointer]:
+                - img [ref=e415]
+                - text: Tout Copier → Jour
+            - paragraph [ref=e418]:
+              - img [ref=e419]
+              - strong [ref=e421]: "Envoie Recap:"
+              - text: Copie H19:N19 → jour (ar_[jour]) |
+              - strong [ref=e422]: "Calcul Cartes:"
+              - text: Copie totaux transelect → jour (CC_[jour])
+          - generic [ref=e423]:
+            - heading "Aperçu Excel en Temps Réel Actualiser" [level=4] [ref=e424]:
+              - img [ref=e425]
+              - text: Aperçu Excel en Temps Réel
+              - button "Actualiser" [ref=e428] [cursor=pointer]:
+                - img [ref=e429]
+                - text: Actualiser
+            - generic [ref=e433]:
+              - generic [ref=e434]: "Feuille à visualiser:"
+              - combobox [ref=e435]:
+                - option "controle (Configuration)" [selected]
+                - option "Recap (Caisse)"
+                - option "transelect (Cartes)"
+                - option "geac_ux (GEAC)"
+                - option "depot (Dépôt)"
+                - option "DUBACK# (DueBack)"
+                - option "rj (Rapport)"
+                - option "jour (Journal)"
+            - generic [ref=e437]:
+              - img [ref=e438]
+              - paragraph [ref=e441]: Chargez un fichier RJ pour voir l'aperçu
+          - generic [ref=e442]:
+            - heading "Une fois terminé, vous pouvez commencer le workflow:" [level=5] [ref=e443]:
+              - img [ref=e444]
+              - text: "Une fois terminé, vous pouvez commencer le workflow:"
+            - generic [ref=e447]:
+              - generic [ref=e448]: 1. SD
+              - generic [ref=e449]: →
+              - generic [ref=e450]: 2. Dépôt
+              - generic [ref=e451]: →
+              - generic [ref=e452]: 3. DueBack
+              - generic [ref=e453]: →
+              - generic [ref=e454]: 4. Recap
+              - generic [ref=e455]: →
+              - generic [ref=e456]: 5. Transelect
+              - generic [ref=e457]: →
+              - generic [ref=e458]: 6. GEAC
+    - generic [ref=e459]:
+      - generic [ref=e460]:
+        - generic [ref=e461]: "RJ chargé: Rj 24-04-2026.xls"
+        - button "×" [ref=e462] [cursor=pointer]
+      - generic [ref=e463]:
+        - generic [ref=e464]: "Date détectée: Jour 24, Mois 4, Année 2026"
+        - button "×" [ref=e465] [cursor=pointer]
+  - generic [ref=e466]:
+    - generic [ref=e467]: ✅ Validation RJ
+    - generic [ref=e468]:
+      - generic [ref=e469]: ✅ Date configurée
+      - generic [ref=e470]: Jour 24/4/2026
+    - generic [ref=e471]:
+      - generic [ref=e472]: ℹ️ Recap balance
+      - generic [ref=e473]: Non vérifié
+    - generic [ref=e474]:
+      - generic [ref=e475]: ℹ️ Cartes TS vs GEAC
+      - generic [ref=e476]: Pas de données cartes
+    - generic [ref=e477]:
+      - generic [ref=e478]: ℹ️ Recap balance
+      - generic [ref=e479]: Pas encore rempli
+    - generic [ref=e480]:
+      - generic [ref=e481]: ✅ DueBack
+      - generic [ref=e482]: 20 réceptionnistes
